@@ -53,7 +53,7 @@ function        : type? ID? LEFTPAR parameters? RIGHTPAR block;
 block           : LEFTCURLYBRACE localDeclaration* statement* RIGHTCURLYBRACE;
 localDeclaration  : typeDecl | variableDecl;
 statement       : block
-                | END
+                | assignment END
                 | expression? END
                 | forLoop
                 | iteration
@@ -62,7 +62,7 @@ statement       : block
                 | ifstatement
                 | returnstatement;
 
-forLoop	        : FOR LEFTPAR expression? END expression? END expression? RIGHTPAR statement;
+forLoop	        : FOR LEFTPAR assignment? END expression? END expression? RIGHTPAR statement;
 iteration       : FOR LEFTPAR ID? COLON type? RIGHTPAR statement;
 whileLoop       : WHILE LEFTPAR expression? RIGHTPAR statement;
 dowhile         : DO statement WHILE LEFTPAR expression? RIGHTPAR END;
@@ -73,38 +73,44 @@ chanPriority : 'chan' 'priority' (chanExpr | 'default') ((COMMA | '<') (chanExpr
 chanExpr : ID
            | chanExpr LEFTBRACKET expression RIGHTBRACKET;
 
+expression  : ID #IdExpr
+            |  literal #LiteralExpr
+            |  expression LEFTBRACKET expression RIGHTBRACKET #ArrayIndex
+            |  expression MARK #MarkExpr
+            |  LEFTPAR expression RIGHTPAR #Paren
+            |  expression '.' ID #Access
+            |  expression '++' #IncrementPost
+            | '++' expression #IncrementPre
+            |  expression '--' #DecrementPost
+            | '--' expression #DecrementPre
+            |  expression LEFTPAR arguments RIGHTPAR #FuncCall
+            |  <assoc=right> unary expression #UnaryExpr
+            |  expression op=('*' | '/' | '%') expression #MultDiv
+            |  expression op=('+' | '-') expression #AddSub
+            |  expression op=('<<' | '>>') expression #Bitshift
+            |  expression op=('<?' | '>?') expression #MinMax
+            |  expression op=('<' | '<=' | '>=' | '>') expression #RelExpr
+            |  expression op=('==' | '!=') expression #EqExpr
+            |  expression '&' expression #BitAnd
+            |  expression '^' expression #BitXor
+            |  expression '|' expression #BitOr
+            |  expression op=('&&' | 'and') expression #LogAnd
+            |  expression op=('||' | 'or' | 'imply') expression #LogOr
+            |  expression '?' expression COLON expression #Conditional
+            |  op=('forall' | 'exists' | 'sum') LEFTPAR ID COLON type RIGHTPAR expression #VerificationExpr
+            ;
 
-expression  : ID
-            |  NAT
-            |  expression LEFTBRACKET expression RIGHTBRACKET
-            |  expression MARK
-            |  LEFTPAR expression RIGHTPAR
-            |  expression '.' ID
-            |  expression '++' | '++' expression
-            |  expression '--' | '--' expression
-            |  expression LEFTPAR arguments RIGHTPAR
-            |  <assoc=right> unary expression
-            |  expression op=('*' | '/' | '%') expression
-            |  expression op=('+' | '-') expression
-            |  expression op=('<<' | '>>') expression
-            |  expression op=('<?' | '>?') expression
-            |  expression op=('<' | '<=' | '>=' | '>') expression
-            |  expression op=('==' | '!=') expression
-            |  expression '&' expression
-            |  expression '^' expression
-            |  expression '|' expression
-            |  expression op=('&&' | 'and') expression
-            |  expression op=('||' | 'or' | 'imply') expression
-            |  expression '?' expression COLON expression
-            |  <assoc=right> expression assign expression
-            |  op=('forall' | 'exists' | 'sum') LEFTPAR ID COLON type RIGHTPAR expression
-            |  'deadlock' | 'true' | 'false';
+assignment  : <assoc=right> expression assign expression #AssignExpr;
 
 arguments  : (expression ( COMMA expression )*)?;
 
 assign     : '=' | ':=' | '+=' | '-=' | '*=' | '/=' | '%='
            | '|=' | '&=' | '^=' | '<<=' | '>>=';
 unary      : '+' | '-' | '!' | 'not';
+
+literal : NAT | boolean | DOUBLE | DEADLOCK;
+
+boolean : 'true' | 'false';
 
 Whitespace : [ \t] + -> channel(HIDDEN)
            ;
@@ -145,6 +151,8 @@ LINK_OP : '->' | '<-' | '<->';
 WITH : 'with';
 ELSE : 'else';
 
+DEADLOCK : 'deadlock';
+DOUBLE : NAT '.' [0-9]+;
 NAT : '0' | [1-9]([0-9])*;
 ID : [a-zA-Z_]([a-zA-Z0-9_])*;
 
