@@ -22,5 +22,17 @@ public class RefExpressionTests {
     }
     //endregion
 
+    //region LiteralExpr: No influence by scopes
+    @Test
+    void NullScopeValidLiteralExpr() {
+
+    }
+
+    @Test
+    void NotNullScopeValidLiteralExpr() {
+
+    }
+    //endregion
+
 
 }

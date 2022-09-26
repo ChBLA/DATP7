@@ -12,6 +12,12 @@ public class Scope {
         this.isComponent = isComponent;
     }
 
+    public Scope(Scope parent, boolean isComponent, ArrayList<Variable> variables) {
+        this.parent = parent;
+        this.variables = variables;
+        this.isComponent = isComponent;
+    }
+
     public void add(Variable v) {
         variables.add(v);
     }
@@ -22,12 +28,12 @@ public class Scope {
 
     public TableReference find(String s, boolean isVarID) {
         for (int i = 0; i < variables.size(); i++) {
-            if(variables.get(i).is(s)) {
+            if (variables.get(i).is(s)) {
                 return new TableReference(0, i);
             }
         }
 
-        if(parent != null && !(isComponent && isVarID)) {
+        if (parent != null && !(isComponent && isVarID)) {
             TableReference result = parent.find(s, isVarID);
             result.incrementScopeLevel();
             return result;
@@ -37,7 +43,7 @@ public class Scope {
     }
 
     public Variable get(TableReference tableReference) throws Exception {
-        if(tableReference.relativeScope > 0) {
+        if (tableReference.relativeScope > 0) {
             if (parent == null) {
                 throw new Exception("Scope has no parent");
             }
