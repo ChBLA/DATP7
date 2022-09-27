@@ -34,6 +34,20 @@ public class TypeCheckerTests  {
     //endregion
 
     //region IncrementPost
+    @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
+    @MethodSource("validIncrementPostTypes")
+    void IncrementPostCorrectlyTyped(Type inType, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.IncrementPostContext node = mock(UCELParser.IncrementPostContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor));
+        node.children = children;
+
+        Type actual = visitor.visitIncrementPost(node);
+
+        assertEquals(returnType, actual);
+    }
     //endregion
 
     //region IncrementPre
@@ -56,8 +70,8 @@ public class TypeCheckerTests  {
 
     //region AddSub
     @ParameterizedTest(name = "{index} => using type {0} + type {1} with plus/minus")
-    @MethodSource("validAddSubTypes")
-    void AddSubCorrectlyTyped(Type left, Type right, Type returnType) {
+    @MethodSource("addSubTypes")
+    void AddSubTyped(Type left, Type right, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.AddSubContext node = mock(UCELParser.AddSubContext.class);
@@ -132,21 +146,30 @@ public class TypeCheckerTests  {
     //endregion
 
     //region Arguments for parameterized tests
-    private static Stream<Arguments> validAddSubTypes() {
+    private static Stream<Arguments> addSubTypes() {
         return Stream.of(
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType)),
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType)),
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType))
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType)),
+                Arguments.arguments(new Type(Type.TypeEnum.stringType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType, 1), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.stringType), new Type(Type.TypeEnum.stringType), new Type(Type.TypeEnum.errorType))
         );
     }
 
-    private static Stream<Arguments> invalidAddSubTypes() {
+    private  static Stream<Arguments> validIncrementPostTypes() {
         return Stream.of(
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType))
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType))
+        );
+    }
+    private  static Stream<Arguments> invalidIncrementPostTypes() {
+        return Stream.of(
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType))
         );
     }
 
@@ -158,5 +181,6 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
         );
     }
+
     //endregion
 }
