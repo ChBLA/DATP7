@@ -11,22 +11,22 @@ public class ScopeTests {
     //region Scope.find()
     @Test
     void ValidTableReferenceFromParentSuccessfulFind() {
-
+        fail();
     }
 
     @Test
     void InvalidTableReferenceFromParentFindThrows() {
-
+        fail();
     }
 
     @Test
     void ValidGetResultSuccessfulFind() {
-
+        fail();
     }
 
     @Test
     void InvalidGetResultFindThrows() {
-
+        fail();
     }
     //endregion
 
