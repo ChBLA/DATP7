@@ -28,7 +28,7 @@ public class Scope {
 
     public TableReference find(String s, boolean isVarID) {
         for (int i = 0; i < variables.size(); i++) {
-            if (variables.get(i).is(s)) {
+            if (variables.get(i).isCalled(s)) {
                 return new TableReference(0, i);
             }
         }

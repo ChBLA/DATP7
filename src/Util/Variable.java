@@ -1,10 +1,22 @@
 public class Variable {
 
-    public Variable() {
+    private String identifier;
+    private Type type;
 
+    public Variable() {
+        //Only for tests
     }
 
-    public boolean is(String s) {
-        return true; //TODO
+    public Variable(String identifier) {
+        this.identifier = identifier;
+        this.type = null;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public boolean isCalled(String s) {
+        return s.equals(identifier);
     }
 }

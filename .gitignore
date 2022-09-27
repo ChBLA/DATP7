@@ -26,3 +26,4 @@ hs_err_pid*
 gen
 /out
 .idea/workspace.xml
+.idea/uiDesigner.xml

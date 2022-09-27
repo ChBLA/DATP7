@@ -10,6 +10,9 @@
       <sourceFolder url="file://$MODULE_DIR$/src/Util" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/ReferenceHandlerTests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/UtilTests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/TypeCheckerTest" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/ShortCut" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/src/TypeChecker" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
