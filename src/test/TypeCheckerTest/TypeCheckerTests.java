@@ -108,9 +108,9 @@ public class TypeCheckerTests  {
     //endregion
 
     //region LogAnd
-    @ParameterizedTest(name = "{index} => using type {0} + type {1} with logical and expecting {2}")
+    @ParameterizedTest(name = "{index} => using {0} and {1} with logical and expecting {2}")
     @MethodSource("logTypes")
-    void LogAndCorrectlyTyped(Type left, Type right, Type returnType) {
+    void LogAndTypes(Type left, Type right, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.LogAndContext node = mock(UCELParser.LogAndContext.class);
@@ -125,6 +125,20 @@ public class TypeCheckerTests  {
     //endregion
 
     //region LogOr
+    @ParameterizedTest(name = "{index} => using {0} and {1} with logical or expecting {2}")
+    @MethodSource("logTypes")
+    void LogOrTypes(Type left, Type right, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.LogOrContext node = mock(UCELParser.LogOrContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
+        node.children = children;
+        Type actual = visitor.visitLogOr(node);
+
+        assertEquals(returnType, actual);
+    }
     //endregion
 
     //region Conditional
@@ -178,7 +192,11 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType))
+                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType, 1), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType, 1), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType, 1), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.boolType, 1), new Type(Type.TypeEnum.errorType))
         );
     }
 

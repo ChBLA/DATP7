@@ -46,4 +46,40 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
 
+    //region Logical expressions
+    @Override
+    public Type visitLogAnd(UCELParser.LogAndContext ctx) {
+        Type leftNode = visit(ctx.children.get(0));
+        Type rightNode = visit(ctx.children.get(1));
+
+        return logicalExpressionDetermineType(leftNode, rightNode);
+    }
+
+    @Override
+    public Type visitLogOr(UCELParser.LogOrContext ctx) {
+        Type leftNode = visit(ctx.children.get(0));
+        Type rightNode = visit(ctx.children.get(1));
+
+        return logicalExpressionDetermineType(leftNode, rightNode);
+    }
+
+    private Type logicalExpressionDetermineType(Type left, Type right) {
+        Type.TypeEnum leftEnum = left.getEvaluationType();
+        Type.TypeEnum rightEnum = right.getEvaluationType();
+
+        if (leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType)
+            return new Type(Type.TypeEnum.errorType);
+        else if (leftEnum != Type.TypeEnum.boolType || rightEnum != Type.TypeEnum.boolType) {
+            // Log: left or right not bool-type
+            return new Type(Type.TypeEnum.errorType);
+        } else if (isArray(left) || isArray(right)) {
+            // Log: either left or right is an array
+            return new Type(Type.TypeEnum.errorType);
+        }
+
+        return new Type(Type.TypeEnum.boolType);
+    }
+
+    //endregion
+
 }
