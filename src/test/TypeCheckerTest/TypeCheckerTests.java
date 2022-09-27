@@ -30,6 +30,10 @@ public class TypeCheckerTests  {
         assertEquals(returnType, actual);
     }
 
+    void FuncCallCorrectlyTyped(Type funcType, Type returnType) {
+        fail();
+    }
+
     private<T extends RuleContext> T mockForVisitorResult(final Class<T> nodeType, final Type visitResult, TypeCheckerVisitor visitor) {
         final T mock = mock(nodeType);
         when(mock.accept(visitor)).thenReturn(visitResult);
