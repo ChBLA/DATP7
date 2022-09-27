@@ -15,6 +15,46 @@ import static org.mockito.Mockito.when;
 
 public class TypeCheckerTests  {
 
+    //region IdExpr
+    //endregion
+
+    //region LiteralExpr
+    //endregion
+
+    //region ArrayIndex
+    //endregion
+
+    //region MarkExpr
+    //endregion
+
+    //region Paren
+    //endregion
+
+    //region Access
+    //endregion
+
+    //region IncrementPost
+    //endregion
+
+    //region IncrementPre
+    //endregion
+
+    //region DecrementPost
+    //endregion
+
+    //region DecrementPre
+    //endregion
+
+    //region FuncCall
+    //endregion
+
+    //region UnaryExpr
+    //endregion
+
+    //region MultDiv
+    //endregion
+
+    //region AddSub
     @ParameterizedTest(name = "{index} => using type {0} + type {1} with plus/minus")
     @MethodSource("validAddSubTypes")
     void AddSubCorrectlyTyped(Type left, Type right, Type returnType) {
@@ -30,12 +70,50 @@ public class TypeCheckerTests  {
         assertEquals(returnType, actual);
     }
 
+    //endregion
+
+    //region BitShift
+    //endregion
+
+    //region MinMax
+    //endregion
+
+    //region RelExpr
+    //endregion
+
+    //region EqExpr
+    //endregion
+
+    //region BitAnd
+    //endregion
+
+    //region BitXor
+    //endregion
+
+    //region BitOr
+    //endregion
+
+    //region LogAnd
+    //endregion
+
+    //region LogOr
+    //endregion
+
+    //region Conditional
+    //endregion
+
+    //region VerificationExpr
+    //endregion
+
+    //region Helper methods
     private<T extends RuleContext> T mockForVisitorResult(final Class<T> nodeType, final Type visitResult, TypeCheckerVisitor visitor) {
         final T mock = mock(nodeType);
         when(mock.accept(visitor)).thenReturn(visitResult);
         return mock;
     }
+    //endregion
 
+    //region Arguments for parameterized tests
     private static Stream<Arguments> validAddSubTypes() {
         return Stream.of(
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType)),
@@ -44,4 +122,6 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType))
         );
     }
+
+    //region
 }
