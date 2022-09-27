@@ -106,6 +106,10 @@ public class TypeCheckerTests  {
     //endregion
 
     //region Helper methods
+    void FuncCallCorrectlyTyped(Type funcType, Type returnType) {
+        fail();
+    }
+
     private<T extends RuleContext> T mockForVisitorResult(final Class<T> nodeType, final Type visitResult, TypeCheckerVisitor visitor) {
         final T mock = mock(nodeType);
         when(mock.accept(visitor)).thenReturn(visitResult);
@@ -123,5 +127,13 @@ public class TypeCheckerTests  {
         );
     }
 
-    //region
+    private static Stream<Arguments> invalidAddSubTypes() {
+        return Stream.of(
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType)),
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType))
+        );
+    }
+    //endregion
 }
