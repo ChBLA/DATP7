@@ -5,13 +5,14 @@ public class Type {
     enum TypeEnum {
         intType,
         doubleType,
+        boolType,
         charType,
         stringType,
         chanType,
         scalarType,
         structType,
         voidType,
-        errorType
+        errorType, invalidType;
     }
 
     private TypeEnum evaluationType;

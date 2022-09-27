@@ -94,6 +94,20 @@ public class TypeCheckerTests  {
     //endregion
 
     //region LogAnd
+    @ParameterizedTest(name = "{index} => using type {0} + type {1} with logical and expecting {2}")
+    @MethodSource("logTypes")
+    void LogAndCorrectlyTyped(Type left, Type right, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.LogAndContext node = mock(UCELParser.LogAndContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
+        node.children = children;
+        Type actual = visitor.visitLogAnd(node);
+
+        assertEquals(returnType, actual);
+    }
     //endregion
 
     //region LogOr
@@ -133,6 +147,15 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType)),
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType)),
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType))
+        );
+    }
+
+    private static Stream<Arguments> logTypes() {
+        return Stream.of(
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
         );
     }
     //endregion
