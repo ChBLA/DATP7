@@ -133,11 +133,14 @@ public class TypeCheckerTests  {
 
     //region Arguments for parameterized tests
     private static Stream<Arguments> validAddSubTypes() {
+        Type intType = new Type(Type.TypeEnum.intType);
+        Type doubleType = new Type(Type.TypeEnum.doubleType);
+
         return Stream.of(
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType))
+                Arguments.arguments(intType, intType, doubleType),
+                Arguments.arguments(doubleType, intType, doubleType),
+                Arguments.arguments(intType, doubleType, doubleType),
+                Arguments.arguments(doubleType, doubleType, doubleType)
         );
     }
 
