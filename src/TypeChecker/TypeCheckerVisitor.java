@@ -1,5 +1,8 @@
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     @Override
@@ -45,6 +48,29 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         return new Type(visit(ctx.children.get(0)).getEvaluationType());
     }
 
+
+    //region Relational/Equality expressions
+    @Override
+    public Type visitRelExpr(UCELParser.RelExprContext ctx) {
+        Type leftNode = visit(ctx.children.get(0));
+        Type rightNode = visit(ctx.children.get(1));
+
+        Type.TypeEnum leftEnum = leftNode.getEvaluationType();
+        Type.TypeEnum rightEnum = rightNode.getEvaluationType();
+
+        List<Type.TypeEnum> comparableTypes = new ArrayList<>() {{ add(Type.TypeEnum.intType); add(Type.TypeEnum.boolType); add(Type.TypeEnum.doubleType);}};
+        if (!(comparableTypes.contains(leftEnum) && comparableTypes.contains(rightEnum)) && leftEnum != rightEnum) {
+            //TODO: Log: No coercion between left and right, and right and left are not same type
+            return new Type(Type.TypeEnum.errorType);
+        } else if (isArray(leftNode) || isArray(rightNode)) {
+            //TODO: Log: Either right or left is an array
+            return new Type(Type.TypeEnum.errorType);
+        }
+
+        return new Type(Type.TypeEnum.boolType);
+    }
+
+    //endregion
 
     //region Logical expressions
     @Override
