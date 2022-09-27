@@ -34,6 +34,20 @@ public class TypeCheckerTests  {
     //endregion
 
     //region IncrementPost
+    @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
+    @MethodSource("validIncrementPostTypes")
+    void IncrementPostCorrectlyTyped(Type inType, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.IncrementPostContext node = mock(UCELParser.IncrementPostContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor));
+        node.children = children;
+
+        Type actual = visitor.visitIncrementPost(node);
+
+        assertEquals(returnType, actual);
+    }
     //endregion
 
     //region IncrementPre
@@ -131,5 +145,19 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.stringType), new Type(Type.TypeEnum.stringType), new Type(Type.TypeEnum.errorType))
         );
     }
+
+    private  static Stream<Arguments> validIncrementPostTypes() {
+        return Stream.of(
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType))
+        );
+    }
+    private  static Stream<Arguments> invalidIncrementPostTypes() {
+        return Stream.of(
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType))
+        );
+    }
+
     //endregion
 }
