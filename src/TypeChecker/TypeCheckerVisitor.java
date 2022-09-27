@@ -28,6 +28,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
     }
 
+    @Override
+    public Type visitIncrementPost (UCELParser.IncrementPostContext ctx) {
+        return new Type(visit(ctx.children.get(0)).getEvaluationType());
+    }
 
 
 }
