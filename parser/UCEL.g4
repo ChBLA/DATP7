@@ -73,30 +73,30 @@ chanPriority : 'chan' 'priority' (chanExpr | 'default') ((COMMA | '<') (chanExpr
 chanExpr : ID
            | chanExpr LEFTBRACKET expression RIGHTBRACKET;
 
-expression  : ID #IdExpr
-            |  literal #LiteralExpr
-            |  expression LEFTBRACKET expression RIGHTBRACKET #ArrayIndex
-            |  expression MARK #MarkExpr
-            |  LEFTPAR expression RIGHTPAR #Paren
-            |  expression '.' ID #Access
-            |  expression '++' #IncrementPost
-            | '++' expression #IncrementPre
-            |  expression '--' #DecrementPost
-            | '--' expression #DecrementPre
-            |  expression LEFTPAR arguments RIGHTPAR #FuncCall
-            |  <assoc=right> unary expression #UnaryExpr
-            |  expression op=('*' | '/' | '%') expression #MultDiv
-            |  expression op=('+' | '-') expression #AddSub
-            |  expression op=('<<' | '>>') expression #Bitshift
-            |  expression op=('<?' | '>?') expression #MinMax
+expression  : ID                                                #IdExpr
+            |  literal                                          #LiteralExpr
+            |  expression LEFTBRACKET expression RIGHTBRACKET   #ArrayIndex
+            |  expression MARK                                  #MarkExpr
+            |  LEFTPAR expression RIGHTPAR                      #Paren
+            |  expression '.' ID                                #Access
+            |  expression '++'                                  #IncrementPost
+            | '++' expression                                   #IncrementPre
+            |  expression '--'                                  #DecrementPost
+            | '--' expression                                   #DecrementPre
+            |  expression LEFTPAR arguments RIGHTPAR            #FuncCall
+            |  <assoc=right> unary expression                   #UnaryExpr
+            |  expression op=('*' | '/' | '%') expression       #MultDiv
+            |  expression op=('+' | '-') expression             #AddSub
+            |  expression op=('<<' | '>>') expression           #Bitshift
+            |  expression op=('<?' | '>?') expression           #MinMax
             |  expression op=('<' | '<=' | '>=' | '>') expression #RelExpr
-            |  expression op=('==' | '!=') expression #EqExpr
-            |  expression '&' expression #BitAnd
-            |  expression '^' expression #BitXor
-            |  expression '|' expression #BitOr
-            |  expression op=('&&' | 'and') expression #LogAnd
+            |  expression op=('==' | '!=') expression           #EqExpr
+            |  expression '&' expression                        #BitAnd
+            |  expression '^' expression                        #BitXor
+            |  expression '|' expression                        #BitOr
+            |  expression op=('&&' | 'and') expression          #LogAnd
             |  expression op=('||' | 'or' | 'imply') expression #LogOr
-            |  expression '?' expression COLON expression #Conditional
+            |  expression '?' expression COLON expression       #Conditional
             |  op=('forall' | 'exists' | 'sum') LEFTPAR ID COLON type RIGHTPAR expression #VerificationExpr
             ;
 
