@@ -43,6 +43,23 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
     }
 
+
+    @Override
+    public Type visitLiteral(UCELParser.LiteralContext ctx) {
+        Type type;
+        if (ctx.NAT() != null) {
+            type = new Type(Type.TypeEnum.intType);
+        } else if (ctx.DOUBLE() != null) {
+            type = new Type(Type.TypeEnum.doubleType);
+        } else if (ctx.boolean_() != null) {
+            type = new Type(Type.TypeEnum.boolType);
+        } else {
+            type = new Type(Type.TypeEnum.errorType);
+        }
+
+        return type;
+    }
+
     @Override
     public Type visitIncrementPost (UCELParser.IncrementPostContext ctx) {
         return new Type(visit(ctx.children.get(0)).getEvaluationType());
@@ -68,6 +85,18 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
 
         return new Type(Type.TypeEnum.boolType);
+    }
+
+    @Override
+    public Type visitFuncCall(UCELParser.FuncCallContext ctx) {
+
+        return super.visitFuncCall(ctx);
+    }
+
+    @Override
+    public Type visitArguments(UCELParser.ArgumentsContext ctx) {
+
+        return super.visitArguments(ctx);
     }
 
     //endregion
@@ -107,5 +136,4 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
     //endregion
-
 }

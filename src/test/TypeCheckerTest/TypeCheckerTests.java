@@ -1,9 +1,15 @@
+import org.antlr.v4.runtime.CommonToken;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.TerminalNodeImpl;
+import org.antlr.v4.tool.ast.TerminalAST;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mock;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +25,46 @@ public class TypeCheckerTests  {
     //endregion
 
     //region LiteralExpr
+
+
+    @Test
+    void IntLiteralTypedCorrectly() {
+        Type literalType = new Type(Type.TypeEnum.intType);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.LiteralContext node = mock(UCELParser.LiteralContext.class);
+        when(node.NAT()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.NAT)));
+
+        Type actual = visitor.visitLiteral(node);
+        assertEquals(literalType, actual);
+    }
+
+    @Test
+    void DoubleLiteralTypedCorrectly() {
+        Type literalType = new Type(Type.TypeEnum.doubleType);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.LiteralContext node = mock(UCELParser.LiteralContext.class);
+        when(node.DOUBLE()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.NAT)));
+
+        Type actual = visitor.visitLiteral(node);
+        assertEquals(literalType, actual);
+    }
+
+    @Test
+    void BoolLiteralTypedCorrectly() {
+        Type literalType = new Type(Type.TypeEnum.boolType);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.BooleanContext boolCtx = mock(UCELParser.BooleanContext.class);
+
+        UCELParser.LiteralContext node = mock(UCELParser.LiteralContext.class);
+        when(node.boolean_()).thenReturn(boolCtx);
+
+        Type actual = visitor.visitLiteral(node);
+        assertEquals(literalType, actual);
+    }
+
     //endregion
 
     //region ArrayIndex
@@ -60,6 +106,20 @@ public class TypeCheckerTests  {
     //endregion
 
     //region FuncCall
+    void FuncCallParamsCorrectType(Type param1, Type param2) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.FuncCallContext node = mock(UCELParser.FuncCallContext.class);
+        final UCELParser.ArgumentsContext argumentsContext = mock(UCELParser.ArgumentsContext.class);
+        List<ParseTree> arguments = new ArrayList<>();
+        arguments.add(mockForVisitorResult(UCELParser.ExpressionContext.class, param1, visitor));
+        arguments.add(mockForVisitorResult(UCELParser.ExpressionContext.class, param2, visitor));
+        argumentsContext.children = arguments;
+        when(node.arguments()).thenReturn(argumentsContext);
+
+//        visitor.visitFuncCall(node);
+    }
+
     //endregion
 
     //region UnaryExpr
@@ -162,9 +222,6 @@ public class TypeCheckerTests  {
     //endregion
 
     //region Helper methods
-    void FuncCallCorrectlyTyped(Type funcType, Type returnType) {
-        fail();
-    }
 
     private<T extends RuleContext> T mockForVisitorResult(final Class<T> nodeType, final Type visitResult, TypeCheckerVisitor visitor) {
         final T mock = mock(nodeType);
@@ -187,7 +244,6 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.stringType), new Type(Type.TypeEnum.stringType), new Type(Type.TypeEnum.errorType))
         );
     }
-
     private  static Stream<Arguments> validIncrementPostTypes() {
         return Stream.of(
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType)),
