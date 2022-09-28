@@ -109,6 +109,14 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
     //endregion
 
+    @Override
+    public Type visitMinMax(UCELParser.MinMaxContext ctx) {
+        Type leftNode = visit(ctx.children.get(0));
+        Type rightNode = visit(ctx.children.get(1));
+
+        return intDoubleBinaryOp(leftNode, rightNode);
+    }
+
     //region Relational/Equality expressions
     @Override
     public Type visitRelExpr(UCELParser.RelExprContext ctx) {
@@ -119,7 +127,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type.TypeEnum rightEnum = rightNode.getEvaluationType();
 
         List<Type.TypeEnum> comparableTypes = new ArrayList<>() {{ add(Type.TypeEnum.intType); add(Type.TypeEnum.doubleType);}};
-        if (!(comparableTypes.contains(leftEnum) && comparableTypes.contains(rightEnum)) && leftEnum != rightEnum) {
+        if (leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType) {
+            // Error propagated, no logging
+            return new Type(Type.TypeEnum.errorType);
+        } else if (!(comparableTypes.contains(leftEnum) && comparableTypes.contains(rightEnum)) && leftEnum != rightEnum) {
             //TODO: Log: No coercion between left and right, and right and left are not same type
             return new Type(Type.TypeEnum.errorType);
         } else if (isArray(leftNode) || isArray(rightNode)) {
@@ -140,7 +151,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         List<Type.TypeEnum> comparableTypes = new ArrayList<>() {{ add(Type.TypeEnum.intType); add(Type.TypeEnum.boolType); add(Type.TypeEnum.doubleType);}};
 
-        if (!(comparableTypes.contains(leftEnum) && leftEnum == rightEnum)
+        if (leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType) {
+            // Error propagated, no logging
+            return new Type(Type.TypeEnum.errorType);
+        } else if (!(comparableTypes.contains(leftEnum) && leftEnum == rightEnum)
                 && !(leftEnum == Type.TypeEnum.intType && rightEnum == Type.TypeEnum.doubleType)
                 && !(leftEnum == Type.TypeEnum.doubleType && rightEnum == Type.TypeEnum.intType)) {
             //TODO: Log: Non-comparable types or different types for left and right
@@ -190,7 +204,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type.TypeEnum leftEnum = left.getEvaluationType();
         Type.TypeEnum rightEnum = right.getEvaluationType();
 
-        if (!(leftEnum == Type.TypeEnum.intType && rightEnum == Type.TypeEnum.intType)) {
+        if (leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType) {
+            // Error propagated, no logging
+            return new Type(Type.TypeEnum.errorType);
+        } else if (!(leftEnum == Type.TypeEnum.intType && rightEnum == Type.TypeEnum.intType)) {
             //TODO: Log: Cannot perform bit operators on non-int types
             return new Type(Type.TypeEnum.errorType);
         } else if (isArray(left) || isArray(right)) {
