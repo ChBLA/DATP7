@@ -51,7 +51,6 @@ public class TypeCheckerTests  {
     //endregion
 
     //region IncrementPre
-    //endregion
     @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
     @MethodSource("expectedIncrementPostTypes")
     void IncrementPreExpectedOutType(Type inType, Type returnType) {
@@ -66,6 +65,8 @@ public class TypeCheckerTests  {
 
         assertEquals(returnType, actual);
     }
+    //endregion
+
     //region DecrementPost
     @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
     @MethodSource("expectedIncrementPostTypes")
