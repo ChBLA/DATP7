@@ -166,4 +166,25 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //endregion
 
+    //region Conditional Expr
+    @Override
+    public Type visitConditional(UCELParser.ConditionalContext ctx) {
+        Type condType = visit(ctx.children.get(0));
+        Type leftValType = visit(ctx.children.get(1));
+        Type rightValType = visit(ctx.children.get(2));
+
+        // Condition must be boolean
+        if(condType.getEvaluationType() != Type.TypeEnum.boolType)
+            return new Type(Type.TypeEnum.errorType);
+
+        // Return types match
+        if(leftValType.equals(rightValType))
+            return leftValType;
+
+        // Type Coercion
+        return intDoubleBinaryOp(leftValType, rightValType);
+    }
+
+    //endregion
+
 }
