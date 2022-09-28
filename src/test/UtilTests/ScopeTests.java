@@ -12,7 +12,7 @@ public class ScopeTests {
     @Test
     void FindSuccesfulSameScope() {
 
-
+        fail();
 
 
     }

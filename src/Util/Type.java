@@ -17,6 +17,7 @@ public class Type {
 
     private TypeEnum evaluationType;
     private Type[] parameters;
+    private String[] parameterNames;
     private int arrayDimensions;
 
     public Type(TypeEnum type) {
@@ -26,7 +27,14 @@ public class Type {
     public Type(TypeEnum type, int arrayDimensions) {
         this.evaluationType = type;
         this.parameters = null;
+        this.parameterNames = null;
         this.arrayDimensions = arrayDimensions;
+    }
+
+    public Type(TypeEnum evaluationType, String[] paramNames, Type[] parameters) {
+        this.evaluationType = evaluationType;
+        this.parameters = parameters;
+        this.parameterNames = paramNames;
     }
 
     public TypeEnum getEvaluationType() {
@@ -39,6 +47,14 @@ public class Type {
 
     public int getArrayDimensions() {
         return arrayDimensions;
+    }
+
+    public String[] getParameterNames() {
+        return parameterNames;
+    }
+
+    public Type[] getParameters() {
+        return parameters;
     }
 
     @Override
