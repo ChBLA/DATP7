@@ -18,6 +18,14 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         return intDoubleBinaryOp(leftType, rightType);
     }
 
+    @Override
+    public Type visitMultDiv(UCELParser.MultDivContext ctx) {
+        Type leftType = visit(ctx.children.get(0));
+        Type rightType = visit(ctx.children.get(1));
+
+        return intDoubleBinaryOp(leftType, rightType);
+    }
+
     private boolean isArray(Type t) {
         return t.getArrayDimensions() > 0;
     }
@@ -68,11 +76,36 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         } else if (ctx.boolean_() != null) {
             type = new Type(Type.TypeEnum.boolType);
         } else {
+            // This should not happen
             type = new Type(Type.TypeEnum.errorType);
         }
 
         return type;
     }
+
+    @Override
+    public Type visitUnaryExpr(UCELParser.UnaryExprContext ctx) {
+        Type exprType = visit(ctx.expression());
+        Type.TypeEnum typeEnum = exprType.getEvaluationType();
+
+        Type evaluationType;
+
+        boolean isPlus = ctx.unary().PLUS() != null;
+        boolean isMinus = ctx.unary().MINUS() != null;
+        boolean isNeg = ctx.unary().NEG() != null;
+        boolean isNot = ctx.unary().NOT() != null;
+
+        if ((isPlus || isMinus) && (typeEnum == Type.TypeEnum.intType || typeEnum == Type.TypeEnum.doubleType)) {
+            evaluationType = exprType;
+        } else if ((isNeg || isNot) && typeEnum == Type.TypeEnum.boolType) {
+            evaluationType = exprType;
+        } else {
+            evaluationType = new Type(Type.TypeEnum.errorType);
+        }
+
+        return evaluationType;
+    }
+
 
     //region Increment/Decrement
     @Override
