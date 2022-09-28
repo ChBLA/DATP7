@@ -1,5 +1,10 @@
+import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RuleContext;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.misc.Interval;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.ParseTreeVisitor;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -86,9 +91,6 @@ public class TypeCheckerTests  {
 
     //endregion
 
-    //region BitShift
-    //endregion
-
     //region MinMax
     //endregion
 
@@ -126,13 +128,90 @@ public class TypeCheckerTests  {
     }
     //endregion
 
+    //region Bit Expressions
+    //region BitShift
+    @ParameterizedTest(name = "{index} => using {0} and {1} with bit shift expecting {2}")
+    @MethodSource("bitTypes")
+    void BitshiftTypes(Type left, Type right, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.BitshiftContext node = mock(UCELParser.BitshiftContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
+        node.children = children;
+        Type actual = visitor.visitBitshift(node);
+
+        assertEquals(returnType, actual);
+    }
+    //endregion
+
     //region BitAnd
+    @ParameterizedTest(name = "{index} => using {0} and {1} with bit and expecting {2}")
+    @MethodSource("bitTypes")
+    void BitAndTypes(Type left, Type right, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.BitAndContext node = mock(UCELParser.BitAndContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
+        node.children = children;
+        Type actual = visitor.visitBitAnd(node);
+
+        assertEquals(returnType, actual);
+    }
     //endregion
 
     //region BitXor
+    @ParameterizedTest(name = "{index} => using {0} and {1} with bit xor expecting {2}")
+    @MethodSource("bitTypes")
+    void BitXorTypes(Type left, Type right, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.BitXorContext node = mock(UCELParser.BitXorContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
+        node.children = children;
+        Type actual = visitor.visitBitXor(node);
+
+        assertEquals(returnType, actual);
+    }
     //endregion
 
     //region BitOr
+    @ParameterizedTest(name = "{index} => using {0} and {1} with bit or expecting {2}")
+    @MethodSource("bitTypes")
+    void BitOrTypes(Type left, Type right, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.BitOrContext node = mock(UCELParser.BitOrContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
+        node.children = children;
+        Type actual = visitor.visitBitOr(node);
+
+        assertEquals(returnType, actual);
+    }
+    //endregion
+    private static Stream<Arguments> bitTypes() {
+        Type intType = new Type(Type.TypeEnum.intType);
+        Type errorType = new Type(Type.TypeEnum.errorType);
+        Type intArrayType = new Type(Type.TypeEnum.intType, 1);
+        Type invalidType = new Type(Type.TypeEnum.invalidType);
+
+        return Stream.of(
+                Arguments.arguments(intType, intType, intType),
+
+                Arguments.arguments(intType, invalidType, errorType),
+                Arguments.arguments(invalidType, intType, errorType),
+
+                Arguments.arguments(intType, intArrayType, errorType),
+                Arguments.arguments(intArrayType, intType, errorType)
+        );
+    }
     //endregion
 
     //region LogAnd
@@ -222,12 +301,14 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
+
+                // Bool to int, not allowed
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
 
                 // Bad types
                 Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
@@ -255,6 +336,8 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
 
                 // Bad types
                 Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
