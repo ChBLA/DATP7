@@ -111,7 +111,7 @@ unary      : '+' | '-' | '!' | 'not';
 
 literal : NAT | boolean | DOUBLE | DEADLOCK;
 
-boolean : 'true' | 'false';
+boolean : TRUE | FALSE;
 
 Whitespace : [ \t] + -> channel(HIDDEN)
            ;
@@ -156,4 +156,6 @@ DEADLOCK : 'deadlock';
 DOUBLE : NAT '.' [0-9]+;
 NAT : '0' | [1-9]([0-9])*;
 ID : [a-zA-Z_]([a-zA-Z0-9_])*;
+TRUE: 'true';
+FALSE: 'false';
 

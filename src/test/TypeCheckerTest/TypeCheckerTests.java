@@ -1,11 +1,22 @@
+import org.antlr.v4.runtime.CommonToken;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RuleContext;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.misc.Interval;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNodeImpl;
+import org.antlr.v4.tool.ast.TerminalAST;
+import org.antlr.v4.runtime.tree.ParseTreeVisitor;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mock;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -19,6 +30,46 @@ public class TypeCheckerTests  {
     //endregion
 
     //region LiteralExpr
+
+
+    @Test
+    void IntLiteralTypedCorrectly() {
+        Type literalType = new Type(Type.TypeEnum.intType);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.LiteralContext node = mock(UCELParser.LiteralContext.class);
+        when(node.NAT()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.NAT)));
+
+        Type actual = visitor.visitLiteral(node);
+        assertEquals(literalType, actual);
+    }
+
+    @Test
+    void DoubleLiteralTypedCorrectly() {
+        Type literalType = new Type(Type.TypeEnum.doubleType);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.LiteralContext node = mock(UCELParser.LiteralContext.class);
+        when(node.DOUBLE()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.NAT)));
+
+        Type actual = visitor.visitLiteral(node);
+        assertEquals(literalType, actual);
+    }
+
+    @Test
+    void BoolLiteralTypedCorrectly() {
+        Type literalType = new Type(Type.TypeEnum.boolType);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.BooleanContext boolCtx = mock(UCELParser.BooleanContext.class);
+
+        UCELParser.LiteralContext node = mock(UCELParser.LiteralContext.class);
+        when(node.boolean_()).thenReturn(boolCtx);
+
+        Type actual = visitor.visitLiteral(node);
+        assertEquals(literalType, actual);
+    }
+
     //endregion
 
     //region ArrayIndex
@@ -28,11 +79,26 @@ public class TypeCheckerTests  {
     //endregion
 
     //region Paren
+    @ParameterizedTest(name = "{index} => using type {0} for parenthesis")
+    @MethodSource("allTypes")
+    void ParenthesisExpectedType(Type inType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.ParenContext node = mock(UCELParser.ParenContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor));
+        node.children = children;
+
+        Type actual = visitor.visitParen(node);
+
+        assertEquals(inType, actual);
+    }
     //endregion
 
     //region Access
     //endregion
 
+    //region Increment / Decrement
     //region IncrementPost
     @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
     @MethodSource("expectedIncrementPostTypes")
@@ -100,8 +166,10 @@ public class TypeCheckerTests  {
         assertEquals(returnType, actual);
     }
     //endregion
-
+    //endregion
+    
     //region FuncCall
+
     //endregion
 
     //region UnaryExpr
@@ -126,9 +194,6 @@ public class TypeCheckerTests  {
         assertEquals(returnType, actual);
     }
 
-    //endregion
-
-    //region BitShift
     //endregion
 
     //region MinMax
@@ -168,13 +233,90 @@ public class TypeCheckerTests  {
     }
     //endregion
 
+    //region Bit Expressions
+    //region BitShift
+    @ParameterizedTest(name = "{index} => using {0} and {1} with bit shift expecting {2}")
+    @MethodSource("bitTypes")
+    void BitshiftTypes(Type left, Type right, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.BitshiftContext node = mock(UCELParser.BitshiftContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
+        node.children = children;
+        Type actual = visitor.visitBitshift(node);
+
+        assertEquals(returnType, actual);
+    }
+    //endregion
+
     //region BitAnd
+    @ParameterizedTest(name = "{index} => using {0} and {1} with bit and expecting {2}")
+    @MethodSource("bitTypes")
+    void BitAndTypes(Type left, Type right, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.BitAndContext node = mock(UCELParser.BitAndContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
+        node.children = children;
+        Type actual = visitor.visitBitAnd(node);
+
+        assertEquals(returnType, actual);
+    }
     //endregion
 
     //region BitXor
+    @ParameterizedTest(name = "{index} => using {0} and {1} with bit xor expecting {2}")
+    @MethodSource("bitTypes")
+    void BitXorTypes(Type left, Type right, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.BitXorContext node = mock(UCELParser.BitXorContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
+        node.children = children;
+        Type actual = visitor.visitBitXor(node);
+
+        assertEquals(returnType, actual);
+    }
     //endregion
 
     //region BitOr
+    @ParameterizedTest(name = "{index} => using {0} and {1} with bit or expecting {2}")
+    @MethodSource("bitTypes")
+    void BitOrTypes(Type left, Type right, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.BitOrContext node = mock(UCELParser.BitOrContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
+        node.children = children;
+        Type actual = visitor.visitBitOr(node);
+
+        assertEquals(returnType, actual);
+    }
+    //endregion
+    private static Stream<Arguments> bitTypes() {
+        Type intType = new Type(Type.TypeEnum.intType);
+        Type errorType = new Type(Type.TypeEnum.errorType);
+        Type intArrayType = new Type(Type.TypeEnum.intType, 1);
+        Type invalidType = new Type(Type.TypeEnum.invalidType);
+
+        return Stream.of(
+                Arguments.arguments(intType, intType, intType),
+
+                Arguments.arguments(intType, invalidType, errorType),
+                Arguments.arguments(invalidType, intType, errorType),
+
+                Arguments.arguments(intType, intArrayType, errorType),
+                Arguments.arguments(intArrayType, intType, errorType)
+        );
+    }
     //endregion
 
     //region LogAnd
@@ -268,9 +410,6 @@ public class TypeCheckerTests  {
     //endregion
 
     //region Helper methods
-    void FuncCallCorrectlyTyped(Type funcType, Type returnType) {
-        fail();
-    }
 
     private<T extends RuleContext> T mockForVisitorResult(final Class<T> nodeType, final Type visitResult, TypeCheckerVisitor visitor) {
         final T mock = mock(nodeType);
@@ -321,12 +460,14 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
+
+                // Bool to int, not allowed
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
 
                 // Bad types
                 Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
@@ -354,6 +495,8 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
 
                 // Bad types
                 Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
@@ -386,6 +529,23 @@ public class TypeCheckerTests  {
         );
     }
 
+    private static Stream<Arguments> allTypes() {
+
+        ArrayList<Arguments> args = new ArrayList<Arguments>();
+
+        // One of each
+        for(Type.TypeEnum t : Type.TypeEnum.values()) {
+            args.add(Arguments.arguments(new Type(t)));
+        }
+
+        // A couple of array types
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.boolType, 1)));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.intType, 2)));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.doubleType, 3)));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.structType, 4)));
+
+        return args.stream();
+    }
 
 
     //endregion
