@@ -26,18 +26,27 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type.TypeEnum leftEnum = leftType.getEvaluationType();
         Type.TypeEnum rightEnum = rightType.getEvaluationType();
 
-        if(leftEnum == Type.TypeEnum.errorType ||
-                rightEnum == Type.TypeEnum.errorType) {
+        // Error || Error -> Error
+        if(leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType)
             return new Type(Type.TypeEnum.errorType);
-        } else if((leftEnum == Type.TypeEnum.intType ||
-                leftEnum == Type.TypeEnum.doubleType) &&
-                rightEnum == Type.TypeEnum.intType) {
-            return new Type(leftEnum);
-        } else if(rightEnum == Type.TypeEnum.doubleType &&
-                (leftEnum == Type.TypeEnum.intType ||
-                        leftEnum == Type.TypeEnum.doubleType)) {
-            return new Type(rightEnum);
-        } else {
+
+        // Same types: int || int -> int
+        else if(leftEnum == Type.TypeEnum.intType && rightEnum == Type.TypeEnum.intType)
+            return new Type(Type.TypeEnum.intType);
+
+        // Same types: double || double -> double
+        else if(leftEnum == Type.TypeEnum.doubleType && rightEnum == Type.TypeEnum.doubleType)
+            return new Type(Type.TypeEnum.doubleType);
+
+        // Mixed types: double || int -> double
+        else if(leftEnum == Type.TypeEnum.doubleType && rightEnum == Type.TypeEnum.intType)
+            return new Type(Type.TypeEnum.doubleType);
+
+        // Mixed types: int || double -> double
+        else if(leftEnum == Type.TypeEnum.intType && rightEnum == Type.TypeEnum.doubleType)
+            return new Type(Type.TypeEnum.doubleType);
+
+        else {
             //TODO logger
             return new Type(Type.TypeEnum.errorType);
         }
