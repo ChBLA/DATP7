@@ -35,8 +35,8 @@ public class TypeCheckerTests  {
 
     //region IncrementPost
     @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
-    @MethodSource("validIncrementPostTypes")
-    void IncrementPostCorrectlyTyped(Type inType, Type returnType) {
+    @MethodSource("expectedIncrementPostTypes")
+    void IncrementPostExpectedOutType(Type inType, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.IncrementPostContext node = mock(UCELParser.IncrementPostContext.class);
@@ -52,11 +52,52 @@ public class TypeCheckerTests  {
 
     //region IncrementPre
     //endregion
+    @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
+    @MethodSource("expectedIncrementPostTypes")
+    void IncrementPreExpectedOutType(Type inType, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
+        final UCELParser.IncrementPreContext node = mock(UCELParser.IncrementPreContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor));
+        node.children = children;
+
+        Type actual = visitor.visitIncrementPre(node);
+
+        assertEquals(returnType, actual);
+    }
     //region DecrementPost
+    @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
+    @MethodSource("expectedIncrementPostTypes")
+    void DecrementPostExpectedOutType(Type inType, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.DecrementPostContext node = mock(UCELParser.DecrementPostContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor));
+        node.children = children;
+
+        Type actual = visitor.visitDecrementPost(node);
+
+        assertEquals(returnType, actual);
+    }
     //endregion
 
     //region DecrementPre
+    @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
+    @MethodSource("expectedIncrementPostTypes")
+    void DecrementPreExpectedOutType(Type inType, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.DecrementPreContext node = mock(UCELParser.DecrementPreContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor));
+        node.children = children;
+
+        Type actual = visitor.visitDecrementPre(node);
+
+        assertEquals(returnType, actual);
+    }
     //endregion
 
     //region FuncCall
@@ -188,16 +229,23 @@ public class TypeCheckerTests  {
         );
     }
 
-    private  static Stream<Arguments> validIncrementPostTypes() {
+    private  static Stream<Arguments> expectedIncrementPostTypes() {
+
         return Stream.of(
+                // Valid input
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType))
-        );
-    }
-    private  static Stream<Arguments> invalidIncrementPostTypes() {
-        return Stream.of(
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType))
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType)),
+
+                // Bad input
+                Arguments.arguments(new Type(Type.TypeEnum.stringType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.chanType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.scalarType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.structType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.voidType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
+
+                // array (Also bad)
+                Arguments.arguments(new Type(Type.TypeEnum.intType, 1), new Type(Type.TypeEnum.errorType))
         );
     }
 

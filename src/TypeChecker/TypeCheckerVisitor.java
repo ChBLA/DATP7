@@ -43,11 +43,40 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
     }
 
+    //region Increment/Decrement
     @Override
-    public Type visitIncrementPost (UCELParser.IncrementPostContext ctx) {
-        return new Type(visit(ctx.children.get(0)).getEvaluationType());
+    public Type visitIncrementPost(UCELParser.IncrementPostContext ctx) {
+        return visitIncrementDecrement(ctx);
     }
+    @Override
+    public Type visitIncrementPre(UCELParser.IncrementPreContext ctx) {
+        return visitIncrementDecrement(ctx);
+    }
+    @Override
+    public Type visitDecrementPost(UCELParser.DecrementPostContext ctx) {
+        return visitIncrementDecrement(ctx);
+    }
+    @Override
+    public Type visitDecrementPre(UCELParser.DecrementPreContext ctx) {
+        return visitIncrementDecrement(ctx);
+    }
+    private Type visitIncrementDecrement (UCELParser.ExpressionContext ctx) {
+        Type typeOfVariable = visit(ctx.children.get(0));
 
+        // Array
+        if(isArray(typeOfVariable))
+            return new Type(Type.TypeEnum.errorType);
+
+        // Base types
+        switch (typeOfVariable.getEvaluationType()) {
+            case intType:
+            case doubleType:
+                return typeOfVariable;
+            default:
+                return new Type(Type.TypeEnum.errorType);
+        }
+    }
+    //endregion
 
     //region Relational/Equality expressions
     @Override
