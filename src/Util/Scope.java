@@ -26,7 +26,7 @@ public class Scope {
         return parent;
     }
 
-    public TableReference find(String s, boolean isVarID) {
+    public TableReference find(String s, boolean isVarID) throws Exception {
         for (int i = 0; i < variables.size(); i++) {
             if (variables.get(i).isCalled(s)) {
                 return new TableReference(0, i);
@@ -38,18 +38,18 @@ public class Scope {
             result.incrementScopeLevel();
             return result;
         } else {
-            return null;
+            throw new Exception("Identifier Not Found In Scope");
         }
     }
 
     public Variable get(TableReference tableReference) throws Exception {
-        if (tableReference.relativeScope > 0) {
+        if (tableReference.getRelativeScope() > 0) {
             if (parent == null) {
                 throw new Exception("Scope has no parent");
             }
-            return parent.get(new TableReference(tableReference.relativeScope - 1, tableReference.variable));
+            return parent.get(tableReference.moveOutOfScope());
         } else {
-            return variables.get(tableReference.variable);
+            return variables.get(tableReference.getVariable());
         }
     }
 

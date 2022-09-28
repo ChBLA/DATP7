@@ -2,12 +2,33 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     private Scope currentScope;
 
     public ReferenceVisitor() {
-        currentScope = null;
+        this.currentScope = null;
     }
 
+    public ReferenceVisitor(Scope scope) { this.currentScope = scope; }
 
+    @Override
+    public Boolean visitRefExprWrapper(UCELParser.RefExprWrapperContext ctx) {
+        if(!(ctx.children.get(0) instanceof UCELParser.RefExpressionContext)) {
+            //TODO logger parser error
+            return false;
+        }
 
+        UCELParser.RefExpressionContext node = (UCELParser.RefExpressionContext) ctx.children.get(0);
+        String identifer = node.ID().getText();
 
+        TableReference tableReference = null;
+
+        try {
+            tableReference = currentScope.find(identifer, true);
+        } catch (Exception e) {
+            //TODO logger
+            return false;
+        }
+
+        node.reference = tableReference;
+        return true;
+    }
 
 
 
