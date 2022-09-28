@@ -26,6 +26,22 @@ import static org.mockito.Mockito.when;
 
 public class TypeCheckerTests  {
 
+    private static final Type intType = new Type(Type.TypeEnum.intType);
+    private static final Type doubleType = new Type(Type.TypeEnum.doubleType);
+    private static final Type boolType = new Type(Type.TypeEnum.boolType);
+    private static final Type charType = new Type(Type.TypeEnum.charType);
+    private static final Type stringType = new Type(Type.TypeEnum.stringType);
+    private static final Type errorType = new Type(Type.TypeEnum.errorType);
+    private static final Type intArrayType = new Type(Type.TypeEnum.intType, 1);
+    private static final Type doubleArrayType = new Type(Type.TypeEnum.doubleType, 1);
+    private static final Type boolArrayType = new Type(Type.TypeEnum.boolType, 1);
+    private static final Type charArrayType = new Type(Type.TypeEnum.charType, 1);
+    private static final Type invalidType = new Type(Type.TypeEnum.invalidType);
+    private static final Type voidType = new Type(Type.TypeEnum.voidType);
+    private static final Type chanType = new Type(Type.TypeEnum.chanType);
+    private static final Type structType = new Type(Type.TypeEnum.structType);
+    private static final Type scalarType = new Type(Type.TypeEnum.scalarType);
+
     //region IdExpr
     //endregion
 
@@ -34,31 +50,28 @@ public class TypeCheckerTests  {
 
     @Test
     void IntLiteralTypedCorrectly() {
-        Type literalType = new Type(Type.TypeEnum.intType);
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.LiteralContext node = mock(UCELParser.LiteralContext.class);
         when(node.NAT()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.NAT)));
 
         Type actual = visitor.visitLiteral(node);
-        assertEquals(literalType, actual);
+        assertEquals(intType, actual);
     }
 
     @Test
     void DoubleLiteralTypedCorrectly() {
-        Type literalType = new Type(Type.TypeEnum.doubleType);
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.LiteralContext node = mock(UCELParser.LiteralContext.class);
         when(node.DOUBLE()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.NAT)));
 
         Type actual = visitor.visitLiteral(node);
-        assertEquals(literalType, actual);
+        assertEquals(doubleType, actual);
     }
 
     @Test
     void BoolLiteralTypedCorrectly() {
-        Type literalType = new Type(Type.TypeEnum.boolType);
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.BooleanContext boolCtx = mock(UCELParser.BooleanContext.class);
@@ -67,7 +80,7 @@ public class TypeCheckerTests  {
         when(node.boolean_()).thenReturn(boolCtx);
 
         Type actual = visitor.visitLiteral(node);
-        assertEquals(literalType, actual);
+        assertEquals(boolType, actual);
     }
 
     //endregion
@@ -176,6 +189,46 @@ public class TypeCheckerTests  {
     //endregion
 
     //region MultDiv
+    @ParameterizedTest(name = "{index} => using type {0} and type {1} with mult/div")
+    @MethodSource("multDivTypes")
+    void MultDivTyped(Type left, Type right, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.MultDivContext node = mock(UCELParser.MultDivContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
+        node.children = children;
+        Type actual = visitor.visitMultDiv(node);
+
+        assertEquals(returnType, actual);
+    }
+
+    private static Stream<Arguments> multDivTypes() {
+        return Stream.of(
+                Arguments.arguments(intType, intType, intType),
+                Arguments.arguments(doubleType, doubleType, doubleType),
+
+                Arguments.arguments(intType, doubleType, doubleType),
+                Arguments.arguments(doubleType, intType, doubleType),
+
+                Arguments.arguments(intType, invalidType, errorType),
+                Arguments.arguments(invalidType, intType, errorType),
+                Arguments.arguments(doubleType, invalidType, errorType),
+                Arguments.arguments(invalidType, doubleType, errorType),
+
+                Arguments.arguments(intType, intArrayType, errorType),
+                Arguments.arguments(intArrayType, intType, errorType),
+                Arguments.arguments(doubleType, doubleArrayType, errorType),
+                Arguments.arguments(doubleArrayType, doubleType, errorType),
+
+                Arguments.arguments(intType, errorType, errorType),
+                Arguments.arguments(errorType, intType, errorType),
+                Arguments.arguments(doubleType, errorType, errorType),
+                Arguments.arguments(errorType, doubleType, errorType)
+        );
+    }
+
     //endregion
 
     //region AddSub
@@ -213,13 +266,6 @@ public class TypeCheckerTests  {
     }
 
     private static Stream<Arguments> minMaxTypes() {
-        Type intType = new Type(Type.TypeEnum.intType);
-        Type doubleType = new Type(Type.TypeEnum.doubleType);
-        Type errorType = new Type(Type.TypeEnum.errorType);
-        Type intArrayType = new Type(Type.TypeEnum.intType, 1);
-        Type doubleArrayType = new Type(Type.TypeEnum.doubleType, 1);
-        Type invalidType = new Type(Type.TypeEnum.invalidType);
-
         return Stream.of(
                 Arguments.arguments(intType, intType, intType),
                 Arguments.arguments(doubleType, doubleType, doubleType),
@@ -348,11 +394,6 @@ public class TypeCheckerTests  {
     }
     //endregion
     private static Stream<Arguments> bitTypes() {
-        Type intType = new Type(Type.TypeEnum.intType);
-        Type errorType = new Type(Type.TypeEnum.errorType);
-        Type intArrayType = new Type(Type.TypeEnum.intType, 1);
-        Type invalidType = new Type(Type.TypeEnum.invalidType);
-
         return Stream.of(
                 Arguments.arguments(intType, intType, intType),
 
@@ -425,32 +466,32 @@ public class TypeCheckerTests  {
         return Stream.of(
                 // Conditions:
                 // Conditions - Valid
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType)),
+                Arguments.arguments(boolType, intType, intType, intType),
 
                 // Conditions - Invalid
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.chanType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.voidType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(intType, intType, intType, errorType),
+                Arguments.arguments(doubleType, intType, intType, errorType),
+                Arguments.arguments(chanType, intType, intType, errorType),
+                Arguments.arguments(voidType, intType, intType, errorType),
+                Arguments.arguments(errorType, intType, intType, errorType),
 
                 // Unmatched Return Types
                 // Unmatched Return Types - Valid
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType)),
+                Arguments.arguments(boolType, intType, doubleType, doubleType),
+                Arguments.arguments(boolType, doubleType, intType, doubleType),
 
                 // Unmatched Return Types - Invalid
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.chanType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.chanType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.voidType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.voidType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(boolType, intType, boolType, errorType),
+                Arguments.arguments(boolType, boolType, intType, errorType),
+                Arguments.arguments(boolType, intType, chanType, errorType),
+                Arguments.arguments(boolType, chanType, intType, errorType),
+                Arguments.arguments(boolType, intType, voidType, errorType),
+                Arguments.arguments(boolType, voidType, intType, errorType),
 
                 // Error in input
-                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType))
+                Arguments.arguments(errorType, intType, intType, errorType),
+                Arguments.arguments(boolType, errorType, intType, errorType),
+                Arguments.arguments(boolType, intType, errorType, errorType)
         );
     }
 
@@ -471,15 +512,15 @@ public class TypeCheckerTests  {
     //region Arguments for parameterized tests
     private static Stream<Arguments> addSubTypes() {
         return Stream.of(
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType)),
-                Arguments.arguments(new Type(Type.TypeEnum.stringType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType, 1), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.stringType), new Type(Type.TypeEnum.stringType), new Type(Type.TypeEnum.errorType))
+                Arguments.arguments(intType, intType, intType),
+                Arguments.arguments(doubleType, intType, doubleType),
+                Arguments.arguments(intType, doubleType, doubleType),
+                Arguments.arguments(doubleType, doubleType, doubleType),
+                Arguments.arguments(stringType, intType, errorType),
+                Arguments.arguments(errorType, intType, errorType),
+                Arguments.arguments(intType, errorType, errorType),
+                Arguments.arguments(intType, intArrayType, errorType),
+                Arguments.arguments(stringType, stringType, errorType)
         );
     }
 
@@ -487,118 +528,118 @@ public class TypeCheckerTests  {
 
         return Stream.of(
                 // Valid input
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType)),
+                Arguments.arguments(intType, intType),
+                Arguments.arguments(doubleType, doubleType),
 
                 // Bad input
-                Arguments.arguments(new Type(Type.TypeEnum.stringType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.chanType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.scalarType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.structType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.voidType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(stringType, errorType),
+                Arguments.arguments(chanType, errorType),
+                Arguments.arguments(scalarType, errorType),
+                Arguments.arguments(structType, errorType),
+                Arguments.arguments(voidType, errorType),
+                Arguments.arguments(errorType, errorType),
 
                 // array (Also bad)
-                Arguments.arguments(new Type(Type.TypeEnum.intType, 1), new Type(Type.TypeEnum.errorType))
+                Arguments.arguments(intArrayType, errorType)
         );
     }
 
 
     private static Stream<Arguments> relTypes() {
         return Stream.of(
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
+                Arguments.arguments(boolType, boolType, boolType),
+                Arguments.arguments(intType, intType, boolType),
+                Arguments.arguments(doubleType, doubleType, boolType),
+                Arguments.arguments(charType, charType, boolType),
+                Arguments.arguments(doubleType, intType, boolType),
+                Arguments.arguments(intType, doubleType, boolType),
 
                 // Bool to int, not allowed
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(intType, boolType, errorType),
+                Arguments.arguments(boolType, intType, errorType),
+                Arguments.arguments(doubleType, boolType, errorType),
+                Arguments.arguments(boolType, doubleType, errorType),
 
                 // Bad types
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(boolType, invalidType, errorType),
+                Arguments.arguments(invalidType, boolType, errorType),
+                Arguments.arguments(intType, invalidType, errorType),
+                Arguments.arguments(invalidType, intType, errorType),
+                Arguments.arguments(doubleType, invalidType, errorType),
+                Arguments.arguments(invalidType, doubleType, errorType),
+                Arguments.arguments(charType, invalidType, errorType),
+                Arguments.arguments(invalidType, charType, errorType),
 
                 // Bad types (arrays)
-                Arguments.arguments(new Type(Type.TypeEnum.boolType,1), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType,1), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType,1), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.charType,1), new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType,1), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType,1), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType,1), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.charType,1), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(boolArrayType, boolType, errorType),
+                Arguments.arguments(intArrayType, intType, errorType),
+                Arguments.arguments(doubleArrayType, doubleType, errorType),
+                Arguments.arguments(charArrayType, charType, errorType),
+                Arguments.arguments(boolType, boolArrayType, errorType),
+                Arguments.arguments(intType, intArrayType, errorType),
+                Arguments.arguments(doubleType, doubleArrayType, errorType),
+                Arguments.arguments(charType, charArrayType, errorType),
 
                 // Bad types (errors)
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.errorType))
+                Arguments.arguments(boolType, errorType, errorType),
+                Arguments.arguments(errorType, boolType, errorType),
+                Arguments.arguments(intType, errorType, errorType),
+                Arguments.arguments(errorType, intType, errorType),
+                Arguments.arguments(doubleType, errorType, errorType),
+                Arguments.arguments(errorType, doubleType, errorType),
+                Arguments.arguments(charType, errorType, errorType),
+                Arguments.arguments(errorType, charType, errorType)
         );
     }
     private static Stream<Arguments> eqTypes() {
         return Stream.of(
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
+                Arguments.arguments(boolType, boolType, boolType),
+                Arguments.arguments(intType, intType, boolType),
+                Arguments.arguments(doubleType, doubleType, boolType),
+                Arguments.arguments(doubleType, intType, boolType),
+                Arguments.arguments(intType, doubleType, boolType),
 
                 // Bad types
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(boolType, invalidType, errorType),
+                Arguments.arguments(invalidType, boolType, errorType),
+                Arguments.arguments(doubleType, invalidType, errorType),
+                Arguments.arguments(invalidType, doubleType, errorType),
+                Arguments.arguments(intType, invalidType, errorType),
+                Arguments.arguments(invalidType, intType, errorType),
 
                 //Bad types (arrays)
-                Arguments.arguments(new Type(Type.TypeEnum.boolType,1), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType,1), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType,1), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType,1), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType,1), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType,1), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(boolArrayType, boolType, errorType),
+                Arguments.arguments(boolType, boolArrayType, errorType),
+                Arguments.arguments(doubleArrayType, doubleType, errorType),
+                Arguments.arguments(doubleType, doubleArrayType, errorType),
+                Arguments.arguments(intArrayType, intType, errorType),
+                Arguments.arguments(intType, intArrayType, errorType),
 
                 // Bad types (errors)
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType))
+                Arguments.arguments(boolType, errorType, errorType),
+                Arguments.arguments(errorType, boolType, errorType),
+                Arguments.arguments(doubleType, errorType, errorType),
+                Arguments.arguments(errorType, doubleType, errorType),
+                Arguments.arguments(intType, errorType, errorType),
+                Arguments.arguments(errorType, intType, errorType),
+                Arguments.arguments(errorType, errorType, errorType)
         );
     }
 
     private static Stream<Arguments> logTypes() { //TODO: consider letting char comparable with non-char
         return Stream.of(
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType, 1), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType, 1), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType, 1), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.boolType, 1), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(boolType, boolType, boolType),
+                Arguments.arguments(boolType, invalidType, errorType),
+                Arguments.arguments(invalidType, boolType, errorType),
+                Arguments.arguments(invalidType, invalidType, errorType),
+                Arguments.arguments(boolArrayType, boolType, errorType),
+                Arguments.arguments(boolType, boolArrayType, errorType),
+                Arguments.arguments(boolArrayType, invalidType, errorType),
+                Arguments.arguments(invalidType, boolArrayType, errorType),
 
-                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType))
+                Arguments.arguments(errorType, boolType, errorType),
+                Arguments.arguments(boolType, errorType, errorType),
+                Arguments.arguments(errorType, errorType, errorType)
         );
     }
 
@@ -612,10 +653,10 @@ public class TypeCheckerTests  {
         }
 
         // A couple of array types
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.boolType, 1)));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.intType, 2)));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.doubleType, 3)));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.structType, 4)));
+        args.add(Arguments.arguments(boolType, 1));
+        args.add(Arguments.arguments(intType, 2));
+        args.add(Arguments.arguments(doubleType, 3));
+        args.add(Arguments.arguments(structType, 4));
 
         return args.stream();
     }

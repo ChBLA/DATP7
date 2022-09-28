@@ -18,6 +18,14 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         return intDoubleBinaryOp(leftType, rightType);
     }
 
+    @Override
+    public Type visitMultDiv(UCELParser.MultDivContext ctx) {
+        Type leftType = visit(ctx.children.get(0));
+        Type rightType = visit(ctx.children.get(1));
+
+        return intDoubleBinaryOp(leftType, rightType);
+    }
+
     private boolean isArray(Type t) {
         return t.getArrayDimensions() > 0;
     }
