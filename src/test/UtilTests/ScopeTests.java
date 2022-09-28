@@ -10,8 +10,11 @@ public class ScopeTests {
 
     //region Scope.find()
     @Test
-    void ValidTableReferenceFromParentSuccessfulFind() {
-        fail();
+    void FindSuccesfulSameScope() {
+
+
+
+
     }
 
     @Test
