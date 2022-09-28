@@ -1,22 +1,13 @@
 import org.antlr.v4.runtime.CommonToken;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RuleContext;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.misc.Interval;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
-import org.antlr.v4.tool.ast.TerminalAST;
-import org.antlr.v4.runtime.tree.ParseTreeVisitor;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mock;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -173,6 +164,83 @@ public class TypeCheckerTests  {
     //endregion
 
     //region UnaryExpr
+    @ParameterizedTest(name = "{index} => using type {0} for unary +")
+    @MethodSource("unaryPlusMinusNumberTypes")
+    void UnaryPlusExpressionTypedCorrectly(Type expectedType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.UnaryExprContext node = mock(UCELParser.UnaryExprContext.class);
+        UCELParser.UnaryContext mockedUnary = mock(UCELParser.UnaryContext.class);
+        UCELParser.ExpressionContext mockedExpression = mock(UCELParser.ExpressionContext.class);
+
+        when(node.expression()).thenReturn(mockedExpression);
+        when(visitor.visit(mockedExpression)).thenReturn(expectedType);
+        when(mockedUnary.PLUS()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.PLUS)));
+        when(node.unary()).thenReturn(mockedUnary);
+
+        Type actualType = visitor.visitUnaryExpr(node);
+
+        assertEquals(expectedType, actualType);
+    }
+
+    @ParameterizedTest(name = "{index} => using type {0} for unary -")
+    @MethodSource("unaryPlusMinusNumberTypes")
+    void UnaryMinusExpressionTypedCorrectly(Type expectedType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.UnaryExprContext node = mock(UCELParser.UnaryExprContext.class);
+        UCELParser.UnaryContext mockedUnary = mock(UCELParser.UnaryContext.class);
+        UCELParser.ExpressionContext mockedExpression = mock(UCELParser.ExpressionContext.class);
+
+        when(node.expression()).thenReturn(mockedExpression);
+        when(visitor.visit(mockedExpression)).thenReturn(expectedType);
+        when(mockedUnary.MINUS()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.MINUS)));
+        when(node.unary()).thenReturn(mockedUnary);
+
+        Type actualType = visitor.visitUnaryExpr(node);
+
+        assertEquals(expectedType, actualType);
+    }
+
+    @Test
+    void UnaryNegBoolExpressionTypedCorrectly() {
+        Type expectedType = new Type(Type.TypeEnum.boolType);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.UnaryExprContext node = mock(UCELParser.UnaryExprContext.class);
+        UCELParser.UnaryContext mockedUnary = mock(UCELParser.UnaryContext.class);
+        UCELParser.ExpressionContext mockedExpression = mock(UCELParser.ExpressionContext.class);
+
+        when(node.expression()).thenReturn(mockedExpression);
+        when(visitor.visit(mockedExpression)).thenReturn(expectedType);
+        when(mockedUnary.NEG()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.NEG)));
+        when(node.unary()).thenReturn(mockedUnary);
+
+        Type actualType = visitor.visitUnaryExpr(node);
+
+        assertEquals(expectedType, actualType);
+    }
+
+    @Test
+    void UnaryNotBoolExpressionTypedCorrectly() {
+        Type expectedType = new Type(Type.TypeEnum.boolType);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.UnaryExprContext node = mock(UCELParser.UnaryExprContext.class);
+        UCELParser.UnaryContext mockedUnary = mock(UCELParser.UnaryContext.class);
+        UCELParser.ExpressionContext mockedExpression = mock(UCELParser.ExpressionContext.class);
+
+        when(node.expression()).thenReturn(mockedExpression);
+        when(visitor.visit(mockedExpression)).thenReturn(expectedType);
+        when(mockedUnary.NOT()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.NOT)));
+        when(node.unary()).thenReturn(mockedUnary);
+
+        Type actualType = visitor.visitUnaryExpr(node);
+
+        assertEquals(expectedType, actualType);
+    }
+
+
     //endregion
 
     //region MultDiv
@@ -419,6 +487,16 @@ public class TypeCheckerTests  {
     //endregion
 
     //region Arguments for parameterized tests
+
+    private static Stream<Arguments> unaryPlusMinusNumberTypes() {
+        Type intType = new Type(Type.TypeEnum.intType);
+        Type doubleType = new Type(Type.TypeEnum.doubleType);
+        return Stream.of(
+                Arguments.arguments(intType),
+                Arguments.arguments(doubleType)
+        );
+    }
+
     private static Stream<Arguments> addSubTypes() {
         return Stream.of(
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType)),

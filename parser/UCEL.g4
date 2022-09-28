@@ -107,7 +107,7 @@ arguments  : (expression ( COMMA expression )*)?;
 
 assign     : '=' | ':=' | '+=' | '-=' | '*=' | '/=' | '%='
            | '|=' | '&=' | '^=' | '<<=' | '>>=';
-unary      : '+' | '-' | '!' | 'not';
+unary      : PLUS | MINUS | NEG | NOT;
 
 literal : NAT | boolean | DOUBLE | DEADLOCK;
 
@@ -138,6 +138,10 @@ RIGHTCURLYBRACE : '}';
 COLON : ':';
 COMMA : ',';
 MARK : '\'';
+PLUS : '+';
+MINUS : '-';
+NEG : '!';
+NOT : 'not';
 
 COMP : 'comp';
 DECLARATIONS : 'declarations';
