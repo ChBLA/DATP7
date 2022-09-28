@@ -110,6 +110,20 @@ public class TypeCheckerTests  {
     //endregion
 
     //region EqExpr
+    @ParameterizedTest(name = "{index} => using {0} and {1} with equality operator expecting {2}")
+    @MethodSource("eqTypes")
+    void EqExprTypes(Type left, Type right, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.EqExprContext node = mock(UCELParser.EqExprContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
+        node.children = children;
+        Type actual = visitor.visitEqExpr(node);
+
+        assertEquals(returnType, actual);
+    }
     //endregion
 
     //region BitAnd
@@ -214,6 +228,8 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
+
+                // Bad types
                 Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
@@ -222,6 +238,8 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.errorType)),
+
+                // Bad types (arrays)
                 Arguments.arguments(new Type(Type.TypeEnum.boolType,1), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.intType,1), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType,1), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
@@ -232,7 +250,29 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.charType,1), new Type(Type.TypeEnum.errorType))
         );
     }
+    private static Stream<Arguments> eqTypes() {
+        return Stream.of(
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType)),
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
 
+                // Bad types
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+
+                //Bad types (arrays)
+                Arguments.arguments(new Type(Type.TypeEnum.boolType,1), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType,1), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType,1), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType,1), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.intType,1), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType,1), new Type(Type.TypeEnum.errorType))
+        );
+    }
 
     private static Stream<Arguments> logTypes() { //TODO: consider letting char comparable with non-char
         return Stream.of(

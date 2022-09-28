@@ -70,6 +70,26 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         return new Type(Type.TypeEnum.boolType);
     }
 
+    @Override
+    public Type visitEqExpr(UCELParser.EqExprContext ctx) {
+        Type leftNode = visit(ctx.children.get(0));
+        Type rightNode = visit(ctx.children.get(1));
+
+        Type.TypeEnum leftEnum = leftNode.getEvaluationType();
+        Type.TypeEnum rightEnum = rightNode.getEvaluationType();
+
+        List<Type.TypeEnum> comparableTypes = new ArrayList<>() {{ add(Type.TypeEnum.intType); add(Type.TypeEnum.boolType); add(Type.TypeEnum.doubleType);}};
+
+        if (!(comparableTypes.contains(leftEnum) && leftEnum == rightEnum)) {
+            //TODO: Log: Non-comparable types or different types for left and right
+            return new Type(Type.TypeEnum.errorType); 
+        } else if (isArray(leftNode) || isArray(rightNode)) {
+            //TODO: Log: Either is an array
+            return new Type(Type.TypeEnum.errorType);
+        }
+
+        return new Type(Type.TypeEnum.boolType);
+    }
     //endregion
 
     //region Logical expressions
