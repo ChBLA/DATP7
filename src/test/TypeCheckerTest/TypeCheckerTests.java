@@ -35,8 +35,8 @@ public class TypeCheckerTests  {
 
     //region IncrementPost
     @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
-    @MethodSource("validIncrementPostTypes")
-    void IncrementPostCorrectlyTyped(Type inType, Type returnType) {
+    @MethodSource("expectedIncrementPostTypes")
+    void IncrementPostExpectedOutType(Type inType, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.IncrementPostContext node = mock(UCELParser.IncrementPostContext.class);
@@ -51,12 +51,54 @@ public class TypeCheckerTests  {
     //endregion
 
     //region IncrementPre
+    @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
+    @MethodSource("expectedIncrementPostTypes")
+    void IncrementPreExpectedOutType(Type inType, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.IncrementPreContext node = mock(UCELParser.IncrementPreContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor));
+        node.children = children;
+
+        Type actual = visitor.visitIncrementPre(node);
+
+        assertEquals(returnType, actual);
+    }
     //endregion
 
     //region DecrementPost
+    @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
+    @MethodSource("expectedIncrementPostTypes")
+    void DecrementPostExpectedOutType(Type inType, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.DecrementPostContext node = mock(UCELParser.DecrementPostContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor));
+        node.children = children;
+
+        Type actual = visitor.visitDecrementPost(node);
+
+        assertEquals(returnType, actual);
+    }
     //endregion
 
     //region DecrementPre
+    @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
+    @MethodSource("expectedIncrementPostTypes")
+    void DecrementPreExpectedOutType(Type inType, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.DecrementPreContext node = mock(UCELParser.DecrementPreContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor));
+        node.children = children;
+
+        Type actual = visitor.visitDecrementPre(node);
+
+        assertEquals(returnType, actual);
+    }
     //endregion
 
     //region FuncCall
@@ -110,6 +152,20 @@ public class TypeCheckerTests  {
     //endregion
 
     //region EqExpr
+    @ParameterizedTest(name = "{index} => using {0} and {1} with equality operator expecting {2}")
+    @MethodSource("eqTypes")
+    void EqExprTypes(Type left, Type right, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.EqExprContext node = mock(UCELParser.EqExprContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
+        node.children = children;
+        Type actual = visitor.visitEqExpr(node);
+
+        assertEquals(returnType, actual);
+    }
     //endregion
 
     //region BitAnd
@@ -156,6 +212,56 @@ public class TypeCheckerTests  {
     //endregion
 
     //region Conditional
+    @ParameterizedTest(name = "{index} => using {0} ? {1} : {2}; expecting {3}")
+    @MethodSource("expectedConditionalExpressionTypes")
+    void ConditionalExpressionTypes(Type conditionType, Type leftReturnType, Type rightReturnType, Type expectedReturnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.ConditionalContext node = mock(UCELParser.ConditionalContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, conditionType, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, leftReturnType, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, rightReturnType, visitor));
+        node.children = children;
+        Type actual = visitor.visitConditional(node);
+
+        assertEquals(expectedReturnType, actual);
+    }
+
+    private  static Stream<Arguments> expectedConditionalExpressionTypes() {
+
+        return Stream.of(
+                // Conditions:
+                // Conditions - Valid
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType)),
+
+                // Conditions - Invalid
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.chanType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.voidType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+
+                // Unmatched Return Types
+                // Unmatched Return Types - Valid
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType)),
+
+                // Unmatched Return Types - Invalid
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.chanType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.chanType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.voidType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.voidType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+
+                // Error in input
+                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType))
+        );
+    }
+
     //endregion
 
     //region VerificationExpr
@@ -188,16 +294,23 @@ public class TypeCheckerTests  {
         );
     }
 
-    private  static Stream<Arguments> validIncrementPostTypes() {
+    private  static Stream<Arguments> expectedIncrementPostTypes() {
+
         return Stream.of(
+                // Valid input
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType))
-        );
-    }
-    private  static Stream<Arguments> invalidIncrementPostTypes() {
-        return Stream.of(
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType)),
-                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType))
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType)),
+
+                // Bad input
+                Arguments.arguments(new Type(Type.TypeEnum.stringType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.chanType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.scalarType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.structType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.voidType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
+
+                // array (Also bad)
+                Arguments.arguments(new Type(Type.TypeEnum.intType, 1), new Type(Type.TypeEnum.errorType))
         );
     }
 
@@ -214,6 +327,8 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
+
+                // Bad types
                 Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
@@ -222,6 +337,8 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.errorType)),
+
+                // Bad types (arrays)
                 Arguments.arguments(new Type(Type.TypeEnum.boolType,1), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.intType,1), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType,1), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
@@ -232,7 +349,29 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.charType,1), new Type(Type.TypeEnum.errorType))
         );
     }
+    private static Stream<Arguments> eqTypes() {
+        return Stream.of(
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType)),
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.boolType)),
 
+                // Bad types
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+
+                //Bad types (arrays)
+                Arguments.arguments(new Type(Type.TypeEnum.boolType,1), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType,1), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType,1), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType,1), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.intType,1), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType,1), new Type(Type.TypeEnum.errorType))
+        );
+    }
 
     private static Stream<Arguments> logTypes() { //TODO: consider letting char comparable with non-char
         return Stream.of(
