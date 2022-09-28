@@ -6,6 +6,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -28,6 +29,20 @@ public class TypeCheckerTests  {
     //endregion
 
     //region Paren
+    @ParameterizedTest(name = "{index} => using type {0} for parenthesis")
+    @MethodSource("allTypes")
+    void ParenthesisExpectedType(Type inType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.ParenContext node = mock(UCELParser.ParenContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor));
+        node.children = children;
+
+        Type actual = visitor.visitParen(node);
+
+        assertEquals(inType, actual);
+    }
     //endregion
 
     //region Access
@@ -386,6 +401,23 @@ public class TypeCheckerTests  {
         );
     }
 
+    private static Stream<Arguments> allTypes() {
+
+        ArrayList<Arguments> args = new ArrayList<Arguments>();
+
+        // One of each
+        for(Type.TypeEnum t : Type.TypeEnum.values()) {
+            args.add(Arguments.arguments(new Type(t)));
+        }
+
+        // A couple of array types
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.boolType, 1)));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.intType, 2)));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.doubleType, 3)));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.structType, 4)));
+
+        return args.stream();
+    }
 
 
     //endregion
