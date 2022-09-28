@@ -48,6 +48,7 @@ public class TypeCheckerTests  {
     //region Access
     //endregion
 
+    //region Increment / Decrement
     //region IncrementPost
     @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
     @MethodSource("expectedIncrementPostTypes")
@@ -115,7 +116,8 @@ public class TypeCheckerTests  {
         assertEquals(returnType, actual);
     }
     //endregion
-
+    //endregion
+    
     //region FuncCall
     //endregion
 
