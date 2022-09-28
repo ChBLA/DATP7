@@ -169,19 +169,6 @@ public class TypeCheckerTests  {
     //endregion
     
     //region FuncCall
-    void FuncCallParamsCorrectType(Type param1, Type param2) {
-        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
-
-        final UCELParser.FuncCallContext node = mock(UCELParser.FuncCallContext.class);
-        final UCELParser.ArgumentsContext argumentsContext = mock(UCELParser.ArgumentsContext.class);
-        List<ParseTree> arguments = new ArrayList<>();
-        arguments.add(mockForVisitorResult(UCELParser.ExpressionContext.class, param1, visitor));
-        arguments.add(mockForVisitorResult(UCELParser.ExpressionContext.class, param2, visitor));
-        argumentsContext.children = arguments;
-        when(node.arguments()).thenReturn(argumentsContext);
-
-//        visitor.visitFuncCall(node);
-    }
 
     //endregion
 
