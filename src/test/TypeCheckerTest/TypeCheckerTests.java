@@ -265,6 +265,52 @@ public class TypeCheckerTests  {
     //endregion
 
     //region MinMax
+    @ParameterizedTest(name = "{index} => using {0} and {1} with min/max operator expecting {2}")
+    @MethodSource("minMaxTypes")
+    void MinMaxTypes(Type left, Type right, Type returnType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.MinMaxContext node = mock(UCELParser.MinMaxContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
+        node.children = children;
+        Type actual = visitor.visitMinMax(node);
+
+        assertEquals(returnType, actual);
+    }
+
+    private static Stream<Arguments> minMaxTypes() {
+        Type intType = new Type(Type.TypeEnum.intType);
+        Type doubleType = new Type(Type.TypeEnum.doubleType);
+        Type errorType = new Type(Type.TypeEnum.errorType);
+        Type intArrayType = new Type(Type.TypeEnum.intType, 1);
+        Type doubleArrayType = new Type(Type.TypeEnum.doubleType, 1);
+        Type invalidType = new Type(Type.TypeEnum.invalidType);
+
+        return Stream.of(
+                Arguments.arguments(intType, intType, intType),
+                Arguments.arguments(doubleType, doubleType, doubleType),
+
+                Arguments.arguments(intType, doubleType, doubleType),
+                Arguments.arguments(doubleType, intType, doubleType),
+
+                Arguments.arguments(intType, invalidType, errorType),
+                Arguments.arguments(invalidType, intType, errorType),
+                Arguments.arguments(doubleType, invalidType, errorType),
+                Arguments.arguments(invalidType, doubleType, errorType),
+
+                Arguments.arguments(intType, intArrayType, errorType),
+                Arguments.arguments(intArrayType, intType, errorType),
+                Arguments.arguments(doubleType, doubleArrayType, errorType),
+                Arguments.arguments(doubleArrayType, doubleType, errorType),
+
+                Arguments.arguments(intType, errorType, errorType),
+                Arguments.arguments(errorType, intType, errorType),
+                Arguments.arguments(doubleType, errorType, errorType),
+                Arguments.arguments(errorType, doubleType, errorType)
+        );
+    }
     //endregion
 
     //region RelExpr
@@ -382,7 +428,11 @@ public class TypeCheckerTests  {
                 Arguments.arguments(invalidType, intType, errorType),
 
                 Arguments.arguments(intType, intArrayType, errorType),
-                Arguments.arguments(intArrayType, intType, errorType)
+                Arguments.arguments(intArrayType, intType, errorType),
+
+                Arguments.arguments(intType, errorType, errorType),
+                Arguments.arguments(errorType, intType, errorType),
+                Arguments.arguments(errorType, errorType, errorType)
         );
     }
     //endregion
@@ -565,7 +615,17 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType,1), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType,1), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType,1), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.charType,1), new Type(Type.TypeEnum.errorType))
+                Arguments.arguments(new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.charType,1), new Type(Type.TypeEnum.errorType)),
+
+                // Bad types (errors)
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.charType), new Type(Type.TypeEnum.errorType))
         );
     }
     private static Stream<Arguments> eqTypes() {
@@ -590,7 +650,16 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType,1), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.doubleType,1), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.intType,1), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType,1), new Type(Type.TypeEnum.errorType))
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.intType,1), new Type(Type.TypeEnum.errorType)),
+
+                // Bad types (errors)
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType))
         );
     }
 
@@ -603,7 +672,11 @@ public class TypeCheckerTests  {
                 Arguments.arguments(new Type(Type.TypeEnum.boolType, 1), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.boolType, 1), new Type(Type.TypeEnum.errorType)),
                 Arguments.arguments(new Type(Type.TypeEnum.boolType, 1), new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.errorType)),
-                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.boolType, 1), new Type(Type.TypeEnum.errorType))
+                Arguments.arguments(new Type(Type.TypeEnum.invalidType), new Type(Type.TypeEnum.boolType, 1), new Type(Type.TypeEnum.errorType)),
+
+                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType)),
+                Arguments.arguments(new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.errorType))
         );
     }
 
