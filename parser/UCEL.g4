@@ -73,7 +73,9 @@ chanPriority : 'chan' 'priority' (chanExpr | 'default') ((COMMA | '<') (chanExpr
 chanExpr : ID
            | chanExpr LEFTBRACKET expression RIGHTBRACKET;
 
-expression  : ID                                                #IdExpr
+refExpression locals [TableReference reference]: ID | ID LEFTPAR arguments RIGHTPAR;
+
+expression  :  refExpression                                    #RefExprWrapper
             |  literal                                          #LiteralExpr
             |  expression LEFTBRACKET expression RIGHTBRACKET   #ArrayIndex
             |  expression MARK                                  #MarkExpr
@@ -83,7 +85,6 @@ expression  : ID                                                #IdExpr
             | '++' expression                                   #IncrementPre
             |  expression '--'                                  #DecrementPost
             | '--' expression                                   #DecrementPre
-            |  expression LEFTPAR arguments RIGHTPAR            #FuncCall
             |  <assoc=right> unary expression                   #UnaryExpr
             |  expression op=('*' | '/' | '%') expression       #MultDiv
             |  expression op=('+' | '-') expression             #AddSub
