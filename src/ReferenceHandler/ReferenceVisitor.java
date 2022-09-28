@@ -24,6 +24,24 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         return true;
     }
 
+    @Override
+    public Boolean visitFuncCall(UCELParser.FuncCallContext ctx) {
+        String identifier = ctx.ID().getText();
+
+        TableReference tableReference = null;
+
+        try {
+            tableReference = currentScope.find(identifier, true);
+        } catch (Exception e) {
+            //TODO logger
+            return false;
+        }
+
+        ctx.reference = tableReference;
+        visit(ctx.arguments());
+        return true;
+    }
+
 
 
 
