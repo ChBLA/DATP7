@@ -26,23 +26,40 @@ public class RefExpressionTests {
         variables.add(new Variable(incorrectVariableName));
         ReferenceVisitor visitor = new ReferenceVisitor(new Scope(null, false, variables));
 
-        UCELParser.RefExprWrapperContext wrapper = new UCELParser.RefExprWrapperContext(new UCELParser.ExpressionContext());
-        UCELParser.RefExpressionContext refExpression = mock(UCELParser.RefExpressionContext.class);
+        UCELParser.IdExprContext idExprContext = mock(UCELParser.IdExprContext.class);
         TerminalNode idNode = mock(TerminalNode.class);
         when(idNode.getText()).thenReturn(correctVariableName);
-        when(refExpression.ID()).thenReturn(idNode);
-        ArrayList<ParseTree> children = new ArrayList<>();
-        children.add(refExpression);
-        wrapper.children = children;
+        when(idExprContext.ID()).thenReturn(idNode);
 
-        visitor.visitRefExprWrapper(wrapper);
+        visitor.visitIdExpr(idExprContext);
 
-        assertEquals(refExpression.reference, new TableReference(0,2));
+        assertEquals(idExprContext.reference, new TableReference(0,2));
     }
 
     @Test
     void IDExprSuccessfulLookupInDistantScope() {
-        fail();
+        String correctVariableName = "cvn";
+        String incorrectVariableName = "icvn";
+
+        ArrayList<Variable> lvl1Variables = new ArrayList<>();
+        lvl1Variables.add(new Variable(incorrectVariableName));
+        lvl1Variables.add(new Variable(incorrectVariableName));
+        lvl1Variables.add(new Variable(correctVariableName));
+        lvl1Variables.add(new Variable(incorrectVariableName));
+        ArrayList<Variable> lvl0Variables = new ArrayList<>();
+
+        Scope lvl1Scope = new Scope(null, false, lvl1Variables);
+        Scope lvl0Scope = new Scope(lvl1Scope, false, lvl0Variables);
+        ReferenceVisitor visitor = new ReferenceVisitor(lvl0Scope);
+
+        UCELParser.IdExprContext idExprContext = mock(UCELParser.IdExprContext.class);
+        TerminalNode idNode = mock(TerminalNode.class);
+        when(idNode.getText()).thenReturn(correctVariableName);
+        when(idExprContext.ID()).thenReturn(idNode);
+
+        visitor.visitIdExpr(idExprContext);
+
+        assertEquals(idExprContext.reference, new TableReference(1,2));
     }
 
     @Test
@@ -56,16 +73,12 @@ public class RefExpressionTests {
         variables.add(new Variable(incorrectVariableName));
         ReferenceVisitor visitor = new ReferenceVisitor(new Scope(null, false, variables));
 
-        UCELParser.RefExprWrapperContext wrapper = new UCELParser.RefExprWrapperContext(new UCELParser.ExpressionContext());
-        UCELParser.RefExpressionContext refExpression = mock(UCELParser.RefExpressionContext.class);
+        UCELParser.IdExprContext idExprContext = mock(UCELParser.IdExprContext.class);
         TerminalNode idNode = mock(TerminalNode.class);
         when(idNode.getText()).thenReturn(correctVariableName);
-        when(refExpression.ID()).thenReturn(idNode);
-        ArrayList<ParseTree> children = new ArrayList<>();
-        children.add(refExpression);
-        wrapper.children = children;
+        when(idExprContext.ID()).thenReturn(idNode);
 
-        boolean actualReturnValue = visitor.visitRefExprWrapper(wrapper);
+        boolean actualReturnValue = visitor.visitIdExpr(idExprContext);
 
         assertFalse(actualReturnValue);
     }
