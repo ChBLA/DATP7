@@ -1,6 +1,7 @@
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,6 +42,25 @@ public class TypeCheckerTests  {
         when(node.ID()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.ID)));
         Type actual = visitor.visitIdExpr(node);
         assertEquals(errorType, actual);
+    }
+
+
+    void FoundIntTypeIdentifierInScope() {
+        var scope = new Scope(null, false);
+
+        var variableName = "foo";
+        var variable = new Variable(variableName);
+        variable.setType(intType);
+        scope.add(new Variable(variableName));
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+        UCELParser.IdExprContext node = mock(UCELParser.IdExprContext.class);
+        TerminalNode idNode = mock(TerminalNode.class);
+        when(idNode.getText()).thenReturn(variableName);
+        when(node.ID()).thenReturn(idNode);
+
+        when(node.ID()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.ID)));
+        Type actual = visitor.visitIdExpr(node);
+        assertEquals(intType, actual);
     }
     //endregion
 

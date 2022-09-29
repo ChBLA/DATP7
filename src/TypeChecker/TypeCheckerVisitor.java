@@ -4,12 +4,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
+    private Scope currentScope;
+    public TypeCheckerVisitor() {
+        this.currentScope = new Scope(null, false);
+    }
 
+    public TypeCheckerVisitor(Scope scope) {
+        this.currentScope = scope;
+    }
 
     @Override
     public Type visitIdExpr(UCELParser.IdExprContext ctx) {
-        /* Missing shit aka. scope.*/
-        throw new RuntimeException("Not implemented yet");
+        try {
+            var ref = currentScope.find(ctx.ID().toString(), true);
+            var variable = currentScope.get(ref);
+            return variable.getType();
+        } catch (Exception e) {
+            return new Type(Type.TypeEnum.errorType);
+        }
     }
 
 
