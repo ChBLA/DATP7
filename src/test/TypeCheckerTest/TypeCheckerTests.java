@@ -305,9 +305,28 @@ public class TypeCheckerTests  {
         assertEquals(expectedType, actualType);
     }
 
+    @ParameterizedTest(name = "{index} => using type {0} for unary Not")
+    @MethodSource("unaryNotNegTypes")
+    void UnaryNotExpressionTypedCorrectly(Type expectedType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.UnaryExprContext node = mock(UCELParser.UnaryExprContext.class);
+        UCELParser.UnaryContext mockedUnary = mock(UCELParser.UnaryContext.class);
+        UCELParser.ExpressionContext mockedExpression = mock(UCELParser.ExpressionContext.class);
+
+        when(node.expression()).thenReturn(mockedExpression);
+        when(visitor.visit(mockedExpression)).thenReturn(expectedType);
+        when(mockedUnary.NOT()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.NOT)));
+        when(node.unary()).thenReturn(mockedUnary);
+
+        Type actualType = visitor.visitUnaryExpr(node);
+
+        assertEquals(expectedType, actualType);
+    }
+
     @ParameterizedTest(name = "{index} => using wrong type {0} for unary Not")
     @MethodSource("unaryPlusMinusNumberTypes")
-    void UnaryNotExpressionTypedCorrectly(Type wrongType) {
+    void UnaryNotWrongTypesReturnsErrorType(Type wrongType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.UnaryExprContext node = mock(UCELParser.UnaryExprContext.class);
