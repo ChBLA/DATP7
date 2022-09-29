@@ -39,6 +39,20 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
     @Override
+    public Type visitArrayIndex(UCELParser.ArrayIndexContext ctx) {
+        Type arrayType = visit(ctx.children.get(0));
+        Type arrayIndex = visit(ctx.children.get(1));
+
+        if (!isArray(arrayType)) {
+            return new Type(Type.TypeEnum.errorType);
+        }
+        if (!(arrayIndex.getEvaluationType() == Type.TypeEnum.intType))
+            return new Type(Type.TypeEnum.errorType);
+
+        return arrayType;
+    }
+
+    @Override
     public Type visitMultDiv(UCELParser.MultDivContext ctx) {
         Type leftType = visit(ctx.children.get(0));
         Type rightType = visit(ctx.children.get(1));
