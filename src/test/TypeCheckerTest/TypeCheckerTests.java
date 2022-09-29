@@ -34,6 +34,14 @@ public class TypeCheckerTests  {
     private static final Type scalarType = new Type(Type.TypeEnum.scalarType);
 
     //region IdExpr
+    @Test
+    void MissingIdentifierDefinition() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+        UCELParser.IdExprContext node = mock(UCELParser.IdExprContext.class);
+        when(node.ID()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.ID)));
+        Type actual = visitor.visitIdExpr(node);
+        assertEquals(errorType, actual);
+    }
     //endregion
 
     //region LiteralExpr

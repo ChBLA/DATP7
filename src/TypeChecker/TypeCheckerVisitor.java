@@ -5,6 +5,14 @@ import java.util.List;
 
 public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
+
+    @Override
+    public Type visitIdExpr(UCELParser.IdExprContext ctx) {
+        /* Missing shit aka. scope.*/
+        throw new RuntimeException("Not implemented yet");
+    }
+
+
     @Override
     public Type visitParen(UCELParser.ParenContext ctx) {
         return visit(ctx.children.get(0));
