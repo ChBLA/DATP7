@@ -105,6 +105,49 @@ public class TypeCheckerTests  {
     //endregion
 
     //region ArrayIndex
+    @Test
+    void ArrayIndexFailsIfNotInt() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, boolArrayType, visitor));
+        children.add(mockForVisitorResult(UCELParser.ArrayIndexContext.class, charType, visitor));
+        node.children = children;
+
+        Type actual = visitor.visitArrayIndex(node);
+        assertEquals(errorType, actual);
+    }
+
+    @Test
+    void ArrayIndexErrorIfNoArray() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, boolType, visitor));
+        children.add(mockForVisitorResult(UCELParser.ArrayIndexContext.class, intType, visitor));
+        node.children = children;
+
+        Type actual = visitor.visitArrayIndex(node);
+        assertEquals(errorType, actual);
+    }
+
+    @Test
+    void ArrayIndexReturnsArrayType() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, boolArrayType, visitor));
+        children.add(mockForVisitorResult(UCELParser.ArrayIndexContext.class, intType, visitor));
+        node.children = children;
+
+        Type actual = visitor.visitArrayIndex(node);
+        assertEquals(boolArrayType, actual);
+    }
+
+
     //endregion
 
     //region MarkExpr
