@@ -5,13 +5,22 @@ import java.util.List;
 
 public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private Scope currentScope;
+    private Logger logger;
+
     public TypeCheckerVisitor() {
-        this.currentScope = new Scope(null, false);
-    }
+            this.currentScope = null;
+            this.logger = new Logger();
+        }
 
     public TypeCheckerVisitor(Scope scope) {
-        this.currentScope = scope;
-    }
+            this.currentScope = scope;
+            this.logger = new Logger();
+        }
+
+    public TypeCheckerVisitor(Logger logger) {
+            this.currentScope = null;
+            this.logger = logger;
+        }
 
     @Override
     public Type visitIdExpr(UCELParser.IdExprContext ctx) {

@@ -1,11 +1,16 @@
 public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     private Scope currentScope;
+    private Logger logger;
 
-    public ReferenceVisitor() {
-        this.currentScope = null;
+    public ReferenceVisitor(Scope scope) {
+        this.currentScope = scope;
+        this.logger = new Logger();
     }
 
-    public ReferenceVisitor(Scope scope) { this.currentScope = scope; }
+    public ReferenceVisitor(Logger logger) {
+        this.currentScope = null;
+        this.logger = logger;
+    }
 
     @Override
     public Boolean visitIdExpr(UCELParser.IdExprContext ctx) {
@@ -16,7 +21,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         try {
             tableReference = currentScope.find(identifier, true);
         } catch (Exception e) {
-            //TODO logger
+            logger.log(new ErrorLog(ctx,"Identifier '" + identifier + "' has not been declared in scope"));
             return false;
         }
 

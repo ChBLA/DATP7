@@ -7,19 +7,24 @@ public class Main {
     }
 
     public Main() {
-        CharStream charStream = CharStreams.fromString("1+2*7");
+        String input = "1+2*x";
+
+        CharStream charStream = CharStreams.fromString(input);
         UCELLexer lexer = new UCELLexer(charStream);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         UCELParser parser = new UCELParser(tokenStream);
 
-        ReferenceVisitor referenceVisitor = new ReferenceVisitor();
-        TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor();
+        Logger logger = new Logger(input);
+        ReferenceVisitor referenceVisitor = new ReferenceVisitor(logger);
+        TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor(logger);
 
         UCELParser.ExpressionContext expressionContext = parser.expression();
 
         referenceVisitor.visit(expressionContext);
-        //Type type = typeCheckerVisitor.visit(expressionContext);
+        Type type = typeCheckerVisitor.visit(expressionContext);
 
-        //System.out.println(type);
+        System.out.println(type);
+
+        logger.printLogs();
     }
 }
