@@ -485,10 +485,12 @@ public class TypeCheckerTests  {
 
         final UCELParser.MultDivContext node = mock(UCELParser.MultDivContext.class);
         List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, null, visitor));
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
-        node.children = children;
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
+        
         Type actual = visitor.visitMultDiv(node);
 
         assertEquals(returnType, actual);
@@ -529,10 +531,13 @@ public class TypeCheckerTests  {
 
         final UCELParser.AddSubContext node = mock(UCELParser.AddSubContext.class);
         List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, null, visitor));
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
-        node.children = children;
+
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
+
         Type actual = visitor.visitAddSub(node);
 
         assertEquals(returnType, actual);

@@ -65,8 +65,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     @Override
     public Type visitAddSub(UCELParser.AddSubContext ctx) {
-        Type leftType = visit(ctx.children.get(0));
-        Type rightType = visit(ctx.children.get(2));
+        Type leftType = visit(ctx.expression(0));
+        Type rightType = visit(ctx.expression(1));
 
         return intDoubleBinaryOp(leftType, rightType);
     }
@@ -87,8 +87,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     @Override
     public Type visitMultDiv(UCELParser.MultDivContext ctx) {
-        Type leftType = visit(ctx.children.get(0));
-        Type rightType = visit(ctx.children.get(2));
+        Type leftType = visit(ctx.expression(0));
+        Type rightType = visit(ctx.expression(1));
 
         return intDoubleBinaryOp(leftType, rightType);
     }
