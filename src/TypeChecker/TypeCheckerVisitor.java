@@ -211,8 +211,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     @Override
     public Type visitMinMax(UCELParser.MinMaxContext ctx) {
-        Type leftNode = visit(ctx.children.get(0));
-        Type rightNode = visit(ctx.children.get(1));
+        Type leftNode = visit(ctx.expression(0));
+        Type rightNode = visit(ctx.expression(1));
 
         return intDoubleBinaryOp(leftNode, rightNode);
     }
@@ -220,8 +220,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //region Relational/Equality expressions
     @Override
     public Type visitRelExpr(UCELParser.RelExprContext ctx) {
-        Type leftNode = visit(ctx.children.get(0));
-        Type rightNode = visit(ctx.children.get(1));
+        Type leftNode = visit(ctx.expression(0));
+        Type rightNode = visit(ctx.expression(1));
 
         Type.TypeEnum leftEnum = leftNode.getEvaluationType();
         Type.TypeEnum rightEnum = rightNode.getEvaluationType();
@@ -243,8 +243,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     @Override
     public Type visitEqExpr(UCELParser.EqExprContext ctx) {
-        Type leftNode = visit(ctx.children.get(0));
-        Type rightNode = visit(ctx.children.get(1));
+        Type leftNode = visit(ctx.expression(0));
+        Type rightNode = visit(ctx.expression(1));
 
         Type.TypeEnum leftEnum = leftNode.getEvaluationType();
         Type.TypeEnum rightEnum = rightNode.getEvaluationType();
@@ -271,31 +271,31 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //region Bit expressions
     @Override
     public Type visitBitshift(UCELParser.BitshiftContext ctx) {
-        Type leftNode = visit(ctx.children.get(0));
-        Type rightNode = visit(ctx.children.get(1));
+        Type leftNode = visit(ctx.expression(0));
+        Type rightNode = visit(ctx.expression(1));
 
         return bitExpressionDetermineType(leftNode, rightNode);
     }
     @Override
     public Type visitBitAnd(UCELParser.BitAndContext ctx) {
-        Type leftNode = visit(ctx.children.get(0));
-        Type rightNode = visit(ctx.children.get(1));
+        Type leftNode = visit(ctx.expression(0));
+        Type rightNode = visit(ctx.expression(1));
 
         return bitExpressionDetermineType(leftNode, rightNode);
     }
 
     @Override
     public Type visitBitXor(UCELParser.BitXorContext ctx) {
-        Type leftNode = visit(ctx.children.get(0));
-        Type rightNode = visit(ctx.children.get(1));
+        Type leftNode = visit(ctx.expression(0));
+        Type rightNode = visit(ctx.expression(1));
 
         return bitExpressionDetermineType(leftNode, rightNode);
     }
 
     @Override
     public Type visitBitOr(UCELParser.BitOrContext ctx) {
-        Type leftNode = visit(ctx.children.get(0));
-        Type rightNode = visit(ctx.children.get(1));
+        Type leftNode = visit(ctx.expression(0));
+        Type rightNode = visit(ctx.expression(1));
 
         return bitExpressionDetermineType(leftNode, rightNode);
     }
@@ -322,16 +322,16 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //region Logical expressions
     @Override
     public Type visitLogAnd(UCELParser.LogAndContext ctx) {
-        Type leftNode = visit(ctx.children.get(0));
-        Type rightNode = visit(ctx.children.get(1));
+        Type leftNode = visit(ctx.expression(0));
+        Type rightNode = visit(ctx.expression(1));
 
         return logicalExpressionDetermineType(leftNode, rightNode);
     }
 
     @Override
     public Type visitLogOr(UCELParser.LogOrContext ctx) {
-        Type leftNode = visit(ctx.children.get(0));
-        Type rightNode = visit(ctx.children.get(1));
+        Type leftNode = visit(ctx.expression(0));
+        Type rightNode = visit(ctx.expression(1));
 
         return logicalExpressionDetermineType(leftNode, rightNode);
     }

@@ -547,10 +547,12 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.MinMaxContext node = mock(UCELParser.MinMaxContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
-        node.children = children;
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
+
         Type actual = visitor.visitMinMax(node);
 
         assertEquals(returnType, actual);
@@ -589,14 +591,64 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.RelExprContext node = mock(UCELParser.RelExprContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
-        node.children = children;
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
+
         Type actual = visitor.visitRelExpr(node);
 
         assertEquals(returnType, actual);
     }
+
+    private static Stream<Arguments> relTypes() {
+        return Stream.of(
+                Arguments.arguments(boolType, boolType, boolType),
+                Arguments.arguments(intType, intType, boolType),
+                Arguments.arguments(doubleType, doubleType, boolType),
+                Arguments.arguments(charType, charType, boolType),
+                Arguments.arguments(doubleType, intType, boolType),
+                Arguments.arguments(intType, doubleType, boolType),
+
+                // Bool to int, not allowed
+                Arguments.arguments(intType, boolType, errorType),
+                Arguments.arguments(boolType, intType, errorType),
+                Arguments.arguments(doubleType, boolType, errorType),
+                Arguments.arguments(boolType, doubleType, errorType),
+
+                // Bad types
+                Arguments.arguments(boolType, invalidType, errorType),
+                Arguments.arguments(invalidType, boolType, errorType),
+                Arguments.arguments(intType, invalidType, errorType),
+                Arguments.arguments(invalidType, intType, errorType),
+                Arguments.arguments(doubleType, invalidType, errorType),
+                Arguments.arguments(invalidType, doubleType, errorType),
+                Arguments.arguments(charType, invalidType, errorType),
+                Arguments.arguments(invalidType, charType, errorType),
+
+                // Bad types (arrays)
+                Arguments.arguments(boolArrayType, boolType, errorType),
+                Arguments.arguments(intArrayType, intType, errorType),
+                Arguments.arguments(doubleArrayType, doubleType, errorType),
+                Arguments.arguments(charArrayType, charType, errorType),
+                Arguments.arguments(boolType, boolArrayType, errorType),
+                Arguments.arguments(intType, intArrayType, errorType),
+                Arguments.arguments(doubleType, doubleArrayType, errorType),
+                Arguments.arguments(charType, charArrayType, errorType),
+
+                // Bad types (errors)
+                Arguments.arguments(boolType, errorType, errorType),
+                Arguments.arguments(errorType, boolType, errorType),
+                Arguments.arguments(intType, errorType, errorType),
+                Arguments.arguments(errorType, intType, errorType),
+                Arguments.arguments(doubleType, errorType, errorType),
+                Arguments.arguments(errorType, doubleType, errorType),
+                Arguments.arguments(charType, errorType, errorType),
+                Arguments.arguments(errorType, charType, errorType)
+        );
+    }
+
     //endregion
 
     //region EqExpr
@@ -606,13 +658,50 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.EqExprContext node = mock(UCELParser.EqExprContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
-        node.children = children;
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
+
         Type actual = visitor.visitEqExpr(node);
 
         assertEquals(returnType, actual);
+    }
+
+    private static Stream<Arguments> eqTypes() {
+        return Stream.of(
+                Arguments.arguments(boolType, boolType, boolType),
+                Arguments.arguments(intType, intType, boolType),
+                Arguments.arguments(doubleType, doubleType, boolType),
+                Arguments.arguments(doubleType, intType, boolType),
+                Arguments.arguments(intType, doubleType, boolType),
+
+                // Bad types
+                Arguments.arguments(boolType, invalidType, errorType),
+                Arguments.arguments(invalidType, boolType, errorType),
+                Arguments.arguments(doubleType, invalidType, errorType),
+                Arguments.arguments(invalidType, doubleType, errorType),
+                Arguments.arguments(intType, invalidType, errorType),
+                Arguments.arguments(invalidType, intType, errorType),
+
+                //Bad types (arrays)
+                Arguments.arguments(boolArrayType, boolType, errorType),
+                Arguments.arguments(boolType, boolArrayType, errorType),
+                Arguments.arguments(doubleArrayType, doubleType, errorType),
+                Arguments.arguments(doubleType, doubleArrayType, errorType),
+                Arguments.arguments(intArrayType, intType, errorType),
+                Arguments.arguments(intType, intArrayType, errorType),
+
+                // Bad types (errors)
+                Arguments.arguments(boolType, errorType, errorType),
+                Arguments.arguments(errorType, boolType, errorType),
+                Arguments.arguments(doubleType, errorType, errorType),
+                Arguments.arguments(errorType, doubleType, errorType),
+                Arguments.arguments(intType, errorType, errorType),
+                Arguments.arguments(errorType, intType, errorType),
+                Arguments.arguments(errorType, errorType, errorType)
+        );
     }
     //endregion
 
@@ -624,10 +713,12 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.BitshiftContext node = mock(UCELParser.BitshiftContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
-        node.children = children;
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
+
         Type actual = visitor.visitBitshift(node);
 
         assertEquals(returnType, actual);
@@ -641,10 +732,12 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.BitAndContext node = mock(UCELParser.BitAndContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
-        node.children = children;
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
+
         Type actual = visitor.visitBitAnd(node);
 
         assertEquals(returnType, actual);
@@ -658,10 +751,12 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.BitXorContext node = mock(UCELParser.BitXorContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
-        node.children = children;
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
+
         Type actual = visitor.visitBitXor(node);
 
         assertEquals(returnType, actual);
@@ -675,10 +770,12 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.BitOrContext node = mock(UCELParser.BitOrContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
-        node.children = children;
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
+
         Type actual = visitor.visitBitOr(node);
 
         assertEquals(returnType, actual);
@@ -701,6 +798,7 @@ public class TypeCheckerTests  {
     }
     //endregion
 
+    //region Logical expressions
     //region LogAnd
     @ParameterizedTest(name = "{index} => using {0} and {1} with logical and expecting {2}")
     @MethodSource("logTypes")
@@ -708,10 +806,12 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.LogAndContext node = mock(UCELParser.LogAndContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
-        node.children = children;
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
+
         Type actual = visitor.visitLogAnd(node);
 
         assertEquals(returnType, actual);
@@ -725,13 +825,32 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.LogOrContext node = mock(UCELParser.LogOrContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
-        node.children = children;
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
+
         Type actual = visitor.visitLogOr(node);
 
         assertEquals(returnType, actual);
+    }
+    //endregion
+    private static Stream<Arguments> logTypes() { //TODO: consider letting char comparable with non-char
+        return Stream.of(
+                Arguments.arguments(boolType, boolType, boolType),
+                Arguments.arguments(boolType, invalidType, errorType),
+                Arguments.arguments(invalidType, boolType, errorType),
+                Arguments.arguments(invalidType, invalidType, errorType),
+                Arguments.arguments(boolArrayType, boolType, errorType),
+                Arguments.arguments(boolType, boolArrayType, errorType),
+                Arguments.arguments(boolArrayType, invalidType, errorType),
+                Arguments.arguments(invalidType, boolArrayType, errorType),
+
+                Arguments.arguments(errorType, boolType, errorType),
+                Arguments.arguments(boolType, errorType, errorType),
+                Arguments.arguments(errorType, errorType, errorType)
+        );
     }
     //endregion
 
@@ -849,105 +968,6 @@ public class TypeCheckerTests  {
         );
     }
 
-
-    private static Stream<Arguments> relTypes() {
-        return Stream.of(
-                Arguments.arguments(boolType, boolType, boolType),
-                Arguments.arguments(intType, intType, boolType),
-                Arguments.arguments(doubleType, doubleType, boolType),
-                Arguments.arguments(charType, charType, boolType),
-                Arguments.arguments(doubleType, intType, boolType),
-                Arguments.arguments(intType, doubleType, boolType),
-
-                // Bool to int, not allowed
-                Arguments.arguments(intType, boolType, errorType),
-                Arguments.arguments(boolType, intType, errorType),
-                Arguments.arguments(doubleType, boolType, errorType),
-                Arguments.arguments(boolType, doubleType, errorType),
-
-                // Bad types
-                Arguments.arguments(boolType, invalidType, errorType),
-                Arguments.arguments(invalidType, boolType, errorType),
-                Arguments.arguments(intType, invalidType, errorType),
-                Arguments.arguments(invalidType, intType, errorType),
-                Arguments.arguments(doubleType, invalidType, errorType),
-                Arguments.arguments(invalidType, doubleType, errorType),
-                Arguments.arguments(charType, invalidType, errorType),
-                Arguments.arguments(invalidType, charType, errorType),
-
-                // Bad types (arrays)
-                Arguments.arguments(boolArrayType, boolType, errorType),
-                Arguments.arguments(intArrayType, intType, errorType),
-                Arguments.arguments(doubleArrayType, doubleType, errorType),
-                Arguments.arguments(charArrayType, charType, errorType),
-                Arguments.arguments(boolType, boolArrayType, errorType),
-                Arguments.arguments(intType, intArrayType, errorType),
-                Arguments.arguments(doubleType, doubleArrayType, errorType),
-                Arguments.arguments(charType, charArrayType, errorType),
-
-                // Bad types (errors)
-                Arguments.arguments(boolType, errorType, errorType),
-                Arguments.arguments(errorType, boolType, errorType),
-                Arguments.arguments(intType, errorType, errorType),
-                Arguments.arguments(errorType, intType, errorType),
-                Arguments.arguments(doubleType, errorType, errorType),
-                Arguments.arguments(errorType, doubleType, errorType),
-                Arguments.arguments(charType, errorType, errorType),
-                Arguments.arguments(errorType, charType, errorType)
-        );
-    }
-    private static Stream<Arguments> eqTypes() {
-        return Stream.of(
-                Arguments.arguments(boolType, boolType, boolType),
-                Arguments.arguments(intType, intType, boolType),
-                Arguments.arguments(doubleType, doubleType, boolType),
-                Arguments.arguments(doubleType, intType, boolType),
-                Arguments.arguments(intType, doubleType, boolType),
-
-                // Bad types
-                Arguments.arguments(boolType, invalidType, errorType),
-                Arguments.arguments(invalidType, boolType, errorType),
-                Arguments.arguments(doubleType, invalidType, errorType),
-                Arguments.arguments(invalidType, doubleType, errorType),
-                Arguments.arguments(intType, invalidType, errorType),
-                Arguments.arguments(invalidType, intType, errorType),
-
-                //Bad types (arrays)
-                Arguments.arguments(boolArrayType, boolType, errorType),
-                Arguments.arguments(boolType, boolArrayType, errorType),
-                Arguments.arguments(doubleArrayType, doubleType, errorType),
-                Arguments.arguments(doubleType, doubleArrayType, errorType),
-                Arguments.arguments(intArrayType, intType, errorType),
-                Arguments.arguments(intType, intArrayType, errorType),
-
-                // Bad types (errors)
-                Arguments.arguments(boolType, errorType, errorType),
-                Arguments.arguments(errorType, boolType, errorType),
-                Arguments.arguments(doubleType, errorType, errorType),
-                Arguments.arguments(errorType, doubleType, errorType),
-                Arguments.arguments(intType, errorType, errorType),
-                Arguments.arguments(errorType, intType, errorType),
-                Arguments.arguments(errorType, errorType, errorType)
-        );
-    }
-
-    private static Stream<Arguments> logTypes() { //TODO: consider letting char comparable with non-char
-        return Stream.of(
-                Arguments.arguments(boolType, boolType, boolType),
-                Arguments.arguments(boolType, invalidType, errorType),
-                Arguments.arguments(invalidType, boolType, errorType),
-                Arguments.arguments(invalidType, invalidType, errorType),
-                Arguments.arguments(boolArrayType, boolType, errorType),
-                Arguments.arguments(boolType, boolArrayType, errorType),
-                Arguments.arguments(boolArrayType, invalidType, errorType),
-                Arguments.arguments(invalidType, boolArrayType, errorType),
-
-                Arguments.arguments(errorType, boolType, errorType),
-                Arguments.arguments(boolType, errorType, errorType),
-                Arguments.arguments(errorType, errorType, errorType)
-        );
-    }
-
     private static Stream<Arguments> allTypes() {
 
         ArrayList<Arguments> args = new ArrayList<Arguments>();
@@ -965,7 +985,5 @@ public class TypeCheckerTests  {
 
         return args.stream();
     }
-
-
     //endregion
 }
