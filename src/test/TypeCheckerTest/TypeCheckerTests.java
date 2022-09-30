@@ -170,7 +170,80 @@ public class TypeCheckerTests  {
     }
     //endregion
 
-    //region Access
+    //region StructAccess
+
+    @Test
+    void StructAccessCorrectStructSetTableReference() {
+        String correctVariableName = "cvn";
+        String incorrectVariableName = "icvn";
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.StructAccessContext node = mock(UCELParser.StructAccessContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        Type[] structInternalTypes = new Type[]{intType, stringType};
+        String[] structInternalIdentifiers = new String[]{incorrectVariableName, correctVariableName};
+        Type type = new Type(Type.TypeEnum.structType, structInternalIdentifiers, structInternalTypes);
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor));
+
+        TerminalNode idNode = mock(TerminalNode.class);
+        when(idNode.getText()).thenReturn(correctVariableName);
+        when(node.ID()).thenReturn(idNode);
+
+        node.children = children;
+
+        Type unused = visitor.visitStructAccess(node);
+
+        assertEquals(new TableReference(-1, 1), node.reference);
+    }
+
+    @Test
+    void StructAccessCorrectStructReturnCorrectType() {
+        String correctVariableName = "cvn";
+        String incorrectVariableName = "icvn";
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.StructAccessContext node = mock(UCELParser.StructAccessContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        Type[] structInternalTypes = new Type[]{intType, stringType};
+        String[] structInternalIdentifiers = new String[]{incorrectVariableName, correctVariableName};
+        Type type = new Type(Type.TypeEnum.structType, structInternalIdentifiers, structInternalTypes);
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor));
+
+        TerminalNode idNode = mock(TerminalNode.class);
+        when(idNode.getText()).thenReturn(correctVariableName);
+        when(node.ID()).thenReturn(idNode);
+
+        node.children = children;
+
+        Type actualType = visitor.visitStructAccess(node);
+
+        assertEquals(stringType, actualType);
+    }
+
+    @Test
+    void StructAccessIncorrectStructReturnErrorType() {
+        String invalidVariableName = "icvn";
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.StructAccessContext node = mock(UCELParser.StructAccessContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        Type type = invalidType;
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor));
+
+        TerminalNode idNode = mock(TerminalNode.class);
+        when(idNode.getText()).thenReturn(invalidVariableName);
+        when(node.ID()).thenReturn(idNode);
+
+        node.children = children;
+
+        Type actualType = visitor.visitStructAccess(node);
+
+        assertEquals(new Type(Type.TypeEnum.errorType), actualType);
+    }
+
     //endregion
 
     //region Increment / Decrement

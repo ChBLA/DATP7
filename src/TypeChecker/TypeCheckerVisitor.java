@@ -31,6 +31,30 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
     @Override
+    public Type visitStructAccess(UCELParser.StructAccessContext ctx) {
+        Type structType = visit(ctx.children.get(0));
+        Type[] parameterTypes = structType.getParameters();
+        String[] parameterNames = structType.getParameterNames();
+
+        String identifier = ctx.ID().getText();
+
+        if(structType.getEvaluationType() != Type.TypeEnum.structType ||
+            parameterTypes == null || parameterNames == null) {
+            //TODO logger
+            return new Type(Type.TypeEnum.errorType);
+        }
+
+        for (int i = 0; i < parameterNames.length; i++) {
+            if(parameterNames[i].equals(identifier)) {
+                ctx.reference = new TableReference(-1, i);
+                return parameterTypes[i];
+            }
+        }
+        //TODO logger not found
+        return new Type(Type.TypeEnum.errorType);
+    }
+
+    @Override
     public Type visitAddSub(UCELParser.AddSubContext ctx) {
         Type leftType = visit(ctx.children.get(0));
         Type rightType = visit(ctx.children.get(1));

@@ -14,7 +14,7 @@ import static org.mockito.Mockito.*;
 
 public class ReferenceHandlerTests {
 
-    //region
+    //region FuncCall
     @Test
     void FuncCallExpressionSuccesfulLookup() {
         String correctFunctionName = "cfn";
@@ -145,20 +145,6 @@ public class ReferenceHandlerTests {
         boolean actualReturnValue = visitor.visitIdExpr(idExprContext);
 
         assertFalse(actualReturnValue);
-    }
-    //endregion
-
-    //region LiteralExpr: No influence by scopes
-    @Test
-    void NullScopeValidLiteralExpr() {
-        //SEEMS POINTLESS, DELETE?
-        fail();
-    }
-
-    @Test
-    void NotNullScopeValidLiteralExpr() {
-        //SEEMS POINTLESS, DELETE?
-        fail();
     }
     //endregion
 
