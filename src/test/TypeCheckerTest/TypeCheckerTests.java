@@ -106,7 +106,7 @@ public class TypeCheckerTests  {
 
     //region ArrayIndex
     @Test
-    void ArrayIndexFailsIfNotInt() {
+    void ArrayIndexErrorIfNotInt() {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
@@ -241,7 +241,7 @@ public class TypeCheckerTests  {
 
         Type actualType = visitor.visitStructAccess(node);
 
-        assertEquals(new Type(Type.TypeEnum.errorType), actualType);
+        assertEquals(errorType, actualType);
     }
 
     //endregion
@@ -486,6 +486,7 @@ public class TypeCheckerTests  {
         final UCELParser.MultDivContext node = mock(UCELParser.MultDivContext.class);
         List<ParseTree> children = new ArrayList<>();
         children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, null, visitor));
         children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
         node.children = children;
         Type actual = visitor.visitMultDiv(node);
