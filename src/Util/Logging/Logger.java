@@ -42,7 +42,7 @@ public class Logger {
 
         String firstLine = String.format("The compiled code has %d warnings and %d errors\n", warningCount, errorCount);
         stringBuilder.append(firstLine);
-        fancyPrint(print, Color.White, firstLine);
+        fancyPrint(print, Color.Reset, firstLine);
 
         for (Log log : logs) {
             String logString = "";

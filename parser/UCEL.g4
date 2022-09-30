@@ -74,8 +74,8 @@ chanExpr : ID
            | chanExpr LEFTBRACKET expression RIGHTBRACKET;
 
 expression locals [TableReference reference]
-            :  ID                                               #IdExpr
-            |  literal                                          #LiteralExpr
+            :  literal                                          #LiteralExpr
+            |  ID                                               #IdExpr
             |  expression LEFTBRACKET expression RIGHTBRACKET   #ArrayIndex
             |  expression MARK                                  #MarkExpr
             |  LEFTPAR expression RIGHTPAR                      #Paren

@@ -7,7 +7,7 @@ public class Main {
     }
 
     public Main() {
-        String input = "1+2*x";
+        String input = "true + x";
 
         CharStream charStream = CharStreams.fromString(input);
         UCELLexer lexer = new UCELLexer(charStream);

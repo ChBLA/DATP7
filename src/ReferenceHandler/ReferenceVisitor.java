@@ -21,7 +21,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         try {
             tableReference = currentScope.find(identifier, true);
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx,"Identifier '" + identifier + "' has not been declared in scope"));
+            logger.log(new ErrorLog(ctx,"Variable '" + identifier + "' has not been declared in scope"));
             return false;
         }
 
