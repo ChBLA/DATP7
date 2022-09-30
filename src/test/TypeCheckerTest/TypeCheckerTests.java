@@ -529,6 +529,7 @@ public class TypeCheckerTests  {
         final UCELParser.AddSubContext node = mock(UCELParser.AddSubContext.class);
         List<ParseTree> children = new ArrayList<>();
         children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, null, visitor));
         children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor));
         node.children = children;
         Type actual = visitor.visitAddSub(node);

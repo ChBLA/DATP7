@@ -57,7 +57,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitAddSub(UCELParser.AddSubContext ctx) {
         Type leftType = visit(ctx.children.get(0));
-        Type rightType = visit(ctx.children.get(1));
+        Type rightType = visit(ctx.children.get(2));
 
         return intDoubleBinaryOp(leftType, rightType);
     }
