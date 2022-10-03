@@ -37,6 +37,10 @@ public class Type {
         this.parameterNames = paramNames;
     }
 
+    public Type(TypeEnum evaluationType, Type[] parameters) {
+        this(evaluationType, null, parameters);
+    }
+
     public TypeEnum getEvaluationType() {
         return evaluationType;
     }

@@ -318,6 +318,42 @@ public class TypeCheckerTests  {
     
     //region FuncCall
 
+    //region Arguments
+    @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
+    @MethodSource("argumentTypesArguments")
+    void argumentTypes(Type argTypes) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.ArgumentsContext node = mock(UCELParser.ArgumentsContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        for(Type paramType: argTypes.getParameters()) {
+            children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, paramType, visitor));
+        }
+        node.children = children;
+
+        Type actual = visitor.visitArguments(node);
+
+        assertEquals(argTypes, actual);
+    }
+    private static Stream<Arguments> argumentTypesArguments() {
+
+        ArrayList<Arguments> args = new ArrayList<Arguments>();
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE, INT_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE, INT_TYPE, BOOL_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE, INT_TYPE, BOOL_TYPE, CHAR_TYPE})));
+
+        // If it contains an error, base-type becomes error
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.errorType, new Type[] {ERROR_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.errorType, new Type[] {DOUBLE_TYPE, ERROR_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.errorType, new Type[] {ERROR_TYPE, INT_TYPE, BOOL_TYPE})));
+
+        return args.stream();
+    }
+
+
+
     //endregion
 
     //region UnaryExpr
