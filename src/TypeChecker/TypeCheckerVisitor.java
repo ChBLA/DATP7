@@ -1,6 +1,7 @@
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
@@ -105,6 +106,22 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
                 return typeOfVariable;
             default:
                 return new Type(Type.TypeEnum.errorType);
+        }
+    }
+    //endregion
+
+    //region ArgumentsVisitor
+    public Type visitArguments(UCELParser.ArgumentsContext ctx) {
+        // Map each argument to its type
+        Type[] argTypes = ctx.children.stream().map(expr -> visit(expr)).toArray(Type[]::new);
+
+        // If any type is error, then base-type is error-type.
+        // Else if no errors, then base-type is invalidType
+        if(Arrays.stream(argTypes).anyMatch(t -> t.getEvaluationType() == Type.TypeEnum.errorType)) {
+            return new Type(Type.TypeEnum.errorType, argTypes);
+        }
+        else {
+            return new Type(Type.TypeEnum.invalidType, argTypes);
         }
     }
     //endregion

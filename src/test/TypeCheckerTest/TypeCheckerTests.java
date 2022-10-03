@@ -170,6 +170,42 @@ public class TypeCheckerTests  {
     
     //region FuncCall
 
+    //region Arguments
+    @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
+    @MethodSource("argumentTypesArguments")
+    void argumentTypes(Type argTypes) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final UCELParser.ArgumentsContext node = mock(UCELParser.ArgumentsContext.class);
+        List<ParseTree> children = new ArrayList<>();
+        for(Type paramType: argTypes.getParameters()) {
+            children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, paramType, visitor));
+        }
+        node.children = children;
+
+        Type actual = visitor.visitArguments(node);
+
+        assertEquals(argTypes, actual);
+    }
+    private static Stream<Arguments> argumentTypesArguments() {
+
+        ArrayList<Arguments> args = new ArrayList<Arguments>();
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {new Type(Type.TypeEnum.doubleType)})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType)})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.charType)})));
+
+        // If it contains an error, base-type becomes error
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.errorType, new Type[] {new Type(Type.TypeEnum.errorType)})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.errorType, new Type[] {new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.errorType, new Type[] {new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)})));
+
+        return args.stream();
+    }
+
+
+
     //endregion
 
     //region UnaryExpr
