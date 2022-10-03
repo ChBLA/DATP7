@@ -1,3 +1,4 @@
+import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.junit.jupiter.api.Test;
@@ -11,7 +12,70 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 
-public class RefExpressionTests {
+public class ReferenceHandlerTests {
+
+    //region FuncCall
+    @Test
+    void FuncCallExpressionSuccesfulLookup() {
+        String correctFunctionName = "cfn";
+        String incorrectFunctionName = "icfn";
+
+        ArrayList<Variable> lvl1Variables = new ArrayList<>();
+        lvl1Variables.add(new Variable(incorrectFunctionName));
+        lvl1Variables.add(new Variable(incorrectFunctionName));
+        lvl1Variables.add(new Variable(correctFunctionName));
+        lvl1Variables.add(new Variable(incorrectFunctionName));
+
+        ArrayList<Variable> lvl0Variables = new ArrayList<>();
+
+        Scope lvl1Scope = new Scope(null, false, lvl1Variables);
+        Scope lvl0Scope = new Scope(lvl1Scope, false, lvl0Variables);
+        ReferenceVisitor visitor = new ReferenceVisitor(lvl0Scope);
+
+        UCELParser.FuncCallContext funcCallContext = mock(UCELParser.FuncCallContext.class);
+        UCELParser.ArgumentsContext argumentsContext = mock(UCELParser.ArgumentsContext.class);
+
+        TerminalNode idNode = mock(TerminalNode.class);
+        when(idNode.getText()).thenReturn(correctFunctionName);
+        when(funcCallContext.ID()).thenReturn(idNode);
+        when(funcCallContext.arguments()).thenReturn(argumentsContext);
+
+        visitor.visitFuncCall(funcCallContext);
+
+        assertEquals(funcCallContext.reference, new TableReference(1,2));
+    }
+
+    @Test
+    void FuncCallExpressionVisitArguments() {
+        String correctFunctionName = "cfn";
+        String incorrectFunctionName = "icfn";
+
+        ArrayList<Variable> lvl1Variables = new ArrayList<>();
+        lvl1Variables.add(new Variable(incorrectFunctionName));
+        lvl1Variables.add(new Variable(incorrectFunctionName));
+        lvl1Variables.add(new Variable(correctFunctionName));
+        lvl1Variables.add(new Variable(incorrectFunctionName));
+
+        ArrayList<Variable> lvl0Variables = new ArrayList<>();
+
+        Scope lvl1Scope = new Scope(null, false, lvl1Variables);
+        Scope lvl0Scope = new Scope(lvl1Scope, false, lvl0Variables);
+        ReferenceVisitor visitor = new ReferenceVisitor(lvl0Scope);
+
+        UCELParser.FuncCallContext funcCallContext = mock(UCELParser.FuncCallContext.class);
+        UCELParser.ArgumentsContext argumentsContext = mock(UCELParser.ArgumentsContext.class);
+
+        TerminalNode idNode = mock(TerminalNode.class);
+        when(idNode.getText()).thenReturn(correctFunctionName);
+        when(funcCallContext.ID()).thenReturn(idNode);
+        when(funcCallContext.arguments()).thenReturn(argumentsContext);
+
+        visitor.visitFuncCall(funcCallContext);
+
+        verify(argumentsContext, times(1)).accept(visitor);
+    }
+
+    //endregion
 
     //region IDExpr: look in immediate scope, look through multiple scope, fail to find
     @Test
@@ -81,20 +145,6 @@ public class RefExpressionTests {
         boolean actualReturnValue = visitor.visitIdExpr(idExprContext);
 
         assertFalse(actualReturnValue);
-    }
-    //endregion
-
-    //region LiteralExpr: No influence by scopes
-    @Test
-    void NullScopeValidLiteralExpr() {
-        //SEEMS POINTLESS, DELETE?
-        fail();
-    }
-
-    @Test
-    void NotNullScopeValidLiteralExpr() {
-        //SEEMS POINTLESS, DELETE?
-        fail();
     }
     //endregion
 

@@ -1,18 +1,16 @@
 grammar UCEL;
 
-start : declarations system;
+start locals [Scope scope]
+    : declarations system;
 system : SYSTEM ID ((COMMA | '<') ID)* END;
 
-component : COMP ID LEFTPAR parameters? RIGHTPAR LEFTCURLYBRACE comp_body RIGHTCURLYBRACE;
-comp_body : interfaces? uses? (DECLARATIONS COLON declarations)? contains? links?;
+component locals [Scope scope]
+    : COMP ID LEFTPAR parameters? RIGHTPAR LEFTCURLYBRACE comp_body RIGHTCURLYBRACE;
+comp_body locals [Scope scope]
+    : interfaces? (DECLARATIONS COLON declarations)? links?;
 
 interfaces : INTERFACES COLON interface_stmnt+;
-interface_stmnt : ID (ID arrayDecl*  | UNDERSCORE) COMMA (ID arrayDecl* | UNDERSCORE) END;
-
-uses : USES COLON uses_stmnt+;
-uses_stmnt : type ID arrayDecl* (AS ID arrayDecl*)? END;
-
-contains : CONTAINS COLON expression (COMMA expression)* END;
+interface_stmnt : (IN | OUT) ID ID (COMMA (IN | OUT) ID ID)* END;
 
 links : LINKS COLON link_stmnt+;
 link_stmnt : ID arrayDecl* LINK_OP ID arrayDecl* WITH ID END
@@ -31,7 +29,7 @@ progressDecl  : PROGRESS LEFTCURLYBRACE ( expression? END )* RIGHTCURLYBRACE;
 
 
 parameters : ( parameter (COMMA parameter)* )?;
-parameter  : type? ('&')? ID? arrayDecl*;
+parameter  : type? REF? ('&')? ID? arrayDecl*;
 
 declarations  : (variableDecl | typeDecl | function | chanPriority | component | interface_decl | link_stmnt)*;
 variableDecl  : type? variableID (COMMA variableID)* END;
@@ -49,8 +47,10 @@ fieldDecl     : type ID arrayDecl* (COMMA ID arrayDecl*)* END;
 arrayDecl     : LEFTBRACKET expression? RIGHTBRACKET
               | LEFTBRACKET type RIGHTBRACKET;
 
-function        : type? ID? LEFTPAR parameters? RIGHTPAR block;
-block           : LEFTCURLYBRACE localDeclaration* statement* RIGHTCURLYBRACE;
+function locals [Scope scope]
+    : type? ID? LEFTPAR parameters? RIGHTPAR block;
+block locals [Scope scope]
+    : LEFTCURLYBRACE localDeclaration* statement* RIGHTCURLYBRACE;
 localDeclaration  : typeDecl | variableDecl;
 statement       : block
                 | assignment END
@@ -74,8 +74,8 @@ chanExpr : ID
            | chanExpr LEFTBRACKET expression RIGHTBRACKET;
 
 expression locals [TableReference reference]
-            :  ID                                               #IdExpr
-            |  literal                                          #LiteralExpr
+            :  literal                                          #LiteralExpr
+            |  ID                                               #IdExpr
             |  expression LEFTBRACKET expression RIGHTBRACKET   #ArrayIndex
             |  expression MARK                                  #MarkExpr
             |  LEFTPAR expression RIGHTPAR                      #Paren
@@ -103,11 +103,11 @@ expression locals [TableReference reference]
 
 assignment  : <assoc=right> expression assign expression #AssignExpr;
 
-arguments  : (expression ( COMMA expression )*)?;
+arguments  : ((expression | REF ID) ( COMMA (expression | REF ID))*)?;
 
 assign     : '=' | ':=' | '+=' | '-=' | '*=' | '/=' | '%='
            | '|=' | '&=' | '^=' | '<<=' | '>>=';
-unary      : '+' | '-' | '!' | 'not';
+unary      : PLUS | MINUS | NEG | NOT;
 
 literal : NAT | boolean | DOUBLE | DEADLOCK;
 
@@ -121,6 +121,9 @@ Newline : ('\n' | '\r\n' | '\r') -> skip
 BlockComment: '/*' .*? '*/' -> skip;
 LineComment: '//' ~ [\r\n]* -> skip;
 
+IN : 'in';
+OUT : 'out';
+REF : 'ref';
 FOR : 'for';
 WHILE : 'while';
 DO : 'do';
@@ -138,6 +141,10 @@ RIGHTCURLYBRACE : '}';
 COLON : ':';
 COMMA : ',';
 MARK : '\'';
+PLUS : '+';
+MINUS : '-';
+NEG : '!';
+NOT : 'not';
 
 COMP : 'comp';
 DECLARATIONS : 'declarations';
@@ -152,10 +159,10 @@ LINK_OP : '->' | '<-' | '<->';
 WITH : 'with';
 ELSE : 'else';
 
+TRUE: 'true';
+FALSE: 'false';
 DEADLOCK : 'deadlock';
 DOUBLE : NAT '.' [0-9]+;
 NAT : '0' | [1-9]([0-9])*;
 ID : [a-zA-Z_]([a-zA-Z0-9_])*;
-TRUE: 'true';
-FALSE: 'false';
 

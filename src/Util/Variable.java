@@ -15,6 +15,7 @@ public class Variable {
     public void setType(Type type) {
         this.type = type;
     }
+    public Type getType() { return this.type; }
 
     public boolean isCalled(String s) {
         return s.equals(identifier);
