@@ -339,15 +339,15 @@ public class TypeCheckerTests  {
 
         ArrayList<Arguments> args = new ArrayList<Arguments>();
         args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {})));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {new Type(Type.TypeEnum.doubleType)})));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType)})));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)})));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType), new Type(Type.TypeEnum.charType)})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE, INT_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE, INT_TYPE, BOOL_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE, INT_TYPE, BOOL_TYPE, CHAR_TYPE})));
 
         // If it contains an error, base-type becomes error
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.errorType, new Type[] {new Type(Type.TypeEnum.errorType)})));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.errorType, new Type[] {new Type(Type.TypeEnum.doubleType), new Type(Type.TypeEnum.errorType)})));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.errorType, new Type[] {new Type(Type.TypeEnum.errorType), new Type(Type.TypeEnum.intType), new Type(Type.TypeEnum.boolType)})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.errorType, new Type[] {ERROR_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.errorType, new Type[] {DOUBLE_TYPE, ERROR_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.errorType, new Type[] {ERROR_TYPE, INT_TYPE, BOOL_TYPE})));
 
         return args.stream();
     }
