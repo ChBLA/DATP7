@@ -38,12 +38,12 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     @Override
     public Type visitParen(UCELParser.ParenContext ctx) {
-        return visit(ctx.children.get(0));
+        return visit(ctx.expression());
     }
 
     @Override
     public Type visitStructAccess(UCELParser.StructAccessContext ctx) {
-        Type structType = visit(ctx.children.get(0));
+        Type structType = visit(ctx.expression());
         Type[] parameterTypes = structType.getParameters();
         String[] parameterNames = structType.getParameterNames();
 
@@ -75,8 +75,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     @Override
     public Type visitArrayIndex(UCELParser.ArrayIndexContext ctx) {
-        Type arrayType = visit(ctx.children.get(0));
-        Type arrayIndex = visit(ctx.children.get(1));
+        Type arrayType = visit(ctx.expression(0));
+        Type arrayIndex = visit(ctx.expression(1));
 
         if (!isArray(arrayType)) {
             return new Type(Type.TypeEnum.errorType);
@@ -182,23 +182,21 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //region Increment/Decrement
     @Override
     public Type visitIncrementPost(UCELParser.IncrementPostContext ctx) {
-        return visitIncrementDecrement(ctx);
+        return visitIncrementDecrement(ctx, visit(ctx.expression()));
     }
     @Override
     public Type visitIncrementPre(UCELParser.IncrementPreContext ctx) {
-        return visitIncrementDecrement(ctx);
+        return visitIncrementDecrement(ctx, visit(ctx.expression()));
     }
     @Override
     public Type visitDecrementPost(UCELParser.DecrementPostContext ctx) {
-        return visitIncrementDecrement(ctx);
+        return visitIncrementDecrement(ctx, visit(ctx.expression()));
     }
     @Override
     public Type visitDecrementPre(UCELParser.DecrementPreContext ctx) {
-        return visitIncrementDecrement(ctx);
+        return visitIncrementDecrement(ctx, visit(ctx.expression()));
     }
-    private Type visitIncrementDecrement (UCELParser.ExpressionContext ctx) {
-        Type typeOfVariable = visit(ctx.children.get(0));
-
+    private Type visitIncrementDecrement (UCELParser.ExpressionContext ctx, Type typeOfVariable) {
         // Array
         if(isArray(typeOfVariable)) {
             logger.log(new ErrorLog(ctx, "Array type not supported for increment and decrement"));
@@ -220,7 +218,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //region ArgumentsVisitor
     public Type visitArguments(UCELParser.ArgumentsContext ctx) {
         // Map each argument to its type
-        Type[] argTypes = ctx.children.stream().map(expr -> visit(expr)).toArray(Type[]::new);
+        Type[] argTypes = ctx.expression().stream().map(expr -> visit(expr)).toArray(Type[]::new);
 
         // If any type is error, then base-type is error-type.
         // Else if no errors, then base-type is invalidType
@@ -382,9 +380,9 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //region Conditional Expr
     @Override
     public Type visitConditional(UCELParser.ConditionalContext ctx) {
-        Type condType = visit(ctx.children.get(0));
-        Type leftValType = visit(ctx.children.get(1));
-        Type rightValType = visit(ctx.children.get(2));
+        Type condType = visit(ctx.expression(0));
+        Type leftValType = visit(ctx.expression(1));
+        Type rightValType = visit(ctx.expression(2));
 
         // Condition must be boolean
         if(condType.getEvaluationType() != Type.TypeEnum.boolType) {

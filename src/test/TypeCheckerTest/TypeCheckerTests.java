@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -44,7 +45,7 @@ public class TypeCheckerTests  {
         assertEquals(ERROR_TYPE, actual);
     }
 
-
+    @Test
     void FoundIntTypeIdentifierInScope() {
         var scope = new Scope(null, false);
 
@@ -110,10 +111,11 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_ARRAY_TYPE, visitor));
-        children.add(mockForVisitorResult(UCELParser.ArrayIndexContext.class, CHAR_TYPE, visitor));
-        node.children = children;
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_ARRAY_TYPE, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, CHAR_TYPE, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
 
         Type actual = visitor.visitArrayIndex(node);
         assertEquals(ERROR_TYPE, actual);
@@ -124,10 +126,11 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor));
-        children.add(mockForVisitorResult(UCELParser.ArrayIndexContext.class, INT_TYPE, visitor));
-        node.children = children;
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
 
         Type actual = visitor.visitArrayIndex(node);
         assertEquals(ERROR_TYPE, actual);
@@ -138,10 +141,11 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_ARRAY_TYPE, visitor));
-        children.add(mockForVisitorResult(UCELParser.ArrayIndexContext.class, INT_TYPE, visitor));
-        node.children = children;
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_ARRAY_TYPE, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
 
         Type actual = visitor.visitArrayIndex(node);
         assertEquals(BOOL_ARRAY_TYPE, actual);
@@ -160,9 +164,8 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.ParenContext node = mock(UCELParser.ParenContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor));
-        node.children = children;
+        var child = mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor);
+        when(node.expression()).thenReturn(child);
 
         Type actual = visitor.visitParen(node);
 
@@ -180,17 +183,16 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.StructAccessContext node = mock(UCELParser.StructAccessContext.class);
-        List<ParseTree> children = new ArrayList<>();
         Type[] structInternalTypes = new Type[]{INT_TYPE, STRING_TYPE};
         String[] structInternalIdentifiers = new String[]{incorrectVariableName, correctVariableName};
         Type type = new Type(Type.TypeEnum.structType, structInternalIdentifiers, structInternalTypes);
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor));
+        var child = mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor);
 
         TerminalNode idNode = mock(TerminalNode.class);
         when(idNode.getText()).thenReturn(correctVariableName);
         when(node.ID()).thenReturn(idNode);
 
-        node.children = children;
+        when(node.expression()).thenReturn(child);
 
         Type unused = visitor.visitStructAccess(node);
 
@@ -205,17 +207,16 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.StructAccessContext node = mock(UCELParser.StructAccessContext.class);
-        List<ParseTree> children = new ArrayList<>();
         Type[] structInternalTypes = new Type[]{INT_TYPE, STRING_TYPE};
         String[] structInternalIdentifiers = new String[]{incorrectVariableName, correctVariableName};
         Type type = new Type(Type.TypeEnum.structType, structInternalIdentifiers, structInternalTypes);
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor));
+        var child = mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor);
 
         TerminalNode idNode = mock(TerminalNode.class);
         when(idNode.getText()).thenReturn(correctVariableName);
         when(node.ID()).thenReturn(idNode);
 
-        node.children = children;
+        when(node.expression()).thenReturn(child);
 
         Type actualType = visitor.visitStructAccess(node);
 
@@ -229,15 +230,13 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.StructAccessContext node = mock(UCELParser.StructAccessContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        Type type = INVALID_TYPE;
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor));
+        var child = mockForVisitorResult(UCELParser.ExpressionContext.class, INVALID_TYPE, visitor);
 
         TerminalNode idNode = mock(TerminalNode.class);
         when(idNode.getText()).thenReturn(invalidVariableName);
         when(node.ID()).thenReturn(idNode);
 
-        node.children = children;
+        when(node.expression()).thenReturn(child);
 
         Type actualType = visitor.visitStructAccess(node);
 
@@ -254,9 +253,8 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.IncrementPostContext node = mock(UCELParser.IncrementPostContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor));
-        node.children = children;
+        var child = mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor);
+        when(node.expression()).thenReturn(child);
 
         Type actual = visitor.visitIncrementPost(node);
 
@@ -271,9 +269,8 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.IncrementPreContext node = mock(UCELParser.IncrementPreContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor));
-        node.children = children;
+        var child = mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor);
+        when(node.expression()).thenReturn(child);
 
         Type actual = visitor.visitIncrementPre(node);
 
@@ -288,9 +285,8 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.DecrementPostContext node = mock(UCELParser.DecrementPostContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor));
-        node.children = children;
+        var child = mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor);
+        when(node.expression()).thenReturn(child);
 
         Type actual = visitor.visitDecrementPost(node);
 
@@ -305,15 +301,34 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.DecrementPreContext node = mock(UCELParser.DecrementPreContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor));
-        node.children = children;
+        var child = mockForVisitorResult(UCELParser.ExpressionContext.class, inType, visitor);
+        when(node.expression()).thenReturn(child);
 
         Type actual = visitor.visitDecrementPre(node);
 
         assertEquals(returnType, actual);
     }
     //endregion
+
+    private  static Stream<Arguments> expectedIncrementPostTypes() {
+
+        return Stream.of(
+                // Valid input
+                Arguments.arguments(INT_TYPE, INT_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, DOUBLE_TYPE),
+
+                // Bad input
+                Arguments.arguments(STRING_TYPE, ERROR_TYPE),
+                Arguments.arguments(CHAN_TYPE, ERROR_TYPE),
+                Arguments.arguments(SCALAR_TYPE, ERROR_TYPE),
+                Arguments.arguments(STRUCT_TYPE, ERROR_TYPE),
+                Arguments.arguments(VOID_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, ERROR_TYPE),
+
+                // array (Also bad)
+                Arguments.arguments(INT_ARRAY_TYPE, ERROR_TYPE)
+        );
+    }
     //endregion
     
     //region FuncCall
@@ -325,11 +340,14 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.ArgumentsContext node = mock(UCELParser.ArgumentsContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        for(Type paramType: argTypes.getParameters()) {
-            children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, paramType, visitor));
+
+        LinkedList<UCELParser.ExpressionContext> mocks = new LinkedList<>();
+        for (int i = 0; i < argTypes.getParameters().length; i++) {
+            var c = mockForVisitorResult(UCELParser.ExpressionContext.class, argTypes.getParameters()[i], visitor);
+            mocks.add(c);
         }
-        node.children = children;
+
+        when(node.expression()).thenReturn(mocks);
 
         Type actual = visitor.visitArguments(node);
 
@@ -509,7 +527,18 @@ public class TypeCheckerTests  {
         assertEquals(ERROR_TYPE, actualType);
     }
 
+    private static Stream<Arguments> unaryNotNegTypes() {
+        return Stream.of(
+                Arguments.arguments(BOOL_TYPE)
+        );
+    }
 
+    private static Stream<Arguments> unaryPlusMinusNumberTypes() {
+        return Stream.of(
+                Arguments.arguments(INT_TYPE),
+                Arguments.arguments(DOUBLE_TYPE)
+        );
+    }
 
     //endregion
 
@@ -566,7 +595,6 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.AddSubContext node = mock(UCELParser.AddSubContext.class);
-        List<ParseTree> children = new ArrayList<>();
 
         var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor);
         var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor);
@@ -579,6 +607,19 @@ public class TypeCheckerTests  {
         assertEquals(returnType, actual);
     }
 
+    private static Stream<Arguments> addSubTypes() {
+        return Stream.of(
+                Arguments.arguments(INT_TYPE, INT_TYPE, INT_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, INT_TYPE, DOUBLE_TYPE),
+                Arguments.arguments(INT_TYPE, DOUBLE_TYPE, DOUBLE_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, DOUBLE_TYPE, DOUBLE_TYPE),
+                Arguments.arguments(STRING_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(INT_TYPE, ERROR_TYPE, ERROR_TYPE),
+                Arguments.arguments(INT_TYPE, INT_ARRAY_TYPE, ERROR_TYPE),
+                Arguments.arguments(STRING_TYPE, STRING_TYPE, ERROR_TYPE)
+        );
+    }
     //endregion
 
     //region MinMax
@@ -902,11 +943,15 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.ConditionalContext node = mock(UCELParser.ConditionalContext.class);
-        List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, conditionType, visitor));
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, leftReturnType, visitor));
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, rightReturnType, visitor));
-        node.children = children;
+
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, conditionType, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, leftReturnType, visitor);
+        var child3 = mockForVisitorResult(UCELParser.ExpressionContext.class, rightReturnType, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
+        when(node.expression(2)).thenReturn(child3);
+
         Type actual = visitor.visitConditional(node);
 
         assertEquals(expectedReturnType, actual);
@@ -961,53 +1006,6 @@ public class TypeCheckerTests  {
     //endregion
 
     //region Arguments for parameterized tests
-
-    private static Stream<Arguments> unaryNotNegTypes() {
-        return Stream.of(
-                Arguments.arguments(BOOL_TYPE)
-        );
-    }
-
-    private static Stream<Arguments> unaryPlusMinusNumberTypes() {
-        return Stream.of(
-                Arguments.arguments(INT_TYPE),
-                Arguments.arguments(DOUBLE_TYPE)
-        );
-    }
-
-    private static Stream<Arguments> addSubTypes() {
-        return Stream.of(
-                Arguments.arguments(INT_TYPE, INT_TYPE, INT_TYPE),
-                Arguments.arguments(DOUBLE_TYPE, INT_TYPE, DOUBLE_TYPE),
-                Arguments.arguments(INT_TYPE, DOUBLE_TYPE, DOUBLE_TYPE),
-                Arguments.arguments(DOUBLE_TYPE, DOUBLE_TYPE, DOUBLE_TYPE),
-                Arguments.arguments(STRING_TYPE, INT_TYPE, ERROR_TYPE),
-                Arguments.arguments(ERROR_TYPE, INT_TYPE, ERROR_TYPE),
-                Arguments.arguments(INT_TYPE, ERROR_TYPE, ERROR_TYPE),
-                Arguments.arguments(INT_TYPE, INT_ARRAY_TYPE, ERROR_TYPE),
-                Arguments.arguments(STRING_TYPE, STRING_TYPE, ERROR_TYPE)
-        );
-    }
-
-    private  static Stream<Arguments> expectedIncrementPostTypes() {
-
-        return Stream.of(
-                // Valid input
-                Arguments.arguments(INT_TYPE, INT_TYPE),
-                Arguments.arguments(DOUBLE_TYPE, DOUBLE_TYPE),
-
-                // Bad input
-                Arguments.arguments(STRING_TYPE, ERROR_TYPE),
-                Arguments.arguments(CHAN_TYPE, ERROR_TYPE),
-                Arguments.arguments(SCALAR_TYPE, ERROR_TYPE),
-                Arguments.arguments(STRUCT_TYPE, ERROR_TYPE),
-                Arguments.arguments(VOID_TYPE, ERROR_TYPE),
-                Arguments.arguments(ERROR_TYPE, ERROR_TYPE),
-
-                // array (Also bad)
-                Arguments.arguments(INT_ARRAY_TYPE, ERROR_TYPE)
-        );
-    }
 
     private static Stream<Arguments> allTypes() {
 
