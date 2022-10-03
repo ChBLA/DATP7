@@ -4,7 +4,7 @@ public class Main {
     public static void main(String[] args) {
         //UCELBaseListener a = new UCELBaseListener();
 
-        String input = "true + x";
+        String input = "true > 12 && true || b";
         new Main(input);
     }
 
