@@ -69,7 +69,7 @@ public class Logger {
 
     private String formatErrorLog(ErrorLog log) {
         if(log.getLineStart() == log.getLineStop()) {
-            return "Error: " + log.getMessage() + "\n" + lines[log.getLineStart()] +
+            return "Error at " + (log.getLineStart() + 1) + ":" + log.getCharStart() + ": " + log.getMessage() + "\n" + lines[log.getLineStart()] +
                     "\n" + repeat(" ", log.getCharStart()) +
                     repeat("^", log.getCharStop() - log.getCharStart() + 1);
         }

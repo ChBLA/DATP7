@@ -3,11 +3,12 @@ import org.antlr.v4.runtime.*;
 public class Main {
     public static void main(String[] args) {
         //UCELBaseListener a = new UCELBaseListener();
-        new Main();
+
+        String input = "true + x";
+        new Main(input);
     }
 
-    public Main() {
-        String input = "true + x";
+    public Main(String input) {
 
         CharStream charStream = CharStreams.fromString(input);
         UCELLexer lexer = new UCELLexer(charStream);
@@ -24,7 +25,6 @@ public class Main {
         Type type = typeCheckerVisitor.visit(expressionContext);
 
         System.out.println(type);
-
         logger.printLogs();
     }
 }

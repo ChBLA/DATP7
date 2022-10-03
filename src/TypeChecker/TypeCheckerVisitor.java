@@ -1,3 +1,4 @@
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
@@ -68,7 +69,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type leftType = visit(ctx.expression(0));
         Type rightType = visit(ctx.expression(1));
 
-        return intDoubleBinaryOp(leftType, rightType);
+        return intDoubleBinaryOp(ctx, leftType, rightType);
     }
 
     @Override
@@ -90,16 +91,17 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type leftType = visit(ctx.expression(0));
         Type rightType = visit(ctx.expression(1));
 
-        return intDoubleBinaryOp(leftType, rightType);
+        return intDoubleBinaryOp(ctx, leftType, rightType);
     }
 
     private boolean isArray(Type t) {
         return t.getArrayDimensions() > 0;
     }
 
-    private Type intDoubleBinaryOp(Type leftType, Type rightType) {
+    //TODO comment
+    private Type intDoubleBinaryOp(ParserRuleContext ctx, Type leftType, Type rightType) {
         if(isArray(leftType) || isArray(rightType)) {
-            //TODO logger
+            logger.log(new ErrorLog(ctx, "Array type not supported for operator"));
             return new Type(Type.TypeEnum.errorType);
         }
 
@@ -127,7 +129,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return new Type(Type.TypeEnum.doubleType);
 
         else {
-            //TODO logger
+            logger.log(new ErrorLog(ctx, "The types " + leftType.toString() + " and " +
+                                        leftType.toString() + " are not supported for operator"));
             return new Type(Type.TypeEnum.errorType);
         }
     }
@@ -214,7 +217,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type leftNode = visit(ctx.expression(0));
         Type rightNode = visit(ctx.expression(1));
 
-        return intDoubleBinaryOp(leftNode, rightNode);
+        return intDoubleBinaryOp(ctx, leftNode, rightNode);
     }
 
     //region Relational/Equality expressions
@@ -371,7 +374,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return leftValType;
 
         // Type Coercion
-        return intDoubleBinaryOp(leftValType, rightValType);
+        return intDoubleBinaryOp(ctx, leftValType, rightValType);
     }
 
     //endregion

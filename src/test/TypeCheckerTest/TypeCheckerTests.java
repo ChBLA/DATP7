@@ -18,21 +18,21 @@ import static org.mockito.Mockito.when;
 
 public class TypeCheckerTests  {
 
-    private static final Type intType = new Type(Type.TypeEnum.intType);
-    private static final Type doubleType = new Type(Type.TypeEnum.doubleType);
-    private static final Type boolType = new Type(Type.TypeEnum.boolType);
-    private static final Type charType = new Type(Type.TypeEnum.charType);
-    private static final Type stringType = new Type(Type.TypeEnum.stringType);
-    private static final Type errorType = new Type(Type.TypeEnum.errorType);
-    private static final Type intArrayType = new Type(Type.TypeEnum.intType, 1);
-    private static final Type doubleArrayType = new Type(Type.TypeEnum.doubleType, 1);
-    private static final Type boolArrayType = new Type(Type.TypeEnum.boolType, 1);
-    private static final Type charArrayType = new Type(Type.TypeEnum.charType, 1);
-    private static final Type invalidType = new Type(Type.TypeEnum.invalidType);
-    private static final Type voidType = new Type(Type.TypeEnum.voidType);
-    private static final Type chanType = new Type(Type.TypeEnum.chanType);
-    private static final Type structType = new Type(Type.TypeEnum.structType);
-    private static final Type scalarType = new Type(Type.TypeEnum.scalarType);
+    private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
+    private static final Type DOUBLE_TYPE = new Type(Type.TypeEnum.doubleType);
+    private static final Type BOOL_TYPE = new Type(Type.TypeEnum.boolType);
+    private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
+    private static final Type STRING_TYPE = new Type(Type.TypeEnum.stringType);
+    private static final Type ERROR_TYPE = new Type(Type.TypeEnum.errorType);
+    private static final Type INT_ARRAY_TYPE = new Type(Type.TypeEnum.intType, 1);
+    private static final Type DOUBLE_ARRAY_TYPE = new Type(Type.TypeEnum.doubleType, 1);
+    private static final Type BOOL_ARRAY_TYPE = new Type(Type.TypeEnum.boolType, 1);
+    private static final Type CHAR_ARRAY_TYPE = new Type(Type.TypeEnum.charType, 1);
+    private static final Type INVALID_TYPE = new Type(Type.TypeEnum.invalidType);
+    private static final Type VOID_TYPE = new Type(Type.TypeEnum.voidType);
+    private static final Type CHAN_TYPE = new Type(Type.TypeEnum.chanType);
+    private static final Type STRUCT_TYPE = new Type(Type.TypeEnum.structType);
+    private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
 
     //region IdExpr
     @Test
@@ -41,7 +41,7 @@ public class TypeCheckerTests  {
         UCELParser.IdExprContext node = mock(UCELParser.IdExprContext.class);
         when(node.ID()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.ID)));
         Type actual = visitor.visitIdExpr(node);
-        assertEquals(errorType, actual);
+        assertEquals(ERROR_TYPE, actual);
     }
 
 
@@ -50,7 +50,7 @@ public class TypeCheckerTests  {
 
         var variableName = "foo";
         var variable = new Variable(variableName);
-        variable.setType(intType);
+        variable.setType(INT_TYPE);
         scope.add(new Variable(variableName));
         TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
         UCELParser.IdExprContext node = mock(UCELParser.IdExprContext.class);
@@ -60,7 +60,7 @@ public class TypeCheckerTests  {
 
         when(node.ID()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.ID)));
         Type actual = visitor.visitIdExpr(node);
-        assertEquals(intType, actual);
+        assertEquals(INT_TYPE, actual);
     }
     //endregion
 
@@ -75,7 +75,7 @@ public class TypeCheckerTests  {
         when(node.NAT()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.NAT)));
 
         Type actual = visitor.visitLiteral(node);
-        assertEquals(intType, actual);
+        assertEquals(INT_TYPE, actual);
     }
 
     @Test
@@ -86,7 +86,7 @@ public class TypeCheckerTests  {
         when(node.DOUBLE()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.NAT)));
 
         Type actual = visitor.visitLiteral(node);
-        assertEquals(doubleType, actual);
+        assertEquals(DOUBLE_TYPE, actual);
     }
 
     @Test
@@ -99,7 +99,7 @@ public class TypeCheckerTests  {
         when(node.boolean_()).thenReturn(boolCtx);
 
         Type actual = visitor.visitLiteral(node);
-        assertEquals(boolType, actual);
+        assertEquals(BOOL_TYPE, actual);
     }
 
     //endregion
@@ -111,12 +111,12 @@ public class TypeCheckerTests  {
 
         UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
         List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, boolArrayType, visitor));
-        children.add(mockForVisitorResult(UCELParser.ArrayIndexContext.class, charType, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_ARRAY_TYPE, visitor));
+        children.add(mockForVisitorResult(UCELParser.ArrayIndexContext.class, CHAR_TYPE, visitor));
         node.children = children;
 
         Type actual = visitor.visitArrayIndex(node);
-        assertEquals(errorType, actual);
+        assertEquals(ERROR_TYPE, actual);
     }
 
     @Test
@@ -125,12 +125,12 @@ public class TypeCheckerTests  {
 
         UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
         List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, boolType, visitor));
-        children.add(mockForVisitorResult(UCELParser.ArrayIndexContext.class, intType, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor));
+        children.add(mockForVisitorResult(UCELParser.ArrayIndexContext.class, INT_TYPE, visitor));
         node.children = children;
 
         Type actual = visitor.visitArrayIndex(node);
-        assertEquals(errorType, actual);
+        assertEquals(ERROR_TYPE, actual);
     }
 
     @Test
@@ -139,12 +139,12 @@ public class TypeCheckerTests  {
 
         UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
         List<ParseTree> children = new ArrayList<>();
-        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, boolArrayType, visitor));
-        children.add(mockForVisitorResult(UCELParser.ArrayIndexContext.class, intType, visitor));
+        children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_ARRAY_TYPE, visitor));
+        children.add(mockForVisitorResult(UCELParser.ArrayIndexContext.class, INT_TYPE, visitor));
         node.children = children;
 
         Type actual = visitor.visitArrayIndex(node);
-        assertEquals(boolArrayType, actual);
+        assertEquals(BOOL_ARRAY_TYPE, actual);
     }
 
 
@@ -181,7 +181,7 @@ public class TypeCheckerTests  {
 
         final UCELParser.StructAccessContext node = mock(UCELParser.StructAccessContext.class);
         List<ParseTree> children = new ArrayList<>();
-        Type[] structInternalTypes = new Type[]{intType, stringType};
+        Type[] structInternalTypes = new Type[]{INT_TYPE, STRING_TYPE};
         String[] structInternalIdentifiers = new String[]{incorrectVariableName, correctVariableName};
         Type type = new Type(Type.TypeEnum.structType, structInternalIdentifiers, structInternalTypes);
         children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor));
@@ -206,7 +206,7 @@ public class TypeCheckerTests  {
 
         final UCELParser.StructAccessContext node = mock(UCELParser.StructAccessContext.class);
         List<ParseTree> children = new ArrayList<>();
-        Type[] structInternalTypes = new Type[]{intType, stringType};
+        Type[] structInternalTypes = new Type[]{INT_TYPE, STRING_TYPE};
         String[] structInternalIdentifiers = new String[]{incorrectVariableName, correctVariableName};
         Type type = new Type(Type.TypeEnum.structType, structInternalIdentifiers, structInternalTypes);
         children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor));
@@ -219,7 +219,7 @@ public class TypeCheckerTests  {
 
         Type actualType = visitor.visitStructAccess(node);
 
-        assertEquals(stringType, actualType);
+        assertEquals(STRING_TYPE, actualType);
     }
 
     @Test
@@ -230,7 +230,7 @@ public class TypeCheckerTests  {
 
         final UCELParser.StructAccessContext node = mock(UCELParser.StructAccessContext.class);
         List<ParseTree> children = new ArrayList<>();
-        Type type = invalidType;
+        Type type = INVALID_TYPE;
         children.add(mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor));
 
         TerminalNode idNode = mock(TerminalNode.class);
@@ -241,7 +241,7 @@ public class TypeCheckerTests  {
 
         Type actualType = visitor.visitStructAccess(node);
 
-        assertEquals(errorType, actualType);
+        assertEquals(ERROR_TYPE, actualType);
     }
 
     //endregion
@@ -413,7 +413,7 @@ public class TypeCheckerTests  {
 
         Type actualType = visitor.visitUnaryExpr(node);
 
-        assertEquals(errorType, actualType);
+        assertEquals(ERROR_TYPE, actualType);
     }
 
     @ParameterizedTest(name = "{index} => using wrong type {0} for unary +")
@@ -432,7 +432,7 @@ public class TypeCheckerTests  {
 
         Type actualType = visitor.visitUnaryExpr(node);
 
-        assertEquals(errorType, actualType);
+        assertEquals(ERROR_TYPE, actualType);
     }
 
     @ParameterizedTest(name = "{index} => using type {0} for unary Minus")
@@ -451,7 +451,7 @@ public class TypeCheckerTests  {
 
         Type actualType = visitor.visitUnaryExpr(node);
 
-        assertEquals(errorType, actualType);
+        assertEquals(ERROR_TYPE, actualType);
     }
 
     @ParameterizedTest(name = "{index} => using wrong type {0} for unary Neg")
@@ -470,7 +470,7 @@ public class TypeCheckerTests  {
 
         Type actualType = visitor.visitUnaryExpr(node);
 
-        assertEquals(errorType, actualType);
+        assertEquals(ERROR_TYPE, actualType);
     }
 
 
@@ -484,7 +484,7 @@ public class TypeCheckerTests  {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.MultDivContext node = mock(UCELParser.MultDivContext.class);
-        List<ParseTree> children = new ArrayList<>();
+
         var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor);
         var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor);
 
@@ -498,26 +498,26 @@ public class TypeCheckerTests  {
 
     private static Stream<Arguments> multDivTypes() {
         return Stream.of(
-                Arguments.arguments(intType, intType, intType),
-                Arguments.arguments(doubleType, doubleType, doubleType),
+                Arguments.arguments(INT_TYPE, INT_TYPE, INT_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, DOUBLE_TYPE, DOUBLE_TYPE),
 
-                Arguments.arguments(intType, doubleType, doubleType),
-                Arguments.arguments(doubleType, intType, doubleType),
+                Arguments.arguments(INT_TYPE, DOUBLE_TYPE, DOUBLE_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, INT_TYPE, DOUBLE_TYPE),
 
-                Arguments.arguments(intType, invalidType, errorType),
-                Arguments.arguments(invalidType, intType, errorType),
-                Arguments.arguments(doubleType, invalidType, errorType),
-                Arguments.arguments(invalidType, doubleType, errorType),
+                Arguments.arguments(INT_TYPE, INVALID_TYPE, ERROR_TYPE),
+                Arguments.arguments(INVALID_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, INVALID_TYPE, ERROR_TYPE),
+                Arguments.arguments(INVALID_TYPE, DOUBLE_TYPE, ERROR_TYPE),
 
-                Arguments.arguments(intType, intArrayType, errorType),
-                Arguments.arguments(intArrayType, intType, errorType),
-                Arguments.arguments(doubleType, doubleArrayType, errorType),
-                Arguments.arguments(doubleArrayType, doubleType, errorType),
+                Arguments.arguments(INT_TYPE, INT_ARRAY_TYPE, ERROR_TYPE),
+                Arguments.arguments(INT_ARRAY_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, DOUBLE_ARRAY_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_ARRAY_TYPE, DOUBLE_TYPE, ERROR_TYPE),
 
-                Arguments.arguments(intType, errorType, errorType),
-                Arguments.arguments(errorType, intType, errorType),
-                Arguments.arguments(doubleType, errorType, errorType),
-                Arguments.arguments(errorType, doubleType, errorType)
+                Arguments.arguments(INT_TYPE, ERROR_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, ERROR_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, DOUBLE_TYPE, ERROR_TYPE)
         );
     }
 
@@ -565,26 +565,26 @@ public class TypeCheckerTests  {
 
     private static Stream<Arguments> minMaxTypes() {
         return Stream.of(
-                Arguments.arguments(intType, intType, intType),
-                Arguments.arguments(doubleType, doubleType, doubleType),
+                Arguments.arguments(INT_TYPE, INT_TYPE, INT_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, DOUBLE_TYPE, DOUBLE_TYPE),
 
-                Arguments.arguments(intType, doubleType, doubleType),
-                Arguments.arguments(doubleType, intType, doubleType),
+                Arguments.arguments(INT_TYPE, DOUBLE_TYPE, DOUBLE_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, INT_TYPE, DOUBLE_TYPE),
 
-                Arguments.arguments(intType, invalidType, errorType),
-                Arguments.arguments(invalidType, intType, errorType),
-                Arguments.arguments(doubleType, invalidType, errorType),
-                Arguments.arguments(invalidType, doubleType, errorType),
+                Arguments.arguments(INT_TYPE, INVALID_TYPE, ERROR_TYPE),
+                Arguments.arguments(INVALID_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, INVALID_TYPE, ERROR_TYPE),
+                Arguments.arguments(INVALID_TYPE, DOUBLE_TYPE, ERROR_TYPE),
 
-                Arguments.arguments(intType, intArrayType, errorType),
-                Arguments.arguments(intArrayType, intType, errorType),
-                Arguments.arguments(doubleType, doubleArrayType, errorType),
-                Arguments.arguments(doubleArrayType, doubleType, errorType),
+                Arguments.arguments(INT_TYPE, INT_ARRAY_TYPE, ERROR_TYPE),
+                Arguments.arguments(INT_ARRAY_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, DOUBLE_ARRAY_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_ARRAY_TYPE, DOUBLE_TYPE, ERROR_TYPE),
 
-                Arguments.arguments(intType, errorType, errorType),
-                Arguments.arguments(errorType, intType, errorType),
-                Arguments.arguments(doubleType, errorType, errorType),
-                Arguments.arguments(errorType, doubleType, errorType)
+                Arguments.arguments(INT_TYPE, ERROR_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, ERROR_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, DOUBLE_TYPE, ERROR_TYPE)
         );
     }
     //endregion
@@ -609,48 +609,48 @@ public class TypeCheckerTests  {
 
     private static Stream<Arguments> relTypes() {
         return Stream.of(
-                Arguments.arguments(boolType, boolType, boolType),
-                Arguments.arguments(intType, intType, boolType),
-                Arguments.arguments(doubleType, doubleType, boolType),
-                Arguments.arguments(charType, charType, boolType),
-                Arguments.arguments(doubleType, intType, boolType),
-                Arguments.arguments(intType, doubleType, boolType),
+                Arguments.arguments(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE),
+                Arguments.arguments(INT_TYPE, INT_TYPE, BOOL_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, DOUBLE_TYPE, BOOL_TYPE),
+                Arguments.arguments(CHAR_TYPE, CHAR_TYPE, BOOL_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, INT_TYPE, BOOL_TYPE),
+                Arguments.arguments(INT_TYPE, DOUBLE_TYPE, BOOL_TYPE),
 
                 // Bool to int, not allowed
-                Arguments.arguments(intType, boolType, errorType),
-                Arguments.arguments(boolType, intType, errorType),
-                Arguments.arguments(doubleType, boolType, errorType),
-                Arguments.arguments(boolType, doubleType, errorType),
+                Arguments.arguments(INT_TYPE, BOOL_TYPE, ERROR_TYPE),
+                Arguments.arguments(BOOL_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, BOOL_TYPE, ERROR_TYPE),
+                Arguments.arguments(BOOL_TYPE, DOUBLE_TYPE, ERROR_TYPE),
 
                 // Bad types
-                Arguments.arguments(boolType, invalidType, errorType),
-                Arguments.arguments(invalidType, boolType, errorType),
-                Arguments.arguments(intType, invalidType, errorType),
-                Arguments.arguments(invalidType, intType, errorType),
-                Arguments.arguments(doubleType, invalidType, errorType),
-                Arguments.arguments(invalidType, doubleType, errorType),
-                Arguments.arguments(charType, invalidType, errorType),
-                Arguments.arguments(invalidType, charType, errorType),
+                Arguments.arguments(BOOL_TYPE, INVALID_TYPE, ERROR_TYPE),
+                Arguments.arguments(INVALID_TYPE, BOOL_TYPE, ERROR_TYPE),
+                Arguments.arguments(INT_TYPE, INVALID_TYPE, ERROR_TYPE),
+                Arguments.arguments(INVALID_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, INVALID_TYPE, ERROR_TYPE),
+                Arguments.arguments(INVALID_TYPE, DOUBLE_TYPE, ERROR_TYPE),
+                Arguments.arguments(CHAR_TYPE, INVALID_TYPE, ERROR_TYPE),
+                Arguments.arguments(INVALID_TYPE, CHAR_TYPE, ERROR_TYPE),
 
                 // Bad types (arrays)
-                Arguments.arguments(boolArrayType, boolType, errorType),
-                Arguments.arguments(intArrayType, intType, errorType),
-                Arguments.arguments(doubleArrayType, doubleType, errorType),
-                Arguments.arguments(charArrayType, charType, errorType),
-                Arguments.arguments(boolType, boolArrayType, errorType),
-                Arguments.arguments(intType, intArrayType, errorType),
-                Arguments.arguments(doubleType, doubleArrayType, errorType),
-                Arguments.arguments(charType, charArrayType, errorType),
+                Arguments.arguments(BOOL_ARRAY_TYPE, BOOL_TYPE, ERROR_TYPE),
+                Arguments.arguments(INT_ARRAY_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_ARRAY_TYPE, DOUBLE_TYPE, ERROR_TYPE),
+                Arguments.arguments(CHAR_ARRAY_TYPE, CHAR_TYPE, ERROR_TYPE),
+                Arguments.arguments(BOOL_TYPE, BOOL_ARRAY_TYPE, ERROR_TYPE),
+                Arguments.arguments(INT_TYPE, INT_ARRAY_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, DOUBLE_ARRAY_TYPE, ERROR_TYPE),
+                Arguments.arguments(CHAR_TYPE, CHAR_ARRAY_TYPE, ERROR_TYPE),
 
                 // Bad types (errors)
-                Arguments.arguments(boolType, errorType, errorType),
-                Arguments.arguments(errorType, boolType, errorType),
-                Arguments.arguments(intType, errorType, errorType),
-                Arguments.arguments(errorType, intType, errorType),
-                Arguments.arguments(doubleType, errorType, errorType),
-                Arguments.arguments(errorType, doubleType, errorType),
-                Arguments.arguments(charType, errorType, errorType),
-                Arguments.arguments(errorType, charType, errorType)
+                Arguments.arguments(BOOL_TYPE, ERROR_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, BOOL_TYPE, ERROR_TYPE),
+                Arguments.arguments(INT_TYPE, ERROR_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, ERROR_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, DOUBLE_TYPE, ERROR_TYPE),
+                Arguments.arguments(CHAR_TYPE, ERROR_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, CHAR_TYPE, ERROR_TYPE)
         );
     }
 
@@ -676,36 +676,36 @@ public class TypeCheckerTests  {
 
     private static Stream<Arguments> eqTypes() {
         return Stream.of(
-                Arguments.arguments(boolType, boolType, boolType),
-                Arguments.arguments(intType, intType, boolType),
-                Arguments.arguments(doubleType, doubleType, boolType),
-                Arguments.arguments(doubleType, intType, boolType),
-                Arguments.arguments(intType, doubleType, boolType),
+                Arguments.arguments(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE),
+                Arguments.arguments(INT_TYPE, INT_TYPE, BOOL_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, DOUBLE_TYPE, BOOL_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, INT_TYPE, BOOL_TYPE),
+                Arguments.arguments(INT_TYPE, DOUBLE_TYPE, BOOL_TYPE),
 
                 // Bad types
-                Arguments.arguments(boolType, invalidType, errorType),
-                Arguments.arguments(invalidType, boolType, errorType),
-                Arguments.arguments(doubleType, invalidType, errorType),
-                Arguments.arguments(invalidType, doubleType, errorType),
-                Arguments.arguments(intType, invalidType, errorType),
-                Arguments.arguments(invalidType, intType, errorType),
+                Arguments.arguments(BOOL_TYPE, INVALID_TYPE, ERROR_TYPE),
+                Arguments.arguments(INVALID_TYPE, BOOL_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, INVALID_TYPE, ERROR_TYPE),
+                Arguments.arguments(INVALID_TYPE, DOUBLE_TYPE, ERROR_TYPE),
+                Arguments.arguments(INT_TYPE, INVALID_TYPE, ERROR_TYPE),
+                Arguments.arguments(INVALID_TYPE, INT_TYPE, ERROR_TYPE),
 
                 //Bad types (arrays)
-                Arguments.arguments(boolArrayType, boolType, errorType),
-                Arguments.arguments(boolType, boolArrayType, errorType),
-                Arguments.arguments(doubleArrayType, doubleType, errorType),
-                Arguments.arguments(doubleType, doubleArrayType, errorType),
-                Arguments.arguments(intArrayType, intType, errorType),
-                Arguments.arguments(intType, intArrayType, errorType),
+                Arguments.arguments(BOOL_ARRAY_TYPE, BOOL_TYPE, ERROR_TYPE),
+                Arguments.arguments(BOOL_TYPE, BOOL_ARRAY_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_ARRAY_TYPE, DOUBLE_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, DOUBLE_ARRAY_TYPE, ERROR_TYPE),
+                Arguments.arguments(INT_ARRAY_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(INT_TYPE, INT_ARRAY_TYPE, ERROR_TYPE),
 
                 // Bad types (errors)
-                Arguments.arguments(boolType, errorType, errorType),
-                Arguments.arguments(errorType, boolType, errorType),
-                Arguments.arguments(doubleType, errorType, errorType),
-                Arguments.arguments(errorType, doubleType, errorType),
-                Arguments.arguments(intType, errorType, errorType),
-                Arguments.arguments(errorType, intType, errorType),
-                Arguments.arguments(errorType, errorType, errorType)
+                Arguments.arguments(BOOL_TYPE, ERROR_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, BOOL_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, ERROR_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, DOUBLE_TYPE, ERROR_TYPE),
+                Arguments.arguments(INT_TYPE, ERROR_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, ERROR_TYPE, ERROR_TYPE)
         );
     }
     //endregion
@@ -788,17 +788,17 @@ public class TypeCheckerTests  {
     //endregion
     private static Stream<Arguments> bitTypes() {
         return Stream.of(
-                Arguments.arguments(intType, intType, intType),
+                Arguments.arguments(INT_TYPE, INT_TYPE, INT_TYPE),
 
-                Arguments.arguments(intType, invalidType, errorType),
-                Arguments.arguments(invalidType, intType, errorType),
+                Arguments.arguments(INT_TYPE, INVALID_TYPE, ERROR_TYPE),
+                Arguments.arguments(INVALID_TYPE, INT_TYPE, ERROR_TYPE),
 
-                Arguments.arguments(intType, intArrayType, errorType),
-                Arguments.arguments(intArrayType, intType, errorType),
+                Arguments.arguments(INT_TYPE, INT_ARRAY_TYPE, ERROR_TYPE),
+                Arguments.arguments(INT_ARRAY_TYPE, INT_TYPE, ERROR_TYPE),
 
-                Arguments.arguments(intType, errorType, errorType),
-                Arguments.arguments(errorType, intType, errorType),
-                Arguments.arguments(errorType, errorType, errorType)
+                Arguments.arguments(INT_TYPE, ERROR_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, ERROR_TYPE, ERROR_TYPE)
         );
     }
     //endregion
@@ -843,18 +843,18 @@ public class TypeCheckerTests  {
     //endregion
     private static Stream<Arguments> logTypes() { //TODO: consider letting char comparable with non-char
         return Stream.of(
-                Arguments.arguments(boolType, boolType, boolType),
-                Arguments.arguments(boolType, invalidType, errorType),
-                Arguments.arguments(invalidType, boolType, errorType),
-                Arguments.arguments(invalidType, invalidType, errorType),
-                Arguments.arguments(boolArrayType, boolType, errorType),
-                Arguments.arguments(boolType, boolArrayType, errorType),
-                Arguments.arguments(boolArrayType, invalidType, errorType),
-                Arguments.arguments(invalidType, boolArrayType, errorType),
+                Arguments.arguments(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE),
+                Arguments.arguments(BOOL_TYPE, INVALID_TYPE, ERROR_TYPE),
+                Arguments.arguments(INVALID_TYPE, BOOL_TYPE, ERROR_TYPE),
+                Arguments.arguments(INVALID_TYPE, INVALID_TYPE, ERROR_TYPE),
+                Arguments.arguments(BOOL_ARRAY_TYPE, BOOL_TYPE, ERROR_TYPE),
+                Arguments.arguments(BOOL_TYPE, BOOL_ARRAY_TYPE, ERROR_TYPE),
+                Arguments.arguments(BOOL_ARRAY_TYPE, INVALID_TYPE, ERROR_TYPE),
+                Arguments.arguments(INVALID_TYPE, BOOL_ARRAY_TYPE, ERROR_TYPE),
 
-                Arguments.arguments(errorType, boolType, errorType),
-                Arguments.arguments(boolType, errorType, errorType),
-                Arguments.arguments(errorType, errorType, errorType)
+                Arguments.arguments(ERROR_TYPE, BOOL_TYPE, ERROR_TYPE),
+                Arguments.arguments(BOOL_TYPE, ERROR_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, ERROR_TYPE, ERROR_TYPE)
         );
     }
     //endregion
@@ -881,32 +881,32 @@ public class TypeCheckerTests  {
         return Stream.of(
                 // Conditions:
                 // Conditions - Valid
-                Arguments.arguments(boolType, intType, intType, intType),
+                Arguments.arguments(BOOL_TYPE, INT_TYPE, INT_TYPE, INT_TYPE),
 
                 // Conditions - Invalid
-                Arguments.arguments(intType, intType, intType, errorType),
-                Arguments.arguments(doubleType, intType, intType, errorType),
-                Arguments.arguments(chanType, intType, intType, errorType),
-                Arguments.arguments(voidType, intType, intType, errorType),
-                Arguments.arguments(errorType, intType, intType, errorType),
+                Arguments.arguments(INT_TYPE, INT_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, INT_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(CHAN_TYPE, INT_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(VOID_TYPE, INT_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, INT_TYPE, INT_TYPE, ERROR_TYPE),
 
                 // Unmatched Return Types
                 // Unmatched Return Types - Valid
-                Arguments.arguments(boolType, intType, doubleType, doubleType),
-                Arguments.arguments(boolType, doubleType, intType, doubleType),
+                Arguments.arguments(BOOL_TYPE, INT_TYPE, DOUBLE_TYPE, DOUBLE_TYPE),
+                Arguments.arguments(BOOL_TYPE, DOUBLE_TYPE, INT_TYPE, DOUBLE_TYPE),
 
                 // Unmatched Return Types - Invalid
-                Arguments.arguments(boolType, intType, boolType, errorType),
-                Arguments.arguments(boolType, boolType, intType, errorType),
-                Arguments.arguments(boolType, intType, chanType, errorType),
-                Arguments.arguments(boolType, chanType, intType, errorType),
-                Arguments.arguments(boolType, intType, voidType, errorType),
-                Arguments.arguments(boolType, voidType, intType, errorType),
+                Arguments.arguments(BOOL_TYPE, INT_TYPE, BOOL_TYPE, ERROR_TYPE),
+                Arguments.arguments(BOOL_TYPE, BOOL_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(BOOL_TYPE, INT_TYPE, CHAN_TYPE, ERROR_TYPE),
+                Arguments.arguments(BOOL_TYPE, CHAN_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(BOOL_TYPE, INT_TYPE, VOID_TYPE, ERROR_TYPE),
+                Arguments.arguments(BOOL_TYPE, VOID_TYPE, INT_TYPE, ERROR_TYPE),
 
                 // Error in input
-                Arguments.arguments(errorType, intType, intType, errorType),
-                Arguments.arguments(boolType, errorType, intType, errorType),
-                Arguments.arguments(boolType, intType, errorType, errorType)
+                Arguments.arguments(ERROR_TYPE, INT_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(BOOL_TYPE, ERROR_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(BOOL_TYPE, INT_TYPE, ERROR_TYPE, ERROR_TYPE)
         );
     }
 
@@ -928,28 +928,28 @@ public class TypeCheckerTests  {
 
     private static Stream<Arguments> unaryNotNegTypes() {
         return Stream.of(
-                Arguments.arguments(boolType)
+                Arguments.arguments(BOOL_TYPE)
         );
     }
 
     private static Stream<Arguments> unaryPlusMinusNumberTypes() {
         return Stream.of(
-                Arguments.arguments(intType),
-                Arguments.arguments(doubleType)
+                Arguments.arguments(INT_TYPE),
+                Arguments.arguments(DOUBLE_TYPE)
         );
     }
 
     private static Stream<Arguments> addSubTypes() {
         return Stream.of(
-                Arguments.arguments(intType, intType, intType),
-                Arguments.arguments(doubleType, intType, doubleType),
-                Arguments.arguments(intType, doubleType, doubleType),
-                Arguments.arguments(doubleType, doubleType, doubleType),
-                Arguments.arguments(stringType, intType, errorType),
-                Arguments.arguments(errorType, intType, errorType),
-                Arguments.arguments(intType, errorType, errorType),
-                Arguments.arguments(intType, intArrayType, errorType),
-                Arguments.arguments(stringType, stringType, errorType)
+                Arguments.arguments(INT_TYPE, INT_TYPE, INT_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, INT_TYPE, DOUBLE_TYPE),
+                Arguments.arguments(INT_TYPE, DOUBLE_TYPE, DOUBLE_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, DOUBLE_TYPE, DOUBLE_TYPE),
+                Arguments.arguments(STRING_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, INT_TYPE, ERROR_TYPE),
+                Arguments.arguments(INT_TYPE, ERROR_TYPE, ERROR_TYPE),
+                Arguments.arguments(INT_TYPE, INT_ARRAY_TYPE, ERROR_TYPE),
+                Arguments.arguments(STRING_TYPE, STRING_TYPE, ERROR_TYPE)
         );
     }
 
@@ -957,19 +957,19 @@ public class TypeCheckerTests  {
 
         return Stream.of(
                 // Valid input
-                Arguments.arguments(intType, intType),
-                Arguments.arguments(doubleType, doubleType),
+                Arguments.arguments(INT_TYPE, INT_TYPE),
+                Arguments.arguments(DOUBLE_TYPE, DOUBLE_TYPE),
 
                 // Bad input
-                Arguments.arguments(stringType, errorType),
-                Arguments.arguments(chanType, errorType),
-                Arguments.arguments(scalarType, errorType),
-                Arguments.arguments(structType, errorType),
-                Arguments.arguments(voidType, errorType),
-                Arguments.arguments(errorType, errorType),
+                Arguments.arguments(STRING_TYPE, ERROR_TYPE),
+                Arguments.arguments(CHAN_TYPE, ERROR_TYPE),
+                Arguments.arguments(SCALAR_TYPE, ERROR_TYPE),
+                Arguments.arguments(STRUCT_TYPE, ERROR_TYPE),
+                Arguments.arguments(VOID_TYPE, ERROR_TYPE),
+                Arguments.arguments(ERROR_TYPE, ERROR_TYPE),
 
                 // array (Also bad)
-                Arguments.arguments(intArrayType, errorType)
+                Arguments.arguments(INT_ARRAY_TYPE, ERROR_TYPE)
         );
     }
 
@@ -983,10 +983,10 @@ public class TypeCheckerTests  {
         }
 
         // A couple of array types
-        args.add(Arguments.arguments(boolType, 1));
-        args.add(Arguments.arguments(intType, 2));
-        args.add(Arguments.arguments(doubleType, 3));
-        args.add(Arguments.arguments(structType, 4));
+        args.add(Arguments.arguments(BOOL_TYPE, 1));
+        args.add(Arguments.arguments(INT_TYPE, 2));
+        args.add(Arguments.arguments(DOUBLE_TYPE, 3));
+        args.add(Arguments.arguments(STRUCT_TYPE, 4));
 
         return args.stream();
     }

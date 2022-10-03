@@ -15,6 +15,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/TypeChecker" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/Shortcut" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/Util/Logging" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/SmokeTest" isTestSource="true" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
