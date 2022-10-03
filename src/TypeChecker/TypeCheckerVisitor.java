@@ -146,7 +146,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         } else if (ctx.boolean_() != null) {
             type = new Type(Type.TypeEnum.boolType);
         } else {
-            // This should not happen
+            logger.log(new ErrorLog(ctx, "Unsupported literal"));
             type = new Type(Type.TypeEnum.errorType);
         }
 
@@ -170,6 +170,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         } else if ((isNeg || isNot) && typeEnum == Type.TypeEnum.boolType) {
             evaluationType = exprType;
         } else {
+            logger.log(new ErrorLog(ctx, typeEnum + " is unsupported for this unary operator"));
             evaluationType = new Type(Type.TypeEnum.errorType);
         }
 
@@ -198,8 +199,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type typeOfVariable = visit(ctx.children.get(0));
 
         // Array
-        if(isArray(typeOfVariable))
+        if(isArray(typeOfVariable)) {
+            logger.log(new ErrorLog(ctx, "Array type not supported for increment and decrement"));
             return new Type(Type.TypeEnum.errorType);
+        }
 
         // Base types
         switch (typeOfVariable.getEvaluationType()) {
@@ -207,6 +210,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             case doubleType:
                 return typeOfVariable;
             default:
+                logger.log(new ErrorLog(ctx, typeOfVariable.getEvaluationType() + " is unsupported for increment and decrement"));
                 return new Type(Type.TypeEnum.errorType);
         }
     }
@@ -234,10 +238,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             // Error propagated, no logging
             return new Type(Type.TypeEnum.errorType);
         } else if (!(comparableTypes.contains(leftEnum) && comparableTypes.contains(rightEnum)) && leftEnum != rightEnum) {
-            //TODO: Log: No coercion between left and right, and right and left are not same type
+            logger.log(new ErrorLog(ctx, leftEnum + " and " + rightEnum + " are unsupported for relation"));
             return new Type(Type.TypeEnum.errorType);
         } else if (isArray(leftNode) || isArray(rightNode)) {
-            //TODO: Log: Either right or left is an array
+            logger.log(new ErrorLog(ctx, "Array types are unsupported for relation"));
             return new Type(Type.TypeEnum.errorType);
         }
 
@@ -260,10 +264,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         } else if (!(comparableTypes.contains(leftEnum) && leftEnum == rightEnum)
                 && !(leftEnum == Type.TypeEnum.intType && rightEnum == Type.TypeEnum.doubleType)
                 && !(leftEnum == Type.TypeEnum.doubleType && rightEnum == Type.TypeEnum.intType)) {
-            //TODO: Log: Non-comparable types or different types for left and right
-            return new Type(Type.TypeEnum.errorType); 
+            logger.log(new ErrorLog(ctx, leftEnum + " and " + rightEnum + " are unsupported for equivalence"));
+            return new Type(Type.TypeEnum.errorType);
         } else if (isArray(leftNode) || isArray(rightNode)) {
-            //TODO: Log: Either is an array
+            logger.log(new ErrorLog(ctx, "Array types are unsupported for equivalence"));
             return new Type(Type.TypeEnum.errorType);
         }
 
@@ -277,14 +281,14 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type leftNode = visit(ctx.expression(0));
         Type rightNode = visit(ctx.expression(1));
 
-        return bitExpressionDetermineType(leftNode, rightNode);
+        return bitExpressionDetermineType(ctx, leftNode, rightNode);
     }
     @Override
     public Type visitBitAnd(UCELParser.BitAndContext ctx) {
         Type leftNode = visit(ctx.expression(0));
         Type rightNode = visit(ctx.expression(1));
 
-        return bitExpressionDetermineType(leftNode, rightNode);
+        return bitExpressionDetermineType(ctx, leftNode, rightNode);
     }
 
     @Override
@@ -292,7 +296,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type leftNode = visit(ctx.expression(0));
         Type rightNode = visit(ctx.expression(1));
 
-        return bitExpressionDetermineType(leftNode, rightNode);
+        return bitExpressionDetermineType(ctx, leftNode, rightNode);
     }
 
     @Override
@@ -300,10 +304,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type leftNode = visit(ctx.expression(0));
         Type rightNode = visit(ctx.expression(1));
 
-        return bitExpressionDetermineType(leftNode, rightNode);
+        return bitExpressionDetermineType(ctx, leftNode, rightNode);
     }
 
-    private Type bitExpressionDetermineType(Type left, Type right) {
+    private Type bitExpressionDetermineType(ParserRuleContext ctx, Type left, Type right) {
         Type.TypeEnum leftEnum = left.getEvaluationType();
         Type.TypeEnum rightEnum = right.getEvaluationType();
 
@@ -311,10 +315,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             // Error propagated, no logging
             return new Type(Type.TypeEnum.errorType);
         } else if (!(leftEnum == Type.TypeEnum.intType && rightEnum == Type.TypeEnum.intType)) {
-            //TODO: Log: Cannot perform bit operators on non-int types
+            logger.log(new ErrorLog(ctx, leftEnum + " and " + rightEnum + " are unsupported for bit operator"));
             return new Type(Type.TypeEnum.errorType);
         } else if (isArray(left) || isArray(right)) {
-            //TODO: Log: Cannot perform bit operators on arrays
+            logger.log(new ErrorLog(ctx, "Array types are unsupported for bit operator"));
             return new Type(Type.TypeEnum.errorType);
         }
 
@@ -328,7 +332,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type leftNode = visit(ctx.expression(0));
         Type rightNode = visit(ctx.expression(1));
 
-        return logicalExpressionDetermineType(leftNode, rightNode);
+        return logicalExpressionDetermineType(ctx, leftNode, rightNode);
     }
 
     @Override
@@ -336,20 +340,20 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type leftNode = visit(ctx.expression(0));
         Type rightNode = visit(ctx.expression(1));
 
-        return logicalExpressionDetermineType(leftNode, rightNode);
+        return logicalExpressionDetermineType(ctx, leftNode, rightNode);
     }
 
-    private Type logicalExpressionDetermineType(Type left, Type right) {
+    private Type logicalExpressionDetermineType(ParserRuleContext ctx, Type left, Type right) {
         Type.TypeEnum leftEnum = left.getEvaluationType();
         Type.TypeEnum rightEnum = right.getEvaluationType();
 
         if (leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType)
             return new Type(Type.TypeEnum.errorType);
         else if (leftEnum != Type.TypeEnum.boolType || rightEnum != Type.TypeEnum.boolType) {
-            // Log: left or right not bool-type
+            logger.log(new ErrorLog(ctx, leftEnum + " and " + rightEnum + " are unsupported for logical operator"));
             return new Type(Type.TypeEnum.errorType);
         } else if (isArray(left) || isArray(right)) {
-            // Log: either left or right is an array
+            logger.log(new ErrorLog(ctx, "Array types are unsupported for logical operator"));
             return new Type(Type.TypeEnum.errorType);
         }
 
@@ -366,8 +370,11 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type rightValType = visit(ctx.children.get(2));
 
         // Condition must be boolean
-        if(condType.getEvaluationType() != Type.TypeEnum.boolType)
+        if(condType.getEvaluationType() != Type.TypeEnum.boolType) {
+            logger.log(new ErrorLog(ctx, condType.getEvaluationType() + "is not supported as predicate in conditional operator"));
             return new Type(Type.TypeEnum.errorType);
+        }
+
 
         // Return types match
         if(leftValType.equals(rightValType))

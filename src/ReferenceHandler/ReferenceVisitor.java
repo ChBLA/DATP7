@@ -38,7 +38,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         try {
             tableReference = currentScope.find(identifier, true);
         } catch (Exception e) {
-            //TODO logger
+            logger.log(new ErrorLog(ctx,"Function '" + identifier + "' has not been declared in scope"));
             return false;
         }
 
