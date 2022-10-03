@@ -16,7 +16,7 @@ public class ReferenceHandlerTests {
 
     //region FuncCall
     @Test
-    void FuncCallExpressionSuccesfulLookup() {
+    void funcCallExpressionSuccesfulLookup() {
         String correctFunctionName = "cfn";
         String incorrectFunctionName = "icfn";
 
@@ -46,7 +46,7 @@ public class ReferenceHandlerTests {
     }
 
     @Test
-    void FuncCallExpressionVisitArguments() {
+    void funcCallExpressionVisitArguments() {
         String correctFunctionName = "cfn";
         String incorrectFunctionName = "icfn";
 
@@ -79,7 +79,7 @@ public class ReferenceHandlerTests {
 
     //region IDExpr: look in immediate scope, look through multiple scope, fail to find
     @Test
-    void IDExprSuccessfulLookupInImmediateScope() {
+    void idExprSuccessfulLookupInImmediateScope() {
         String correctVariableName = "cvn";
         String incorrectVariableName = "icvn";
 
@@ -101,7 +101,7 @@ public class ReferenceHandlerTests {
     }
 
     @Test
-    void IDExprSuccessfulLookupInDistantScope() {
+    void idExprSuccessfulLookupInDistantScope() {
         String correctVariableName = "cvn";
         String incorrectVariableName = "icvn";
 
@@ -127,7 +127,7 @@ public class ReferenceHandlerTests {
     }
 
     @Test
-    void IDExprUnsuccessfulLookupThrows() {
+    void idExprUnsuccessfulLookupThrows() {
         String correctVariableName = "cvn";
         String incorrectVariableName = "icvn";
 

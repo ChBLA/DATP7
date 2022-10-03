@@ -10,7 +10,7 @@ public class ScopeTests {
 
     //region Scope.find()
     @Test
-    void FindSuccesfulSameScope() {
+    void findSuccesfulSameScope() {
 
         fail();
 
@@ -18,24 +18,24 @@ public class ScopeTests {
     }
 
     @Test
-    void InvalidTableReferenceFromParentFindThrows() {
+    void invalidTableReferenceFromParentFindThrows() {
         fail();
     }
 
     @Test
-    void ValidGetResultSuccessfulFind() {
+    void validGetResultSuccessfulFind() {
         fail();
     }
 
     @Test
-    void InvalidGetResultFindThrows() {
+    void invalidGetResultFindThrows() {
         fail();
     }
     //endregion
 
     //region Scope.get()
     @Test
-    void GetFromImmediateScope() {
+    void getFromImmediateScope() {
         Variable testVar = new Variable();
         int index = 0;
         ArrayList<Variable> mockedVariables = mock(ArrayList.class);
@@ -52,7 +52,7 @@ public class ScopeTests {
     }
 
     @Test
-    void GetFromDistantParentScope() {
+    void getFromDistantParentScope() {
         Variable testVar = new Variable();
         int index = 0;
         ArrayList<Variable> mockedVariables = mock(ArrayList.class);
@@ -69,7 +69,7 @@ public class ScopeTests {
     }
 
     @Test
-    void GetNoEntryAnyAccessibleScopesThrows() {
+    void getNoEntryAnyAccessibleScopesThrows() {
         Scope testScope = new Scope(null, false);
         TableReference tableRef = new TableReference(0, 0);
 
@@ -77,7 +77,7 @@ public class ScopeTests {
     }
 
     @Test
-    void GetNoParentScopeThrows() {
+    void getNoParentScopeThrows() {
         Scope testScope = new Scope(null, false);
         TableReference tableRef = new TableReference(2, 0);
 

@@ -37,7 +37,7 @@ public class TypeCheckerTests  {
 
     //region IdExpr
     @Test
-    void MissingIdentifierDefinition() {
+    void missingIdentifierDefinition() {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
         UCELParser.IdExprContext node = mock(UCELParser.IdExprContext.class);
         when(node.ID()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.ID)));
@@ -46,7 +46,7 @@ public class TypeCheckerTests  {
     }
 
     @Test
-    void FoundIntTypeIdentifierInScope() {
+    void foundIntTypeIdentifierInScope() {
         var scope = new Scope(null, false);
 
         var variableName = "foo";
@@ -69,7 +69,7 @@ public class TypeCheckerTests  {
 
 
     @Test
-    void IntLiteralTypedCorrectly() {
+    void intLiteralTypedCorrectly() {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.LiteralContext node = mock(UCELParser.LiteralContext.class);
@@ -80,7 +80,7 @@ public class TypeCheckerTests  {
     }
 
     @Test
-    void DoubleLiteralTypedCorrectly() {
+    void doubleLiteralTypedCorrectly() {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.LiteralContext node = mock(UCELParser.LiteralContext.class);
@@ -91,7 +91,7 @@ public class TypeCheckerTests  {
     }
 
     @Test
-    void BoolLiteralTypedCorrectly() {
+    void boolLiteralTypedCorrectly() {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.BooleanContext boolCtx = mock(UCELParser.BooleanContext.class);
@@ -107,7 +107,7 @@ public class TypeCheckerTests  {
 
     //region ArrayIndex
     @Test
-    void ArrayIndexErrorIfNotInt() {
+    void arrayIndexErrorIfNotInt() {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
@@ -122,7 +122,7 @@ public class TypeCheckerTests  {
     }
 
     @Test
-    void ArrayIndexErrorIfNoArray() {
+    void arrayIndexErrorIfNoArray() {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
@@ -137,7 +137,7 @@ public class TypeCheckerTests  {
     }
 
     @Test
-    void ArrayIndexReturnsArrayType() {
+    void arrayIndexReturnsArrayType() {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
@@ -160,7 +160,7 @@ public class TypeCheckerTests  {
     //region Paren
     @ParameterizedTest(name = "{index} => using type {0} for parenthesis")
     @MethodSource("allTypes")
-    void ParenthesisExpectedType(Type inType) {
+    void parenthesisExpectedType(Type inType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.ParenContext node = mock(UCELParser.ParenContext.class);
@@ -176,7 +176,7 @@ public class TypeCheckerTests  {
     //region StructAccess
 
     @Test
-    void StructAccessCorrectStructSetTableReference() {
+    void structAccessCorrectStructSetTableReference() {
         String correctVariableName = "cvn";
         String incorrectVariableName = "icvn";
 
@@ -200,7 +200,7 @@ public class TypeCheckerTests  {
     }
 
     @Test
-    void StructAccessCorrectStructReturnCorrectType() {
+    void structAccessCorrectStructReturnCorrectType() {
         String correctVariableName = "cvn";
         String incorrectVariableName = "icvn";
 
@@ -224,7 +224,7 @@ public class TypeCheckerTests  {
     }
 
     @Test
-    void StructAccessIncorrectStructReturnErrorType() {
+    void structAccessIncorrectStructReturnErrorType() {
         String invalidVariableName = "icvn";
 
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
@@ -249,7 +249,7 @@ public class TypeCheckerTests  {
     //region IncrementPost
     @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
     @MethodSource("expectedIncrementPostTypes")
-    void IncrementPostExpectedOutType(Type inType, Type returnType) {
+    void incrementPostExpectedOutType(Type inType, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.IncrementPostContext node = mock(UCELParser.IncrementPostContext.class);
@@ -265,7 +265,7 @@ public class TypeCheckerTests  {
     //region IncrementPre
     @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
     @MethodSource("expectedIncrementPostTypes")
-    void IncrementPreExpectedOutType(Type inType, Type returnType) {
+    void incrementPreExpectedOutType(Type inType, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.IncrementPreContext node = mock(UCELParser.IncrementPreContext.class);
@@ -281,7 +281,7 @@ public class TypeCheckerTests  {
     //region DecrementPost
     @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
     @MethodSource("expectedIncrementPostTypes")
-    void DecrementPostExpectedOutType(Type inType, Type returnType) {
+    void decrementPostExpectedOutType(Type inType, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.DecrementPostContext node = mock(UCELParser.DecrementPostContext.class);
@@ -297,7 +297,7 @@ public class TypeCheckerTests  {
     //region DecrementPre
     @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
     @MethodSource("expectedIncrementPostTypes")
-    void DecrementPreExpectedOutType(Type inType, Type returnType) {
+    void decrementPreExpectedOutType(Type inType, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.DecrementPreContext node = mock(UCELParser.DecrementPreContext.class);
@@ -377,7 +377,7 @@ public class TypeCheckerTests  {
     //region UnaryExpr
     @ParameterizedTest(name = "{index} => using type {0} for unary +")
     @MethodSource("unaryPlusMinusNumberTypes")
-    void UnaryPlusExpressionTypedCorrectly(Type expectedType) {
+    void unaryPlusExpressionTypedCorrectly(Type expectedType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.UnaryExprContext node = mock(UCELParser.UnaryExprContext.class);
@@ -396,7 +396,7 @@ public class TypeCheckerTests  {
 
     @ParameterizedTest(name = "{index} => using type {0} for unary -")
     @MethodSource("unaryPlusMinusNumberTypes")
-    void UnaryMinusExpressionTypedCorrectly(Type expectedType) {
+    void unaryMinusExpressionTypedCorrectly(Type expectedType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.UnaryExprContext node = mock(UCELParser.UnaryExprContext.class);
@@ -415,7 +415,7 @@ public class TypeCheckerTests  {
 
     @ParameterizedTest(name = "{index} => using type {0} for unary Neg")
     @MethodSource("unaryNotNegTypes")
-    void UnaryNegExpressionTypedCorrectly(Type expectedType) {
+    void unaryNegExpressionTypedCorrectly(Type expectedType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.UnaryExprContext node = mock(UCELParser.UnaryExprContext.class);
@@ -434,7 +434,7 @@ public class TypeCheckerTests  {
 
     @ParameterizedTest(name = "{index} => using type {0} for unary Not")
     @MethodSource("unaryNotNegTypes")
-    void UnaryNotExpressionTypedCorrectly(Type expectedType) {
+    void unaryNotExpressionTypedCorrectly(Type expectedType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.UnaryExprContext node = mock(UCELParser.UnaryExprContext.class);
@@ -453,7 +453,7 @@ public class TypeCheckerTests  {
 
     @ParameterizedTest(name = "{index} => using wrong type {0} for unary Not")
     @MethodSource("unaryPlusMinusNumberTypes")
-    void UnaryNotWrongTypesReturnsErrorType(Type wrongType) {
+    void unaryNotWrongTypesReturnsErrorType(Type wrongType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.UnaryExprContext node = mock(UCELParser.UnaryExprContext.class);
@@ -545,7 +545,7 @@ public class TypeCheckerTests  {
     //region MultDiv
     @ParameterizedTest(name = "{index} => using type {0} and type {1} with mult/div")
     @MethodSource("multDivTypes")
-    void MultDivTyped(Type left, Type right, Type returnType) {
+    void multDivTyped(Type left, Type right, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.MultDivContext node = mock(UCELParser.MultDivContext.class);
@@ -591,7 +591,7 @@ public class TypeCheckerTests  {
     //region AddSub
     @ParameterizedTest(name = "{index} => using type {0} + type {1} with plus/minus")
     @MethodSource("addSubTypes")
-    void AddSubTyped(Type left, Type right, Type returnType) {
+    void addSubTyped(Type left, Type right, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.AddSubContext node = mock(UCELParser.AddSubContext.class);
@@ -625,7 +625,7 @@ public class TypeCheckerTests  {
     //region MinMax
     @ParameterizedTest(name = "{index} => using {0} and {1} with min/max operator expecting {2}")
     @MethodSource("minMaxTypes")
-    void MinMaxTypes(Type left, Type right, Type returnType) {
+    void minMaxTypes(Type left, Type right, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.MinMaxContext node = mock(UCELParser.MinMaxContext.class);
@@ -669,7 +669,7 @@ public class TypeCheckerTests  {
     //region RelExpr
     @ParameterizedTest(name = "{index} => using {0} and {1} with relational operator expecting {2}")
     @MethodSource("relTypes")
-    void RelExprTypes(Type left, Type right, Type returnType) {
+    void relExprTypes(Type left, Type right, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.RelExprContext node = mock(UCELParser.RelExprContext.class);
@@ -736,7 +736,7 @@ public class TypeCheckerTests  {
     //region EqExpr
     @ParameterizedTest(name = "{index} => using {0} and {1} with equality operator expecting {2}")
     @MethodSource("eqTypes")
-    void EqExprTypes(Type left, Type right, Type returnType) {
+    void eqExprTypes(Type left, Type right, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.EqExprContext node = mock(UCELParser.EqExprContext.class);
@@ -791,7 +791,7 @@ public class TypeCheckerTests  {
     //region BitShift
     @ParameterizedTest(name = "{index} => using {0} and {1} with bit shift expecting {2}")
     @MethodSource("bitTypes")
-    void BitshiftTypes(Type left, Type right, Type returnType) {
+    void bitshiftTypes(Type left, Type right, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.BitshiftContext node = mock(UCELParser.BitshiftContext.class);
@@ -810,7 +810,7 @@ public class TypeCheckerTests  {
     //region BitAnd
     @ParameterizedTest(name = "{index} => using {0} and {1} with bit and expecting {2}")
     @MethodSource("bitTypes")
-    void BitAndTypes(Type left, Type right, Type returnType) {
+    void bitAndTypes(Type left, Type right, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.BitAndContext node = mock(UCELParser.BitAndContext.class);
@@ -829,7 +829,7 @@ public class TypeCheckerTests  {
     //region BitXor
     @ParameterizedTest(name = "{index} => using {0} and {1} with bit xor expecting {2}")
     @MethodSource("bitTypes")
-    void BitXorTypes(Type left, Type right, Type returnType) {
+    void bitXorTypes(Type left, Type right, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.BitXorContext node = mock(UCELParser.BitXorContext.class);
@@ -848,7 +848,7 @@ public class TypeCheckerTests  {
     //region BitOr
     @ParameterizedTest(name = "{index} => using {0} and {1} with bit or expecting {2}")
     @MethodSource("bitTypes")
-    void BitOrTypes(Type left, Type right, Type returnType) {
+    void bitOrTypes(Type left, Type right, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.BitOrContext node = mock(UCELParser.BitOrContext.class);
@@ -884,7 +884,7 @@ public class TypeCheckerTests  {
     //region LogAnd
     @ParameterizedTest(name = "{index} => using {0} and {1} with logical and expecting {2}")
     @MethodSource("logTypes")
-    void LogAndTypes(Type left, Type right, Type returnType) {
+    void logAndTypes(Type left, Type right, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.LogAndContext node = mock(UCELParser.LogAndContext.class);
@@ -903,7 +903,7 @@ public class TypeCheckerTests  {
     //region LogOr
     @ParameterizedTest(name = "{index} => using {0} and {1} with logical or expecting {2}")
     @MethodSource("logTypes")
-    void LogOrTypes(Type left, Type right, Type returnType) {
+    void logOrTypes(Type left, Type right, Type returnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.LogOrContext node = mock(UCELParser.LogOrContext.class);
@@ -939,7 +939,7 @@ public class TypeCheckerTests  {
     //region Conditional
     @ParameterizedTest(name = "{index} => using {0} ? {1} : {2}; expecting {3}")
     @MethodSource("expectedConditionalExpressionTypes")
-    void ConditionalExpressionTypes(Type conditionType, Type leftReturnType, Type rightReturnType, Type expectedReturnType) {
+    void conditionalExpressionTypes(Type conditionType, Type leftReturnType, Type rightReturnType, Type expectedReturnType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         final UCELParser.ConditionalContext node = mock(UCELParser.ConditionalContext.class);
