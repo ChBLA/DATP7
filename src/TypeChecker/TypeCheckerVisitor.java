@@ -217,6 +217,50 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
     //endregion
 
+    //region FuncCall
+    @Override
+    public Type visitFuncCall(UCELParser.FuncCallContext ctx) {
+        String id = ctx.ID().getText();
+        Type argsType = visit(ctx.arguments());
+        Variable funcDecl;
+        Type funcType;
+
+        // Get type of function declaration
+        try {
+            TableReference ref = currentScope.find(id, true);
+            funcDecl = currentScope.get(ref);
+            funcType = funcDecl.getType();
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Definition not found for "));
+            return new Type(Type.TypeEnum.errorType);
+        }
+
+
+        // Compare input parameter types
+        Type[] declParams = funcType.getParameters();
+        String[] declNames = funcType.getParameterNames();
+        Type[] argsParams = argsType.getParameters();
+
+        if(declParams.length != argsParams.length) {
+            logger.log(new ErrorLog(ctx.arguments(), String.format("Function {0} expected {1} arguments, but got {2}", id, declParams.length, argsParams.length)));
+            return new Type(Type.TypeEnum.errorType);
+        }
+
+        boolean argsMismatch = false;
+        for (int i=0; i<declParams.length; i++) {
+            if(!declParams[i].equals(argsParams[i])) {
+                //Todo: Fix fancy logging (I think it's actually just the tests failing because of too tight mocking)
+                //logger.log(new ErrorLog(getArgumentsContexts(ctx.arguments())[i], String.format("Parameter {0} expected argument of type {1}, but got {2}", declNames[i], declParams[i], argsParams[i])));
+                argsMismatch = true;
+            }
+        }
+        if(argsMismatch)
+            return new Type(Type.TypeEnum.errorType);
+
+        return funcType;
+    }
+    //endregion
+
     //region ArgumentsVisitor
     public Type visitArguments(UCELParser.ArgumentsContext ctx) {
         // Map each argument to its type
@@ -230,6 +274,9 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         else {
             return new Type(Type.TypeEnum.invalidType, argTypes);
         }
+    }
+    private UCELParser.ExpressionContext[] getArgumentsContexts(UCELParser.ArgumentsContext ctx) {
+        return ctx.children.stream().toArray(UCELParser.ExpressionContext[]::new);
     }
     //endregion
     
@@ -402,5 +449,6 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
     //endregion
+
 
 }

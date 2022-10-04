@@ -8,8 +8,12 @@ public class Variable {
     }
 
     public Variable(String identifier) {
+        this(identifier, null);
+    }
+
+    public Variable(String identifier, Type type) {
         this.identifier = identifier;
-        this.type = null;
+        this.type = type;
     }
 
     public void setType(Type type) {

@@ -330,8 +330,114 @@ public class TypeCheckerTests  {
         );
     }
     //endregion
-    
+
     //region FuncCall
+    // Functions Required: Well-defined, undefined, wrong parameters, error params
+    @ParameterizedTest(name = "{index} ({0}) => {3} {2}({4}) -> {3}")
+    @MethodSource("expectedFuncCallTypes")
+    void FuncCall(String testName, Scope scope, String name, Type expectedReturnType, Type argsType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        // FuncContext
+        final UCELParser.FuncCallContext funcCtx = mock(UCELParser.FuncCallContext.class);
+
+        // ID
+        final UCELParser.IdExprContext idCtx = mock(UCELParser.IdExprContext.class);
+        when(idCtx.getText()).thenReturn(name);
+
+        // ID - Terminal
+        final TerminalNode idTerminal = mock(TerminalNode.class);
+        when(idTerminal.getText()).thenReturn(name);
+        when(funcCtx.ID()).thenReturn(idTerminal);
+
+
+        // Args
+        final UCELParser.ArgumentsContext argsCtx = mockForVisitorResult(UCELParser.ArgumentsContext.class, argsType, visitor);
+        when(funcCtx.arguments()).thenReturn(argsCtx);
+
+
+        // Act
+        Type actualReturnType = visitor.visitFuncCall(funcCtx);
+
+        // Assert
+        assertNotNull(actualReturnType);
+        assertEquals(expectedReturnType.getEvaluationType(), actualReturnType.getEvaluationType());
+    }
+    private static Stream<Arguments> expectedFuncCallTypes() {
+        ArrayList<Arguments> args = new ArrayList<Arguments>();
+        // Scope scope, String name, Type expectedReturnType, Type argTypes
+
+        // Valid types
+        args.add(Arguments.arguments(
+                "Valid types",
+                scopeGen("func1", new Type(Type.TypeEnum.intType, new Type[] {})),
+                "func1",
+                INT_TYPE,
+                new Type(Type.TypeEnum.invalidType, new Type[] {})
+        ));
+        args.add(Arguments.arguments(
+                "Valid types",
+                scopeGen("func1", new Type(Type.TypeEnum.boolType, new Type[] {STRING_TYPE})),
+                "func1",
+                BOOL_TYPE,
+                new Type(Type.TypeEnum.invalidType, new Type[] {STRING_TYPE})
+        ));
+
+        // Invalid argument type
+        args.add(Arguments.arguments(
+                "Invalid argument type",
+                scopeGen("func1", new Type(Type.TypeEnum.charType, new Type[] {STRING_TYPE})),
+                "func1",
+                ERROR_TYPE,
+                new Type(Type.TypeEnum.invalidType, new Type[] {INT_TYPE})
+        ));
+
+        // Error input (Typically not possible in declaration)
+        args.add(Arguments.arguments(
+                "Error input",
+                scopeGen("func1", new Type(Type.TypeEnum.charType, new Type[] {ERROR_TYPE})),
+                "func1",
+                ERROR_TYPE,
+                new Type(Type.TypeEnum.invalidType, new Type[] {INT_TYPE})
+        ));
+
+        // Missing Argument
+        args.add(Arguments.arguments(
+                "Missing Argument",
+                scopeGen("func1", new Type(Type.TypeEnum.charType, new Type[] {STRING_TYPE})),
+                "func1",
+                ERROR_TYPE,
+                new Type(Type.TypeEnum.invalidType, new Type[] {})
+        ));
+
+        // Too Many Arguments
+        args.add(Arguments.arguments(
+                "Too Many Arguments",
+                scopeGen("func1", new Type(Type.TypeEnum.charType, new Type[] {})),
+                "func1",
+                ERROR_TYPE,
+                new Type(Type.TypeEnum.invalidType, new Type[] {STRING_TYPE})
+        ));
+
+        // Undefined
+        args.add(Arguments.arguments(
+                "Undefined",
+                scopeGen("func1", new Type(Type.TypeEnum.charType, new Type[] {INT_TYPE})),
+                "funcOther",
+                ERROR_TYPE,
+                new Type(Type.TypeEnum.invalidType, new Type[] {INT_TYPE})
+        ));
+
+        return args.stream();
+    }
+    private static Scope scopeGen(String name, Type type) {
+        Scope scope = new Scope(null, false);
+
+        scope.add(new Variable(name, type));
+
+        return scope;
+    }
+    //endregion
 
     //region Arguments
     @ParameterizedTest(name = "{index} => using type {0} for IncrementPost")
