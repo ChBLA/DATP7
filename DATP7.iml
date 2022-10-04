@@ -16,6 +16,9 @@
       <sourceFolder url="file://$MODULE_DIR$/src/Shortcut" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/Util/Logging" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/SmokeTest" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/src/CodeGeneration" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/CodeGeneration/templates" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/CodeGenTests" isTestSource="true" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -30,5 +33,14 @@
     </orderEntry>
     <orderEntry type="library" name="junit.jupiter" level="project" />
     <orderEntry type="library" name="mockito.core" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/ST-4.3.4.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
