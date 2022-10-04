@@ -33,16 +33,22 @@ parameter  : type? REF? ('&')? ID? arrayDecl*;
 
 declarations  : (variableDecl | typeDecl | function | chanPriority | component | interface_decl | link_stmnt)*;
 variableDecl  : type? variableID (COMMA variableID)* END;
-variableID    : ID arrayDecl* ('=' initialiser)?;
+
+variableID locals [TableReference reference]
+              : ID arrayDecl* ('=' initialiser)?;
 initialiser   : expression?
               |  LEFTCURLYBRACE initialiser (COMMA initialiser)* RIGHTCURLYBRACE;
-typeDecl      : 'typedef' type ID arrayDecl* (COMMA ID arrayDecl*)* END;
+typeDecl locals [TableReference reference]
+              : 'typedef' type ID arrayDecl* (COMMA ID arrayDecl*)* END;
 type          : prefix? typeId;
 prefix        : 'urgent' | 'broadcast' | 'meta' | 'const';
-typeId        : ID | 'int' | 'clock' | 'chan' | 'bool' | 'double' | 'string' | 'in' | 'out'
+
+typeId locals [TableReference reference]
+              : ID | 'int' | 'clock' | 'chan' | 'bool' | 'double' | 'string' | 'in' | 'out'
               | 'int' LEFTBRACKET expression? COMMA expression? RIGHTBRACKET
               | 'scalar' LEFTBRACKET expression RIGHTBRACKET
               | 'struct' LEFTCURLYBRACE fieldDecl (fieldDecl)* RIGHTCURLYBRACE;
+
 fieldDecl     : type ID arrayDecl* (COMMA ID arrayDecl*)* END;
 arrayDecl     : LEFTBRACKET expression? RIGHTBRACKET
               | LEFTBRACKET type RIGHTBRACKET;

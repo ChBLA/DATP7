@@ -20,4 +20,14 @@ public class Variable {
     public boolean isCalled(String s) {
         return s.equals(identifier);
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if(!(other instanceof Variable)) return false;
+
+        Variable o = (Variable) other;
+
+        return ((this.type == null && o.getType() == null) || this.type.equals(o.getType())) &&
+                o.isCalled(identifier);
+    }
 }

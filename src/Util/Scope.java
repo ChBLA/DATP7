@@ -18,12 +18,27 @@ public class Scope {
         this.isComponent = isComponent;
     }
 
-    public void add(Variable v) {
+    public TableReference add(Variable v) {
         variables.add(v);
+        return new TableReference(0, variables.size() - 1);
     }
 
     public Scope getParent() {
         return parent;
+    }
+
+    public boolean isUnique(String s, boolean isVarID) {
+        for (int i = 0; i < variables.size(); i++) {
+            if (variables.get(i).isCalled(s)) {
+                return false;
+            }
+        }
+
+        if (parent != null && !(isComponent && isVarID)) {
+            return parent.isUnique(s, isVarID);
+        }
+
+        return true;
     }
 
     public TableReference find(String s, boolean isVarID) throws Exception {

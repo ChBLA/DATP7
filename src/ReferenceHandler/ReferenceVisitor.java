@@ -47,7 +47,31 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         return true;
     }
 
+    @Override
+    public Boolean visitVariableDecl(UCELParser.VariableDeclContext ctx) {
+        boolean b = true;
 
+        for(UCELParser.VariableIDContext idCtx : ctx.variableID()) {
+            Boolean valid = visit(idCtx);
+            b = b && (valid != null) && valid;
+        }
+
+        return b;
+    }
+
+    @Override
+    public Boolean visitVariableID(UCELParser.VariableIDContext ctx) {
+        String identifier = ctx.ID().getText();
+
+        if(!currentScope.isUnique(identifier, true)) {
+            logger.log(new ErrorLog(ctx, "The variable name '" + identifier + "' already defined in scope"));
+            return false;
+        }
+
+        ctx.reference = currentScope.add(new Variable(identifier));
+
+        return true;
+    }
 
 
     private void enterScope() {

@@ -2,6 +2,8 @@ import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import javax.naming.Reference;
 
@@ -148,5 +150,89 @@ public class ReferenceHandlerTests {
     }
     //endregion
 
+    //region variableDecl
+
+    @ParameterizedTest
+    @ValueSource(ints = {0,1,2})
+    void variableDeclVisitAllVariableIDs(int i) {
+        ReferenceVisitor visitor = new ReferenceVisitor(new Scope(null, false));
+        UCELParser.VariableDeclContext node = mock(UCELParser.VariableDeclContext.class);
+        ArrayList<UCELParser.VariableIDContext> varIDs = new ArrayList<>();
+        varIDs.add(mock(UCELParser.VariableIDContext.class));
+        varIDs.add(mock(UCELParser.VariableIDContext.class));
+        varIDs.add(mock(UCELParser.VariableIDContext.class));
+
+        when(node.variableID()).thenReturn(varIDs);
+
+        visitor.visitVariableDecl(node);
+
+        verify(varIDs.get(i), times(1)).accept(visitor);
+    }
+
+    //endregion
+
+    //region
+
+    @Test
+    void variableIDAddVariableToScope() {
+        String correctVariableName = "cvn";
+        String incorrectVariableName = "icvn";
+
+        ArrayList<Variable> variables =new ArrayList<>();
+        variables.add(new Variable(incorrectVariableName));
+        variables.add(new Variable(incorrectVariableName));
+        ReferenceVisitor visitor = new ReferenceVisitor(new Scope(null, false, variables));
+
+        UCELParser.VariableIDContext node = mock(UCELParser.VariableIDContext.class);
+        TerminalNode idNode = mock(TerminalNode.class);
+        when(idNode.getText()).thenReturn(correctVariableName);
+        when(node.ID()).thenReturn(idNode);
+
+        visitor.visitVariableID(node);
+
+        assertEquals(new Variable(correctVariableName), variables.get(2));
+    }
+
+    @Test
+    void variableIDSetVariableReference() {
+        String correctVariableName = "cvn";
+        String incorrectVariableName = "icvn";
+
+        ArrayList<Variable> variables =new ArrayList<>();
+        variables.add(new Variable(incorrectVariableName));
+        variables.add(new Variable(incorrectVariableName));
+        ReferenceVisitor visitor = new ReferenceVisitor(new Scope(null, false, variables));
+
+        UCELParser.VariableIDContext node = mock(UCELParser.VariableIDContext.class);
+        TerminalNode idNode = mock(TerminalNode.class);
+        when(idNode.getText()).thenReturn(correctVariableName);
+        when(node.ID()).thenReturn(idNode);
+
+        visitor.visitVariableID(node);
+
+        assertEquals(node.reference, new TableReference(0, 2));
+    }
+
+    @Test
+    void variableIDReturnFalseOnDuplicate() {
+        String uniqueVariableName = "uvn";
+        String doubleicateVariableName = "dvn";
+
+        ArrayList<Variable> variables =new ArrayList<>();
+        variables.add(new Variable(uniqueVariableName));
+        variables.add(new Variable(doubleicateVariableName));
+        ReferenceVisitor visitor = new ReferenceVisitor(new Scope(null, false, variables));
+
+        UCELParser.VariableIDContext node = mock(UCELParser.VariableIDContext.class);
+        TerminalNode idNode = mock(TerminalNode.class);
+        when(idNode.getText()).thenReturn(doubleicateVariableName);
+        when(node.ID()).thenReturn(idNode);
+
+        boolean result = visitor.visitVariableID(node);
+
+        assertFalse(result);
+    }
+
+    //endregion
 
 }

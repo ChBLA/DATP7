@@ -36,10 +36,10 @@ public class ScopeTests {
     //region Scope.get()
     @Test
     void getFromImmediateScope() {
-        Variable testVar = new Variable();
+        Variable testVar = new Variable("");
         int index = 0;
-        ArrayList<Variable> mockedVariables = mock(ArrayList.class);
-        when(mockedVariables.get(index)).thenReturn(testVar);
+        ArrayList<Variable> mockedVariables = new ArrayList<>();
+        mockedVariables.add(testVar);
 
         Scope testScope = new Scope(null, false, mockedVariables);
         TableReference tableRef = new TableReference(0, index);
@@ -53,7 +53,7 @@ public class ScopeTests {
 
     @Test
     void getFromDistantParentScope() {
-        Variable testVar = new Variable();
+        Variable testVar = new Variable("");
         int index = 0;
         ArrayList<Variable> mockedVariables = mock(ArrayList.class);
         when(mockedVariables.get(index)).thenReturn(testVar);
