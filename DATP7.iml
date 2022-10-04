@@ -18,6 +18,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/test/SmokeTest" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/src/CodeGeneration" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/CodeGeneration/templates" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/CodeGenTests" isTestSource="true" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
