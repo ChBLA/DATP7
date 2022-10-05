@@ -1,4 +1,5 @@
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,10 +74,23 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
     @Override
+    public Type visitDeclarations(UCELParser.DeclarationsContext ctx) {
+        boolean errorFound = false;
+        Type errorType = new Type(Type.TypeEnum.errorType);
+
+        for(ParseTree pt : ctx.children)
+            if(visit(pt).equals(errorType))
+                errorFound = true;
+
+        if(errorFound) return errorType;
+        else return new Type(Type.TypeEnum.voidType);
+    }
+
+    @Override
     public Type visitIdExpr(UCELParser.IdExprContext ctx) {
         try {
             //TDOD the table reference is set by the reference handler
-            //also it is getText and not toString to get the the text of the ID
+            //also it is getText and not toString to get the text of the ID
             var ref = currentScope.find(ctx.ID().toString(), true);
             var variable = currentScope.get(ref);
             return variable.getType();

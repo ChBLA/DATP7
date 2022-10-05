@@ -34,4 +34,8 @@ public class DeclarationInfo {
         return ((this.type == null && o.getType() == null) || this.type.equals(o.getType())) &&
                 o.isCalled(identifier);
     }
+
+    public String getIdentifier() {
+        return this.identifier;
+    }
 }

@@ -2,7 +2,7 @@ public class ParenthesisTemplate implements Template{
     private final String resultingString;
 
     public ParenthesisTemplate(Template expr) {
-        resultingString = "(%s)".formatted(expr.getOutput());
+        resultingString = String.format("(%s)", expr.getOutput());
     }
 
     @Override

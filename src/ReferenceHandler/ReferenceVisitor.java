@@ -63,6 +63,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     public Boolean visitVariableID(UCELParser.VariableIDContext ctx) {
         String identifier = ctx.ID().getText();
 
+        //TODO: maybe delegate to Scope.add
         if(!currentScope.isUnique(identifier, true)) {
             logger.log(new ErrorLog(ctx, "The variable name '" + identifier + "' already defined in scope"));
             return false;
