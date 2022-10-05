@@ -98,9 +98,9 @@ expression locals [TableReference reference]
             |  expression op=('<?' | '>?') expression           #MinMax
             |  expression op=('<' | '<=' | '>=' | '>') expression #RelExpr
             |  expression op=('==' | '!=') expression           #EqExpr
-            |  expression '&' expression                        #BitAnd
-            |  expression '^' expression                        #BitXor
-            |  expression '|' expression                        #BitOr
+            |  expression BITAND expression                        #BitAnd
+            |  expression BITXOR expression                        #BitXor
+            |  expression BITOR expression                        #BitOr
             |  expression op=('&&' | 'and') expression          #LogAnd
             |  expression op=('||' | 'or' | 'imply') expression #LogOr
             |  expression '?' expression COLON expression       #Conditional
@@ -151,6 +151,9 @@ PLUS : '+';
 MINUS : '-';
 NEG : '!';
 NOT : 'not';
+BITAND : '&';
+BITXOR : '^';
+BITOR : '|';
 
 COMP : 'comp';
 DECLARATIONS : 'declarations';
