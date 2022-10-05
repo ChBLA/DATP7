@@ -74,6 +74,11 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
     @Override
+    public Type visitAssign(UCELParser.AssignContext ctx) {
+        return super.visitAssign(ctx);
+    }
+
+    @Override
     public Type visitDeclarations(UCELParser.DeclarationsContext ctx) {
         boolean errorFound = false;
         Type errorType = new Type(Type.TypeEnum.errorType);

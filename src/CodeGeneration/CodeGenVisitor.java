@@ -182,4 +182,13 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
     //endregion
+
+
+    @Override
+    public Template visitAssignExpr(UCELParser.AssignExprContext ctx) {
+        var left = visit(ctx.expression(0));
+        var right = visit(ctx.expression(1));
+
+        return new AssignmentTemplate(left, right);
+    }
 }

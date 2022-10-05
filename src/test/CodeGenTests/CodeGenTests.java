@@ -24,6 +24,45 @@ public class CodeGenTests {
 
     //region Expressions
 
+    //region Assignment
+
+    @ParameterizedTest(name = "{index} => Assignment expression {0} = {1}")
+    @MethodSource("assignments")
+    void assignmentGeneratedCorrectly(String left, String right) {
+        Template leftExpr = new ManualTemplate(left);
+        Template rightExpr = new ManualTemplate(right);
+        String expected = String.format("%s = %s", leftExpr.getOutput(), rightExpr.getOutput());
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.AssignExprContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, leftExpr, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, rightExpr, visitor);
+
+        when(node.expression(0)).thenReturn(expr1);
+        when(node.expression(1)).thenReturn(expr2);
+
+        var actual = visitor.visitAssignExpr(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> assignments() {
+
+        ArrayList<Arguments> args = new ArrayList<Arguments>();
+
+        args.add(Arguments.arguments("var1", "1 + 2"));
+        args.add(Arguments.arguments("var1", "true"));
+        args.add(Arguments.arguments("var1", "!var2"));
+        args.add(Arguments.arguments("var1", "1.02 - 5.2"));
+        args.add(Arguments.arguments("var1", "false"));
+        args.add(Arguments.arguments("var1", "goimer"));
+
+        return args.stream();
+    }
+
+    //endregion
+
     //region ID expression
     @ParameterizedTest(name = "{index} => ID look-up in expression for ID = \"{0}\"")
     @ValueSource(strings = {"a", "awd901", "Ada"})
