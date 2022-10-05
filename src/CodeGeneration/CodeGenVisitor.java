@@ -1,10 +1,32 @@
+import java.awt.image.renderable.RenderableImage;
 import java.util.ArrayList;
 
 public class CodeGenVisitor extends UCELBaseVisitor<Template> {
+    private Scope currentScope;
+
+    public CodeGenVisitor() {
+
+    }
+
+    public CodeGenVisitor(Scope currentScope) {
+        this.currentScope = currentScope;
+    }
+
+
+
 
 
     //region Expressions
 
+
+    @Override
+    public Template visitIdExpr(UCELParser.IdExprContext ctx) {
+        try {
+            return new ManualTemplate(currentScope.get(ctx.reference).getIdentifier());
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
 
     @Override
     public Template visitParen(UCELParser.ParenContext ctx) {

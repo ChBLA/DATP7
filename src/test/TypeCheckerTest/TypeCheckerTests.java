@@ -240,6 +240,7 @@ public class TypeCheckerTests  {
         when(node.ID()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.ID)));
         Type actual = visitor.visitIdExpr(node);
         assertEquals(ERROR_TYPE, actual);
+        fail(); //this test is incorrectly implemented. Should use scopes and references
     }
 
     @Test
@@ -530,6 +531,7 @@ public class TypeCheckerTests  {
 
     //region FuncCall
     // Functions Required: Well-defined, undefined, wrong parameters, error params
+    // Test only works if scopes work
     @ParameterizedTest(name = "{index} ({0}) => {3} {2}({4}) -> {3}")
     @MethodSource("expectedFuncCallTypes")
     void FuncCall(String testName, Scope scope, String name, Type expectedReturnType, Type argsType) {

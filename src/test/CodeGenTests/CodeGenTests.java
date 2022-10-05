@@ -24,10 +24,38 @@ public class CodeGenTests {
 
     //region Expressions
 
+    //region ID expression
+    @ParameterizedTest(name = "{index} => ID look-up in expression for ID = \"{0}\"")
+    @ValueSource(strings = {"a", "awd901", "Ada"})
+    void idExprGeneratedCorrectly(String name) {
+        DeclarationInfo variable = new DeclarationInfo(name, new Type(Type.TypeEnum.intType));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+
+        var scopeMock = mock(Scope.class);
+
+        var node = mock(UCELParser.IdExprContext.class);
+        node.reference = ref;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        CodeGenVisitor visitor = new CodeGenVisitor(scopeMock);
+
+        String actual = visitor.visitIdExpr(node).getOutput();
+
+        assertEquals(name, actual);
+
+    }
+
+    //endregion
+
     //region Literal
 
     @ParameterizedTest(name = "{index} => generating literal for {0} ")
-    @MethodSource("literalsSource")
+    @ValueSource(strings = {"1", "1.0", "0.1", "0.00005", "123456789", "0", "0.1234506789", "true", "false"})
     void literalGeneratedCorrectly(String expectedLiteral) {
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -37,20 +65,6 @@ public class CodeGenTests {
         var actual = visitor.visitLiteral(node).getOutput();
 
         assertEquals(expectedLiteral, actual);
-    }
-
-    private  static Stream<Arguments> literalsSource() {
-        //TODO: Possibly account for deadlock literal later
-        return Stream.of(Arguments.arguments("1"),
-                         Arguments.arguments("1.0"),
-                         Arguments.arguments("0.1"),
-                         Arguments.arguments("0.00005"),
-                         Arguments.arguments("123456789"),
-                         Arguments.arguments("0"),
-                         Arguments.arguments("0.1234506789"),
-                         Arguments.arguments("true"),
-                         Arguments.arguments("false")
-                );
     }
     //endregion
 
