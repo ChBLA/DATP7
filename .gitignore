@@ -28,3 +28,8 @@ gen
 .idea/workspace.xml
 .idea/uiDesigner.xml
 .idea/runConfigurations.xml
+
+/.idea
+/.gradle
+gradlew
+gradlew.bat
