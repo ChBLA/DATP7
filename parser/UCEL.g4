@@ -1,7 +1,7 @@
 grammar UCEL;
 
 start locals [Scope scope]
-    : declarations system;
+    : declarations statement* link_stmnt* system;
 system : SYSTEM ID ((COMMA | '<') ID)* END;
 
 component locals [Scope scope]
@@ -31,7 +31,7 @@ progressDecl  : PROGRESS LEFTCURLYBRACE ( expression? END )* RIGHTCURLYBRACE;
 parameters : ( parameter (COMMA parameter)* )?;
 parameter  : type? REF? ('&')? ID? arrayDecl*;
 
-declarations  : (variableDecl | typeDecl | function | chanPriority | component | interface_decl | link_stmnt)*;
+declarations  : (variableDecl | typeDecl | function | chanPriority | component | interface_decl)*;
 variableDecl  : type? variableID (COMMA variableID)* END;
 
 variableID locals [TableReference reference]

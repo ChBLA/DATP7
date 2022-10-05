@@ -450,5 +450,20 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //endregion
 
+    private void enterScope() {
+        enterScope(false);
+    }
+
+    private void enterScope(boolean isComponent) {
+        this.currentScope = new Scope(this.currentScope, isComponent);
+    }
+
+    private void exitScope() {
+        this.currentScope = this.currentScope.getParent();
+    }
+
+    public Scope getCurrentScope() {
+        return currentScope;
+    }
 
 }
