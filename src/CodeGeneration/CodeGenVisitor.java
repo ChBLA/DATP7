@@ -4,6 +4,13 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
 
     //region Expressions
+
+
+    @Override
+    public Template visitLiteral(UCELParser.LiteralContext ctx) {
+        return new LiteralTemplate(ctx.getText());
+    }
+
     @Override
     public Template visitAddSub(UCELParser.AddSubContext ctx) {
         var left = visit(ctx.expression(0)).getOutput();

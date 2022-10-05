@@ -21,6 +21,35 @@ import static org.mockito.Mockito.when;
 public class CodeGenTests {
 
     //region Expressions
+
+    //region Literal
+
+    @ParameterizedTest(name = "{index} => generating literal for {0} ")
+    @MethodSource("literalsSource")
+    void literalGeneratedCorrectly(String expectedLiteral) {
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.LiteralContext.class);
+        when(node.getText()).thenReturn(expectedLiteral);
+
+        var actual = visitor.visitLiteral(node).getOutput();
+
+        assertEquals(expectedLiteral, actual);
+    }
+
+    private  static Stream<Arguments> literalsSource() {
+        return Stream.of(Arguments.arguments("1"),
+                         Arguments.arguments("1.0"),
+                         Arguments.arguments("0.1"),
+                         Arguments.arguments("0.00005"),
+                         Arguments.arguments("123456789"),
+                         Arguments.arguments("0"),
+                         Arguments.arguments("0.1234506789"),
+                         Arguments.arguments("true"),
+                         Arguments.arguments("false")
+                );
+    }
+
     //region AddSub
     @ParameterizedTest(name = "{index} => generating for expr {0} expr")
     @MethodSource("addSubSource")
