@@ -24,6 +24,55 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
 
     @Override
+    public Type visitBlock(UCELParser.BlockContext ctx) {
+
+        Type commonType = null;
+        Type errorType = new Type(Type.TypeEnum.errorType);
+        Type voidType = new Type(Type.TypeEnum.voidType);
+        enterScope(ctx.scope);
+
+        for(UCELParser.LocalDeclarationContext ldc : ctx.localDeclaration()) {
+            Type declType = visit(ldc);
+            if(declType.equals(errorType))
+                commonType = declType;
+        }
+
+        if(commonType != null && commonType.equals(errorType)) {
+            //No logging just passing the error up
+            exitScope();
+            return errorType;
+        } else {
+            commonType = null;
+        }
+
+        boolean hasFoundError = false;
+        boolean hasFoundType = false;
+
+        for(UCELParser.StatementContext sc : ctx.statement()) {
+            Type statementType = visit(sc);
+            if (hasFoundType) {
+                exitScope();
+                logger.log(new ErrorLog(sc, "Unreachable code"));
+                return errorType;
+            }
+            if(!(hasFoundError)) {
+                if(statementType.equals(errorType)) {
+                    hasFoundError = true;
+                } else if(!statementType.equals(voidType)) {
+                    hasFoundType = true;
+                    commonType = statementType;
+                }
+            }
+        }
+
+        exitScope();
+
+        if(hasFoundError) return errorType;
+        else if(commonType == null) return voidType;
+        else return commonType;
+    }
+
+    @Override
     public Type visitIdExpr(UCELParser.IdExprContext ctx) {
         try {
             //TDOD the table reference is set by the reference handler
@@ -446,12 +495,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //endregion
 
-    private void enterScope() {
-        enterScope(false);
-    }
-
-    private void enterScope(boolean isComponent) {
-        this.currentScope = new Scope(this.currentScope, isComponent);
+    private void enterScope(Scope scope) {
+        currentScope = scope;
     }
 
     private void exitScope() {

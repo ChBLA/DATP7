@@ -12,8 +12,8 @@ import java.util.LinkedList;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 
 public class TypeCheckerTests  {
 
@@ -32,6 +32,205 @@ public class TypeCheckerTests  {
     private static final Type CHAN_TYPE = new Type(Type.TypeEnum.chanType);
     private static final Type STRUCT_TYPE = new Type(Type.TypeEnum.structType);
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
+
+    //region block
+
+    @Test
+    void declarationsForBlockAreVisited() {
+
+        Scope parentScope = new Scope(null, false);
+        TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor(parentScope);
+
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        block.scope = new Scope(parentScope, false);
+
+        UCELParser.LocalDeclarationContext localDecl = mock(UCELParser.LocalDeclarationContext.class);
+        ArrayList<UCELParser.LocalDeclarationContext> localDecls = new ArrayList<>();
+        localDecls.add(localDecl);
+
+        when(localDecl.accept(typeCheckerVisitor)).thenReturn(INT_TYPE);
+        when(block.localDeclaration()).thenReturn(localDecls);
+
+        typeCheckerVisitor.visitBlock(block);
+
+        verify(localDecl, times(1)).accept(typeCheckerVisitor);
+    }
+
+    @Test
+    void statementsForBlockAreVisited() {
+
+        Scope parentScope = new Scope(null, false);
+        TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor(parentScope);
+
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        block.scope = new Scope(parentScope, false);
+
+        UCELParser.StatementContext statementContext = mock(UCELParser.StatementContext.class);
+        ArrayList<UCELParser.StatementContext> statementContexts = new ArrayList<>();
+        statementContexts.add(statementContext);
+
+        when(statementContext.accept(typeCheckerVisitor)).thenReturn(INT_TYPE);
+        when(block.statement()).thenReturn(statementContexts);
+
+        typeCheckerVisitor.visitBlock(block);
+
+        verify(statementContext, times(1)).accept(typeCheckerVisitor);
+    }
+
+    @Test
+    void returnsCorrectlyCommonType() {
+        Scope parentScope = new Scope(null, false);
+        TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor(parentScope);
+
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        block.scope = new Scope(parentScope, false);
+
+        UCELParser.StatementContext statementContext0 = mock(UCELParser.StatementContext.class);
+        UCELParser.StatementContext statementContext1 = mock(UCELParser.StatementContext.class);
+        UCELParser.StatementContext statementContext2 = mock(UCELParser.StatementContext.class);
+        ArrayList<UCELParser.StatementContext> statementContexts = new ArrayList<>();
+        statementContexts.add(statementContext0);
+        statementContexts.add(statementContext1);
+        statementContexts.add(statementContext2);
+
+        when(statementContext0.accept(typeCheckerVisitor)).thenReturn(VOID_TYPE);
+        when(statementContext1.accept(typeCheckerVisitor)).thenReturn(VOID_TYPE);
+        when(statementContext2.accept(typeCheckerVisitor)).thenReturn(INT_TYPE);
+        when(block.statement()).thenReturn(statementContexts);
+
+        Type result = typeCheckerVisitor.visitBlock(block);
+
+        assertEquals(INT_TYPE, result);
+    }
+
+    @Test
+    void returnsErrorTypeOnUnreachableCode() {
+        Scope parentScope = new Scope(null, false);
+        TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor(parentScope);
+
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        block.scope = new Scope(parentScope, false);
+
+        UCELParser.StatementContext statementContext0 = mock(UCELParser.StatementContext.class);
+        UCELParser.StatementContext statementContext1 = mock(UCELParser.StatementContext.class);
+        UCELParser.StatementContext statementContext2 = mock(UCELParser.StatementContext.class);
+        ArrayList<UCELParser.StatementContext> statementContexts = new ArrayList<>();
+        statementContexts.add(statementContext0);
+        statementContexts.add(statementContext1);
+        statementContexts.add(statementContext2);
+
+        when(statementContext0.accept(typeCheckerVisitor)).thenReturn(VOID_TYPE);
+        when(statementContext1.accept(typeCheckerVisitor)).thenReturn(VOID_TYPE);
+        when(statementContext2.accept(typeCheckerVisitor)).thenReturn(INT_TYPE);
+        when(block.statement()).thenReturn(statementContexts);
+
+        Type result = typeCheckerVisitor.visitBlock(block);
+
+        assertEquals(INT_TYPE, result);
+    }
+
+    @Test
+    void returnsCorrectlyVoidTypeFromStatements() {
+
+        Scope parentScope = new Scope(null, false);
+        TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor(parentScope);
+
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        block.scope = new Scope(parentScope, false);
+
+        UCELParser.StatementContext statementContext0 = mock(UCELParser.StatementContext.class);
+        UCELParser.StatementContext statementContext1 = mock(UCELParser.StatementContext.class);
+        UCELParser.StatementContext statementContext2 = mock(UCELParser.StatementContext.class);
+        ArrayList<UCELParser.StatementContext> statementContexts = new ArrayList<>();
+        statementContexts.add(statementContext0);
+        statementContexts.add(statementContext1);
+        statementContexts.add(statementContext2);
+
+        when(statementContext0.accept(typeCheckerVisitor)).thenReturn(VOID_TYPE);
+        when(statementContext1.accept(typeCheckerVisitor)).thenReturn(VOID_TYPE);
+        when(statementContext2.accept(typeCheckerVisitor)).thenReturn(VOID_TYPE);
+        when(block.statement()).thenReturn(statementContexts);
+
+        Type result = typeCheckerVisitor.visitBlock(block);
+
+        assertEquals(VOID_TYPE, result);
+    }
+
+    @Test
+    void returnsCorrectlyVoidTypeFromLackOfStatements() {
+
+        Scope parentScope = new Scope(null, false);
+        TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor(parentScope);
+
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        block.scope = new Scope(parentScope, false);
+
+        UCELParser.StatementContext statementContext0 = mock(UCELParser.StatementContext.class);
+        UCELParser.StatementContext statementContext1 = mock(UCELParser.StatementContext.class);
+        UCELParser.StatementContext statementContext2 = mock(UCELParser.StatementContext.class);
+        ArrayList<UCELParser.StatementContext> statementContexts = new ArrayList<>();
+        when(block.statement()).thenReturn(statementContexts);
+
+        Type result = typeCheckerVisitor.visitBlock(block);
+
+        assertEquals(VOID_TYPE, result);
+    }
+
+    @Test
+    void returnsErrorTypeFromStatement() {
+
+        Scope parentScope = new Scope(null, false);
+        TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor(parentScope);
+
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        block.scope = new Scope(parentScope, false);
+
+        UCELParser.StatementContext statementContext0 = mock(UCELParser.StatementContext.class);
+        UCELParser.StatementContext statementContext1 = mock(UCELParser.StatementContext.class);
+        UCELParser.StatementContext statementContext2 = mock(UCELParser.StatementContext.class);
+        ArrayList<UCELParser.StatementContext> statementContexts = new ArrayList<>();
+        statementContexts.add(statementContext0);
+        statementContexts.add(statementContext1);
+        statementContexts.add(statementContext2);
+
+        when(statementContext0.accept(typeCheckerVisitor)).thenReturn(VOID_TYPE);
+        when(statementContext1.accept(typeCheckerVisitor)).thenReturn(ERROR_TYPE);
+        when(statementContext2.accept(typeCheckerVisitor)).thenReturn(INT_TYPE);
+        when(block.statement()).thenReturn(statementContexts);
+
+        Type result = typeCheckerVisitor.visitBlock(block);
+
+        assertEquals(ERROR_TYPE, result);
+    }
+
+    @Test
+    void returnsErrorTypeFromLocalDecl() {
+
+        Scope parentScope = new Scope(null, false);
+        TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor(parentScope);
+
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        block.scope = new Scope(parentScope, false);
+
+        UCELParser.LocalDeclarationContext statementContext0 = mock(UCELParser.LocalDeclarationContext.class);
+        UCELParser.LocalDeclarationContext statementContext1 = mock(UCELParser.LocalDeclarationContext.class);
+        UCELParser.LocalDeclarationContext statementContext2 = mock(UCELParser.LocalDeclarationContext.class);
+        ArrayList<UCELParser.LocalDeclarationContext> statementContexts = new ArrayList<>();
+        statementContexts.add(statementContext0);
+        statementContexts.add(statementContext1);
+        statementContexts.add(statementContext2);
+
+        when(statementContext0.accept(typeCheckerVisitor)).thenReturn(VOID_TYPE);
+        when(statementContext1.accept(typeCheckerVisitor)).thenReturn(ERROR_TYPE);
+        when(statementContext2.accept(typeCheckerVisitor)).thenReturn(VOID_TYPE);
+        when(block.localDeclaration()).thenReturn(statementContexts);
+
+        Type result = typeCheckerVisitor.visitBlock(block);
+
+        assertEquals(ERROR_TYPE, result);
+    }
+
+    //endregion
 
     //region IdExpr
     @Test

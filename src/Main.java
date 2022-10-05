@@ -22,10 +22,10 @@ public class Main {
         ReferenceVisitor referenceVisitor = new ReferenceVisitor(logger);
         TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor(logger);
 
-        UCELParser.DeclarationsContext declarations = parser.declarations();
+        UCELParser.BlockContext block = parser.block();
 
-        referenceVisitor.visit(declarations);
-        Type type = typeCheckerVisitor.visit(declarations);
+        referenceVisitor.visit(block);
+        Type type = typeCheckerVisitor.visit(block);
 
         System.out.println(type);
         logger.printLogs();

@@ -86,6 +86,8 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         for(UCELParser.StatementContext sc : ctx.statement())
             success &= visit(sc);
 
+        exitScope();
+
         return success;
     }
 
