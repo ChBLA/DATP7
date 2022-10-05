@@ -38,6 +38,7 @@ public class CodeGenTests {
     }
 
     private  static Stream<Arguments> literalsSource() {
+        //TODO: Possibly account for deadlock literal later
         return Stream.of(Arguments.arguments("1"),
                          Arguments.arguments("1.0"),
                          Arguments.arguments("0.1"),
@@ -49,6 +50,30 @@ public class CodeGenTests {
                          Arguments.arguments("false")
                 );
     }
+    //endregion
+
+    //region ArrayIndex
+    @Test
+    void arrayIndexGeneratedCorrectly() {
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+        Template left = generateDefaultExprTemplate(Type.TypeEnum.stringType);
+        Template right = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        String expected = String.format("%s[%s]", left.getOutput(), right.getOutput()); // abc[0]
+
+        var exprLeft = mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor);
+        var exprRight = mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor);
+
+        var node = mock(UCELParser.ArrayIndexContext.class);
+
+        when(node.expression(0)).thenReturn(exprLeft);
+        when(node.expression(1)).thenReturn(exprRight);
+
+        var actual = visitor.visitArrayIndex(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
 
     //region AddSub
     @ParameterizedTest(name = "{index} => generating for expr {0} expr")
