@@ -1,4 +1,5 @@
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,6 +71,19 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if(hasFoundError) return errorType;
         else if(commonType == null) return voidType;
         else return commonType;
+    }
+
+    @Override
+    public Type visitDeclarations(UCELParser.DeclarationsContext ctx) {
+        boolean errorFound = false;
+        Type errorType = new Type(Type.TypeEnum.errorType);
+
+        for(ParseTree pt : ctx.children)
+            if(visit(pt).equals(errorType))
+                errorFound = true;
+
+        if(errorFound) return errorType;
+        else return new Type(Type.TypeEnum.voidType);
     }
 
     @Override
