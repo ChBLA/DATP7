@@ -85,4 +85,8 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     private void exitScope() {
         this.currentScope = this.currentScope.getParent();
     }
+
+    public Scope getCurrentScope() {
+        return currentScope;
+    }
 }

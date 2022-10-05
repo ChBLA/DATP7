@@ -4,7 +4,10 @@ public class Main {
     public static void main(String[] args) {
         //UCELBaseListener a = new UCELBaseListener();
 
-        String input = "true > 12 && true || b";
+        String input = "{ \n " +
+                          "bool b = true; \n " +
+                          "bool a = true > 12 && true || b;\n" +
+                       "}";
         new Main(input);
     }
 
@@ -19,10 +22,10 @@ public class Main {
         ReferenceVisitor referenceVisitor = new ReferenceVisitor(logger);
         TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor(logger);
 
-        UCELParser.ExpressionContext expressionContext = parser.expression();
+        UCELParser.DeclarationsContext declarations = parser.declarations();
 
-        referenceVisitor.visit(expressionContext);
-        Type type = typeCheckerVisitor.visit(expressionContext);
+        referenceVisitor.visit(declarations);
+        Type type = typeCheckerVisitor.visit(declarations);
 
         System.out.println(type);
         logger.printLogs();

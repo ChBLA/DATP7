@@ -230,4 +230,14 @@ public class ReferenceHandlerTests {
 
     //endregion
 
+    @Test
+    void addScopeForBlock() {
+
+        Scope parentScope = new Scope(null, false);
+        ReferenceVisitor referenceVisitor = new ReferenceVisitor(parentScope);
+
+
+
+    }
+
 }
