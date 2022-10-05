@@ -73,6 +73,49 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         else return commonType;
     }
 
+    /**
+     * Checks that varid types are equivalent to the declared type
+     * Edge cases include:
+     *      Coercion from int to double
+     *      varid is declared as an array
+     *      struct to array coercion is handled in the varID visitor
+     *
+     * @param ctx
+     * @return
+     */
+    @Override
+    public Type visitVariableDecl(UCELParser.VariableDeclContext ctx) {
+        Type declaredType = null;
+        Type intType = new Type(Type.TypeEnum.intType);
+        Type doubleType = new Type(Type.TypeEnum.doubleType);
+        if(ctx.type() != null) declaredType = visit(ctx.type());
+
+        boolean errorFound = false;
+
+        for(UCELParser.VariableIDContext varID : ctx.variableID()) {
+            Type varIDType = visit(varID);
+            if(declaredType != null && !varIDType.equalsOrIsArrayOf(declaredType)) {
+                if(declaredType.equals(doubleType) &&
+                    varIDType.equals(intType)) {
+
+                    try {
+                        DeclarationInfo declInfo = currentScope.get(varID.reference);
+                        declInfo.setType(doubleType);
+                    } catch (Exception e) {
+                        logger.log(new ErrorLog(ctx, e.getMessage()));
+                        errorFound = true;
+                    }
+                } else {
+                    logger.log(new ErrorLog(varID, "Does not match declared " + declaredType));
+                    errorFound = true;
+                }
+            }
+        }
+
+        if(errorFound) return new Type(Type.TypeEnum.errorType);
+        else return new Type(Type.TypeEnum.voidType);
+    }
+
     @Override
     public Type visitAssign(UCELParser.AssignContext ctx) {
         return super.visitAssign(ctx);

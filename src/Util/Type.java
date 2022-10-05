@@ -61,12 +61,27 @@ public class Type {
         return parameters;
     }
 
+    public boolean equalsOrIsArrayOf(Type t) {
+        if(t.getEvaluationType() != this.evaluationType) return false;
+
+        Type[] tParameters = t.getParameters();
+        if((parameters == null || parameters.length == 0) &&
+            tParameters == null || tParameters.length == 0) return true;
+
+        if(parameters.length != tParameters.length) return false;
+        for(int i = 0; i < parameters.length; i++) {
+            if(!parameters[i].equals(tParameters[i])) return false;
+        }
+
+        return true;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Type)) return false;
         Type t = (Type) o;
 
-        return t.getEvaluationType() == this.evaluationType &&
+        return equalsOrIsArrayOf(t) &&
                 t.getArrayDimensions() == this.arrayDimensions;
     }
 

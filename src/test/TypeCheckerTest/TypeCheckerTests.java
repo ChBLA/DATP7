@@ -266,19 +266,20 @@ public class TypeCheckerTests  {
     //region VariableDecl
 
     @Test
-    void variableDeclInsertsCorrectTypeInDeclarationInfo() {
+    void variableDeclIntToDoubleInsertedInDeclInfo() {
+        Type declType = DOUBLE_TYPE;
+        Type varIDType = INT_TYPE;
 
-        DeclarationInfo info0 = new DeclarationInfo("");
-        DeclarationInfo info1 = new DeclarationInfo("");
-        DeclarationInfo info2 = new DeclarationInfo("");
+        DeclarationInfo info0 = new DeclarationInfo("", declType);
+        DeclarationInfo info1 = new DeclarationInfo("", varIDType);
+        DeclarationInfo info2 = new DeclarationInfo("", declType);
 
         Scope scope = mock(Scope.class);
 
-        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
 
         UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
-
-        when(type.accept(visitor)).thenReturn(INT_TYPE);
+        when(type.accept(visitor)).thenReturn(declType);
 
         UCELParser.VariableIDContext varID0 = mock(UCELParser.VariableIDContext.class);
         UCELParser.VariableIDContext varID1 = mock(UCELParser.VariableIDContext.class);
@@ -292,13 +293,17 @@ public class TypeCheckerTests  {
         varID1.reference = dr1;
         varID2.reference = dr2;
 
-        //when(scope.get(dr0)).thenReturn(info0);
-        //when(scope.get(dr1)).thenReturn(info1);
-        //when(scope.get(dr2)).thenReturn(info2);
+        try {
+            when(scope.get(dr0)).thenReturn(info0);
+            when(scope.get(dr1)).thenReturn(info1);
+            when(scope.get(dr2)).thenReturn(info2);
+        } catch (Exception e) {
+            fail();
+        }
 
-        when(varID0.accept(visitor)).thenReturn(VOID_TYPE);
-        when(varID1.accept(visitor)).thenReturn(VOID_TYPE);
-        when(varID2.accept(visitor)).thenReturn(VOID_TYPE);
+        when(varID0.accept(visitor)).thenReturn(declType);
+        when(varID1.accept(visitor)).thenReturn(varIDType);
+        when(varID2.accept(visitor)).thenReturn(declType);
 
         ArrayList<UCELParser.VariableIDContext> varIDs = new ArrayList<>();
 
@@ -312,8 +317,174 @@ public class TypeCheckerTests  {
 
         visitor.visitVariableDecl(varDecl);
 
-        assertEquals(info1.getType(), INT_TYPE);
+        assertEquals(declType, info1.getType());
     }
+
+    @Test
+    void variableDeclErrorTypeFromIncorrectVarIDType() {
+        Type declType = INT_TYPE;
+        Type varIDType = BOOL_TYPE;
+
+        DeclarationInfo info0 = new DeclarationInfo("", declType);
+        DeclarationInfo info1 = new DeclarationInfo("", varIDType);
+        DeclarationInfo info2 = new DeclarationInfo("", declType);
+
+        Scope scope = mock(Scope.class);
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        when(type.accept(visitor)).thenReturn(declType);
+
+        UCELParser.VariableIDContext varID0 = mock(UCELParser.VariableIDContext.class);
+        UCELParser.VariableIDContext varID1 = mock(UCELParser.VariableIDContext.class);
+        UCELParser.VariableIDContext varID2 = mock(UCELParser.VariableIDContext.class);
+
+        DeclarationReference dr0 = new DeclarationReference(0, 0);
+        DeclarationReference dr1 = new DeclarationReference(0, 1);
+        DeclarationReference dr2 = new DeclarationReference(0, 2);
+
+        varID0.reference = dr0;
+        varID1.reference = dr1;
+        varID2.reference = dr2;
+
+        try {
+            when(scope.get(dr0)).thenReturn(info0);
+            when(scope.get(dr1)).thenReturn(info1);
+            when(scope.get(dr2)).thenReturn(info2);
+        } catch (Exception e) {
+            fail();
+        }
+
+        when(varID0.accept(visitor)).thenReturn(declType);
+        when(varID1.accept(visitor)).thenReturn(varIDType);
+        when(varID2.accept(visitor)).thenReturn(declType);
+
+        ArrayList<UCELParser.VariableIDContext> varIDs = new ArrayList<>();
+
+        varIDs.add(varID0);
+        varIDs.add(varID1);
+        varIDs.add(varID2);
+
+        UCELParser.VariableDeclContext varDecl = mock(UCELParser.VariableDeclContext.class);
+        when(varDecl.variableID()).thenReturn(varIDs);
+        when(varDecl.type()).thenReturn(type);
+
+        Type result = visitor.visitVariableDecl(varDecl);
+
+        assertEquals(result, ERROR_TYPE);
+    }
+
+    @Test
+    void variableDeclCorrectType() {
+        Type declType = INT_TYPE;
+        Type varIDType = INT_TYPE;
+
+        DeclarationInfo info0 = new DeclarationInfo("", declType);
+        DeclarationInfo info1 = new DeclarationInfo("", varIDType);
+        DeclarationInfo info2 = new DeclarationInfo("", declType);
+
+        Scope scope = mock(Scope.class);
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        when(type.accept(visitor)).thenReturn(declType);
+
+        UCELParser.VariableIDContext varID0 = mock(UCELParser.VariableIDContext.class);
+        UCELParser.VariableIDContext varID1 = mock(UCELParser.VariableIDContext.class);
+        UCELParser.VariableIDContext varID2 = mock(UCELParser.VariableIDContext.class);
+
+        DeclarationReference dr0 = new DeclarationReference(0, 0);
+        DeclarationReference dr1 = new DeclarationReference(0, 1);
+        DeclarationReference dr2 = new DeclarationReference(0, 2);
+
+        varID0.reference = dr0;
+        varID1.reference = dr1;
+        varID2.reference = dr2;
+
+        try {
+            when(scope.get(dr0)).thenReturn(info0);
+            when(scope.get(dr1)).thenReturn(info1);
+            when(scope.get(dr2)).thenReturn(info2);
+        } catch (Exception e) {
+            fail();
+        }
+
+        when(varID0.accept(visitor)).thenReturn(declType);
+        when(varID1.accept(visitor)).thenReturn(varIDType);
+        when(varID2.accept(visitor)).thenReturn(declType);
+
+        ArrayList<UCELParser.VariableIDContext> varIDs = new ArrayList<>();
+
+        varIDs.add(varID0);
+        varIDs.add(varID1);
+        varIDs.add(varID2);
+
+        UCELParser.VariableDeclContext varDecl = mock(UCELParser.VariableDeclContext.class);
+        when(varDecl.variableID()).thenReturn(varIDs);
+        when(varDecl.type()).thenReturn(type);
+
+        Type result = visitor.visitVariableDecl(varDecl);
+
+        assertEquals(result, VOID_TYPE);
+    }
+
+    @Test
+    void variableDeclCorrectArrayType() {
+        Type declType = INT_TYPE;
+        Type varIDType = INT_ARRAY_TYPE;
+
+        DeclarationInfo info0 = new DeclarationInfo("", declType);
+        DeclarationInfo info1 = new DeclarationInfo("", varIDType);
+        DeclarationInfo info2 = new DeclarationInfo("", declType);
+
+        Scope scope = mock(Scope.class);
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        when(type.accept(visitor)).thenReturn(declType);
+
+        UCELParser.VariableIDContext varID0 = mock(UCELParser.VariableIDContext.class);
+        UCELParser.VariableIDContext varID1 = mock(UCELParser.VariableIDContext.class);
+        UCELParser.VariableIDContext varID2 = mock(UCELParser.VariableIDContext.class);
+
+        DeclarationReference dr0 = new DeclarationReference(0, 0);
+        DeclarationReference dr1 = new DeclarationReference(0, 1);
+        DeclarationReference dr2 = new DeclarationReference(0, 2);
+
+        varID0.reference = dr0;
+        varID1.reference = dr1;
+        varID2.reference = dr2;
+
+        try {
+            when(scope.get(dr0)).thenReturn(info0);
+            when(scope.get(dr1)).thenReturn(info1);
+            when(scope.get(dr2)).thenReturn(info2);
+        } catch (Exception e) {
+            fail();
+        }
+
+        when(varID0.accept(visitor)).thenReturn(declType);
+        when(varID1.accept(visitor)).thenReturn(varIDType);
+        when(varID2.accept(visitor)).thenReturn(declType);
+
+        ArrayList<UCELParser.VariableIDContext> varIDs = new ArrayList<>();
+
+        varIDs.add(varID0);
+        varIDs.add(varID1);
+        varIDs.add(varID2);
+
+        UCELParser.VariableDeclContext varDecl = mock(UCELParser.VariableDeclContext.class);
+        when(varDecl.variableID()).thenReturn(varIDs);
+        when(varDecl.type()).thenReturn(type);
+
+        Type result = visitor.visitVariableDecl(varDecl);
+
+        assertEquals(result, VOID_TYPE);
+    }
+
 
     //endregion
 
