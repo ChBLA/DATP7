@@ -48,7 +48,35 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         var expr = visit(ctx.expression());
         var op = visit(ctx.unary());
 
-        return new UnaryExprTemplate(expr, op);
+        return new UnaryExprTemplate(op, expr);
+    }
+
+    @Override
+    public Template visitIncrementPost(UCELParser.IncrementPostContext ctx) {
+        var expr = visit(ctx.expression());
+
+        return new UnaryExprTemplate(expr, new ManualTemplate(ctx.INCREMENT().getText()));
+    }
+
+    @Override
+    public Template visitIncrementPre(UCELParser.IncrementPreContext ctx) {
+        var expr = visit(ctx.expression());
+
+        return new UnaryExprTemplate(new ManualTemplate(ctx.INCREMENT().getText()), expr);
+    }
+
+    @Override
+    public Template visitDecrementPost(UCELParser.DecrementPostContext ctx) {
+        var expr = visit(ctx.expression());
+
+        return new UnaryExprTemplate(expr, new ManualTemplate(ctx.DECREMENT().getText()));
+    }
+
+    @Override
+    public Template visitDecrementPre(UCELParser.DecrementPreContext ctx) {
+        var expr = visit(ctx.expression());
+
+        return new UnaryExprTemplate(new ManualTemplate(ctx.DECREMENT().getText()), expr);
     }
 
     @Override

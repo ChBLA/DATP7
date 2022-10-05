@@ -73,7 +73,7 @@ public class CodeGenTests {
     void arrayIndexGeneratedCorrectly() {
 
         CodeGenVisitor visitor = new CodeGenVisitor();
-        Template left = generateDefaultExprTemplate(Type.TypeEnum.stringType);
+        Template left = generateDefaultExprTemplate("abec");
         Template right = generateDefaultExprTemplate(Type.TypeEnum.intType);
         String expected = String.format("%s[%s]", left.getOutput(), right.getOutput()); // abc[0]
 
@@ -139,6 +139,94 @@ public class CodeGenTests {
 
         assertEquals(expected, actual);
     }
+    //endregion
+
+    //region Increment/Decrement expressions
+    @Test
+    void incrementPostExprGeneratedCorrectly() {
+        Template exprResult = generateDefaultExprTemplate("abec");
+        String expected = String.format("%s++", exprResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.IncrementPostContext.class);
+        var token = mock(TerminalNode.class);
+
+        when(token.getText()).thenReturn("++");
+        when(node.INCREMENT()).thenReturn(token);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitIncrementPost(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void incrementPreExprGeneratedCorrectly() {
+        Template exprResult = generateDefaultExprTemplate("abec");
+        String expected = String.format("++%s", exprResult.getOutput());
+
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.IncrementPreContext.class);
+        var token = mock(TerminalNode.class);
+
+        when(token.getText()).thenReturn("++");
+        when(node.INCREMENT()).thenReturn(token);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitIncrementPre(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void decrementPostExprGeneratedCorrectly() {
+        Template exprResult = generateDefaultExprTemplate("abec");
+        String expected = String.format("%s--", exprResult.getOutput());
+
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.DecrementPostContext.class);
+        var token = mock(TerminalNode.class);
+
+        when(token.getText()).thenReturn("--");
+        when(node.DECREMENT()).thenReturn(token);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitDecrementPost(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void decrementPreExprGeneratedCorrectly() {
+        Template exprResult = generateDefaultExprTemplate("abec");
+        String expected = String.format("--%s", exprResult.getOutput());
+
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.DecrementPreContext.class);
+        var token = mock(TerminalNode.class);
+
+        when(token.getText()).thenReturn("--");
+        when(node.DECREMENT()).thenReturn(token);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitDecrementPre(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
     //endregion
 
     //region Unary expressions
@@ -466,10 +554,14 @@ public class CodeGenTests {
             case intType -> new ManualTemplate("0");
             case boolType -> new ManualTemplate("true");
             case doubleType -> new ManualTemplate("0.0");
-            case charType -> new ManualTemplate("a");
-            case stringType -> new ManualTemplate("abc");
+            case charType -> new ManualTemplate("'a'");
+            case stringType -> new ManualTemplate("\"abc\"");
             default -> new ManualTemplate("");
         };
+    }
+
+    private Template generateDefaultExprTemplate(String id) {
+        return new ManualTemplate(id);
     }
 
     //endregion
