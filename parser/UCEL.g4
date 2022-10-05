@@ -86,10 +86,10 @@ expression locals [DeclarationReference reference]
             |  expression MARK                                  #MarkExpr
             |  LEFTPAR expression RIGHTPAR                      #Paren
             |  expression '.' ID                                #StructAccess
-            |  expression '++'                                  #IncrementPost
-            |  '++' expression                                  #IncrementPre
-            |  expression '--'                                  #DecrementPost
-            |  '--' expression                                  #DecrementPre
+            |  expression INCREMENT                             #IncrementPost
+            |  INCREMENT expression                             #IncrementPre
+            |  expression DECREMENT                             #DecrementPost
+            |  DECREMENT expression                             #DecrementPre
             |  ID LEFTPAR arguments RIGHTPAR                    #FuncCall
             |  <assoc=right> unary expression                   #UnaryExpr
             |  expression op=('*' | '/' | '%') expression       #MultDiv
@@ -103,7 +103,7 @@ expression locals [DeclarationReference reference]
             |  expression BITOR expression                        #BitOr
             |  expression op=('&&' | 'and') expression          #LogAnd
             |  expression op=('||' | 'or' | 'imply') expression #LogOr
-            |  expression '?' expression COLON expression       #Conditional
+            |  expression QUESTIONMARK expression COLON expression       #Conditional
             |  op=('forall' | 'exists' | 'sum') LEFTPAR ID COLON type RIGHTPAR expression #VerificationExpr
             ;
 
@@ -154,6 +154,9 @@ NOT : 'not';
 BITAND : '&';
 BITXOR : '^';
 BITOR : '|';
+QUESTIONMARK : '?';
+INCREMENT : '++';
+DECREMENT : '--';
 
 COMP : 'comp';
 DECLARATIONS : 'declarations';
