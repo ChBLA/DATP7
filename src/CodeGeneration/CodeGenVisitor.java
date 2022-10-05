@@ -14,6 +14,13 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         return new ArrayIndexTemplate(left, right);
     }
 
+    public Template visitUnaryExpr(UCELParser.UnaryExprContext ctx) {
+        var expr = visit(ctx.expression());
+        var op = visit(ctx.unary());
+
+        return new UnaryExprTemplate(expr, op);
+    }
+    
     @Override
     public Template visitLiteral(UCELParser.LiteralContext ctx) {
         return new LiteralTemplate(ctx.getText());
@@ -21,6 +28,14 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitAddSub(UCELParser.AddSubContext ctx) {
+        var left = visit(ctx.expression(0)).getOutput();
+        var right = visit(ctx.expression(1)).getOutput();
+
+        return new BinaryExprTemplate(left, right, ctx.op.getText());
+    }
+
+    @Override
+    public Template visitMultDiv(UCELParser.MultDivContext ctx) {
         var left = visit(ctx.expression(0)).getOutput();
         var right = visit(ctx.expression(1)).getOutput();
 
@@ -61,6 +76,38 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitEqExpr(UCELParser.EqExprContext ctx) {
+        var left = visit(ctx.expression(0)).getOutput();
+        var right = visit(ctx.expression(1)).getOutput();
+
+        return new BinaryExprTemplate(left, right, ctx.op.getText());
+    }
+
+    @Override
+    public Template visitMinMax(UCELParser.MinMaxContext ctx) {
+        var left = visit(ctx.expression(0)).getOutput();
+        var right = visit(ctx.expression(1)).getOutput();
+
+        return new BinaryExprTemplate(left, right, ctx.op.getText());
+    }
+
+    @Override
+    public Template visitRelExpr(UCELParser.RelExprContext ctx) {
+        var left = visit(ctx.expression(0)).getOutput();
+        var right = visit(ctx.expression(1)).getOutput();
+
+        return new BinaryExprTemplate(left, right, ctx.op.getText());
+    }
+
+    @Override
+    public Template visitLogAnd(UCELParser.LogAndContext ctx) {
+        var left = visit(ctx.expression(0)).getOutput();
+        var right = visit(ctx.expression(1)).getOutput();
+
+        return new BinaryExprTemplate(left, right, ctx.op.getText());
+    }
+
+    @Override
+    public Template visitLogOr(UCELParser.LogOrContext ctx) {
         var left = visit(ctx.expression(0)).getOutput();
         var right = visit(ctx.expression(1)).getOutput();
 

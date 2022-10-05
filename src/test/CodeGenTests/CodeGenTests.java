@@ -6,10 +6,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import javax.print.DocFlavor;
 import java.io.Console;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -77,7 +79,7 @@ public class CodeGenTests {
 
     //region AddSub
     @ParameterizedTest(name = "{index} => generating for expr {0} expr")
-    @MethodSource("addSubSource")
+    @ValueSource(strings = {"+", "-"})
     void addSubGeneratedCorrectly(String op) {
         String expected = String.format("0 %s 0", op);
         Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
@@ -98,15 +100,80 @@ public class CodeGenTests {
 
         assertEquals(expected, actual);
     }
+    //endregion
 
-    private  static Stream<Arguments> addSubSource() {
-        return Stream.of(Arguments.arguments("+"), Arguments.arguments("-"));
+    //region MultDiv
+    @ParameterizedTest(name = "{index} => generating for expr {0} expr")
+    @ValueSource(strings = {"*", "/", "%"})
+    void multDivGeneratedCorrectly(String op) {
+        String expected = String.format("0 %s 0", op);
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.MultDivContext.class);
+        var opToken = mock(CommonToken.class);
+
+        node.op = opToken;
+
+        when(node.expression(0)).thenReturn(expr);
+        when(node.expression(1)).thenReturn(expr);
+        when(opToken.getText()).thenReturn(op);
+
+        var actual = visitor.visitMultDiv(node).getOutput();
+
+        assertEquals(expected, actual);
     }
+    //endregion
+
+    //region Unary expressions
+    @ParameterizedTest(name = "{index} => generating for {0} expr")
+    @ValueSource(strings = {"+", "-"})
+    void unaryPlusMinusExprGeneratedCorrectly(String op) {
+        String expected = String.format("%s%s", op, generateDefaultExprTemplate(Type.TypeEnum.intType).getOutput());
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.UnaryExprContext.class);
+        var unaryNode = mockForVisitorResult(UCELParser.UnaryContext.class, new ManualTemplate(op), visitor);
+
+        when(node.expression()).thenReturn(expr);
+        when(node.unary()).thenReturn(unaryNode);
+
+        var actual = visitor.visitUnaryExpr(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+//"!", "not "
+    @ParameterizedTest(name = "{index} => generating for {0} expr")
+    @ValueSource(strings = {"not", "!"})
+    void unaryNotNegExprGeneratedCorrectly(String op) {
+        String sanitizeOp = Objects.equals(op, "not") ? op + " " : op;
+        String expected = String.format("%s%s", sanitizeOp, generateDefaultExprTemplate(Type.TypeEnum.boolType).getOutput());
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.UnaryExprContext.class);
+        var unaryNode = mockForVisitorResult(UCELParser.UnaryContext.class, new ManualTemplate(sanitizeOp), visitor);
+
+        when(node.expression()).thenReturn(expr);
+        when(node.unary()).thenReturn(unaryNode);
+
+        var actual = visitor.visitUnaryExpr(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
     //endregion
 
     //region Bitshift
     @ParameterizedTest(name = "{index} => generating for expr {0} expr")
-    @MethodSource("bitshiftSource")
+    @ValueSource(strings = {"<<", ">>"})
     void bitshiftGeneratedCorrectly(String op) {
         String expected = String.format("0 %s 0", op);
         Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
@@ -128,9 +195,6 @@ public class CodeGenTests {
         assertEquals(expected, actual);
     }
 
-    private  static Stream<Arguments> bitshiftSource() {
-        return Stream.of(Arguments.arguments("<<"), Arguments.arguments(">>"));
-    }
     //endregion
 
     //region Bit logic operators
@@ -207,7 +271,7 @@ public class CodeGenTests {
 
     //region Equality
     @ParameterizedTest(name = "{index} => generating for expr {0} expr")
-    @MethodSource("eqSource")
+    @ValueSource(strings = {"!=", "=="})
     void eqGeneratedCorrectly(String op) {
         String expected = String.format("0 %s 0", op);
         Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
@@ -228,11 +292,106 @@ public class CodeGenTests {
 
         assertEquals(expected, actual);
     }
+    //endregion
 
-    private  static Stream<Arguments> eqSource() {
-        return Stream.of(Arguments.arguments("!="), Arguments.arguments("=="));
+    //region MinMax
+    @ParameterizedTest(name = "{index} => generating for expr {0} expr")
+    @ValueSource(strings = {"<?", ">?"})
+    void minMaxGeneratedCorrectly(String op) {
+        String expected = String.format("0 %s 0", op);
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.MinMaxContext.class);
+        var opToken = mock(CommonToken.class);
+
+        node.op = opToken;
+
+        when(node.expression(0)).thenReturn(expr);
+        when(node.expression(1)).thenReturn(expr);
+        when(opToken.getText()).thenReturn(op);
+
+        var actual = visitor.visitMinMax(node).getOutput();
+
+        assertEquals(expected, actual);
     }
     //endregion
+
+    //region Relational expressions
+    @ParameterizedTest(name = "{index} => generating for expr {0} expr")
+    @ValueSource(strings = {"<", "<=", ">", ">="})
+    void relExprGeneratedCorrectly(String op) {
+        String expected = String.format("0 %s 0", op);
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.RelExprContext.class);
+        var opToken = mock(CommonToken.class);
+
+        node.op = opToken;
+
+        when(node.expression(0)).thenReturn(expr);
+        when(node.expression(1)).thenReturn(expr);
+        when(opToken.getText()).thenReturn(op);
+
+        var actual = visitor.visitRelExpr(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
+    //region Logical expressions
+    @ParameterizedTest(name = "{index} => generating for expr {0} expr")
+    @ValueSource(strings = {"&&", "and"})
+    void logAndGeneratedCorrectly(String op) {
+        String expected = String.format("0 %s 0", op);
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.LogAndContext.class);
+        var opToken = mock(CommonToken.class);
+
+        node.op = opToken;
+
+        when(node.expression(0)).thenReturn(expr);
+        when(node.expression(1)).thenReturn(expr);
+        when(opToken.getText()).thenReturn(op);
+
+        var actual = visitor.visitLogAnd(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest(name = "{index} => generating for expr {0} expr")
+    @ValueSource(strings = {"||", "or", "imply"})
+    void logOrGeneratedCorrectly(String op) {
+        String expected = String.format("0 %s 0", op);
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.LogOrContext.class);
+        var opToken = mock(CommonToken.class);
+
+        node.op = opToken;
+
+        when(node.expression(0)).thenReturn(expr);
+        when(node.expression(1)).thenReturn(expr);
+        when(opToken.getText()).thenReturn(op);
+
+        var actual = visitor.visitLogOr(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
 
     //endregion
 
