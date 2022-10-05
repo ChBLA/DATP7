@@ -220,21 +220,18 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //region FuncCall
     @Override
     public Type visitFuncCall(UCELParser.FuncCallContext ctx) {
-        String id = ctx.ID().getText();
         Type argsType = visit(ctx.arguments());
         Variable funcDecl;
         Type funcType;
 
         // Get type of function declaration
         try {
-            TableReference ref = currentScope.find(id, true);
-            funcDecl = currentScope.get(ref);
+            funcDecl = currentScope.get(ctx.reference);
             funcType = funcDecl.getType();
         } catch (Exception e) {
             logger.log(new ErrorLog(ctx, "Definition not found for "));
             return new Type(Type.TypeEnum.errorType);
         }
-
 
         // Compare input parameter types
         Type[] declParams = funcType.getParameters();
@@ -242,7 +239,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type[] argsParams = argsType.getParameters();
 
         if(declParams.length != argsParams.length) {
-            logger.log(new ErrorLog(ctx.arguments(), String.format("Function {0} expected {1} arguments, but got {2}", id, declParams.length, argsParams.length)));
+            logger.log(new ErrorLog(ctx.arguments(), String.format("Function expected {0} arguments, but got {1}", declParams.length, argsParams.length)));
             return new Type(Type.TypeEnum.errorType);
         }
 

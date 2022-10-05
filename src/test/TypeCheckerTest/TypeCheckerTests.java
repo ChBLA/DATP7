@@ -341,20 +341,16 @@ public class TypeCheckerTests  {
         // FuncContext
         final UCELParser.FuncCallContext funcCtx = mock(UCELParser.FuncCallContext.class);
 
-        // ID
-        final UCELParser.IdExprContext idCtx = mock(UCELParser.IdExprContext.class);
-        when(idCtx.getText()).thenReturn(name);
-
-        // ID - Terminal
-        final TerminalNode idTerminal = mock(TerminalNode.class);
-        when(idTerminal.getText()).thenReturn(name);
-        when(funcCtx.ID()).thenReturn(idTerminal);
-
+        try {
+            funcCtx.reference = scope.find(name, true);
+        }
+        catch (Exception e) {
+            funcCtx.reference = null;
+        }
 
         // Args
         final UCELParser.ArgumentsContext argsCtx = mockForVisitorResult(UCELParser.ArgumentsContext.class, argsType, visitor);
         when(funcCtx.arguments()).thenReturn(argsCtx);
-
 
         // Act
         Type actualReturnType = visitor.visitFuncCall(funcCtx);
