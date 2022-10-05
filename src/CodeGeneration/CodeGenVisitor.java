@@ -13,6 +13,11 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
         return new UnaryExprTemplate(expr, op);
     }
+    
+    @Override
+    public Template visitLiteral(UCELParser.LiteralContext ctx) {
+        return new LiteralTemplate(ctx.getText());
+    }
 
     @Override
     public Template visitAddSub(UCELParser.AddSubContext ctx) {
