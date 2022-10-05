@@ -265,7 +265,8 @@ public class TypeCheckerTests  {
     //region IdExpr
     @Test
     void missingIdentifierDefinition() {
-        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+        var scope = new Scope(null, false);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
         UCELParser.IdExprContext node = mock(UCELParser.IdExprContext.class);
         when(node.ID()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.ID)));
         Type actual = visitor.visitIdExpr(node);
@@ -278,17 +279,13 @@ public class TypeCheckerTests  {
         var scope = new Scope(null, false);
 
         var variableName = "foo";
-        var variable = new DeclarationInfo(variableName);
-        variable.setType(INT_TYPE);
-        scope.add(new DeclarationInfo(variableName));
+        var variable = new DeclarationInfo(variableName, INT_TYPE);
+        var ref = scope.add(variable);
         TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
         UCELParser.IdExprContext node = mock(UCELParser.IdExprContext.class);
-        TerminalNode idNode = mock(TerminalNode.class);
-        when(idNode.getText()).thenReturn(variableName);
-        when(node.ID()).thenReturn(idNode);
+        node.reference = ref;
 
-        when(node.ID()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.ID)));
-        Type actual = visitor.visitIdExpr(node);
+        var actual = visitor.visitIdExpr(node);
         assertEquals(INT_TYPE, actual);
     }
     //endregion
