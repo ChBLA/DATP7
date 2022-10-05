@@ -122,5 +122,14 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         return new BinaryExprTemplate(left, right, ctx.op.getText());
     }
 
+    @Override
+    public Template visitConditional(UCELParser.ConditionalContext ctx) {
+        var condition = visit(ctx.expression(0));
+        var posRes = visit(ctx.expression(1));
+        var negRes = visit(ctx.expression(2));
+
+        return new ConditionalExpressionTemplate(condition, posRes, negRes);
+    }
+
     //endregion
 }

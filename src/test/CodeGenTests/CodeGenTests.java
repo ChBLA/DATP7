@@ -413,6 +413,30 @@ public class CodeGenTests {
     }
     //endregion
 
+    //region Conditional expression
+    @Test
+    void conditionalExpressionGeneratedCorrectly() {
+        Template intResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        Template boolResult = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        String expected = String.format("%s ? %s : %s", boolResult, intResult, intResult);
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var intExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, intResult, visitor);
+        var boolExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, boolResult, visitor);
+        var node = mock(UCELParser.ConditionalContext.class);
+
+        when(node.expression(0)).thenReturn(boolExpr);
+        when(node.expression(1)).thenReturn(intExpr);
+        when(node.expression(2)).thenReturn(intExpr);
+
+        var actual = visitor.visitConditional(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
 
     //endregion
 
