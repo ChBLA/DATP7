@@ -90,7 +90,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public Type visitIdExpr(UCELParser.IdExprContext ctx) {
         try {
             //TDOD the table reference is set by the reference handler
-            //also it is getText and not toString to get the the text of the ID
+            //also it is getText and not toString to get the text of the ID
             var ref = currentScope.find(ctx.ID().toString(), true);
             var variable = currentScope.get(ref);
             return variable.getType();
