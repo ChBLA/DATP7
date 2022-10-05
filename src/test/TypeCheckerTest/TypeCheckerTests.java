@@ -1,5 +1,6 @@
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,35 @@ public class TypeCheckerTests  {
     private static final Type CHAN_TYPE = new Type(Type.TypeEnum.chanType);
     private static final Type STRUCT_TYPE = new Type(Type.TypeEnum.structType);
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
+
+    //region declaration
+
+    @Test
+    void declarationReturnErrorFromChild() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.DeclarationsContext node = mock(UCELParser.DeclarationsContext.class);
+        ParseTree child0 = mock(ParseTree.class);
+        ParseTree child1 = mock(ParseTree.class);
+        ParseTree child2 = mock(ParseTree.class);
+
+        when(child0.accept(visitor)).thenReturn(VOID_TYPE);
+        when(child0.accept(visitor)).thenReturn(ERROR_TYPE);
+        when(child0.accept(visitor)).thenReturn(VOID_TYPE);
+
+        ArrayList<ParseTree> children = new ArrayList<>();
+        children.add(child0);
+        children.add(child1);
+        children.add(child2);
+
+        node.children = children;
+
+        Type result = visitor.visitDeclarations(node);
+
+        assertEquals(ERROR_TYPE, result);
+    }
+
+    //endregion
 
     //region block
 
