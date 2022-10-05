@@ -147,7 +147,7 @@ public class CodeGenTests {
 
         assertEquals(expected, actual);
     }
-//"!", "not "
+
     @ParameterizedTest(name = "{index} => generating for {0} expr")
     @ValueSource(strings = {"not", "!"})
     void unaryNotNegExprGeneratedCorrectly(String op) {
@@ -168,6 +168,27 @@ public class CodeGenTests {
 
         assertEquals(expected, actual);
     }
+
+    //endregion
+
+    //region Parenthesis
+    @Test
+    void parenGeneratedCorrectly() {
+        String expected = String.format("(%s)", generateDefaultExprTemplate(Type.TypeEnum.intType).getOutput());
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.ParenContext.class);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitParen(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
 
     //endregion
 
