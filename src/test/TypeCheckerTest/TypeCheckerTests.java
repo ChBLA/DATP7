@@ -46,8 +46,8 @@ public class TypeCheckerTests  {
         ParseTree child2 = mock(ParseTree.class);
 
         when(child0.accept(visitor)).thenReturn(VOID_TYPE);
-        when(child0.accept(visitor)).thenReturn(ERROR_TYPE);
-        when(child0.accept(visitor)).thenReturn(VOID_TYPE);
+        when(child1.accept(visitor)).thenReturn(ERROR_TYPE);
+        when(child2.accept(visitor)).thenReturn(VOID_TYPE);
 
         ArrayList<ParseTree> children = new ArrayList<>();
         children.add(child0);
