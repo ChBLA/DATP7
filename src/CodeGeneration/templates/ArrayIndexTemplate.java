@@ -8,11 +8,6 @@ public class ArrayIndexTemplate implements Template{
     }
     @Override
     public String getOutput() {
-        return toString();
-    }
-
-    @Override
-    public String toString() {
         return resultingString;
     }
 }
