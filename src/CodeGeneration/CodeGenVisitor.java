@@ -7,13 +7,20 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
 
     @Override
+    public Template visitParen(UCELParser.ParenContext ctx) {
+        var expr = visit(ctx.expression());
+
+        return new ParenthesisTemplate(expr);
+    }
+
+    @Override
     public Template visitUnaryExpr(UCELParser.UnaryExprContext ctx) {
         var expr = visit(ctx.expression());
         var op = visit(ctx.unary());
 
         return new UnaryExprTemplate(expr, op);
     }
-    
+
     @Override
     public Template visitLiteral(UCELParser.LiteralContext ctx) {
         return new LiteralTemplate(ctx.getText());
