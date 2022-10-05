@@ -33,6 +33,7 @@ public class TypeCheckerTests  {
     private static final Type CHAN_TYPE = new Type(Type.TypeEnum.chanType);
     private static final Type STRUCT_TYPE = new Type(Type.TypeEnum.structType);
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
+    private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
 
     //region declaration
 
@@ -258,6 +259,60 @@ public class TypeCheckerTests  {
         Type result = typeCheckerVisitor.visitBlock(block);
 
         assertEquals(ERROR_TYPE, result);
+    }
+
+    //endregion
+
+    //region VariableDecl
+
+    @Test
+    void variableDeclInsertsCorrectTypeInDeclarationInfo() {
+
+        DeclarationInfo info0 = new DeclarationInfo("");
+        DeclarationInfo info1 = new DeclarationInfo("");
+        DeclarationInfo info2 = new DeclarationInfo("");
+
+        Scope scope = mock(Scope.class);
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+
+        when(type.accept(visitor)).thenReturn(INT_TYPE);
+
+        UCELParser.VariableIDContext varID0 = mock(UCELParser.VariableIDContext.class);
+        UCELParser.VariableIDContext varID1 = mock(UCELParser.VariableIDContext.class);
+        UCELParser.VariableIDContext varID2 = mock(UCELParser.VariableIDContext.class);
+
+        DeclarationReference dr0 = new DeclarationReference(0, 0);
+        DeclarationReference dr1 = new DeclarationReference(0, 1);
+        DeclarationReference dr2 = new DeclarationReference(0, 2);
+
+        varID0.reference = dr0;
+        varID1.reference = dr1;
+        varID2.reference = dr2;
+
+        //when(scope.get(dr0)).thenReturn(info0);
+        //when(scope.get(dr1)).thenReturn(info1);
+        //when(scope.get(dr2)).thenReturn(info2);
+
+        when(varID0.accept(visitor)).thenReturn(VOID_TYPE);
+        when(varID1.accept(visitor)).thenReturn(VOID_TYPE);
+        when(varID2.accept(visitor)).thenReturn(VOID_TYPE);
+
+        ArrayList<UCELParser.VariableIDContext> varIDs = new ArrayList<>();
+
+        varIDs.add(varID0);
+        varIDs.add(varID1);
+        varIDs.add(varID2);
+
+        UCELParser.VariableDeclContext varDecl = mock(UCELParser.VariableDeclContext.class);
+        when(varDecl.variableID()).thenReturn(varIDs);
+        when(varDecl.type()).thenReturn(type);
+
+        visitor.visitVariableDecl(varDecl);
+
+        assertEquals(info1.getType(), INT_TYPE);
     }
 
     //endregion
