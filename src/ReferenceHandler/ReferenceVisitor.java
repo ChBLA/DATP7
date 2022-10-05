@@ -73,6 +73,21 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         return true;
     }
 
+    @Override
+    public Boolean visitBlock(UCELParser.BlockContext ctx) {
+
+        boolean success = true;
+        enterScope();
+        ctx.scope = currentScope;
+
+        for(UCELParser.LocalDeclarationContext ldc : ctx.localDeclaration())
+            success &= visit(ldc);
+
+        for(UCELParser.StatementContext sc : ctx.statement())
+            success &= visit(sc);
+
+        return success;
+    }
 
     private void enterScope() {
         enterScope(false);

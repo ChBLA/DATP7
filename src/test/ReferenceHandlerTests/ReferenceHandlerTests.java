@@ -231,13 +231,55 @@ public class ReferenceHandlerTests {
     //endregion
 
     @Test
-    void addScopeForBlock() {
+    void scopeForBlockIsAdded() {
 
         Scope parentScope = new Scope(null, false);
         ReferenceVisitor referenceVisitor = new ReferenceVisitor(parentScope);
 
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
 
+        referenceVisitor.visitBlock(block);
 
+        assertTrue(block.scope instanceof Scope);
+        assertNotEquals(block.scope, parentScope);
+    }
+
+    @Test
+    void declarationsForBlockAreVisited() {
+
+        Scope parentScope = new Scope(null, false);
+        ReferenceVisitor referenceVisitor = new ReferenceVisitor(parentScope);
+
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        UCELParser.LocalDeclarationContext localDecl = mock(UCELParser.LocalDeclarationContext.class);
+        ArrayList<UCELParser.LocalDeclarationContext> localDecls = new ArrayList<>();
+        localDecls.add(localDecl);
+
+        when(localDecl.accept(referenceVisitor)).thenReturn(true);
+        when(block.localDeclaration()).thenReturn(localDecls);
+
+        referenceVisitor.visitBlock(block);
+
+        verify(localDecl, times(1)).accept(referenceVisitor);
+    }
+
+    @Test
+    void statementsForBlockAreVisited() {
+
+        Scope parentScope = new Scope(null, false);
+        ReferenceVisitor referenceVisitor = new ReferenceVisitor(parentScope);
+
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        UCELParser.StatementContext statementContext = mock(UCELParser.StatementContext.class);
+        ArrayList<UCELParser.StatementContext> statementContexts = new ArrayList<>();
+        statementContexts.add(statementContext);
+
+        when(statementContext.accept(referenceVisitor)).thenReturn(true);
+        when(block.statement()).thenReturn(statementContexts);
+
+        referenceVisitor.visitBlock(block);
+
+        verify(statementContext, times(1)).accept(referenceVisitor);
     }
 
 }

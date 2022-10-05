@@ -10,25 +10,16 @@ public class ScopeTests {
     //region Scope.find()
     @Test
     void findSuccesfulSameScope() {
+        String identifier = "identifier";
 
-        fail();
+        DeclarationInfo testVar = new DeclarationInfo(identifier);
+        int index = 0;
+        ArrayList<DeclarationInfo> mockedVariables = new ArrayList<>();
+        mockedVariables.add(testVar);
 
+        Scope testScope = new Scope(null, false, mockedVariables);
 
-    }
-
-    @Test
-    void invalidTableReferenceFromParentFindThrows() {
-        fail();
-    }
-
-    @Test
-    void validGetResultSuccessfulFind() {
-        fail();
-    }
-
-    @Test
-    void invalidGetResultFindThrows() {
-        fail();
+        assertDoesNotThrow(() -> testScope.find(identifier, true));
     }
     //endregion
 
