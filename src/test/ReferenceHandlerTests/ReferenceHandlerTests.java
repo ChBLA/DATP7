@@ -1,13 +1,8 @@
-import org.antlr.v4.runtime.RuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import javax.naming.Reference;
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,7 +39,7 @@ public class ReferenceHandlerTests {
 
         visitor.visitFuncCall(funcCallContext);
 
-        assertEquals(funcCallContext.reference, new TableReference(1,2));
+        assertEquals(funcCallContext.reference, new DeclarationReference(1,2));
     }
 
     @Test
@@ -99,7 +94,7 @@ public class ReferenceHandlerTests {
 
         visitor.visitIdExpr(idExprContext);
 
-        assertEquals(idExprContext.reference, new TableReference(0,2));
+        assertEquals(idExprContext.reference, new DeclarationReference(0,2));
     }
 
     @Test
@@ -125,7 +120,7 @@ public class ReferenceHandlerTests {
 
         visitor.visitIdExpr(idExprContext);
 
-        assertEquals(idExprContext.reference, new TableReference(1,2));
+        assertEquals(idExprContext.reference, new DeclarationReference(1,2));
     }
 
     @Test
@@ -210,7 +205,7 @@ public class ReferenceHandlerTests {
 
         visitor.visitVariableID(node);
 
-        assertEquals(node.reference, new TableReference(0, 2));
+        assertEquals(node.reference, new DeclarationReference(0, 2));
     }
 
     @Test

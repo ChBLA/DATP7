@@ -1,14 +1,14 @@
-public class TableReference {
-    private int variable;
+public class DeclarationReference {
+    private int declarationId;
     private int relativeScope;
 
-    public TableReference(int scopeLevel, int variable) {
+    public DeclarationReference(int scopeLevel, int variable) {
         this.relativeScope = scopeLevel;
-        this.variable = variable;
+        this.declarationId = variable;
     }
 
-    public int getVariable() {
-        return variable;
+    public int getDeclarationId() {
+        return declarationId;
     }
 
     public int getRelativeScope() {
@@ -25,18 +25,18 @@ public class TableReference {
         this.relativeScope--;
     }
 
-    public TableReference moveOutOfScope() {
-        return new TableReference(relativeScope - 1, variable);
+    public DeclarationReference moveOutOfScope() {
+        return new DeclarationReference(relativeScope - 1, declarationId);
     }
 
     @Override
     public boolean equals(Object o) {
-        if(!(o instanceof TableReference))
+        if(!(o instanceof DeclarationReference))
             return false;
 
-        TableReference t = (TableReference) o;
+        DeclarationReference t = (DeclarationReference) o;
 
         return t.getRelativeScope() == this.relativeScope &&
-                t.getVariable() == this.variable;
+                t.getDeclarationId() == this.declarationId;
     }
 }

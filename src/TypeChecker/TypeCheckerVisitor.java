@@ -1,5 +1,4 @@
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,7 +58,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         for (int i = 0; i < parameterNames.length; i++) {
             if(parameterNames[i].equals(identifier)) {
-                ctx.reference = new TableReference(-1, i);
+                ctx.reference = new DeclarationReference(-1, i);
                 return parameterTypes[i];
             }
         }

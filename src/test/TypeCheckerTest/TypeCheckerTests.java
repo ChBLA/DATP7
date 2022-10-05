@@ -1,6 +1,5 @@
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.junit.jupiter.api.Test;
@@ -10,7 +9,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -196,7 +194,7 @@ public class TypeCheckerTests  {
 
         Type unused = visitor.visitStructAccess(node);
 
-        assertEquals(new TableReference(-1, 1), node.reference);
+        assertEquals(new DeclarationReference(-1, 1), node.reference);
     }
 
     @Test
