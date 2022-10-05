@@ -1,10 +1,32 @@
+import java.awt.image.renderable.RenderableImage;
 import java.util.ArrayList;
 
 public class CodeGenVisitor extends UCELBaseVisitor<Template> {
+    private Scope currentScope;
+
+    public CodeGenVisitor() {
+
+    }
+
+    public CodeGenVisitor(Scope currentScope) {
+        this.currentScope = currentScope;
+    }
+
+
+
 
 
     //region Expressions
 
+
+    @Override
+    public Template visitIdExpr(UCELParser.IdExprContext ctx) {
+        try {
+            return new ManualTemplate(currentScope.get(ctx.reference).getIdentifier());
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
 
     @Override
     public Template visitParen(UCELParser.ParenContext ctx) {
@@ -26,7 +48,35 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         var expr = visit(ctx.expression());
         var op = visit(ctx.unary());
 
-        return new UnaryExprTemplate(expr, op);
+        return new UnaryExprTemplate(op, expr);
+    }
+
+    @Override
+    public Template visitIncrementPost(UCELParser.IncrementPostContext ctx) {
+        var expr = visit(ctx.expression());
+
+        return new UnaryExprTemplate(expr, new ManualTemplate(ctx.INCREMENT().getText()));
+    }
+
+    @Override
+    public Template visitIncrementPre(UCELParser.IncrementPreContext ctx) {
+        var expr = visit(ctx.expression());
+
+        return new UnaryExprTemplate(new ManualTemplate(ctx.INCREMENT().getText()), expr);
+    }
+
+    @Override
+    public Template visitDecrementPost(UCELParser.DecrementPostContext ctx) {
+        var expr = visit(ctx.expression());
+
+        return new UnaryExprTemplate(expr, new ManualTemplate(ctx.DECREMENT().getText()));
+    }
+
+    @Override
+    public Template visitDecrementPre(UCELParser.DecrementPreContext ctx) {
+        var expr = visit(ctx.expression());
+
+        return new UnaryExprTemplate(new ManualTemplate(ctx.DECREMENT().getText()), expr);
     }
 
     @Override
@@ -132,4 +182,13 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
     //endregion
+
+
+    @Override
+    public Template visitAssignExpr(UCELParser.AssignExprContext ctx) {
+        var left = visit(ctx.expression(0));
+        var right = visit(ctx.expression(1));
+
+        return new AssignmentTemplate(left, right);
+    }
 }

@@ -24,10 +24,77 @@ public class CodeGenTests {
 
     //region Expressions
 
+    //region Assignment
+
+    @ParameterizedTest(name = "{index} => Assignment expression {0} = {1}")
+    @MethodSource("assignments")
+    void assignmentGeneratedCorrectly(String left, String right) {
+        Template leftExpr = new ManualTemplate(left);
+        Template rightExpr = new ManualTemplate(right);
+        String expected = String.format("%s = %s", leftExpr.getOutput(), rightExpr.getOutput());
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.AssignExprContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, leftExpr, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, rightExpr, visitor);
+
+        when(node.expression(0)).thenReturn(expr1);
+        when(node.expression(1)).thenReturn(expr2);
+
+        var actual = visitor.visitAssignExpr(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> assignments() {
+
+        ArrayList<Arguments> args = new ArrayList<Arguments>();
+
+        args.add(Arguments.arguments("var1", "1 + 2"));
+        args.add(Arguments.arguments("var1", "true"));
+        args.add(Arguments.arguments("var1", "!var2"));
+        args.add(Arguments.arguments("var1", "1.02 - 5.2"));
+        args.add(Arguments.arguments("var1", "false"));
+        args.add(Arguments.arguments("var1", "goimer"));
+
+        return args.stream();
+    }
+
+    //endregion
+
+    //region ID expression
+    @ParameterizedTest(name = "{index} => ID look-up in expression for ID = \"{0}\"")
+    @ValueSource(strings = {"a", "awd901", "Ada"})
+    void idExprGeneratedCorrectly(String name) {
+        DeclarationInfo variable = new DeclarationInfo(name, new Type(Type.TypeEnum.intType));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+
+        var scopeMock = mock(Scope.class);
+
+        var node = mock(UCELParser.IdExprContext.class);
+        node.reference = ref;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        CodeGenVisitor visitor = new CodeGenVisitor(scopeMock);
+
+        String actual = visitor.visitIdExpr(node).getOutput();
+
+        assertEquals(name, actual);
+
+    }
+
+    //endregion
+
     //region Literal
 
     @ParameterizedTest(name = "{index} => generating literal for {0} ")
-    @MethodSource("literalsSource")
+    @ValueSource(strings = {"1", "1.0", "0.1", "0.00005", "123456789", "0", "0.1234506789", "true", "false"})
     void literalGeneratedCorrectly(String expectedLiteral) {
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -38,20 +105,6 @@ public class CodeGenTests {
 
         assertEquals(expectedLiteral, actual);
     }
-
-    private  static Stream<Arguments> literalsSource() {
-        //TODO: Possibly account for deadlock literal later
-        return Stream.of(Arguments.arguments("1"),
-                         Arguments.arguments("1.0"),
-                         Arguments.arguments("0.1"),
-                         Arguments.arguments("0.00005"),
-                         Arguments.arguments("123456789"),
-                         Arguments.arguments("0"),
-                         Arguments.arguments("0.1234506789"),
-                         Arguments.arguments("true"),
-                         Arguments.arguments("false")
-                );
-    }
     //endregion
 
     //region ArrayIndex
@@ -59,7 +112,7 @@ public class CodeGenTests {
     void arrayIndexGeneratedCorrectly() {
 
         CodeGenVisitor visitor = new CodeGenVisitor();
-        Template left = generateDefaultExprTemplate(Type.TypeEnum.stringType);
+        Template left = generateDefaultExprTemplate("abec");
         Template right = generateDefaultExprTemplate(Type.TypeEnum.intType);
         String expected = String.format("%s[%s]", left.getOutput(), right.getOutput()); // abc[0]
 
@@ -125,6 +178,94 @@ public class CodeGenTests {
 
         assertEquals(expected, actual);
     }
+    //endregion
+
+    //region Increment/Decrement expressions
+    @Test
+    void incrementPostExprGeneratedCorrectly() {
+        Template exprResult = generateDefaultExprTemplate("abec");
+        String expected = String.format("%s++", exprResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.IncrementPostContext.class);
+        var token = mock(TerminalNode.class);
+
+        when(token.getText()).thenReturn("++");
+        when(node.INCREMENT()).thenReturn(token);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitIncrementPost(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void incrementPreExprGeneratedCorrectly() {
+        Template exprResult = generateDefaultExprTemplate("abec");
+        String expected = String.format("++%s", exprResult.getOutput());
+
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.IncrementPreContext.class);
+        var token = mock(TerminalNode.class);
+
+        when(token.getText()).thenReturn("++");
+        when(node.INCREMENT()).thenReturn(token);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitIncrementPre(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void decrementPostExprGeneratedCorrectly() {
+        Template exprResult = generateDefaultExprTemplate("abec");
+        String expected = String.format("%s--", exprResult.getOutput());
+
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.DecrementPostContext.class);
+        var token = mock(TerminalNode.class);
+
+        when(token.getText()).thenReturn("--");
+        when(node.DECREMENT()).thenReturn(token);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitDecrementPost(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void decrementPreExprGeneratedCorrectly() {
+        Template exprResult = generateDefaultExprTemplate("abec");
+        String expected = String.format("--%s", exprResult.getOutput());
+
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.DecrementPreContext.class);
+        var token = mock(TerminalNode.class);
+
+        when(token.getText()).thenReturn("--");
+        when(node.DECREMENT()).thenReturn(token);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitDecrementPre(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
     //endregion
 
     //region Unary expressions
@@ -452,10 +593,14 @@ public class CodeGenTests {
             case intType -> new ManualTemplate("0");
             case boolType -> new ManualTemplate("true");
             case doubleType -> new ManualTemplate("0.0");
-            case charType -> new ManualTemplate("a");
-            case stringType -> new ManualTemplate("abc");
+            case charType -> new ManualTemplate("'a'");
+            case stringType -> new ManualTemplate("\"abc\"");
             default -> new ManualTemplate("");
         };
+    }
+
+    private Template generateDefaultExprTemplate(String id) {
+        return new ManualTemplate(id);
     }
 
     //endregion

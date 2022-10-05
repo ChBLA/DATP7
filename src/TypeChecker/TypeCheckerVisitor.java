@@ -74,6 +74,11 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
     @Override
+    public Type visitAssign(UCELParser.AssignContext ctx) {
+        return super.visitAssign(ctx);
+    }
+
+    @Override
     public Type visitDeclarations(UCELParser.DeclarationsContext ctx) {
         boolean errorFound = false;
         Type errorType = new Type(Type.TypeEnum.errorType);
@@ -89,10 +94,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitIdExpr(UCELParser.IdExprContext ctx) {
         try {
-            //TDOD the table reference is set by the reference handler
-            //also it is getText and not toString to get the text of the ID
-            var ref = currentScope.find(ctx.ID().toString(), true);
-            var variable = currentScope.get(ref);
+            var variable = currentScope.get(ctx.reference);
             return variable.getType();
         } catch (Exception e) {
             return new Type(Type.TypeEnum.errorType);
