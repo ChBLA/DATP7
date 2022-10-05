@@ -1,6 +1,5 @@
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.junit.jupiter.api.Test;
@@ -10,7 +9,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,9 +48,9 @@ public class TypeCheckerTests  {
         var scope = new Scope(null, false);
 
         var variableName = "foo";
-        var variable = new Variable(variableName);
+        var variable = new DeclarationInfo(variableName);
         variable.setType(INT_TYPE);
-        scope.add(new Variable(variableName));
+        scope.add(new DeclarationInfo(variableName));
         TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
         UCELParser.IdExprContext node = mock(UCELParser.IdExprContext.class);
         TerminalNode idNode = mock(TerminalNode.class);
@@ -196,7 +194,7 @@ public class TypeCheckerTests  {
 
         Type unused = visitor.visitStructAccess(node);
 
-        assertEquals(new TableReference(-1, 1), node.reference);
+        assertEquals(new DeclarationReference(-1, 1), node.reference);
     }
 
     @Test
@@ -341,20 +339,16 @@ public class TypeCheckerTests  {
         // FuncContext
         final UCELParser.FuncCallContext funcCtx = mock(UCELParser.FuncCallContext.class);
 
-        // ID
-        final UCELParser.IdExprContext idCtx = mock(UCELParser.IdExprContext.class);
-        when(idCtx.getText()).thenReturn(name);
-
-        // ID - Terminal
-        final TerminalNode idTerminal = mock(TerminalNode.class);
-        when(idTerminal.getText()).thenReturn(name);
-        when(funcCtx.ID()).thenReturn(idTerminal);
-
+        try {
+            funcCtx.reference = scope.find(name, true);
+        }
+        catch (Exception e) {
+            funcCtx.reference = null;
+        }
 
         // Args
         final UCELParser.ArgumentsContext argsCtx = mockForVisitorResult(UCELParser.ArgumentsContext.class, argsType, visitor);
         when(funcCtx.arguments()).thenReturn(argsCtx);
-
 
         // Act
         Type actualReturnType = visitor.visitFuncCall(funcCtx);
@@ -433,7 +427,7 @@ public class TypeCheckerTests  {
     private static Scope scopeGen(String name, Type type) {
         Scope scope = new Scope(null, false);
 
-        scope.add(new Variable(name, type));
+        scope.add(new DeclarationInfo(name, type));
 
         return scope;
     }

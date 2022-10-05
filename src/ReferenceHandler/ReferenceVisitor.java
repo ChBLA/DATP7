@@ -16,7 +16,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     public Boolean visitIdExpr(UCELParser.IdExprContext ctx) {
         String identifier = ctx.ID().getText();
 
-        TableReference tableReference = null;
+        DeclarationReference tableReference = null;
 
         try {
             tableReference = currentScope.find(identifier, true);
@@ -33,7 +33,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     public Boolean visitFuncCall(UCELParser.FuncCallContext ctx) {
         String identifier = ctx.ID().getText();
 
-        TableReference tableReference = null;
+        DeclarationReference tableReference = null;
 
         try {
             tableReference = currentScope.find(identifier, true);
@@ -68,7 +68,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             return false;
         }
 
-        ctx.reference = currentScope.add(new Variable(identifier));
+        ctx.reference = currentScope.add(new DeclarationInfo(identifier));
 
         return true;
     }
@@ -84,5 +84,9 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     private void exitScope() {
         this.currentScope = this.currentScope.getParent();
+    }
+
+    public Scope getCurrentScope() {
+        return currentScope;
     }
 }

@@ -1,7 +1,7 @@
 grammar UCEL;
 
 start locals [Scope scope]
-    : declarations system;
+    : declarations statement* link_stmnt* system;
 system : SYSTEM ID ((COMMA | '<') ID)* END;
 
 component locals [Scope scope]
@@ -31,19 +31,19 @@ progressDecl  : PROGRESS LEFTCURLYBRACE ( expression? END )* RIGHTCURLYBRACE;
 parameters : ( parameter (COMMA parameter)* )?;
 parameter  : type? REF? ('&')? ID? arrayDecl*;
 
-declarations  : (variableDecl | typeDecl | function | chanPriority | component | interface_decl | link_stmnt)*;
+declarations  : (variableDecl | typeDecl | function | chanPriority | component | interface_decl)*;
 variableDecl  : type? variableID (COMMA variableID)* END;
 
-variableID locals [TableReference reference]
+variableID locals [DeclarationReference reference]
               : ID arrayDecl* ('=' initialiser)?;
 initialiser   : expression?
               |  LEFTCURLYBRACE initialiser (COMMA initialiser)* RIGHTCURLYBRACE;
-typeDecl locals [TableReference reference]
+typeDecl locals [DeclarationReference reference]
               : 'typedef' type ID arrayDecl* (COMMA ID arrayDecl*)* END;
 type          : prefix? typeId;
 prefix        : 'urgent' | 'broadcast' | 'meta' | 'const';
 
-typeId locals [TableReference reference]
+typeId locals [DeclarationReference reference]
               : ID | 'int' | 'clock' | 'chan' | 'bool' | 'double' | 'string' | 'in' | 'out'
               | 'int' LEFTBRACKET expression? COMMA expression? RIGHTBRACKET
               | 'scalar' LEFTBRACKET expression RIGHTBRACKET
@@ -79,7 +79,7 @@ chanPriority : 'chan' 'priority' (chanExpr | 'default') ((COMMA | '<') (chanExpr
 chanExpr : ID
            | chanExpr LEFTBRACKET expression RIGHTBRACKET;
 
-expression locals [TableReference reference]
+expression locals [DeclarationReference reference]
             :  literal                                          #LiteralExpr
             |  ID                                               #IdExpr
             |  expression LEFTBRACKET expression RIGHTBRACKET   #ArrayIndex
