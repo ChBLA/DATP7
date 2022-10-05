@@ -48,9 +48,9 @@ public class TypeCheckerTests  {
         var scope = new Scope(null, false);
 
         var variableName = "foo";
-        var variable = new Variable(variableName);
+        var variable = new DeclarationInfo(variableName);
         variable.setType(INT_TYPE);
-        scope.add(new Variable(variableName));
+        scope.add(new DeclarationInfo(variableName));
         TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
         UCELParser.IdExprContext node = mock(UCELParser.IdExprContext.class);
         TerminalNode idNode = mock(TerminalNode.class);
@@ -427,7 +427,7 @@ public class TypeCheckerTests  {
     private static Scope scopeGen(String name, Type type) {
         Scope scope = new Scope(null, false);
 
-        scope.add(new Variable(name, type));
+        scope.add(new DeclarationInfo(name, type));
 
         return scope;
     }

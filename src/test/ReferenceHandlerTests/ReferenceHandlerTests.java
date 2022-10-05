@@ -17,13 +17,13 @@ public class ReferenceHandlerTests {
         String correctFunctionName = "cfn";
         String incorrectFunctionName = "icfn";
 
-        ArrayList<Variable> lvl1Variables = new ArrayList<>();
-        lvl1Variables.add(new Variable(incorrectFunctionName));
-        lvl1Variables.add(new Variable(incorrectFunctionName));
-        lvl1Variables.add(new Variable(correctFunctionName));
-        lvl1Variables.add(new Variable(incorrectFunctionName));
+        ArrayList<DeclarationInfo> lvl1Variables = new ArrayList<>();
+        lvl1Variables.add(new DeclarationInfo(incorrectFunctionName));
+        lvl1Variables.add(new DeclarationInfo(incorrectFunctionName));
+        lvl1Variables.add(new DeclarationInfo(correctFunctionName));
+        lvl1Variables.add(new DeclarationInfo(incorrectFunctionName));
 
-        ArrayList<Variable> lvl0Variables = new ArrayList<>();
+        ArrayList<DeclarationInfo> lvl0Variables = new ArrayList<>();
 
         Scope lvl1Scope = new Scope(null, false, lvl1Variables);
         Scope lvl0Scope = new Scope(lvl1Scope, false, lvl0Variables);
@@ -47,13 +47,13 @@ public class ReferenceHandlerTests {
         String correctFunctionName = "cfn";
         String incorrectFunctionName = "icfn";
 
-        ArrayList<Variable> lvl1Variables = new ArrayList<>();
-        lvl1Variables.add(new Variable(incorrectFunctionName));
-        lvl1Variables.add(new Variable(incorrectFunctionName));
-        lvl1Variables.add(new Variable(correctFunctionName));
-        lvl1Variables.add(new Variable(incorrectFunctionName));
+        ArrayList<DeclarationInfo> lvl1Variables = new ArrayList<>();
+        lvl1Variables.add(new DeclarationInfo(incorrectFunctionName));
+        lvl1Variables.add(new DeclarationInfo(incorrectFunctionName));
+        lvl1Variables.add(new DeclarationInfo(correctFunctionName));
+        lvl1Variables.add(new DeclarationInfo(incorrectFunctionName));
 
-        ArrayList<Variable> lvl0Variables = new ArrayList<>();
+        ArrayList<DeclarationInfo> lvl0Variables = new ArrayList<>();
 
         Scope lvl1Scope = new Scope(null, false, lvl1Variables);
         Scope lvl0Scope = new Scope(lvl1Scope, false, lvl0Variables);
@@ -80,11 +80,11 @@ public class ReferenceHandlerTests {
         String correctVariableName = "cvn";
         String incorrectVariableName = "icvn";
 
-        ArrayList<Variable> variables =new ArrayList<>();
-        variables.add(new Variable(incorrectVariableName));
-        variables.add(new Variable(incorrectVariableName));
-        variables.add(new Variable(correctVariableName));
-        variables.add(new Variable(incorrectVariableName));
+        ArrayList<DeclarationInfo> variables =new ArrayList<>();
+        variables.add(new DeclarationInfo(incorrectVariableName));
+        variables.add(new DeclarationInfo(incorrectVariableName));
+        variables.add(new DeclarationInfo(correctVariableName));
+        variables.add(new DeclarationInfo(incorrectVariableName));
         ReferenceVisitor visitor = new ReferenceVisitor(new Scope(null, false, variables));
 
         UCELParser.IdExprContext idExprContext = mock(UCELParser.IdExprContext.class);
@@ -102,12 +102,12 @@ public class ReferenceHandlerTests {
         String correctVariableName = "cvn";
         String incorrectVariableName = "icvn";
 
-        ArrayList<Variable> lvl1Variables = new ArrayList<>();
-        lvl1Variables.add(new Variable(incorrectVariableName));
-        lvl1Variables.add(new Variable(incorrectVariableName));
-        lvl1Variables.add(new Variable(correctVariableName));
-        lvl1Variables.add(new Variable(incorrectVariableName));
-        ArrayList<Variable> lvl0Variables = new ArrayList<>();
+        ArrayList<DeclarationInfo> lvl1Variables = new ArrayList<>();
+        lvl1Variables.add(new DeclarationInfo(incorrectVariableName));
+        lvl1Variables.add(new DeclarationInfo(incorrectVariableName));
+        lvl1Variables.add(new DeclarationInfo(correctVariableName));
+        lvl1Variables.add(new DeclarationInfo(incorrectVariableName));
+        ArrayList<DeclarationInfo> lvl0Variables = new ArrayList<>();
 
         Scope lvl1Scope = new Scope(null, false, lvl1Variables);
         Scope lvl0Scope = new Scope(lvl1Scope, false, lvl0Variables);
@@ -128,10 +128,10 @@ public class ReferenceHandlerTests {
         String correctVariableName = "cvn";
         String incorrectVariableName = "icvn";
 
-        ArrayList<Variable> variables =new ArrayList<>();
-        variables.add(new Variable(incorrectVariableName));
-        variables.add(new Variable(incorrectVariableName));
-        variables.add(new Variable(incorrectVariableName));
+        ArrayList<DeclarationInfo> variables =new ArrayList<>();
+        variables.add(new DeclarationInfo(incorrectVariableName));
+        variables.add(new DeclarationInfo(incorrectVariableName));
+        variables.add(new DeclarationInfo(incorrectVariableName));
         ReferenceVisitor visitor = new ReferenceVisitor(new Scope(null, false, variables));
 
         UCELParser.IdExprContext idExprContext = mock(UCELParser.IdExprContext.class);
@@ -173,9 +173,9 @@ public class ReferenceHandlerTests {
         String correctVariableName = "cvn";
         String incorrectVariableName = "icvn";
 
-        ArrayList<Variable> variables =new ArrayList<>();
-        variables.add(new Variable(incorrectVariableName));
-        variables.add(new Variable(incorrectVariableName));
+        ArrayList<DeclarationInfo> variables =new ArrayList<>();
+        variables.add(new DeclarationInfo(incorrectVariableName));
+        variables.add(new DeclarationInfo(incorrectVariableName));
         ReferenceVisitor visitor = new ReferenceVisitor(new Scope(null, false, variables));
 
         UCELParser.VariableIDContext node = mock(UCELParser.VariableIDContext.class);
@@ -185,7 +185,7 @@ public class ReferenceHandlerTests {
 
         visitor.visitVariableID(node);
 
-        assertEquals(new Variable(correctVariableName), variables.get(2));
+        assertEquals(new DeclarationInfo(correctVariableName), variables.get(2));
     }
 
     @Test
@@ -193,9 +193,9 @@ public class ReferenceHandlerTests {
         String correctVariableName = "cvn";
         String incorrectVariableName = "icvn";
 
-        ArrayList<Variable> variables =new ArrayList<>();
-        variables.add(new Variable(incorrectVariableName));
-        variables.add(new Variable(incorrectVariableName));
+        ArrayList<DeclarationInfo> variables =new ArrayList<>();
+        variables.add(new DeclarationInfo(incorrectVariableName));
+        variables.add(new DeclarationInfo(incorrectVariableName));
         ReferenceVisitor visitor = new ReferenceVisitor(new Scope(null, false, variables));
 
         UCELParser.VariableIDContext node = mock(UCELParser.VariableIDContext.class);
@@ -213,9 +213,9 @@ public class ReferenceHandlerTests {
         String uniqueVariableName = "uvn";
         String doubleicateVariableName = "dvn";
 
-        ArrayList<Variable> variables =new ArrayList<>();
-        variables.add(new Variable(uniqueVariableName));
-        variables.add(new Variable(doubleicateVariableName));
+        ArrayList<DeclarationInfo> variables =new ArrayList<>();
+        variables.add(new DeclarationInfo(uniqueVariableName));
+        variables.add(new DeclarationInfo(doubleicateVariableName));
         ReferenceVisitor visitor = new ReferenceVisitor(new Scope(null, false, variables));
 
         UCELParser.VariableIDContext node = mock(UCELParser.VariableIDContext.class);

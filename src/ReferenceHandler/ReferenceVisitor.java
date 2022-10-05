@@ -68,7 +68,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             return false;
         }
 
-        ctx.reference = currentScope.add(new Variable(identifier));
+        ctx.reference = currentScope.add(new DeclarationInfo(identifier));
 
         return true;
     }

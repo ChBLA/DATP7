@@ -220,7 +220,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitFuncCall(UCELParser.FuncCallContext ctx) {
         Type argsType = visit(ctx.arguments());
-        Variable funcDecl;
+        DeclarationInfo funcDecl;
         Type funcType;
 
         // Get type of function declaration

@@ -35,9 +35,9 @@ public class ScopeTests {
     //region Scope.get()
     @Test
     void getFromImmediateScope() {
-        Variable testVar = new Variable("");
+        DeclarationInfo testVar = new DeclarationInfo("");
         int index = 0;
-        ArrayList<Variable> mockedVariables = new ArrayList<>();
+        ArrayList<DeclarationInfo> mockedVariables = new ArrayList<>();
         mockedVariables.add(testVar);
 
         Scope testScope = new Scope(null, false, mockedVariables);
@@ -52,9 +52,9 @@ public class ScopeTests {
 
     @Test
     void getFromDistantParentScope() {
-        Variable testVar = new Variable("");
+        DeclarationInfo testVar = new DeclarationInfo("");
         int index = 0;
-        ArrayList<Variable> mockedVariables = mock(ArrayList.class);
+        ArrayList<DeclarationInfo> mockedVariables = mock(ArrayList.class);
         when(mockedVariables.get(index)).thenReturn(testVar);
 
         Scope testScope = new Scope(new Scope(new Scope(null, false, mockedVariables),false),false);

@@ -2,9 +2,9 @@ public class DeclarationReference {
     private int declarationId;
     private int relativeScope;
 
-    public DeclarationReference(int scopeLevel, int variable) {
+    public DeclarationReference(int scopeLevel, int declarationId) {
         this.relativeScope = scopeLevel;
-        this.declarationId = variable;
+        this.declarationId = declarationId;
     }
 
     public int getDeclarationId() {

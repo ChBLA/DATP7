@@ -1,17 +1,17 @@
-public class Variable {
+public class DeclarationInfo {
 
     private String identifier;
     private Type type;
 
-    public Variable() {
+    public DeclarationInfo() {
         //Only for tests
     }
 
-    public Variable(String identifier) {
+    public DeclarationInfo(String identifier) {
         this(identifier, null);
     }
 
-    public Variable(String identifier, Type type) {
+    public DeclarationInfo(String identifier, Type type) {
         this.identifier = identifier;
         this.type = type;
     }
@@ -27,9 +27,9 @@ public class Variable {
 
     @Override
     public boolean equals(Object other) {
-        if(!(other instanceof Variable)) return false;
+        if(!(other instanceof DeclarationInfo)) return false;
 
-        Variable o = (Variable) other;
+        DeclarationInfo o = (DeclarationInfo) other;
 
         return ((this.type == null && o.getType() == null) || this.type.equals(o.getType())) &&
                 o.isCalled(identifier);
