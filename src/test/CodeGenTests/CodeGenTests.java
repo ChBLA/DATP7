@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import javax.print.DocFlavor;
 import java.io.Console;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -22,7 +23,192 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
-    //region Expressions
+    //region variableID
+
+    @Test
+    void variableIDNoInitGeneratedCorrectly() {
+        Template arrayDecl = new ManualTemplate("[10]");
+        String expected = "var1[10]";
+        String variableID = "var1";
+        DeclarationInfo variable = new DeclarationInfo(variableID, new Type(Type.TypeEnum.intType, 10));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+
+        Scope scopeMock = mock(Scope.class);
+        var visitor = new CodeGenVisitor(scopeMock);
+        var arrayDeclMock = mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDecl, visitor);
+        List<UCELParser.ArrayDeclContext> arrayDeclContextList = new ArrayList<>();
+        arrayDeclContextList.add(arrayDeclMock);
+
+        var node = mock(UCELParser.VariableIDContext.class);
+        when(node.arrayDecl()).thenReturn(arrayDeclContextList);
+        when(node.arrayDecl(0)).thenReturn(arrayDeclMock);
+        node.reference = ref;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        var actual = visitor.visitVariableID(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void variableIDWithInit() {
+        Template initTemplate = new ManualTemplate("5");
+        String expected = "var1 = 5";
+        String variableID = "var1";
+        DeclarationInfo variable = new DeclarationInfo(variableID, new Type(Type.TypeEnum.intType));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+
+        Scope scopeMock = mock(Scope.class);
+        var visitor = new CodeGenVisitor(scopeMock);
+        var initMock = mockForVisitorResult(UCELParser.InitialiserContext.class, initTemplate, visitor);
+
+        var node = mock(UCELParser.VariableIDContext.class);
+        when(node.initialiser()).thenReturn(initMock);
+        node.reference = ref;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        var actual = visitor.visitVariableID(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void variableIDMultipleArrayDecl() {
+        Template arrayDecl1 = new ManualTemplate("[10]");
+        Template arrayDecl2 = new ManualTemplate("[5]");
+        String expected = "var1[10][5]";
+        String variableID = "var1";
+        // TODO: set correct array type for declarationinfo maybe
+        DeclarationInfo variable = new DeclarationInfo(variableID, new Type(Type.TypeEnum.intType));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+
+        Scope scopeMock = mock(Scope.class);
+        var visitor = new CodeGenVisitor(scopeMock);
+        var arrayDeclMock1 = mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDecl1, visitor);
+        var arrayDeclMock2 = mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDecl2, visitor);
+        List<UCELParser.ArrayDeclContext> arrayDeclContextList = new ArrayList<>();
+        arrayDeclContextList.add(arrayDeclMock1);
+        arrayDeclContextList.add(arrayDeclMock2);
+
+        var node = mock(UCELParser.VariableIDContext.class);
+        when(node.arrayDecl()).thenReturn(arrayDeclContextList);
+        when(node.arrayDecl(0)).thenReturn(arrayDeclMock1);
+        when(node.arrayDecl(1)).thenReturn(arrayDeclMock2);
+
+        node.reference = ref;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        var actual = visitor.visitVariableID(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void variableIDMultipleArrayWithInitGeneratedCorrectly() {
+        Template arrayDecl = new ManualTemplate("[]");
+        Template initTemp = new ManualTemplate("[[1,2,3], [1,2,3,4]]");
+        String expected = "var1[][] = [[1,2,3], [1,2,3,4]]";
+        String variableID = "var1";
+        // TODO: set correct array type for declarationinfo maybe
+        DeclarationInfo variable = new DeclarationInfo(variableID, new Type(Type.TypeEnum.intType));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+
+        Scope scopeMock = mock(Scope.class);
+        var visitor = new CodeGenVisitor(scopeMock);
+        var arrayDeclMock = mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDecl, visitor);
+        var initMock = mockForVisitorResult(UCELParser.InitialiserContext.class, initTemp, visitor);
+        List<UCELParser.ArrayDeclContext> arrayDeclContextList = new ArrayList<>();
+        arrayDeclContextList.add(arrayDeclMock);
+        arrayDeclContextList.add(arrayDeclMock);
+
+        var node = mock(UCELParser.VariableIDContext.class);
+        when(node.arrayDecl()).thenReturn(arrayDeclContextList);
+        when(node.arrayDecl(0)).thenReturn(arrayDeclMock);
+        when(node.arrayDecl(1)).thenReturn(arrayDeclMock);
+        when(node.initialiser()).thenReturn(initMock);
+        node.reference = ref;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        var actual = visitor.visitVariableID(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+
+
+
+
+    //endregion
+
+    //region arrayDecl
+    @Test
+    void arrayDeclExprGeneratedCorrectly() {
+        Template exprTemplate = new ManualTemplate("10");
+        String expected = "[10]";
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.ArrayDeclContext.class);
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitArrayDecl(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void arrayDeclTypeGeneratedCorrectly() {
+        Template typeTemplate = new ManualTemplate("int[0,10]");
+        String expected = "[int[0,10]]";
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.ArrayDeclContext.class);
+        var type = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
+
+        when(node.type()).thenReturn(type);
+
+        var actual = visitor.visitArrayDecl(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void arrayDeclNoExpr() {
+        String expected = "[]";
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.ArrayDeclContext.class);
+
+        var actual = visitor.visitArrayDecl(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+
+    //endregion
 
     //region Assignment
 
@@ -62,6 +248,10 @@ public class CodeGenTests {
     }
 
     //endregion
+
+    //region Expressions
+
+
 
     //region ID expression
     @ParameterizedTest(name = "{index} => ID look-up in expression for ID = \"{0}\"")

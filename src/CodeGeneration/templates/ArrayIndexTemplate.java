@@ -4,7 +4,7 @@ public class ArrayIndexTemplate implements Template{
     private final String resultingString;
 
     public ArrayIndexTemplate(Template leftExpr, Template arrayIndexExpr) {
-        resultingString = MessageFormat.format("{0}[{1}]", leftExpr.getOutput(), arrayIndexExpr.getOutput());
+        resultingString = String.format("%s[%s]", leftExpr.getOutput(), arrayIndexExpr.getOutput());
     }
     @Override
     public String getOutput() {
