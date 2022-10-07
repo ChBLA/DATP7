@@ -23,6 +23,96 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region variableDecl
+    @Test
+    void variableDeclSingleVarWithType() {
+        Template typeTemp = new ManualTemplate("int[0,10]");
+        Template variableIdTemp = new ManualTemplate("goimer = 5");
+        String expected = "int[0,10] goimer = 5;";
+
+        var visitor = new CodeGenVisitor();
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeTemp, visitor);
+        var variableIdMock = mockForVisitorResult(UCELParser.VariableIDContext.class, variableIdTemp, visitor);
+        List<UCELParser.VariableIDContext> variableIDContextList = new ArrayList<>();
+        variableIDContextList.add(variableIdMock);
+
+        var node = mock(UCELParser.VariableDeclContext.class);
+        when(node.variableID()).thenReturn(variableIDContextList);
+        when(node.type()).thenReturn(typeMock);
+
+        var actual = visitor.visitVariableDecl(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void variableDeclMultipleVarWithType() {
+        Template typeTemp = new ManualTemplate("int[0,10]");
+        Template variableIdTemp = new ManualTemplate("goimer = 5");
+        // Not valid but should not matter for these tests
+        String expected = "int[0,10] goimer = 5, goimer = 5, goimer = 5;";
+
+        var visitor = new CodeGenVisitor();
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeTemp, visitor);
+        var variableIdMock = mockForVisitorResult(UCELParser.VariableIDContext.class, variableIdTemp, visitor);
+        List<UCELParser.VariableIDContext> variableIDContextList = new ArrayList<>();
+        variableIDContextList.add(variableIdMock);
+        variableIDContextList.add(variableIdMock);
+        variableIDContextList.add(variableIdMock);
+
+        var node = mock(UCELParser.VariableDeclContext.class);
+        when(node.variableID()).thenReturn(variableIDContextList);
+        when(node.type()).thenReturn(typeMock);
+
+        var actual = visitor.visitVariableDecl(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void variableDeclSingleVarNoType() {
+        Template variableIdTemp = new ManualTemplate("goimer = 5");
+        String expected = "goimer = 5;";
+
+        var visitor = new CodeGenVisitor();
+
+        var variableIdMock = mockForVisitorResult(UCELParser.VariableIDContext.class, variableIdTemp, visitor);
+        List<UCELParser.VariableIDContext> variableIDContextList = new ArrayList<>();
+        variableIDContextList.add(variableIdMock);
+
+        var node = mock(UCELParser.VariableDeclContext.class);
+        when(node.variableID()).thenReturn(variableIDContextList);
+
+        var actual = visitor.visitVariableDecl(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void variableDeclMultipleVarNoType() {
+        Template variableIdTemp = new ManualTemplate("goimer = 5");
+        // Not valid but should not matter for these tests
+        String expected = "goimer = 5, goimer = 5, goimer = 5;";
+
+        var visitor = new CodeGenVisitor();
+
+        var variableIdMock = mockForVisitorResult(UCELParser.VariableIDContext.class, variableIdTemp, visitor);
+        List<UCELParser.VariableIDContext> variableIDContextList = new ArrayList<>();
+        variableIDContextList.add(variableIdMock);
+        variableIDContextList.add(variableIdMock);
+        variableIDContextList.add(variableIdMock);
+
+        var node = mock(UCELParser.VariableDeclContext.class);
+        when(node.variableID()).thenReturn(variableIDContextList);
+
+        var actual = visitor.visitVariableDecl(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
     //region variableID
 
     @Test
