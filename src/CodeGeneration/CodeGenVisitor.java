@@ -1,5 +1,6 @@
 import java.awt.image.renderable.RenderableImage;
 import java.util.ArrayList;
+import java.util.List;
 
 public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     private Scope currentScope;
@@ -12,8 +13,70 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.currentScope = currentScope;
     }
 
+    @Override
+    public Template visitVariableDecl(UCELParser.VariableDeclContext ctx) {
+        Template result;
 
+        List<Template> variableIDTemplates = new ArrayList<>();
 
+        for (var variableID : ctx.variableID()) {
+            variableIDTemplates.add(visit(variableID));
+        }
+
+        if (ctx.type() != null) {
+            Template typeTemplate = visit(ctx.type());
+            result = new VariableDeclTemplate(typeTemplate, variableIDTemplates);
+        } else {
+            result = new VariableDeclTemplate(variableIDTemplates);
+        }
+
+        return result;
+    }
+
+    @Override
+    public Template visitVariableID(UCELParser.VariableIDContext ctx) {
+        Template result;
+        DeclarationInfo declarationInfo;
+        List<Template> arrayDecals = new ArrayList<>();
+        try {
+            declarationInfo = currentScope.get(ctx.reference);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+
+        for (int i = 0; i < ctx.arrayDecl().size(); i++) {
+            arrayDecals.add(visit(ctx.arrayDecl(i)));
+        }
+
+        if (ctx.initialiser() != null) {
+            Template initialiserResult = visit(ctx.initialiser());
+            result = new VariableIDTemplate(declarationInfo.getIdentifier(), arrayDecals, initialiserResult);
+        }
+        else {
+            result = new VariableIDTemplate(declarationInfo.getIdentifier(), arrayDecals);
+        }
+
+        return result;
+    }
+
+    @Override
+    public Template visitArrayDecl(UCELParser.ArrayDeclContext ctx) {
+
+        Template result;
+
+        if (ctx.expression() != null) {
+            Template exprTemplate = visit(ctx.expression());
+            result = new ArrayDeclTemplate(exprTemplate);
+        }
+        else if (ctx.type() != null){
+            Template typeTemplate = visit(ctx.type());
+            result = new ArrayDeclTemplate(typeTemplate);
+        } else {
+            result = new ArrayDeclTemplate();
+        }
+
+        return result;
+    }
 
 
     //region Expressions
