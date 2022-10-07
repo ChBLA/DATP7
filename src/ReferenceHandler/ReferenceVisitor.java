@@ -69,9 +69,17 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             return false;
         }
 
-        ctx.reference = currentScope.add(new DeclarationInfo(identifier));
+        boolean valid = true;
 
-        return true;
+        for (UCELParser.ArrayDeclContext arrayDecl : ctx.arrayDecl()) {
+            valid = valid && visit(arrayDecl);
+        }
+
+        ctx.reference = currentScope.add(new DeclarationInfo(identifier));
+        if(ctx.initialiser() != null)
+            valid = valid && visit(ctx.initialiser());
+
+        return valid;
     }
 
     @Override
