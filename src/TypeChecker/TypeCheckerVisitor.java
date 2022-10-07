@@ -131,7 +131,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
                         DeclarationInfo declInfo = currentScope.get(varID.reference);
                         declInfo.setType(doubleType);
                     } catch (Exception e) {
-                        logger.log(new ErrorLog(ctx, e.getMessage()));
+                        logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
                         errorFound = true;
                     }
                 } else {
@@ -143,6 +143,33 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         if(errorFound) return new Type(Type.TypeEnum.errorType);
         else return new Type(Type.TypeEnum.voidType);
+    }
+
+    @Override
+    public Type visitVariableID(UCELParser.VariableIDContext ctx) {
+        Type initialiserType = ctx.initialiser() != null ?
+                visit(ctx.initialiser()) : new Type(Type.TypeEnum.voidType);
+        Type errorType = new Type(Type.TypeEnum.errorType);
+
+        boolean errorFound = false;
+        List<UCELParser.ArrayDeclContext> arrayDecls = ctx.arrayDecl();
+        for(UCELParser.ArrayDeclContext arrayDecl : arrayDecls) {
+            Type arrayDeclType = visit(arrayDecl);
+            if(arrayDeclType.equals(errorType))
+                errorFound = true;
+        }
+
+        int arrayDim = arrayDecls == null ? 0 : arrayDecls.size();
+        if(errorFound) return errorType;
+
+        try {
+            Type newType = initialiserType.deepCopy(arrayDim);
+            currentScope.get(ctx.reference).setType(newType);
+            return newType;
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            return errorType;
+        }
     }
 
     @Override

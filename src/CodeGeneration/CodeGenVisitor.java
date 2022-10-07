@@ -14,6 +14,26 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
     @Override
+    public Template visitVariableDecl(UCELParser.VariableDeclContext ctx) {
+        Template result;
+
+        List<Template> variableIDTemplates = new ArrayList<>();
+
+        for (var variableID : ctx.variableID()) {
+            variableIDTemplates.add(visit(variableID));
+        }
+
+        if (ctx.type() != null) {
+            Template typeTemplate = visit(ctx.type());
+            result = new VariableDeclTemplate(typeTemplate, variableIDTemplates);
+        } else {
+            result = new VariableDeclTemplate(variableIDTemplates);
+        }
+
+        return result;
+    }
+
+    @Override
     public Template visitVariableID(UCELParser.VariableIDContext ctx) {
         Template result;
         DeclarationInfo declarationInfo;
