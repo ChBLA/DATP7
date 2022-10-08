@@ -282,6 +282,20 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
     //endregion
+    //region For-loop
+
+    @Override
+    public Template visitForLoop(UCELParser.ForLoopContext ctx) {
+        var assign = ctx.assignment() != null ? visit(ctx.assignment()) : new ManualTemplate("");
+        var expr1 = ctx.expression(0) != null ? visit(ctx.expression(0)) : new ManualTemplate("");
+        var expr2 = ctx.expression(1) != null ? visit(ctx.expression(1)) : new ManualTemplate("");
+        var stmnt = visit(ctx.statement());
+
+        return new ForLoopTemplate(assign, expr1, expr2, stmnt);
+    }
+
+
+    //endregion
 
     //endregion
 
