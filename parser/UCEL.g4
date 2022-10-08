@@ -72,7 +72,7 @@ forLoop	        : FOR LEFTPAR assignment? END expression? END expression? RIGHTP
 iteration       : FOR LEFTPAR ID? COLON type? RIGHTPAR statement;
 whileLoop       : WHILE LEFTPAR expression? RIGHTPAR statement;
 dowhile         : DO statement WHILE LEFTPAR expression? RIGHTPAR END;
-ifstatement     : IF LEFTPAR expression? RIGHTPAR statement ( ELSE statement )?;
+ifstatement     : IF LEFTPAR expression RIGHTPAR statement ( ELSE statement )?;
 returnstatement : RETURN expression? END;
 
 chanPriority : 'chan' 'priority' (chanExpr | 'default') ((COMMA | '<') (chanExpr | 'default'))* END;

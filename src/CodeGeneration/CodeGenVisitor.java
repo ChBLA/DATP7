@@ -246,6 +246,44 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     //endregion
 
+    //region Control structures
+    //region If-statement
+
+    @Override
+    public Template visitIfstatement(UCELParser.IfstatementContext ctx) {
+        var expr = visit(ctx.expression());
+        var stmnt1 = visit(ctx.statement(0));
+        var stmnt2 = ctx.statement(1) != null ? visit(ctx.statement(1)) : null;
+
+        return stmnt2 != null ? new IfStatementTemplate(expr, stmnt1, stmnt2) : new IfStatementTemplate(expr, stmnt1);
+    }
+    //endregion
+
+    //region While-loop
+
+    @Override
+    public Template visitWhileLoop(UCELParser.WhileLoopContext ctx) {
+        var expr = visit(ctx.expression());
+        var stmnt = visit(ctx.statement());
+
+        return new WhileLoopTemplate(expr, stmnt);
+    }
+
+    //endregion
+
+    //region Do-while-loop
+
+    @Override
+    public Template visitDowhile(UCELParser.DowhileContext ctx) {
+        var expr = visit(ctx.expression());
+        var stmnt = visit(ctx.statement());
+
+        return new DoWhileLoopTemplate(expr, stmnt);
+    }
+
+    //endregion
+
+    //endregion
 
     @Override
     public Template visitAssignExpr(UCELParser.AssignExprContext ctx) {

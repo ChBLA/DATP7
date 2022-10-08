@@ -861,6 +861,101 @@ public class CodeGenTests {
 
     //endregion
 
+    //region Control structure
+    //region If-statement
+    @Test
+    void ifStatementNoElseCorrectlyGenerated() {
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template stmntResult = generateDefaultStatementTemplate();
+        String expected = String.format("if (%s) %s", exprResult.getOutput(), stmntResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+        var node = mock(UCELParser.IfstatementContext.class);
+
+        when(node.expression()).thenReturn(expr);
+        when(node.statement(0)).thenReturn(stmnt);
+
+        var actual = visitor.visitIfstatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void ifStatementWithElseCorrectlyGenerated() {
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template stmnt1Result = generateDefaultStatementTemplate();
+        Template stmnt2Result = generateDefaultStatementTemplate();
+        String expected = String.format("if (%s) %s else %s", exprResult.getOutput(), stmnt1Result.getOutput(), stmnt2Result.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var stmnt1 = mockForVisitorResult(UCELParser.StatementContext.class, stmnt1Result, visitor);
+        var stmnt2 = mockForVisitorResult(UCELParser.StatementContext.class, stmnt2Result, visitor);
+        var node = mock(UCELParser.IfstatementContext.class);
+
+        when(node.expression()).thenReturn(expr);
+        when(node.statement(0)).thenReturn(stmnt1);
+        when(node.statement(1)).thenReturn(stmnt2);
+
+        var actual = visitor.visitIfstatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region While-loop
+    @Test
+    void whileStatementCorrectlyGenerated() {
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template stmntResult = generateDefaultStatementTemplate();
+        String expected = String.format("while (%s) %s", exprResult.getOutput(), stmntResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+        var node = mock(UCELParser.WhileLoopContext.class);
+
+        when(node.expression()).thenReturn(expr);
+        when(node.statement()).thenReturn(stmnt);
+
+        var actual = visitor.visitWhileLoop(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region Do-while-loop
+    @Test
+    void doWhileStatementCorrectlyGenerated() {
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template stmntResult = generateDefaultStatementTemplate();
+        String expected = String.format("do %s while (%s);", stmntResult.getOutput(), exprResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+        var node = mock(UCELParser.DowhileContext.class);
+
+        when(node.expression()).thenReturn(expr);
+        when(node.statement()).thenReturn(stmnt);
+
+        var actual = visitor.visitDowhile(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //endregion
+
     //region Helper functions
     private<T extends RuleContext> T mockForVisitorResult(final Class<T> nodeType, final Template visitTemplateResult, CodeGenVisitor visitor) {
         final T mock = mock(nodeType);
@@ -877,6 +972,10 @@ public class CodeGenTests {
             case stringType -> new ManualTemplate("\"abc\"");
             default -> new ManualTemplate("");
         };
+    }
+
+    private Template generateDefaultStatementTemplate() {
+        return new ManualTemplate("{ }");
     }
 
     private Template generateDefaultExprTemplate(String id) {
