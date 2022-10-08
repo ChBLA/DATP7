@@ -69,7 +69,8 @@ statement       : block
                 | returnstatement;
 
 forLoop	        : FOR LEFTPAR assignment? END expression? END expression? RIGHTPAR statement;
-iteration       : FOR LEFTPAR ID? COLON type? RIGHTPAR statement;
+iteration locals [DeclarationReference reference]
+                : FOR LEFTPAR ID? COLON type? RIGHTPAR statement;
 whileLoop       : WHILE LEFTPAR expression? RIGHTPAR statement;
 dowhile         : DO statement WHILE LEFTPAR expression? RIGHTPAR END;
 ifstatement     : IF LEFTPAR expression RIGHTPAR statement ( ELSE statement )?;

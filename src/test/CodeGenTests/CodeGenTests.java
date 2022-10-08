@@ -1138,7 +1138,140 @@ public class CodeGenTests {
     //endregion
 
     //region Iteration
+    //FOR LEFTPAR ID? COLON type? RIGHTPAR statement;
+    @Test
+    void iterationGeneratedCorrectly() {
+        var idResult = new ManualTemplate("name");
+        var typeResult = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var stmntResult = generateDefaultStatementTemplate();
+        var expected = String.format("for (%s:%s) %s", idResult.getOutput(), typeResult.getOutput(), stmntResult.getOutput());
 
+        DeclarationInfo variable = new DeclarationInfo(idResult.getOutput(), new Type(Type.TypeEnum.intType, 1));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+
+        var scopeMock = mock(Scope.class);
+
+        var node = mock(UCELParser.IterationContext.class);
+        node.reference = ref;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        CodeGenVisitor visitor = new CodeGenVisitor(scopeMock);
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeResult, visitor);
+        var stmntMock = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+
+        when(node.type()).thenReturn(typeMock);
+        when(node.statement()).thenReturn(stmntMock);
+
+        String actual = visitor.visitIteration(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void iterationEmptyIDGeneratedCorrectly() {
+        var idResult = new ManualTemplate("");
+        var typeResult = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var stmntResult = generateDefaultStatementTemplate();
+        var expected = String.format("for (%s:%s) %s", idResult.getOutput(), typeResult.getOutput(), stmntResult.getOutput());
+
+        DeclarationInfo variable = new DeclarationInfo(idResult.getOutput(), new Type(Type.TypeEnum.intType, 1));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+
+        var scopeMock = mock(Scope.class);
+
+        var node = mock(UCELParser.IterationContext.class);
+        node.reference = ref;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        CodeGenVisitor visitor = new CodeGenVisitor(scopeMock);
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeResult, visitor);
+        var stmntMock = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+
+        when(node.type()).thenReturn(typeMock);
+        when(node.statement()).thenReturn(stmntMock);
+
+        String actual = visitor.visitIteration(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void iterationEmptyTypeGeneratedCorrectly() {
+        var idResult = new ManualTemplate("");
+        var typeResult = new ManualTemplate("");
+        var stmntResult = generateDefaultStatementTemplate();
+        var expected = String.format("for (%s:%s) %s", idResult.getOutput(), typeResult.getOutput(), stmntResult.getOutput());
+
+        DeclarationInfo variable = new DeclarationInfo(idResult.getOutput(), new Type(Type.TypeEnum.intType, 1));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+
+        var scopeMock = mock(Scope.class);
+
+        var node = mock(UCELParser.IterationContext.class);
+        node.reference = ref;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        CodeGenVisitor visitor = new CodeGenVisitor(scopeMock);
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeResult, visitor);
+        var stmntMock = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+
+        when(node.type()).thenReturn(typeMock);
+        when(node.statement()).thenReturn(stmntMock);
+
+        String actual = visitor.visitIteration(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void iterationEmptyIDEmptyTypeGeneratedCorrectly() {
+        var idResult = new ManualTemplate("");
+        var typeResult = new ManualTemplate("");
+        var stmntResult = generateDefaultStatementTemplate();
+        var expected = String.format("for (%s:%s) %s", idResult.getOutput(), typeResult.getOutput(), stmntResult.getOutput());
+
+        DeclarationInfo variable = new DeclarationInfo(idResult.getOutput(), new Type(Type.TypeEnum.intType, 1));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+
+        var scopeMock = mock(Scope.class);
+
+        var node = mock(UCELParser.IterationContext.class);
+        node.reference = ref;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        CodeGenVisitor visitor = new CodeGenVisitor(scopeMock);
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeResult, visitor);
+        var stmntMock = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+
+        when(node.type()).thenReturn(typeMock);
+        when(node.statement()).thenReturn(stmntMock);
+
+        String actual = visitor.visitIteration(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
 
     //endregion
 
@@ -1168,6 +1301,17 @@ public class CodeGenTests {
 
     private Template generateDefaultStatementTemplate() {
         return new ManualTemplate("{ }");
+    }
+
+    private Template generateDefaultTypeTemplate(Type.TypeEnum type) {
+        return switch (type) {
+            case intType -> new ManualTemplate("int");
+            case boolType -> new ManualTemplate("bool");
+            case doubleType -> new ManualTemplate("double");
+            case charType -> new ManualTemplate("char");
+            case stringType -> new ManualTemplate("char[]");
+            default -> new ManualTemplate("");
+        };
     }
 
     private Template generateDefaultExprTemplate(String id) {

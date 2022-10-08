@@ -282,6 +282,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
     //endregion
+
     //region For-loop
 
     @Override
@@ -292,6 +293,26 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         var stmnt = visit(ctx.statement());
 
         return new ForLoopTemplate(assign, expr1, expr2, stmnt);
+    }
+
+
+    //endregion
+
+    //region Iteration
+
+    @Override
+    public Template visitIteration(UCELParser.IterationContext ctx) {
+        DeclarationInfo declarationInfo;
+        try {
+            declarationInfo = currentScope.get(ctx.reference);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+
+        var typeResult = ctx.type() != null ? visit(ctx.type()) : new ManualTemplate("");
+        var stmntResult = visit(ctx.statement());
+
+        return new IterationTemplate(new ManualTemplate(declarationInfo != null ? declarationInfo.getIdentifier() : ""), typeResult, stmntResult);
     }
 
 
