@@ -154,6 +154,24 @@ public class TypeCheckerTests  {
 
     //endregion
 
+    //region for-loop
+    @Test
+    void forLoopCondNotBool() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.ForLoopContext node = mock(UCELParser.ForLoopContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, INT_TYPE, visitor);
+
+        when(node.expression(0)).thenReturn(condType);
+        when(node.statement()).thenReturn(statementType);
+        Type result = visitor.visitForLoop(node);
+
+        assertEquals(ERROR_TYPE, result);
+    }
+
+    //endregion
+
     //region declaration
 
     @Test

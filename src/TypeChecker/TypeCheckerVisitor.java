@@ -80,6 +80,30 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         return visit(ctx.statement());
     }
 
+    @Override
+    public Type visitForLoop(UCELParser.ForLoopContext ctx) {
+        if ((ctx.assignment() != null)) {
+            if (visit(ctx.assignment()).equals(ERROR_TYPE)) {
+                logger.log(new ErrorLog(ctx.assignment(), "Assignment is not valid"));
+                return ERROR_TYPE;
+            }
+        }
+
+        Type condType = visit(ctx.expression(0));
+        if (!condType.equals(BOOL_TYPE)) {
+            logger.log(new ErrorLog(ctx.expression(0), "Loop condition not a boolean"));
+            return ERROR_TYPE;
+        }
+
+        if ((ctx.expression(1) != null)) {
+            if (visit(ctx.expression(1)).equals(ERROR_TYPE)) {
+                logger.log(new ErrorLog(ctx.expression(1), "Expression not well typed"));
+                return ERROR_TYPE;
+            }
+        }
+
+        return visit(ctx.statement());
+    }
 
     @Override
     public Type visitBlock(UCELParser.BlockContext ctx) {
