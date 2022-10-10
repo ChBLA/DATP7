@@ -58,6 +58,7 @@ public class TypeCheckerTests  {
         assertEquals(expectedType, actual);
     }
 
+    // TODO: Possibly refactor this to not use for loops as it is prone to mistakes
     private static Stream<Arguments> assignmentTestSource() {
         Type[] types = new Type[]{INT_TYPE,
                 CHAR_TYPE,
@@ -69,7 +70,6 @@ public class TypeCheckerTests  {
                 INT_ARRAY_TYPE,
                 CHAR_ARRAY_TYPE,
                 BOOL_ARRAY_TYPE,
-                VOID_2D_ARRAY_TYPE,
                 INT_2D_ARRAY_TYPE,
                 DOUBLE_ARRAY_TYPE
         };
@@ -85,7 +85,6 @@ public class TypeCheckerTests  {
                 {INT_ARRAY_TYPE, INT_ARRAY_TYPE},
                 {CHAR_ARRAY_TYPE, CHAR_ARRAY_TYPE},
                 {BOOL_ARRAY_TYPE, BOOL_ARRAY_TYPE},
-                {VOID_2D_ARRAY_TYPE, VOID_2D_ARRAY_TYPE},
                 {INT_2D_ARRAY_TYPE, INT_2D_ARRAY_TYPE},
                 {DOUBLE_ARRAY_TYPE, DOUBLE_ARRAY_TYPE}
         };
@@ -101,6 +100,13 @@ public class TypeCheckerTests  {
                     }
                 }
                 arguments.add(Arguments.of(leftType, rightType, expectedType));
+            }
+        }
+
+        Type[] invalidAssignmentTypes = new Type[]{VOID_TYPE, CHAN_TYPE, INVALID_TYPE, ERROR_TYPE};
+        for (Type leftType : types) {
+            for (Type rightType : invalidAssignmentTypes) {
+                arguments.add(Arguments.of(leftType, rightType, ERROR_TYPE));
             }
         }
 
