@@ -187,6 +187,19 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
     @Override
+    public Type visitInitialiser(UCELParser.InitialiserContext ctx) {
+        if(ctx.expression() != null) return visit(ctx.expression());
+
+        Type[] types = new Type[ctx.initialiser().size()];
+        List<UCELParser.InitialiserContext> innerInitialisers = ctx.initialiser();
+        for(int i = 0; i < innerInitialisers.size(); i++) {
+            types[i] = visit(innerInitialisers.get(i));
+        }
+
+        return new Type(Type.TypeEnum.structType, types);
+    }
+
+    @Override
     public Type visitAssign(UCELParser.AssignContext ctx) {
         return super.visitAssign(ctx);
     }
