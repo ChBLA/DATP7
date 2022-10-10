@@ -57,11 +57,10 @@ public class TypeCheckerTests  {
 
         UCELParser.WhileLoopContext node = mock(UCELParser.WhileLoopContext.class);
         var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
-        UCELParser.StatementContext statementContext0 = mock(UCELParser.StatementContext.class);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, INT_TYPE, visitor);
 
-        when(statementContext0.accept(visitor)).thenReturn(INT_TYPE);
         when(node.expression()).thenReturn(condType);
-        when(node.statement()).thenReturn(statementContext0);
+        when(node.statement()).thenReturn(statementType);
 
         Type result = visitor.visitWhileLoop(node);
         assertEquals(INT_TYPE, result);
@@ -73,28 +72,13 @@ public class TypeCheckerTests  {
 
         UCELParser.WhileLoopContext node = mock(UCELParser.WhileLoopContext.class);
         var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
-        UCELParser.StatementContext statementContext0 = mock(UCELParser.StatementContext.class);
-
-        when(statementContext0.accept(visitor)).thenReturn(ERROR_TYPE);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, ERROR_TYPE, visitor);
+        ;
         when(node.expression()).thenReturn(condType);
-        when(node.statement()).thenReturn(statementContext0);
+        when(node.statement()).thenReturn(statementType);
 
         Type result = visitor.visitWhileLoop(node);
         assertEquals(ERROR_TYPE, result);
-    }
-
-    @Test
-    void whileLoopStatementVisited() {
-        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
-
-        UCELParser.WhileLoopContext node = mock(UCELParser.WhileLoopContext.class);
-        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
-        UCELParser.StatementContext statementContext0 = mock(UCELParser.StatementContext.class);
-
-        when(statementContext0.accept(visitor)).thenReturn(CHAN_TYPE);
-        when(node.expression()).thenReturn(condType);
-
-        verify(statementContext0, times(1)).accept(visitor);
     }
 
     //endregion
