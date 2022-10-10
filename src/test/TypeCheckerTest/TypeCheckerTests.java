@@ -9,7 +9,9 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,6 +37,77 @@ public class TypeCheckerTests  {
     private static final Type BOOL_TYPE = new Type(Type.TypeEnum.boolType);
     private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
+
+    //region Assignment
+
+    @ParameterizedTest
+    @MethodSource("assignmentTestSource")
+    void assignmentTests(Type leftType, Type rightType, Type expectedType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        var mockLeft = mockForVisitorResult(UCELParser.ExpressionContext.class, leftType, visitor);
+        var mockRight = mockForVisitorResult(UCELParser.ExpressionContext.class, rightType, visitor);
+
+        var node = mock(UCELParser.AssignExprContext.class);
+
+        when(node.expression(0)).thenReturn(mockLeft);
+        when(node.expression(1)).thenReturn(mockRight);
+
+        Type actual = visitor.visitAssignExpr(node);
+
+        assertEquals(expectedType, actual);
+    }
+
+    private static Stream<Arguments> assignmentTestSource() {
+        Type[] types = new Type[]{INT_TYPE,
+                CHAR_TYPE,
+                BOOL_TYPE,
+                STRING_TYPE,
+                SCALAR_TYPE,
+                STRUCT_TYPE,
+                DOUBLE_TYPE,
+                INT_ARRAY_TYPE,
+                CHAR_ARRAY_TYPE,
+                BOOL_ARRAY_TYPE,
+                VOID_2D_ARRAY_TYPE,
+                INT_2D_ARRAY_TYPE,
+                DOUBLE_ARRAY_TYPE
+        };
+
+        Type[][] validPairTypes = new Type[][]{
+                {INT_TYPE, INT_TYPE},
+                {CHAR_TYPE, CHAR_TYPE},
+                {BOOL_TYPE, BOOL_TYPE},
+                {STRING_TYPE, STRING_TYPE},
+                {SCALAR_TYPE, SCALAR_TYPE},
+                {STRUCT_TYPE, STRUCT_TYPE},
+                {DOUBLE_TYPE, DOUBLE_TYPE},
+                {INT_ARRAY_TYPE, INT_ARRAY_TYPE},
+                {CHAR_ARRAY_TYPE, CHAR_ARRAY_TYPE},
+                {BOOL_ARRAY_TYPE, BOOL_ARRAY_TYPE},
+                {VOID_2D_ARRAY_TYPE, VOID_2D_ARRAY_TYPE},
+                {INT_2D_ARRAY_TYPE, INT_2D_ARRAY_TYPE},
+                {DOUBLE_ARRAY_TYPE, DOUBLE_ARRAY_TYPE}
+        };
+
+        List<Arguments> arguments = new ArrayList<>();
+        for (Type leftType : types) {
+            for (Type rightType : types) {
+                Type expectedType = ERROR_TYPE;
+                for (Type[] validPairType : validPairTypes) {
+                    if (leftType.equals(validPairType[0]) && rightType.equals(validPairType[1])) {
+                        expectedType = VOID_TYPE;
+                        break;
+                    }
+                }
+                arguments.add(Arguments.of(leftType, rightType, expectedType));
+            }
+        }
+
+        return arguments.stream();
+    }
+
+    //endregion
 
     //region ArrayDecl
     @Test
