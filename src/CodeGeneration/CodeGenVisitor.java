@@ -428,6 +428,36 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     //endregion
 
+    //region Statement
+
+    @Override
+    public Template visitStatement(UCELParser.StatementContext ctx) {
+        Template result = new ManualTemplate("");
+        if (ctx.block() != null)
+            return visit(ctx.block());
+        else if (ctx.assignment() != null) {
+            result = new ManualTemplate(visit(ctx.assignment()).getOutput() + ";");
+        } else if (ctx.expression() != null) {
+            result = new ManualTemplate(visit(ctx.expression()).getOutput() + ";");
+        } else if (ctx.forLoop() != null) {
+            result = visit(ctx.forLoop());
+        } else if (ctx.iteration() != null) {
+            result = visit(ctx.iteration());
+        } else if (ctx.whileLoop() != null) {
+            result = visit(ctx.whileLoop());
+        } else if (ctx.dowhile() != null) {
+            result = visit(ctx.dowhile());
+        } else if (ctx.ifstatement() != null) {
+            result = visit(ctx.ifstatement());
+        } else if (ctx.returnstatement() != null) {
+            result = visit(ctx.returnstatement());
+        }
+
+        return new ManualTemplate(result.getOutput() + "\n");
+    }
+
+    //endregion
+
     //endregion
 
     @Override

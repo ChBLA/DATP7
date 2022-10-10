@@ -1653,7 +1653,158 @@ public class CodeGenTests {
     //endregion
 
     //region Statement
+    @Test
+    void statementBlockGeneratedCorrectly() {
+        var blockResult = generateDefaultStatementTemplate();
+        var expected = blockResult.getOutput();
 
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var blockMock = mockForVisitorResult(UCELParser.BlockContext.class, blockResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.block()).thenReturn(blockMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementAssignmentGeneratedCorrectly() {
+        var assignResult = generateDefaultAssignmentTemplate(Type.TypeEnum.intType);
+        var expected = assignResult.getOutput() + ";\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var assignMock = mockForVisitorResult(UCELParser.AssignmentContext.class, assignResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.assignment()).thenReturn(assignMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementExpressionGeneratedCorrectly() {
+        var exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        var expected = exprResult.getOutput() + ";\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.expression()).thenReturn(exprMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementForLoopGeneratedCorrectly() {
+        var forloopResult = generateDefaultForLoopTemplate();
+        var expected = forloopResult.getOutput() + "\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var forloopMock = mockForVisitorResult(UCELParser.ForLoopContext.class, forloopResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.forLoop()).thenReturn(forloopMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementIterationGeneratedCorrectly() {
+        var iterationResult = generateDefaultIterationTemplate();
+        var expected = iterationResult.getOutput() + "\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var iterationMock = mockForVisitorResult(UCELParser.IterationContext.class, iterationResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.iteration()).thenReturn(iterationMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementWhileLoopGeneratedCorrectly() {
+        var whileResult = generateDefaultWhileLoopTemplate();
+        var expected = whileResult.getOutput() + "\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var whileMock = mockForVisitorResult(UCELParser.WhileLoopContext.class, whileResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.whileLoop()).thenReturn(whileMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementDoWhileGeneratedCorrectly() {
+        var doWhileResult = generateDefaultDoWhileLoopTemplate();
+        var expected = doWhileResult.getOutput() + "\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var doWhileMock = mockForVisitorResult(UCELParser.DowhileContext.class, doWhileResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.dowhile()).thenReturn(doWhileMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementIfStatementGeneratedCorrectly() {
+        var ifResult = generateDefaultIfStatementTemplate();
+        var expected = ifResult.getOutput() + "\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var ifMock = mockForVisitorResult(UCELParser.IfstatementContext.class, ifResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.ifstatement()).thenReturn(ifMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementReturnStatementGeneratedCorrectly() {
+        var returnResult = generateDefaultReturnStatementTemplate();
+        var expected = returnResult.getOutput() + "\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var returnMock = mockForVisitorResult(UCELParser.ReturnstatementContext.class, returnResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.returnstatement()).thenReturn(returnMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
 
     //endregion
 
@@ -1704,7 +1855,24 @@ public class CodeGenTests {
     private Template generateDefaultNonBlockStatementTemplate() {
         return new ManualTemplate("a = a;\n");
     }
-
+    private Template generateDefaultForLoopTemplate() {
+        return new ManualTemplate("for (i = 0;i < 10;i++) {\n}");
+    }
+    private Template generateDefaultIterationTemplate() {
+        return new ManualTemplate("for (i:int) {\n}");
+    }
+    private Template generateDefaultWhileLoopTemplate() {
+        return new ManualTemplate("while (true) {\n}");
+    }
+    private Template generateDefaultDoWhileLoopTemplate() {
+        return new ManualTemplate("do {\n} while (true)");
+    }
+    private Template generateDefaultIfStatementTemplate() {
+        return new ManualTemplate("if (true) {\n}");
+    }
+    private Template generateDefaultReturnStatementTemplate() {
+        return new ManualTemplate("return 1;");
+    }
     private Template generateDefaultTypeTemplate(Type.TypeEnum type) {
         return switch (type) {
             case intType -> new ManualTemplate("int");
