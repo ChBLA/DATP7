@@ -609,6 +609,52 @@ public class TypeCheckerTests  {
 
     //endregion
 
+    //region type
+
+    @Test
+    void typeWithoutPrefix() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.TypeContext node = mock(UCELParser.TypeContext.class);
+        UCELParser.TypeIdContext typeID = mock(UCELParser.TypeIdContext.class);
+        when(typeID.accept(visitor)).thenReturn(INT_TYPE);
+        when(node.typeId()).thenReturn(typeID);
+
+        Type actual = visitor.visitType(node);
+
+        assertEquals(INT_TYPE, actual);
+    }
+
+    @ParameterizedTest(name = "{index} => using prefix {0} + type {1} with prefix type")
+    @MethodSource("prefixes")
+    void typeMetaPrefix(String prefixName, Type exptectedType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.TypeContext node = mock(UCELParser.TypeContext.class);
+        UCELParser.TypeIdContext typeID = mock(UCELParser.TypeIdContext.class);
+        UCELParser.PrefixContext prefix = mock(UCELParser.PrefixContext.class);
+        when(typeID.accept(visitor)).thenReturn(INT_TYPE);
+        when(node.prefix()).thenReturn(prefix);
+        when(prefix.getText()).thenReturn(prefixName);
+        when(node.typeId()).thenReturn(typeID);
+
+        Type actual = visitor.visitType(node);
+
+        assertEquals(exptectedType, actual);
+    }
+
+    private static Stream<Arguments> prefixes() {
+        return Stream.of(
+                Arguments.arguments("meta", INT_TYPE.deepCopy(Type.TypePrefixEnum.meta)),
+                Arguments.arguments("urgent", INT_TYPE.deepCopy(Type.TypePrefixEnum.urgent)),
+                Arguments.arguments("broadcast", INT_TYPE.deepCopy(Type.TypePrefixEnum.broadcast)),
+                Arguments.arguments("const", INT_TYPE.deepCopy(Type.TypePrefixEnum.constant))
+        );
+    }
+
+
+    //endregion
+
     //region VariableID
 
     //region noArray
@@ -1031,6 +1077,8 @@ public class TypeCheckerTests  {
 
 
     //endregion
+
+    //region expressions
 
     //region IdExpr
     @Test
@@ -2092,6 +2140,8 @@ public class TypeCheckerTests  {
     //endregion
 
     //region VerificationExpr
+    //endregion
+
     //endregion
 
     //region Helper methods

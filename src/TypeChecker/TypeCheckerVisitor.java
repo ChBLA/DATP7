@@ -54,8 +54,6 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
 
-
-
     @Override
     public Type visitWhileLoop(UCELParser.WhileLoopContext ctx) {
         Type condType = visit(ctx.expression());
@@ -80,6 +78,18 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         return visit(ctx.statement());
     }
 
+    @Override
+    public Type visitType(UCELParser.TypeContext ctx) {
+        String prefix = ctx.prefix() == null ? "" : ctx.prefix().getText();
+        Type type = visit(ctx.typeId());
+        return switch (prefix) {
+            case "urgent" ->  type.deepCopy(Type.TypePrefixEnum.urgent);
+            case "broadcast" ->  type.deepCopy(Type.TypePrefixEnum.broadcast);
+            case "meta" -> type.deepCopy(Type.TypePrefixEnum.meta);
+            case "const" ->  type.deepCopy(Type.TypePrefixEnum.constant);
+            default -> type;
+        };
+    }
 
     @Override
     public Type visitBlock(UCELParser.BlockContext ctx) {
