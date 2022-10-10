@@ -44,10 +44,12 @@ type          : prefix? typeId;
 prefix        : 'urgent' | 'broadcast' | 'meta' | 'const';
 
 typeId locals [DeclarationReference reference]
-              : ID | 'int' | 'clock' | 'chan' | 'bool' | 'double' | 'string' | 'in' | 'out'
-              | 'int' LEFTBRACKET expression? COMMA expression? RIGHTBRACKET
-              | 'scalar' LEFTBRACKET expression RIGHTBRACKET
-              | 'struct' LEFTCURLYBRACE fieldDecl (fieldDecl)* RIGHTCURLYBRACE;
+              : ID                                                                               #TypeIDID
+              | op=('int' | 'clock' | 'chan' | 'bool' | 'double' | 'string' | 'in' | 'out')      #TypeIDType
+              | 'int' LEFTBRACKET expression? COMMA expression? RIGHTBRACKET                     #TypeIDInt
+              | 'scalar' LEFTBRACKET expression RIGHTBRACKET                                     #TypeIDScalar
+              | 'struct' LEFTCURLYBRACE fieldDecl (fieldDecl)* RIGHTCURLYBRACE                   #TypeIDStruct
+              ;
 
 fieldDecl     : type ID arrayDecl* (COMMA ID arrayDecl*)* END;
 arrayDecl     : LEFTBRACKET expression? RIGHTBRACKET

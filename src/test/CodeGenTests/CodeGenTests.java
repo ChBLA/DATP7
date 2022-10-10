@@ -23,6 +23,118 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region TypeID
+
+    @Test
+    void TypeIDIDGeneratedCorrectly() {
+        String variableID = "var1";
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        var scopeMock = mock(Scope.class);
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.TypeIDIDContext.class);
+        node.reference = ref;
+
+        when(variable.getIdentifier()).thenReturn(variableID);
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("could not mock scope");
+        }
+
+        String actual = visitor.visitTypeIDID(node).getOutput();
+
+        assertEquals(variableID, actual);
+    }
+
+    @Test
+    void TypeIDTypeGeneratedCorrectly() {
+        String expected = "double";
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.TypeIDTypeContext.class);
+        // Maybe set correct type, but should not matter
+        node.op = new CommonToken(0 ,"double");
+
+        String actual = visitor.visitTypeIDType(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+
+    @Test
+    void TypeIDIntGeneratedCorrectly() {
+        Template exprTemp = new ManualTemplate("10");
+        String expected = String.format("int[%s,%s]", exprTemp.getOutput(),
+                                                      exprTemp.getOutput());
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.TypeIDIntContext.class);
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemp, visitor);
+        List<UCELParser.ExpressionContext> exprList = new ArrayList<>();
+        exprList.add(exprMock);
+        exprList.add(exprMock);
+
+        when(node.expression()).thenReturn(exprList);
+
+        String actual = visitor.visitTypeIDInt(node).getOutput();
+
+        assertEquals(expected, actual);
+   }
+
+    @Test
+    void TypeIDIntNoLeftExprGeneratedCorrectly() {
+        Template exprTemp = new ManualTemplate("10");
+        String expected = String.format("int[,%s]", exprTemp.getOutput());
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.TypeIDIntContext.class);
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemp, visitor);
+        List<UCELParser.ExpressionContext> exprList = new ArrayList<>();
+        exprList.add(null);
+        exprList.add(exprMock);
+
+        when(node.expression()).thenReturn(exprList);
+
+        String actual = visitor.visitTypeIDInt(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void TypeIDIntNoRightExprGeneratedCorrectly() {
+        Template exprTemp = new ManualTemplate("10");
+        String expected = String.format("int[%s,]", exprTemp.getOutput());
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.TypeIDIntContext.class);
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemp, visitor);
+        List<UCELParser.ExpressionContext> exprList = new ArrayList<>();
+        exprList.add(exprMock);
+        exprList.add(null);
+
+        when(node.expression()).thenReturn(exprList);
+
+        String actual = visitor.visitTypeIDInt(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void TypeIDScalarGeneratedCorrectly() {
+        fail();
+    }
+
+    @Test
+    void TypeIDStructGeneratedCorrectly() {
+        fail();
+    }
+
+    //endregion
     //region Type
     @Test
     void TypeWithPrefixGeneratedCorrectly() {

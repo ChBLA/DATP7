@@ -13,6 +13,23 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.currentScope = currentScope;
     }
 
+    //region TypeID
+
+    @Override
+    public Template visitTypeIDID(UCELParser.TypeIDIDContext ctx) {
+        ManualTemplate result;
+        try {
+            result = new ManualTemplate(currentScope.get(ctx.reference).getIdentifier());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return result;
+    }
+
+
+    //endregion
+
     //region Type
 
     @Override
