@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import javax.print.DocFlavor;
 import java.io.Console;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -24,6 +25,143 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region TypeID
+
+    @Test
+    void TypeIDIDGeneratedCorrectly() {
+        String variableID = "var1";
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        var scopeMock = mock(Scope.class);
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.TypeIDIDContext.class);
+        node.reference = ref;
+
+        when(variable.getIdentifier()).thenReturn(variableID);
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("could not mock scope");
+        }
+
+        String actual = visitor.visitTypeIDID(node).getOutput();
+
+        assertEquals(variableID, actual);
+    }
+
+    @Test
+    void TypeIDTypeGeneratedCorrectly() {
+        String expected = generateDefaultTypeTemplate(Type.TypeEnum.doubleType).getOutput();
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.TypeIDTypeContext.class);
+        // Maybe set correct type, but should not matter
+        node.op = new CommonToken(0, expected);
+
+        String actual = visitor.visitTypeIDType(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+
+    @Test
+    void TypeIDIntGeneratedCorrectly() {
+        Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        String expected = String.format("int[%s,%s]", exprTemp.getOutput(),
+                                                      exprTemp.getOutput());
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.TypeIDIntContext.class);
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemp, visitor);
+
+        when(node.expression(0)).thenReturn(exprMock);
+        when(node.expression(1)).thenReturn(exprMock);
+
+        String actual = visitor.visitTypeIDInt(node).getOutput();
+
+        assertEquals(expected, actual);
+   }
+
+    @Test
+    void TypeIDIntNoLeftExprGeneratedCorrectly() {
+        Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        String expected = String.format("int[,%s]", exprTemp.getOutput());
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.TypeIDIntContext.class);
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemp, visitor);
+
+        when(node.expression(1)).thenReturn(exprMock);
+
+        String actual = visitor.visitTypeIDInt(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void TypeIDIntNoRightExprGeneratedCorrectly() {
+        Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        String expected = String.format("int[%s,]", exprTemp.getOutput());
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.TypeIDIntContext.class);
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemp, visitor);
+
+        when(node.expression(0)).thenReturn(exprMock);
+
+        String actual = visitor.visitTypeIDInt(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void TypeIDScalarGeneratedCorrectly() {
+        Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        Template scalarTemp = generateDefaultTypeTemplate(Type.TypeEnum.scalarType);
+        String expected = String.format("%s[%s]", scalarTemp.getOutput(), exprTemp.getOutput());
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.TypeIDScalarContext.class);
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemp, visitor);
+
+        when(node.expression()).thenReturn(exprMock);
+
+        String actual = visitor.visitTypeIDScalar(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void TypeIDStructGeneratedCorrectly() {
+        Template fieldDecl1Temp = new ManualTemplate("int a;");
+        Template fieldDecl2Temp = new ManualTemplate("int b;");
+        String expected = String.format("struct {\n%s\n%s\n}",
+                fieldDecl1Temp.getOutput(),
+                fieldDecl2Temp.getOutput());
+
+        var visitor = new CodeGenVisitor();
+
+        var fieldDecl1Mock = mockForVisitorResult(UCELParser.FieldDeclContext.class, fieldDecl1Temp, visitor);
+        var fieldDecl2Mock = mockForVisitorResult(UCELParser.FieldDeclContext.class, fieldDecl2Temp, visitor);
+        List<UCELParser.FieldDeclContext> fieldDeclContextList = new ArrayList<>();
+        fieldDeclContextList.add(fieldDecl1Mock);
+        fieldDeclContextList.add(fieldDecl2Mock);
+
+        var node = mock(UCELParser.TypeIDStructContext.class);
+
+        when(node.fieldDecl()).thenReturn(fieldDeclContextList);
+
+        String actual = visitor.visitTypeIDStruct(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
     //region Type
     @Test
     void TypeWithPrefixGeneratedCorrectly() {
@@ -1375,6 +1513,7 @@ public class CodeGenTests {
             case doubleType -> new ManualTemplate("double");
             case charType -> new ManualTemplate("char");
             case stringType -> new ManualTemplate("char[]");
+            case scalarType -> new ManualTemplate("scalar");
             default -> new ManualTemplate("");
         };
     }

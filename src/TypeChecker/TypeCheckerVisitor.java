@@ -54,8 +54,6 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
 
-
-
     @Override
     public Type visitWhileLoop(UCELParser.WhileLoopContext ctx) {
         Type condType = visit(ctx.expression());
@@ -103,6 +101,18 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
 
         return visit(ctx.statement());
+    }
+    @Override
+    public Type visitType(UCELParser.TypeContext ctx) {
+        String prefix = ctx.prefix() == null ? "" : ctx.prefix().getText();
+        Type type = visit(ctx.typeId());
+        return switch (prefix) {
+            case "urgent" ->  type.deepCopy(Type.TypePrefixEnum.urgent);
+            case "broadcast" ->  type.deepCopy(Type.TypePrefixEnum.broadcast);
+            case "meta" -> type.deepCopy(Type.TypePrefixEnum.meta);
+            case "const" ->  type.deepCopy(Type.TypePrefixEnum.constant);
+            default -> type;
+        };
     }
 
     @Override
@@ -215,13 +225,33 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if(errorFound) return errorType;
 
         try {
-            Type newType = initialiserType.deepCopy(arrayDim);
+            Type newType = structToArray(ctx, initialiserType, arrayDim);
             currentScope.get(ctx.reference).setType(newType);
             return newType;
         } catch (Exception e) {
             logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
             return errorType;
         }
+    }
+
+    private Type structToArray(ParserRuleContext ctx, Type type, int arrayDim) {
+        Type voidType =  new Type(Type.TypeEnum.voidType);
+        if(arrayDim == 0) return type;
+        if(type.equals(voidType)) return voidType.deepCopy(arrayDim);
+        if(type.getEvaluationType() != Type.TypeEnum.structType) {
+            logger.log(new ErrorLog(ctx, "Array declaration does not match initializer"));
+        }
+        Type internalType = null;
+        for(Type t : type.getParameters()) {
+            Type paramType = structToArray(ctx, t, arrayDim - 1);
+            if(internalType != null && !internalType.equals(paramType)) {
+                logger.log(new ErrorLog(ctx, "Array initializer cannot contain both " +
+                        paramType + " and " + internalType));
+                return new Type(Type.TypeEnum.errorType);
+            }
+            internalType = paramType;
+        }
+        return internalType.deepCopy(arrayDim);
     }
 
     @Override
