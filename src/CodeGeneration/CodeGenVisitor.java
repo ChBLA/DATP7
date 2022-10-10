@@ -343,6 +343,13 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
     @Override
+    public Template visitMarkExpr(UCELParser.MarkExprContext ctx) {
+        var expr = visit(ctx.expression());
+
+        return new MarkExpressionTemplate(expr);
+    }
+
+    @Override
     public Template visitVerificationExpr(UCELParser.VerificationExprContext ctx) {
         return visit(ctx.verification());
     }

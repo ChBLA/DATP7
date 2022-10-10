@@ -1088,6 +1088,43 @@ public class CodeGenTests {
 
     //endregion
 
+    //region Mark expression
+    @ParameterizedTest(name = "{index} => generating for mark expr type {0}")
+    @EnumSource(value = Type.TypeEnum.class, names ={"intType", "doubleType", "boolType"})
+    void markExpressionGeneratedCorrectly(Type.TypeEnum type) {
+        var exprTemplate = generateDefaultExprTemplate(type);
+        var expected = exprTemplate.getOutput() + "'";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+        var node = mock(UCELParser.MarkExprContext.class);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitMarkExpr(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void markExpressionIDGeneratedCorrectly() {
+        var exprTemplate = generateDefaultExprTemplate("abc");
+        var expected = exprTemplate.getOutput() + "'";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+        var node = mock(UCELParser.MarkExprContext.class);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitMarkExpr(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
     //region Verification expression
     @Test
     void verificationGeneratedCorrectly() {
@@ -1563,7 +1600,7 @@ public class CodeGenTests {
     //endregion
 
     //region Return statement
-    @ParameterizedTest()
+    @ParameterizedTest(name = "{index} => generating for return type {0}")
     @EnumSource(value = Type.TypeEnum.class, names ={"intType", "doubleType", "boolType"})
     void returnStatementGeneratedCorrectly(Type.TypeEnum type) {
         var exprResult = generateDefaultExprTemplate(type);

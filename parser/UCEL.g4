@@ -101,13 +101,13 @@ expression locals [DeclarationReference reference]
             |  expression op=('<?' | '>?') expression           #MinMax
             |  expression op=('<' | '<=' | '>=' | '>') expression #RelExpr
             |  expression op=('==' | '!=') expression           #EqExpr
-            |  expression BITAND expression                        #BitAnd
-            |  expression BITXOR expression                        #BitXor
-            |  expression BITOR expression                        #BitOr
+            |  expression BITAND expression                     #BitAnd
+            |  expression BITXOR expression                     #BitXor
+            |  expression BITOR expression                      #BitOr
             |  expression op=('&&' | 'and') expression          #LogAnd
             |  expression op=('||' | 'or' | 'imply') expression #LogOr
             |  expression QUESTIONMARK expression COLON expression       #Conditional
-            | verification              #VerificationExpr
+            |  verification                                     #VerificationExpr
             ;
 
 verification locals [Scope scope, DeclarationReference reference] : op=('forall' | 'exists' | 'sum') LEFTPAR ID COLON type RIGHTPAR expression;
