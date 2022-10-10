@@ -693,7 +693,8 @@ public class TypeCheckerTests  {
     //region withArray
     @Test
     void variableIDReturnsTypeWithArray() {
-        Type initialiserType = INT_TYPE;
+        Type initialiserType = new Type(Type.TypeEnum.structType,
+                new Type[]{new Type(Type.TypeEnum.structType, new Type[]{INT_TYPE})});
         DeclarationInfo info0 = new DeclarationInfo("");
         Scope scope = mock(Scope.class);
 
@@ -726,45 +727,7 @@ public class TypeCheckerTests  {
 
         Type result = visitor.visitVariableID(varID);
 
-        assertEquals(result, INT_2D_ARRAY_TYPE);
-    }
-
-    @Test
-    void variableIDSetsTypeOnScopeWithArray() {
-        Type initialiserType = INT_TYPE;
-        DeclarationInfo info0 = new DeclarationInfo("");
-        Scope scope = mock(Scope.class);
-
-        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
-
-        UCELParser.VariableIDContext varID = mock(UCELParser.VariableIDContext.class);
-        DeclarationReference declarationReference = new DeclarationReference(0, 0);
-        varID.reference = declarationReference;
-
-        try {
-            when(scope.get(declarationReference)).thenReturn(info0);
-        } catch (Exception e) {
-            fail();
-        }
-
-        UCELParser.InitialiserContext initialiser = mock(UCELParser.InitialiserContext.class);
-        when(varID.initialiser()).thenReturn(initialiser);
-        when(initialiser.accept(visitor)).thenReturn(initialiserType);
-
-        ArrayList<UCELParser.ArrayDeclContext> arrayDecls = new ArrayList<>();
-        UCELParser.ArrayDeclContext arrayDecl0 = mock(UCELParser.ArrayDeclContext.class);
-        UCELParser.ArrayDeclContext arrayDecl1 = mock(UCELParser.ArrayDeclContext.class);
-
-        arrayDecls.add(arrayDecl0);
-        arrayDecls.add(arrayDecl1);
-
-        when(varID.arrayDecl()).thenReturn(arrayDecls);
-        when(arrayDecl0.accept(visitor)).thenReturn(VOID_TYPE);
-        when(arrayDecl1.accept(visitor)).thenReturn(VOID_TYPE);
-
-        visitor.visitVariableID(varID);
-
-        assertEquals(info0.getType(), INT_2D_ARRAY_TYPE);
+        assertEquals(INT_2D_ARRAY_TYPE, result);
     }
 
     @Test
@@ -800,7 +763,7 @@ public class TypeCheckerTests  {
 
         Type result = visitor.visitVariableID(varID);
 
-        assertEquals(result, VOID_2D_ARRAY_TYPE);
+        assertEquals(VOID_2D_ARRAY_TYPE, result);
     }
 
     @Test
@@ -838,6 +801,154 @@ public class TypeCheckerTests  {
         assertEquals(info0.getType(), VOID_2D_ARRAY_TYPE);
     }
     //endregion withArray
+
+    //region struct-to-array
+    @Test
+    void variableIDReturnsArrayFromStruct() {
+        Type initialiserType = new Type(Type.TypeEnum.structType,
+                new Type[]{INT_TYPE, INT_TYPE, INT_TYPE});
+        DeclarationInfo info0 = new DeclarationInfo("");
+        Scope scope = mock(Scope.class);
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.VariableIDContext varID = mock(UCELParser.VariableIDContext.class);
+        DeclarationReference declarationReference = new DeclarationReference(0, 0);
+        varID.reference = declarationReference;
+
+        try {
+            when(scope.get(declarationReference)).thenReturn(info0);
+        } catch (Exception e) {
+            fail();
+        }
+
+        UCELParser.InitialiserContext initialiser = mock(UCELParser.InitialiserContext.class);
+        when(varID.initialiser()).thenReturn(initialiser);
+        when(initialiser.accept(visitor)).thenReturn(initialiserType);
+
+        ArrayList<UCELParser.ArrayDeclContext> arrayDecls = new ArrayList<>();
+        UCELParser.ArrayDeclContext arrayDecl0 = mock(UCELParser.ArrayDeclContext.class);
+
+        arrayDecls.add(arrayDecl0);
+
+        when(varID.arrayDecl()).thenReturn(arrayDecls);
+        when(arrayDecl0.accept(visitor)).thenReturn(VOID_TYPE);
+
+        Type result = visitor.visitVariableID(varID);
+
+        assertEquals(result, INT_ARRAY_TYPE);
+    }
+
+    @Test
+    void variableIDInvalidArrayFromStruct() {
+        Type initialiserType = new Type(Type.TypeEnum.structType,
+                new Type[]{INT_TYPE, DOUBLE_TYPE, INT_TYPE});
+        DeclarationInfo info0 = new DeclarationInfo("");
+        Scope scope = mock(Scope.class);
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.VariableIDContext varID = mock(UCELParser.VariableIDContext.class);
+        DeclarationReference declarationReference = new DeclarationReference(0, 0);
+        varID.reference = declarationReference;
+
+        try {
+            when(scope.get(declarationReference)).thenReturn(info0);
+        } catch (Exception e) {
+            fail();
+        }
+
+        UCELParser.InitialiserContext initialiser = mock(UCELParser.InitialiserContext.class);
+        when(varID.initialiser()).thenReturn(initialiser);
+        when(initialiser.accept(visitor)).thenReturn(initialiserType);
+
+        ArrayList<UCELParser.ArrayDeclContext> arrayDecls = new ArrayList<>();
+        UCELParser.ArrayDeclContext arrayDecl0 = mock(UCELParser.ArrayDeclContext.class);
+
+        arrayDecls.add(arrayDecl0);
+
+        when(varID.arrayDecl()).thenReturn(arrayDecls);
+        when(arrayDecl0.accept(visitor)).thenReturn(VOID_TYPE);
+
+        Type result = visitor.visitVariableID(varID);
+
+        assertEquals(result, ERROR_TYPE);
+    }
+
+    @Test
+    void variableIDInvalidArrayDimFromStruct() {
+        Type initialiserType = new Type(Type.TypeEnum.structType, new Type[]{INT_TYPE});
+        DeclarationInfo info0 = new DeclarationInfo("");
+        Scope scope = mock(Scope.class);
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.VariableIDContext varID = mock(UCELParser.VariableIDContext.class);
+        DeclarationReference declarationReference = new DeclarationReference(0, 0);
+        varID.reference = declarationReference;
+
+        try {
+            when(scope.get(declarationReference)).thenReturn(info0);
+        } catch (Exception e) {
+            fail();
+        }
+
+        UCELParser.InitialiserContext initialiser = mock(UCELParser.InitialiserContext.class);
+        when(varID.initialiser()).thenReturn(initialiser);
+        when(initialiser.accept(visitor)).thenReturn(initialiserType);
+
+        ArrayList<UCELParser.ArrayDeclContext> arrayDecls = new ArrayList<>();
+        UCELParser.ArrayDeclContext arrayDecl0 = mock(UCELParser.ArrayDeclContext.class);
+        UCELParser.ArrayDeclContext arrayDecl1 = mock(UCELParser.ArrayDeclContext.class);
+
+        arrayDecls.add(arrayDecl0);
+        arrayDecls.add(arrayDecl1);
+
+        when(varID.arrayDecl()).thenReturn(arrayDecls);
+        when(arrayDecl0.accept(visitor)).thenReturn(VOID_TYPE);
+        when(arrayDecl1.accept(visitor)).thenReturn(VOID_TYPE);
+
+        Type result = visitor.visitVariableID(varID);
+
+        assertEquals(ERROR_TYPE, result);
+    }
+
+    @Test
+    void variableIDSetsStructTypeOnScopeFromArray() {
+        Type initialiserType = new Type(Type.TypeEnum.structType,
+                new Type[]{INT_TYPE, INT_TYPE, INT_TYPE});;
+        DeclarationInfo info0 = new DeclarationInfo("");
+        Scope scope = mock(Scope.class);
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.VariableIDContext varID = mock(UCELParser.VariableIDContext.class);
+        DeclarationReference declarationReference = new DeclarationReference(0, 0);
+        varID.reference = declarationReference;
+
+        try {
+            when(scope.get(declarationReference)).thenReturn(info0);
+        } catch (Exception e) {
+            fail();
+        }
+
+        UCELParser.InitialiserContext initialiser = mock(UCELParser.InitialiserContext.class);
+        when(varID.initialiser()).thenReturn(initialiser);
+        when(initialiser.accept(visitor)).thenReturn(initialiserType);
+
+        ArrayList<UCELParser.ArrayDeclContext> arrayDecls = new ArrayList<>();
+        UCELParser.ArrayDeclContext arrayDecl0 = mock(UCELParser.ArrayDeclContext.class);
+
+        arrayDecls.add(arrayDecl0);
+
+        when(varID.arrayDecl()).thenReturn(arrayDecls);
+        when(arrayDecl0.accept(visitor)).thenReturn(VOID_TYPE);
+
+        visitor.visitVariableID(varID);
+
+        assertEquals(info0.getType(), INT_ARRAY_TYPE);
+    }
+    //endregion
 
     //endregion
 
