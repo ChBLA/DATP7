@@ -56,6 +56,8 @@ public class TypeCheckerTests  {
         assertEquals(INT_TYPE, result);
     }
 
+    //endregion
+
     //region while-loop
 
     @Test
@@ -64,8 +66,11 @@ public class TypeCheckerTests  {
 
         UCELParser.WhileLoopContext node = mock(UCELParser.WhileLoopContext.class);
         var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, INT_TYPE, visitor);
 
         when(node.expression()).thenReturn(condType);
+        when(node.statement()).thenReturn(statementType);
+
         Type result = visitor.visitWhileLoop(node);
 
         assertEquals(ERROR_TYPE, result);
@@ -77,11 +82,10 @@ public class TypeCheckerTests  {
 
         UCELParser.WhileLoopContext node = mock(UCELParser.WhileLoopContext.class);
         var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
-        UCELParser.StatementContext statementContext0 = mock(UCELParser.StatementContext.class);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, INT_TYPE, visitor);
 
-        when(statementContext0.accept(visitor)).thenReturn(INT_TYPE);
         when(node.expression()).thenReturn(condType);
-        when(node.statement()).thenReturn(statementContext0);
+        when(node.statement()).thenReturn(statementType);
 
         Type result = visitor.visitWhileLoop(node);
         assertEquals(INT_TYPE, result);
@@ -93,28 +97,61 @@ public class TypeCheckerTests  {
 
         UCELParser.WhileLoopContext node = mock(UCELParser.WhileLoopContext.class);
         var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
-        UCELParser.StatementContext statementContext0 = mock(UCELParser.StatementContext.class);
-
-        when(statementContext0.accept(visitor)).thenReturn(ERROR_TYPE);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, ERROR_TYPE, visitor);
+        ;
         when(node.expression()).thenReturn(condType);
-        when(node.statement()).thenReturn(statementContext0);
+        when(node.statement()).thenReturn(statementType);
 
         Type result = visitor.visitWhileLoop(node);
         assertEquals(ERROR_TYPE, result);
     }
 
+    //endregion
+
+    //region dowhile
     @Test
-    void whileLoopStatementVisited() {
+    void doWhileCondNotBool() {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
-        UCELParser.WhileLoopContext node = mock(UCELParser.WhileLoopContext.class);
-        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
-        UCELParser.StatementContext statementContext0 = mock(UCELParser.StatementContext.class);
+        UCELParser.DowhileContext node = mock(UCELParser.DowhileContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, INT_TYPE, visitor);
 
-        when(statementContext0.accept(visitor)).thenReturn(CHAN_TYPE);
         when(node.expression()).thenReturn(condType);
+        when(node.statement()).thenReturn(statementType);
+        Type result = visitor.visitDowhile(node);
 
-        verify(statementContext0, times(1)).accept(visitor);
+        assertEquals(ERROR_TYPE, result);
+    }
+
+    @Test
+    void doWhileReturnsStatementType() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.DowhileContext node = mock(UCELParser.DowhileContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, INT_TYPE, visitor);
+
+        when(node.expression()).thenReturn(condType);
+        when(node.statement()).thenReturn(statementType);
+
+        Type result = visitor.visitDowhile(node);
+        assertEquals(INT_TYPE, result);
+    }
+
+    @Test
+    void doWhileReturnsStatementError() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.DowhileContext node = mock(UCELParser.DowhileContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, ERROR_TYPE, visitor);
+        ;
+        when(node.expression()).thenReturn(condType);
+        when(node.statement()).thenReturn(statementType);
+
+        Type result = visitor.visitDowhile(node);
+        assertEquals(ERROR_TYPE, result);
     }
 
     //endregion

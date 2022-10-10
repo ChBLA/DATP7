@@ -345,6 +345,17 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     //endregion
 
+    //region Return-statement
+
+    @Override
+    public Template visitReturnstatement(UCELParser.ReturnstatementContext ctx) {
+        var expr = visit(ctx.expression());
+
+        return new ReturnStatementTemplate(expr);
+    }
+
+    //endregion
+
     //endregion
 
     @Override
