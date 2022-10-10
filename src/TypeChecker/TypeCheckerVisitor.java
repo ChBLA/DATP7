@@ -42,6 +42,20 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
     private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
 
+
+    @Override
+    public Type visitArrayDecl(UCELParser.ArrayDeclContext ctx) {
+        if (ctx.expression() != null) {
+            var elementType = visit(ctx.expression());
+            return new Type(elementType.getEvaluationType(), 1);
+        } else {
+            var elementType = visit(ctx.type());
+            return new Type(elementType.getEvaluationType(), 1);
+        }
+    }
+
+
+
     @Override
     public Type visitReturnstatement(UCELParser.ReturnstatementContext ctx) {
         var expression = ctx.expression();
