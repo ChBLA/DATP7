@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import javax.print.DocFlavor;
 import java.io.Console;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -118,12 +119,45 @@ public class CodeGenTests {
 
     @Test
     void TypeIDScalarGeneratedCorrectly() {
-        fail();
+        Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        Template scalarTemp = generateDefaultTypeTemplate(Type.TypeEnum.scalarType);
+        String expected = String.format("%s[%s]", scalarTemp.getOutput(), exprTemp.getOutput());
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.TypeIDScalarContext.class);
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemp, visitor);
+
+        when(node.expression()).thenReturn(exprMock);
+
+        String actual = visitor.visitTypeIDScalar(node).getOutput();
+
+        assertEquals(expected, actual);
     }
 
     @Test
     void TypeIDStructGeneratedCorrectly() {
-        fail();
+        Template fieldDecl1Temp = new ManualTemplate("int a;");
+        Template fieldDecl2Temp = new ManualTemplate("int b;");
+        String expected = String.format("struct {\n%s\n%s\n}",
+                fieldDecl1Temp.getOutput(),
+                fieldDecl2Temp.getOutput());
+
+        var visitor = new CodeGenVisitor();
+
+        var fieldDecl1Mock = mockForVisitorResult(UCELParser.FieldDeclContext.class, fieldDecl1Temp, visitor);
+        var fieldDecl2Mock = mockForVisitorResult(UCELParser.FieldDeclContext.class, fieldDecl2Temp, visitor);
+        List<UCELParser.FieldDeclContext> fieldDeclContextList = new ArrayList<>();
+        fieldDeclContextList.add(fieldDecl1Mock);
+        fieldDeclContextList.add(fieldDecl2Mock);
+
+        var node = mock(UCELParser.TypeIDStructContext.class);
+
+        when(node.fieldDecl()).thenReturn(fieldDeclContextList);
+
+        String actual = visitor.visitTypeIDStruct(node).getOutput();
+
+        assertEquals(expected, actual);
     }
 
     //endregion
@@ -1453,6 +1487,7 @@ public class CodeGenTests {
             case doubleType -> new ManualTemplate("double");
             case charType -> new ManualTemplate("char");
             case stringType -> new ManualTemplate("char[]");
+            case scalarType -> new ManualTemplate("scalar");
             default -> new ManualTemplate("");
         };
     }

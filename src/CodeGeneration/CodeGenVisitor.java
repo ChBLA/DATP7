@@ -45,7 +45,24 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         return new TypeIDIntTemplate(expr1, expr2);
     }
 
+    @Override
+    public Template visitTypeIDScalar(UCELParser.TypeIDScalarContext ctx) {
+        return new TypeIDScalarTemplate(visit(ctx.expression()));
+    }
+
+    @Override
+    public Template visitTypeIDStruct(UCELParser.TypeIDStructContext ctx) {
+        ArrayList<Template> decls = new ArrayList<>();
+
+        for (var fieldDecl : ctx.fieldDecl()) {
+            decls.add(visit(fieldDecl));
+        }
+
+        return new TypeIDStructTemplate(decls);
+    }
+
     //endregion
+
 
     //region Type
 
