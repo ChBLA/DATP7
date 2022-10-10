@@ -1,3 +1,4 @@
+import com.sun.jdi.BooleanType;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -24,6 +25,48 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             this.logger = logger;
         }
 
+    private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
+    private static final Type DOUBLE_TYPE = new Type(Type.TypeEnum.doubleType);
+    private static final Type BOOL_TYPE = new Type(Type.TypeEnum.boolType);
+    private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
+    private static final Type STRING_TYPE = new Type(Type.TypeEnum.stringType);
+    private static final Type ERROR_TYPE = new Type(Type.TypeEnum.errorType);
+    private static final Type INT_ARRAY_TYPE = new Type(Type.TypeEnum.intType, 1);
+    private static final Type DOUBLE_ARRAY_TYPE = new Type(Type.TypeEnum.doubleType, 1);
+    private static final Type BOOL_ARRAY_TYPE = new Type(Type.TypeEnum.boolType, 1);
+    private static final Type CHAR_ARRAY_TYPE = new Type(Type.TypeEnum.charType, 1);
+    private static final Type INVALID_TYPE = new Type(Type.TypeEnum.invalidType);
+    private static final Type VOID_TYPE = new Type(Type.TypeEnum.voidType);
+    private static final Type CHAN_TYPE = new Type(Type.TypeEnum.chanType);
+    private static final Type STRUCT_TYPE = new Type(Type.TypeEnum.structType);
+    private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
+    private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
+
+    @Override
+    public Type visitReturnstatement(UCELParser.ReturnstatementContext ctx) {
+        var expression = ctx.expression();
+        if (expression != null) {
+            var expressionType = visit(expression);
+            return expressionType;
+        } else {
+            return VOID_TYPE;
+        }
+    }
+
+
+
+
+    @Override
+    public Type visitWhileLoop(UCELParser.WhileLoopContext ctx) {
+        Type condType = visit(ctx.expression());
+        Type statementType = null;
+
+        if (!condType.equals(BOOL_TYPE)) return ERROR_TYPE;
+
+        statementType = visit(ctx.statement());
+
+        return statementType;
+    }
     @Override
     public Type visitBlock(UCELParser.BlockContext ctx) {
 
@@ -159,6 +202,11 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitAssign(UCELParser.AssignContext ctx) {
         return super.visitAssign(ctx);
+    }
+
+    @Override
+    public Type visitStatement(UCELParser.StatementContext ctx) {
+        return super.visitStatement(ctx);
     }
 
     @Override
