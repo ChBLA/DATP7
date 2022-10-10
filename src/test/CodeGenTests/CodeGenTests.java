@@ -51,12 +51,12 @@ public class CodeGenTests {
 
     @Test
     void TypeIDTypeGeneratedCorrectly() {
-        String expected = "double";
+        String expected = generateDefaultTypeTemplate(Type.TypeEnum.doubleType).getOutput();
 
         var visitor = new CodeGenVisitor();
         var node = mock(UCELParser.TypeIDTypeContext.class);
         // Maybe set correct type, but should not matter
-        node.op = new CommonToken(0 ,"double");
+        node.op = new CommonToken(0, expected);
 
         String actual = visitor.visitTypeIDType(node).getOutput();
 
@@ -66,7 +66,7 @@ public class CodeGenTests {
 
     @Test
     void TypeIDIntGeneratedCorrectly() {
-        Template exprTemp = new ManualTemplate("10");
+        Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
         String expected = String.format("int[%s,%s]", exprTemp.getOutput(),
                                                       exprTemp.getOutput());
 
@@ -74,11 +74,9 @@ public class CodeGenTests {
 
         var node = mock(UCELParser.TypeIDIntContext.class);
         var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemp, visitor);
-        List<UCELParser.ExpressionContext> exprList = new ArrayList<>();
-        exprList.add(exprMock);
-        exprList.add(exprMock);
 
-        when(node.expression()).thenReturn(exprList);
+        when(node.expression(0)).thenReturn(exprMock);
+        when(node.expression(1)).thenReturn(exprMock);
 
         String actual = visitor.visitTypeIDInt(node).getOutput();
 
@@ -87,18 +85,15 @@ public class CodeGenTests {
 
     @Test
     void TypeIDIntNoLeftExprGeneratedCorrectly() {
-        Template exprTemp = new ManualTemplate("10");
+        Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
         String expected = String.format("int[,%s]", exprTemp.getOutput());
 
         var visitor = new CodeGenVisitor();
 
         var node = mock(UCELParser.TypeIDIntContext.class);
         var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemp, visitor);
-        List<UCELParser.ExpressionContext> exprList = new ArrayList<>();
-        exprList.add(null);
-        exprList.add(exprMock);
 
-        when(node.expression()).thenReturn(exprList);
+        when(node.expression(1)).thenReturn(exprMock);
 
         String actual = visitor.visitTypeIDInt(node).getOutput();
 
@@ -106,18 +101,15 @@ public class CodeGenTests {
     }
     @Test
     void TypeIDIntNoRightExprGeneratedCorrectly() {
-        Template exprTemp = new ManualTemplate("10");
+        Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
         String expected = String.format("int[%s,]", exprTemp.getOutput());
 
         var visitor = new CodeGenVisitor();
 
         var node = mock(UCELParser.TypeIDIntContext.class);
         var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemp, visitor);
-        List<UCELParser.ExpressionContext> exprList = new ArrayList<>();
-        exprList.add(exprMock);
-        exprList.add(null);
 
-        when(node.expression()).thenReturn(exprList);
+        when(node.expression(0)).thenReturn(exprMock);
 
         String actual = visitor.visitTypeIDInt(node).getOutput();
 

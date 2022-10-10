@@ -27,6 +27,23 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         return result;
     }
 
+    @Override
+    public Template visitTypeIDType(UCELParser.TypeIDTypeContext ctx) {
+        return new ManualTemplate(ctx.op.getText());
+    }
+
+    @Override
+    public Template visitTypeIDInt(UCELParser.TypeIDIntContext ctx) {
+        Template expr1 = (ctx.expression(0) != null) ?
+                visit(ctx.expression(0)) :
+                new ManualTemplate("");
+        Template expr2 = (ctx.expression(1) != null) ?
+                visit(ctx.expression(1)) :
+                new ManualTemplate("");
+
+
+        return new TypeIDIntTemplate(expr1, expr2);
+    }
 
     //endregion
 
