@@ -88,6 +88,7 @@ public class TypeCheckerTests  {
         when(node.statement()).thenReturn(statementType);
 
         Type result = visitor.visitWhileLoop(node);
+
         assertEquals(INT_TYPE, result);
     }
 
@@ -103,6 +104,7 @@ public class TypeCheckerTests  {
         when(node.statement()).thenReturn(statementType);
 
         Type result = visitor.visitWhileLoop(node);
+
         assertEquals(ERROR_TYPE, result);
     }
 
@@ -119,6 +121,7 @@ public class TypeCheckerTests  {
 
         when(node.expression()).thenReturn(condType);
         when(node.statement()).thenReturn(statementType);
+
         Type result = visitor.visitDowhile(node);
 
         assertEquals(ERROR_TYPE, result);
@@ -136,6 +139,7 @@ public class TypeCheckerTests  {
         when(node.statement()).thenReturn(statementType);
 
         Type result = visitor.visitDowhile(node);
+
         assertEquals(INT_TYPE, result);
     }
 
@@ -151,6 +155,7 @@ public class TypeCheckerTests  {
         when(node.statement()).thenReturn(statementType);
 
         Type result = visitor.visitDowhile(node);
+
         assertEquals(ERROR_TYPE, result);
     }
 
@@ -167,9 +172,66 @@ public class TypeCheckerTests  {
 
         when(node.expression(0)).thenReturn(condType);
         when(node.statement()).thenReturn(statementType);
+
         Type result = visitor.visitForLoop(node);
 
         assertEquals(ERROR_TYPE, result);
+    }
+
+    @Test
+    void forLoopAssignmentError() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.ForLoopContext node = mock(UCELParser.ForLoopContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, INT_TYPE, visitor);
+        var assignmentType = mockForVisitorResult(UCELParser.AssignmentContext.class, ERROR_TYPE, visitor);
+
+        when(node.assignment()).thenReturn(assignmentType);
+        when(node.expression(0)).thenReturn(condType);
+        when(node.statement()).thenReturn(statementType);
+
+        Type result = visitor.visitForLoop(node);
+
+        assertEquals(ERROR_TYPE, result);
+    }
+
+    @Test
+    void forLoopExpressionError() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.ForLoopContext node = mock(UCELParser.ForLoopContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, INT_TYPE, visitor);
+        var expressionType = mockForVisitorResult(UCELParser.ExpressionContext.class, ERROR_TYPE, visitor);
+
+        when(node.expression(0)).thenReturn(condType);
+        when(node.expression(1)).thenReturn(expressionType);
+        when(node.statement()).thenReturn(statementType);
+
+        Type result = visitor.visitForLoop(node);
+
+        assertEquals(ERROR_TYPE, result);
+    }
+
+    @Test
+    void forLoopWithEverythingWorks() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.ForLoopContext node = mock(UCELParser.ForLoopContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var assignmentType = mockForVisitorResult(UCELParser.AssignmentContext.class, VOID_TYPE, visitor);
+        var expressionType = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+
+        when(node.assignment()).thenReturn(assignmentType);
+        when(node.expression(0)).thenReturn(condType);
+        when(node.expression(1)).thenReturn(expressionType);
+        when(node.statement()).thenReturn(statementType);
+
+        Type result = visitor.visitForLoop(node);
+
+        assertEquals(CHAR_TYPE, result);
     }
 
     //endregion

@@ -102,6 +102,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         return visit(ctx.statement());
     }
+
     @Override
     public Type visitType(UCELParser.TypeContext ctx) {
         String prefix = ctx.prefix() == null ? "" : ctx.prefix().getText();
