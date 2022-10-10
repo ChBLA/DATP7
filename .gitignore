@@ -23,13 +23,12 @@
 hs_err_pid*
 
 /build
-gen
-/out
-.idea/workspace.xml
-.idea/uiDesigner.xml
-.idea/runConfigurations.xml
+src/main/java/UCELParser_Generated/*
 
 /.idea
 /.gradle
 gradlew
 gradlew.bat
+
+*.iml
+

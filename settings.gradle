@@ -1,2 +1,18 @@
+//include ":parser"
+//
+//include ":src"
+
+//test {
+//    useJUnit {
+//        includeCategories 'src/test'
+//    }
+//}
+
+
 rootProject.name = 'DATP7'
 
+include('src')
+
+//test {
+//    include '**my.package.name/*'
+//}
