@@ -489,7 +489,7 @@ public class TypeCheckerTests  {
 
     //endregion
 
-    //region VariableDecl
+    //region VariableID
 
     //region noArray
 
@@ -755,6 +755,49 @@ public class TypeCheckerTests  {
         assertEquals(info0.getType(), VOID_2D_ARRAY_TYPE);
     }
     //endregion withArray
+
+    //endregion
+
+    //region initializer
+    @Test
+    void initialiserPassExpression() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+        UCELParser.InitialiserContext initialiserContext = mock(UCELParser.InitialiserContext.class);
+        UCELParser.ExpressionContext expressionContext = mock(UCELParser.ExpressionContext.class);
+
+        when(initialiserContext.expression()).thenReturn(expressionContext);
+        when(expressionContext.accept(visitor)).thenReturn(INT_TYPE);
+
+        Type actual = visitor.visitInitialiser(initialiserContext);
+
+        assertEquals(INT_TYPE, actual);
+    }
+
+    @Test
+    void initializerBuildSruct() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+        UCELParser.InitialiserContext initialiserContext = mock(UCELParser.InitialiserContext.class);
+        UCELParser.InitialiserContext initializer0 = mock(UCELParser.InitialiserContext.class);
+        UCELParser.InitialiserContext initializer1 = mock(UCELParser.InitialiserContext.class);
+        UCELParser.InitialiserContext initializer2 = mock(UCELParser.InitialiserContext.class);
+
+        ArrayList<UCELParser.InitialiserContext> initializers = new ArrayList<>();
+        initializers.add(initializer0);
+        initializers.add(initializer1);
+        initializers.add(initializer2);
+
+        when(initialiserContext.initialiser()).thenReturn(initializers);
+        when(initializer0.accept(visitor)).thenReturn(INT_TYPE);
+        when(initializer1.accept(visitor)).thenReturn(STRING_TYPE);
+        when(initializer2.accept(visitor)).thenReturn(DOUBLE_TYPE);
+
+        Type actual = visitor.visitInitialiser(initialiserContext);
+
+        assertEquals(new Type(Type.TypeEnum.structType,
+                new String[]{"i", "s", "d"},
+                new Type[]{INT_TYPE, STRING_TYPE, DOUBLE_TYPE}), actual);
+    }
+
 
     //endregion
 
