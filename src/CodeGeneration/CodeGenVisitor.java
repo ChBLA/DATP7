@@ -427,6 +427,27 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     //endregion
 
+    //region Block
+
+    @Override
+    public Template visitBlock(UCELParser.BlockContext ctx) {
+        List<Template> localDecls = new ArrayList<>();
+        List<Template> statements = new ArrayList<>();
+
+        for (var decl : ctx.localDeclaration()) {
+            localDecls.add(visit(decl));
+        }
+
+        for (var stmnt : ctx.statement()) {
+            statements.add(visit(stmnt));
+        }
+
+        return new BlockTemplate(localDecls, statements);
+    }
+
+
+    //endregion
+
     //endregion
 
     @Override

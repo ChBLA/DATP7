@@ -42,6 +42,20 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
     private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
 
+
+    @Override
+    public Type visitArrayDecl(UCELParser.ArrayDeclContext ctx) {
+        if (ctx.expression() != null) {
+            var elementType = visit(ctx.expression());
+            return new Type(elementType.getEvaluationType(), 1);
+        } else {
+            var elementType = visit(ctx.type());
+            return new Type(elementType.getEvaluationType(), 1);
+        }
+    }
+
+
+
     @Override
     public Type visitReturnstatement(UCELParser.ReturnstatementContext ctx) {
         var expression = ctx.expression();
@@ -73,6 +87,31 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if (!condType.equals(BOOL_TYPE)) {
             logger.log(new ErrorLog(ctx.expression(), "Loop condition not a boolean"));
             return ERROR_TYPE;
+        }
+
+        return visit(ctx.statement());
+    }
+
+    @Override
+    public Type visitForLoop(UCELParser.ForLoopContext ctx) {
+        if ((ctx.assignment() != null)) {
+            if (visit(ctx.assignment()).equals(ERROR_TYPE)) {
+                logger.log(new ErrorLog(ctx.assignment(), "Assignment is not valid"));
+                return ERROR_TYPE;
+            }
+        }
+
+        Type condType = visit(ctx.expression(0));
+        if (!condType.equals(BOOL_TYPE)) {
+            logger.log(new ErrorLog(ctx.expression(0), "Loop condition not a boolean"));
+            return ERROR_TYPE;
+        }
+
+        if ((ctx.expression(1) != null)) {
+            if (visit(ctx.expression(1)).equals(ERROR_TYPE)) {
+                logger.log(new ErrorLog(ctx.expression(1), "Expression not well typed"));
+                return ERROR_TYPE;
+            }
         }
 
         return visit(ctx.statement());
