@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -1449,6 +1450,31 @@ public class CodeGenTests {
 
         assertEquals(expected, actual);
     }
+
+    //endregion
+
+    //region Return statement
+    @ParameterizedTest()
+    @EnumSource(value = Type.TypeEnum.class, names ={"intType", "doubleType", "boolType"})
+    void returnStatementGeneratedCorrectly(Type.TypeEnum type) {
+        var exprResult = generateDefaultExprTemplate(type);
+        var expected = String.format("return %s;", exprResult.getOutput());
+
+        var node = mock(UCELParser.ReturnstatementContext.class);
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+
+        when(node.expression()).thenReturn(exprMock);
+
+        String actual = visitor.visitReturnstatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
+    //region Statement
+
 
     //endregion
 
