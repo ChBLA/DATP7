@@ -36,6 +36,32 @@ public class TypeCheckerTests  {
     private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
 
+    //region ArrayDecl
+    @Test
+    void correctArrayDeclTypeOnExpression() {
+        var type = new Type(INT_TYPE.getEvaluationType(), 1);
+        var visitor = new TypeCheckerVisitor();
+        var node = mock(UCELParser.ArrayDeclContext.class);
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor);
+        when(node.expression()).thenReturn(expr);
+        var actual = visitor.visitArrayDecl(node);
+        assertEquals(type, actual);
+    }
+    
+    @Test
+    void correctTypeArrayDeclOnTypeDeclaration() {
+        var type = new Type(INT_TYPE.getEvaluationType(), 1);
+        var visitor = new TypeCheckerVisitor();
+        var node = mock(UCELParser.ArrayDeclContext.class);
+        var expr = mockForVisitorResult(UCELParser.TypeContext.class, type, visitor);
+        when(node.type()).thenReturn(expr);
+        var actual = visitor.visitArrayDecl(node);
+        assertEquals(type, actual);
+    }
+
+    //endregion
+
+
     //region returnstatement
     @Test
     void returnVoidOnNoExpression() {
