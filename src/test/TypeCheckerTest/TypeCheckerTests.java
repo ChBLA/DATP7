@@ -36,6 +36,26 @@ public class TypeCheckerTests  {
     private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
 
+    //region returnstatement
+    @Test
+    void returnVoidOnNoExpression() {
+        var visitor = new TypeCheckerVisitor();
+        var node = mock(UCELParser.ReturnstatementContext.class);
+        when(node.expression()).thenReturn(null);
+        var result = visitor.visitReturnstatement(node);
+        assertEquals(VOID_TYPE, result);
+    }
+
+    @Test
+    void returnIntOnIntExpression() {
+        var visitor = new TypeCheckerVisitor();
+        var node = mock(UCELParser.ReturnstatementContext.class);
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        when(node.expression()).thenReturn(expr);
+        var result = visitor.visitReturnstatement(node);
+        assertEquals(INT_TYPE, result);
+    }
+
     //region while-loop
 
     @Test
