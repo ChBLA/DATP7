@@ -67,6 +67,20 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         return visit(ctx.statement());
     }
+
+    @Override
+    public Type visitDowhile(UCELParser.DowhileContext ctx) {
+        Type condType = visit(ctx.expression());
+
+        if (!condType.equals(BOOL_TYPE)) {
+            logger.log(new ErrorLog(ctx.expression(), "Loop condition not a boolean"));
+            return ERROR_TYPE;
+        }
+
+        return visit(ctx.statement());
+    }
+
+
     @Override
     public Type visitBlock(UCELParser.BlockContext ctx) {
 
