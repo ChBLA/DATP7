@@ -43,6 +43,20 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
 
     @Override
+    public Type visitReturnstatement(UCELParser.ReturnstatementContext ctx) {
+        var expression = ctx.expression();
+        if (expression != null) {
+            var expressionType = visit(expression);
+            return expressionType;
+        } else {
+            return VOID_TYPE;
+        }
+    }
+
+
+
+
+    @Override
     public Type visitWhileLoop(UCELParser.WhileLoopContext ctx) {
         Type condType = visit(ctx.expression());
         Type statementType = null;
