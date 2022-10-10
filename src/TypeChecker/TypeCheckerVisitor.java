@@ -42,6 +42,18 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
     private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
 
+    @Override
+    public Type visitAssignExpr(UCELParser.AssignExprContext ctx) {
+        Type leftType = visit(ctx.expression(0));
+        Type rightType = visit(ctx.expression(1));
+
+        if (leftType.equals(rightType)) {
+            return VOID_TYPE;
+        } else {
+            logger.log(new ErrorLog(ctx, "Type error: cannot assign " + rightType + " to " + leftType));
+            return ERROR_TYPE;
+        }
+    }
 
     @Override
     public Type visitArrayDecl(UCELParser.ArrayDeclContext ctx) {
