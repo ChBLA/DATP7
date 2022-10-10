@@ -47,6 +47,18 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type leftType = visit(ctx.expression(0));
         Type rightType = visit(ctx.expression(1));
 
+        if (leftType.getEvaluationType() == Type.TypeEnum.errorType ||
+                rightType.getEvaluationType() == Type.TypeEnum.errorType ||
+                leftType.getEvaluationType() == Type.TypeEnum.chanType ||
+                rightType.getEvaluationType() == Type.TypeEnum.chanType ||
+                leftType.getEvaluationType() == Type.TypeEnum.voidType ||
+                rightType.getEvaluationType() == Type.TypeEnum.voidType ||
+                leftType.getEvaluationType() == Type.TypeEnum.invalidType ||
+                rightType.getEvaluationType() == Type.TypeEnum.invalidType) {
+            logger.log(new ErrorLog(ctx, "Type error: cannot assign " + rightType + " to " + leftType));
+            return ERROR_TYPE;
+        }
+
         if (leftType.equals(rightType)) {
             return VOID_TYPE;
         } else {
