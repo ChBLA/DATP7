@@ -861,6 +861,422 @@ public class CodeGenTests {
 
     //endregion
 
+    //region Control structure
+    //region If-statement
+    @Test
+    void ifStatementNoElseCorrectlyGenerated() {
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template stmntResult = generateDefaultStatementTemplate();
+        String expected = String.format("if (%s) %s", exprResult.getOutput(), stmntResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+        var node = mock(UCELParser.IfstatementContext.class);
+
+        when(node.expression()).thenReturn(expr);
+        when(node.statement(0)).thenReturn(stmnt);
+
+        var actual = visitor.visitIfstatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void ifStatementWithElseCorrectlyGenerated() {
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template stmnt1Result = generateDefaultStatementTemplate();
+        Template stmnt2Result = generateDefaultStatementTemplate();
+        String expected = String.format("if (%s) %s else %s", exprResult.getOutput(), stmnt1Result.getOutput(), stmnt2Result.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var stmnt1 = mockForVisitorResult(UCELParser.StatementContext.class, stmnt1Result, visitor);
+        var stmnt2 = mockForVisitorResult(UCELParser.StatementContext.class, stmnt2Result, visitor);
+        var node = mock(UCELParser.IfstatementContext.class);
+
+        when(node.expression()).thenReturn(expr);
+        when(node.statement(0)).thenReturn(stmnt1);
+        when(node.statement(1)).thenReturn(stmnt2);
+
+        var actual = visitor.visitIfstatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region While-loop
+    @Test
+    void whileStatementCorrectlyGenerated() {
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template stmntResult = generateDefaultStatementTemplate();
+        String expected = String.format("while (%s) %s", exprResult.getOutput(), stmntResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+        var node = mock(UCELParser.WhileLoopContext.class);
+
+        when(node.expression()).thenReturn(expr);
+        when(node.statement()).thenReturn(stmnt);
+
+        var actual = visitor.visitWhileLoop(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region Do-while-loop
+    @Test
+    void doWhileStatementCorrectlyGenerated() {
+        Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template stmntResult = generateDefaultStatementTemplate();
+        String expected = String.format("do %s while (%s);", stmntResult.getOutput(), exprResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+        var node = mock(UCELParser.DowhileContext.class);
+
+        when(node.expression()).thenReturn(expr);
+        when(node.statement()).thenReturn(stmnt);
+
+        var actual = visitor.visitDowhile(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region For-loop
+    // FOR LEFTPAR assignment? END expression? END expression? RIGHTPAR statement;
+    @Test
+    void forLoopStatementGeneratedCorrectly() {
+        Template expr1Result = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template expr2Result = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template assignResult = generateDefaultAssignmentTemplate(Type.TypeEnum.boolType);
+        Template stmntResult = generateDefaultStatementTemplate();
+        String expected = String.format("for (%s;%s;%s) %s", assignResult.getOutput(), expr1Result.getOutput(), expr2Result.getOutput(), stmntResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var assign = mockForVisitorResult(UCELParser.AssignmentContext.class, assignResult, visitor);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, expr1Result, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, expr2Result, visitor);
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+        var node = mock(UCELParser.ForLoopContext.class);
+
+        when(node.expression(0)).thenReturn(expr1);
+        when(node.expression(1)).thenReturn(expr2);
+        when(node.assignment()).thenReturn(assign);
+        when(node.statement()).thenReturn(stmnt);
+
+        var actual = visitor.visitForLoop(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void forLoopEmptyAssignGeneratedCorrectly() {
+        Template expr1Result = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template expr2Result = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template stmntResult = generateDefaultStatementTemplate();
+        String expected = String.format("for (%s;%s;%s) %s", generateEmptyAssignTemplate().getOutput(), expr1Result.getOutput(), expr2Result.getOutput(), stmntResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, expr1Result, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, expr2Result, visitor);
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+        var node = mock(UCELParser.ForLoopContext.class);
+
+        when(node.expression(0)).thenReturn(expr1);
+        when(node.expression(1)).thenReturn(expr2);
+        when(node.assignment()).thenReturn(null);
+        when(node.statement()).thenReturn(stmnt);
+
+        var actual = visitor.visitForLoop(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void forLoopEmptyExpr1GeneratedCorrectly() {
+        Template expr1Result = generateEmptyExprTemplate();
+        Template expr2Result = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template assignResult = generateDefaultAssignmentTemplate(Type.TypeEnum.boolType);
+        Template stmntResult = generateDefaultStatementTemplate();
+        String expected = String.format("for (%s;%s;%s) %s", assignResult.getOutput(), expr1Result.getOutput(), expr2Result.getOutput(), stmntResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var assign = mockForVisitorResult(UCELParser.AssignmentContext.class, assignResult, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, expr2Result, visitor);
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+        var node = mock(UCELParser.ForLoopContext.class);
+
+        when(node.expression(0)).thenReturn(null);
+        when(node.expression(1)).thenReturn(expr2);
+        when(node.assignment()).thenReturn(assign);
+        when(node.statement()).thenReturn(stmnt);
+
+        var actual = visitor.visitForLoop(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void forLoopEmptyExpr2GeneratedCorrectly() {
+        Template expr1Result = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template expr2Result = generateEmptyExprTemplate();
+        Template assignResult = generateDefaultAssignmentTemplate(Type.TypeEnum.boolType);
+        Template stmntResult = generateDefaultStatementTemplate();
+        String expected = String.format("for (%s;%s;%s) %s", assignResult.getOutput(), expr1Result.getOutput(), expr2Result.getOutput(), stmntResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var assign = mockForVisitorResult(UCELParser.AssignmentContext.class, assignResult, visitor);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, expr1Result, visitor);
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+        var node = mock(UCELParser.ForLoopContext.class);
+
+        when(node.expression(0)).thenReturn(expr1);
+        when(node.expression(1)).thenReturn(null);
+        when(node.assignment()).thenReturn(assign);
+        when(node.statement()).thenReturn(stmnt);
+
+        var actual = visitor.visitForLoop(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void forLoopEmptyExpr1Expr2GeneratedCorrectly() {
+        Template assignResult = generateDefaultAssignmentTemplate(Type.TypeEnum.boolType);
+        Template stmntResult = generateDefaultStatementTemplate();
+        String expected = String.format("for (%s;%s;%s) %s", assignResult.getOutput(), generateEmptyExprTemplate().getOutput(), generateEmptyExprTemplate().getOutput(), stmntResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var assign = mockForVisitorResult(UCELParser.AssignmentContext.class, assignResult, visitor);
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+        var node = mock(UCELParser.ForLoopContext.class);
+
+        when(node.expression(0)).thenReturn(null);
+        when(node.expression(1)).thenReturn(null);
+        when(node.assignment()).thenReturn(assign);
+        when(node.statement()).thenReturn(stmnt);
+
+        var actual = visitor.visitForLoop(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void forLoopEmptyAssignExpr1GeneratedCorrectly() {
+        Template expr2Result = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template stmntResult = generateDefaultStatementTemplate();
+        String expected = String.format("for (%s;%s;%s) %s", generateEmptyAssignTemplate().getOutput(), generateEmptyExprTemplate().getOutput(), expr2Result.getOutput(), stmntResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, expr2Result, visitor);
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+        var node = mock(UCELParser.ForLoopContext.class);
+
+        when(node.expression(0)).thenReturn(null);
+        when(node.expression(1)).thenReturn(expr2);
+        when(node.assignment()).thenReturn(null);
+        when(node.statement()).thenReturn(stmnt);
+
+        var actual = visitor.visitForLoop(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void forLoopEmptyAssignExpr2GeneratedCorrectly() {
+        Template expr1Result = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        Template stmntResult = generateDefaultStatementTemplate();
+        String expected = String.format("for (%s;%s;%s) %s", generateEmptyAssignTemplate().getOutput(), expr1Result.getOutput(), generateEmptyExprTemplate().getOutput(), stmntResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, expr1Result, visitor);
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+        var node = mock(UCELParser.ForLoopContext.class);
+
+        when(node.expression(0)).thenReturn(expr1);
+        when(node.expression(1)).thenReturn(null);
+        when(node.assignment()).thenReturn(null);
+        when(node.statement()).thenReturn(stmnt);
+
+        var actual = visitor.visitForLoop(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void forLoopEmptyAssignExprsGeneratedCorrectly() {
+        Template stmntResult = generateDefaultStatementTemplate();
+        String expected = String.format("for (%s;%s;%s) %s", generateEmptyAssignTemplate().getOutput(), generateEmptyExprTemplate().getOutput(), generateEmptyExprTemplate().getOutput(), stmntResult.getOutput());
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+        var node = mock(UCELParser.ForLoopContext.class);
+
+        when(node.expression(0)).thenReturn(null);
+        when(node.expression(1)).thenReturn(null);
+        when(node.assignment()).thenReturn(null);
+        when(node.statement()).thenReturn(stmnt);
+
+        var actual = visitor.visitForLoop(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
+    //region Iteration
+    //FOR LEFTPAR ID? COLON type? RIGHTPAR statement;
+    @Test
+    void iterationGeneratedCorrectly() {
+        var idResult = new ManualTemplate("name");
+        var typeResult = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var stmntResult = generateDefaultStatementTemplate();
+        var expected = String.format("for (%s:%s) %s", idResult.getOutput(), typeResult.getOutput(), stmntResult.getOutput());
+
+        DeclarationInfo variable = new DeclarationInfo(idResult.getOutput(), new Type(Type.TypeEnum.intType, 1));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+
+        var scopeMock = mock(Scope.class);
+
+        var node = mock(UCELParser.IterationContext.class);
+        node.reference = ref;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        CodeGenVisitor visitor = new CodeGenVisitor(scopeMock);
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeResult, visitor);
+        var stmntMock = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+
+        when(node.type()).thenReturn(typeMock);
+        when(node.statement()).thenReturn(stmntMock);
+
+        String actual = visitor.visitIteration(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void iterationEmptyIDGeneratedCorrectly() {
+        var idResult = new ManualTemplate("");
+        var typeResult = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var stmntResult = generateDefaultStatementTemplate();
+        var expected = String.format("for (%s:%s) %s", idResult.getOutput(), typeResult.getOutput(), stmntResult.getOutput());
+
+        DeclarationInfo variable = new DeclarationInfo(idResult.getOutput(), new Type(Type.TypeEnum.intType, 1));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+
+        var scopeMock = mock(Scope.class);
+
+        var node = mock(UCELParser.IterationContext.class);
+        node.reference = ref;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        CodeGenVisitor visitor = new CodeGenVisitor(scopeMock);
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeResult, visitor);
+        var stmntMock = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+
+        when(node.type()).thenReturn(typeMock);
+        when(node.statement()).thenReturn(stmntMock);
+
+        String actual = visitor.visitIteration(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void iterationEmptyTypeGeneratedCorrectly() {
+        var idResult = new ManualTemplate("");
+        var typeResult = new ManualTemplate("");
+        var stmntResult = generateDefaultStatementTemplate();
+        var expected = String.format("for (%s:%s) %s", idResult.getOutput(), typeResult.getOutput(), stmntResult.getOutput());
+
+        DeclarationInfo variable = new DeclarationInfo(idResult.getOutput(), new Type(Type.TypeEnum.intType, 1));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+
+        var scopeMock = mock(Scope.class);
+
+        var node = mock(UCELParser.IterationContext.class);
+        node.reference = ref;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        CodeGenVisitor visitor = new CodeGenVisitor(scopeMock);
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeResult, visitor);
+        var stmntMock = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+
+        when(node.type()).thenReturn(typeMock);
+        when(node.statement()).thenReturn(stmntMock);
+
+        String actual = visitor.visitIteration(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void iterationEmptyIDEmptyTypeGeneratedCorrectly() {
+        var idResult = new ManualTemplate("");
+        var typeResult = new ManualTemplate("");
+        var stmntResult = generateDefaultStatementTemplate();
+        var expected = String.format("for (%s:%s) %s", idResult.getOutput(), typeResult.getOutput(), stmntResult.getOutput());
+
+        DeclarationInfo variable = new DeclarationInfo(idResult.getOutput(), new Type(Type.TypeEnum.intType, 1));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+
+        var scopeMock = mock(Scope.class);
+
+        var node = mock(UCELParser.IterationContext.class);
+        node.reference = ref;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        CodeGenVisitor visitor = new CodeGenVisitor(scopeMock);
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeResult, visitor);
+        var stmntMock = mockForVisitorResult(UCELParser.StatementContext.class, stmntResult, visitor);
+
+        when(node.type()).thenReturn(typeMock);
+        when(node.statement()).thenReturn(stmntMock);
+
+        String actual = visitor.visitIteration(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //endregion
+
     //region Helper functions
     private<T extends RuleContext> T mockForVisitorResult(final Class<T> nodeType, final Template visitTemplateResult, CodeGenVisitor visitor) {
         final T mock = mock(nodeType);
@@ -879,8 +1295,42 @@ public class CodeGenTests {
         };
     }
 
+    private Template generateEmptyExprTemplate() {
+        return new ManualTemplate("");
+    }
+
+    private Template generateDefaultStatementTemplate() {
+        return new ManualTemplate("{ }");
+    }
+
+    private Template generateDefaultTypeTemplate(Type.TypeEnum type) {
+        return switch (type) {
+            case intType -> new ManualTemplate("int");
+            case boolType -> new ManualTemplate("bool");
+            case doubleType -> new ManualTemplate("double");
+            case charType -> new ManualTemplate("char");
+            case stringType -> new ManualTemplate("char[]");
+            default -> new ManualTemplate("");
+        };
+    }
+
     private Template generateDefaultExprTemplate(String id) {
         return new ManualTemplate(id);
+    }
+
+    private Template generateDefaultAssignmentTemplate(Type.TypeEnum type) {
+        return switch (type) {
+            case intType -> new ManualTemplate("a = 0");
+            case boolType -> new ManualTemplate("b = true");
+            case doubleType -> new ManualTemplate("d = 0.0");
+            case charType -> new ManualTemplate("c = 'a'");
+            case stringType -> new ManualTemplate("s = \"abc\"");
+            default -> new ManualTemplate("");
+        };
+    }
+
+    private Template generateEmptyAssignTemplate() {
+        return new ManualTemplate("");
     }
 
     //endregion

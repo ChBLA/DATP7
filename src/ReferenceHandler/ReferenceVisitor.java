@@ -13,6 +13,11 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     }
 
     @Override
+    protected Boolean aggregateResult(Boolean aggregate, Boolean nextResult) {
+        return (nextResult == null || nextResult) && (aggregate == null || aggregate);
+    }
+
+    @Override
     public Boolean visitIdExpr(UCELParser.IdExprContext ctx) {
         String identifier = ctx.ID().getText();
 

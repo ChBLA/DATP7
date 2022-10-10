@@ -246,6 +246,79 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     //endregion
 
+    //region Control structures
+    //region If-statement
+
+    @Override
+    public Template visitIfstatement(UCELParser.IfstatementContext ctx) {
+        var expr = visit(ctx.expression());
+        var stmnt1 = visit(ctx.statement(0));
+        var stmnt2 = ctx.statement(1) != null ? visit(ctx.statement(1)) : null;
+
+        return stmnt2 != null ? new IfStatementTemplate(expr, stmnt1, stmnt2) : new IfStatementTemplate(expr, stmnt1);
+    }
+    //endregion
+
+    //region While-loop
+
+    @Override
+    public Template visitWhileLoop(UCELParser.WhileLoopContext ctx) {
+        var expr = visit(ctx.expression());
+        var stmnt = visit(ctx.statement());
+
+        return new WhileLoopTemplate(expr, stmnt);
+    }
+
+    //endregion
+
+    //region Do-while-loop
+
+    @Override
+    public Template visitDowhile(UCELParser.DowhileContext ctx) {
+        var expr = visit(ctx.expression());
+        var stmnt = visit(ctx.statement());
+
+        return new DoWhileLoopTemplate(expr, stmnt);
+    }
+
+    //endregion
+
+    //region For-loop
+
+    @Override
+    public Template visitForLoop(UCELParser.ForLoopContext ctx) {
+        var assign = ctx.assignment() != null ? visit(ctx.assignment()) : new ManualTemplate("");
+        var expr1 = ctx.expression(0) != null ? visit(ctx.expression(0)) : new ManualTemplate("");
+        var expr2 = ctx.expression(1) != null ? visit(ctx.expression(1)) : new ManualTemplate("");
+        var stmnt = visit(ctx.statement());
+
+        return new ForLoopTemplate(assign, expr1, expr2, stmnt);
+    }
+
+
+    //endregion
+
+    //region Iteration
+
+    @Override
+    public Template visitIteration(UCELParser.IterationContext ctx) {
+        DeclarationInfo declarationInfo;
+        try {
+            declarationInfo = currentScope.get(ctx.reference);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+
+        var typeResult = ctx.type() != null ? visit(ctx.type()) : new ManualTemplate("");
+        var stmntResult = visit(ctx.statement());
+
+        return new IterationTemplate(new ManualTemplate(declarationInfo != null ? declarationInfo.getIdentifier() : ""), typeResult, stmntResult);
+    }
+
+
+    //endregion
+
+    //endregion
 
     @Override
     public Template visitAssignExpr(UCELParser.AssignExprContext ctx) {
