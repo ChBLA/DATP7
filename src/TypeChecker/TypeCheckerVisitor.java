@@ -43,15 +43,29 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
 
     @Override
+    public Type visitReturnstatement(UCELParser.ReturnstatementContext ctx) {
+        var expression = ctx.expression();
+        if (expression != null) {
+            var expressionType = visit(expression);
+            return expressionType;
+        } else {
+            return VOID_TYPE;
+        }
+    }
+
+
+
+
+    @Override
     public Type visitWhileLoop(UCELParser.WhileLoopContext ctx) {
         Type condType = visit(ctx.expression());
-        Type statementType = null;
 
-        if (!condType.equals(BOOL_TYPE)) return ERROR_TYPE;
+        if (!condType.equals(BOOL_TYPE)) {
+            logger.log(new ErrorLog(ctx.expression(), "Loop condition not a boolean"));
+            return ERROR_TYPE;
+        }
 
-        statementType = visit(ctx.statement());
-
-        return statementType;
+        return visit(ctx.statement());
     }
     @Override
     public Type visitBlock(UCELParser.BlockContext ctx) {
@@ -170,6 +184,19 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
             return errorType;
         }
+    }
+
+    @Override
+    public Type visitInitialiser(UCELParser.InitialiserContext ctx) {
+        if(ctx.expression() != null) return visit(ctx.expression());
+
+        Type[] types = new Type[ctx.initialiser().size()];
+        List<UCELParser.InitialiserContext> innerInitialisers = ctx.initialiser();
+        for(int i = 0; i < innerInitialisers.size(); i++) {
+            types[i] = visit(innerInitialisers.get(i));
+        }
+
+        return new Type(Type.TypeEnum.structType, types);
     }
 
     @Override

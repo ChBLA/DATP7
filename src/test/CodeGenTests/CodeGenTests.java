@@ -24,6 +24,45 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region Type
+    @Test
+    void TypeWithPrefixGeneratedCorrectly() {
+        Template prefixTemplate = new ManualTemplate("urgent");
+        Template typeIDTemplate = new ManualTemplate("int[0,10]");
+        String expected = "urgent int[0,10]";
+
+        var visitor = new CodeGenVisitor();
+
+        var prefixMock = mockForVisitorResult(UCELParser.PrefixContext.class, prefixTemplate, visitor);
+        var typeIDMock = mockForVisitorResult(UCELParser.TypeIdContext.class, typeIDTemplate, visitor);
+
+        var node = mock(UCELParser.TypeContext.class);
+        when(node.prefix()).thenReturn(prefixMock);
+        when(node.typeId()).thenReturn(typeIDMock);
+
+        String actual = visitor.visitType(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void TypeNoPrefixGeneratedCorrectly() {
+        Template typeIDTemplate = new ManualTemplate("int[0,10]");
+        String expected = "int[0,10]";
+
+        var visitor = new CodeGenVisitor();
+
+        var typeIDMock = mockForVisitorResult(UCELParser.TypeIdContext.class, typeIDTemplate, visitor);
+
+        var node = mock(UCELParser.TypeContext.class);
+        when(node.typeId()).thenReturn(typeIDMock);
+
+        String actual = visitor.visitType(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
     //region variableDecl
     @Test
     void variableDeclSingleVarWithType() {

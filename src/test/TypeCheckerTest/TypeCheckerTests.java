@@ -36,6 +36,26 @@ public class TypeCheckerTests  {
     private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
 
+    //region returnstatement
+    @Test
+    void returnVoidOnNoExpression() {
+        var visitor = new TypeCheckerVisitor();
+        var node = mock(UCELParser.ReturnstatementContext.class);
+        when(node.expression()).thenReturn(null);
+        var result = visitor.visitReturnstatement(node);
+        assertEquals(VOID_TYPE, result);
+    }
+
+    @Test
+    void returnIntOnIntExpression() {
+        var visitor = new TypeCheckerVisitor();
+        var node = mock(UCELParser.ReturnstatementContext.class);
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        when(node.expression()).thenReturn(expr);
+        var result = visitor.visitReturnstatement(node);
+        assertEquals(INT_TYPE, result);
+    }
+
     //region while-loop
 
     @Test
@@ -57,11 +77,10 @@ public class TypeCheckerTests  {
 
         UCELParser.WhileLoopContext node = mock(UCELParser.WhileLoopContext.class);
         var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
-        UCELParser.StatementContext statementContext0 = mock(UCELParser.StatementContext.class);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, INT_TYPE, visitor);
 
-        when(statementContext0.accept(visitor)).thenReturn(INT_TYPE);
         when(node.expression()).thenReturn(condType);
-        when(node.statement()).thenReturn(statementContext0);
+        when(node.statement()).thenReturn(statementType);
 
         Type result = visitor.visitWhileLoop(node);
         assertEquals(INT_TYPE, result);
@@ -73,28 +92,13 @@ public class TypeCheckerTests  {
 
         UCELParser.WhileLoopContext node = mock(UCELParser.WhileLoopContext.class);
         var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
-        UCELParser.StatementContext statementContext0 = mock(UCELParser.StatementContext.class);
-
-        when(statementContext0.accept(visitor)).thenReturn(ERROR_TYPE);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, ERROR_TYPE, visitor);
+        ;
         when(node.expression()).thenReturn(condType);
-        when(node.statement()).thenReturn(statementContext0);
+        when(node.statement()).thenReturn(statementType);
 
         Type result = visitor.visitWhileLoop(node);
         assertEquals(ERROR_TYPE, result);
-    }
-
-    @Test
-    void whileLoopStatementVisited() {
-        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
-
-        UCELParser.WhileLoopContext node = mock(UCELParser.WhileLoopContext.class);
-        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
-        UCELParser.StatementContext statementContext0 = mock(UCELParser.StatementContext.class);
-
-        when(statementContext0.accept(visitor)).thenReturn(CHAN_TYPE);
-        when(node.expression()).thenReturn(condType);
-
-        verify(statementContext0, times(1)).accept(visitor);
     }
 
     //endregion
@@ -552,7 +556,7 @@ public class TypeCheckerTests  {
 
     //endregion
 
-    //region VariableDecl
+    //region VariableID
 
     //region noArray
 
@@ -818,6 +822,49 @@ public class TypeCheckerTests  {
         assertEquals(info0.getType(), VOID_2D_ARRAY_TYPE);
     }
     //endregion withArray
+
+    //endregion
+
+    //region initializer
+    @Test
+    void initialiserPassExpression() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+        UCELParser.InitialiserContext initialiserContext = mock(UCELParser.InitialiserContext.class);
+        UCELParser.ExpressionContext expressionContext = mock(UCELParser.ExpressionContext.class);
+
+        when(initialiserContext.expression()).thenReturn(expressionContext);
+        when(expressionContext.accept(visitor)).thenReturn(INT_TYPE);
+
+        Type actual = visitor.visitInitialiser(initialiserContext);
+
+        assertEquals(INT_TYPE, actual);
+    }
+
+    @Test
+    void initializerBuildSruct() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+        UCELParser.InitialiserContext initialiserContext = mock(UCELParser.InitialiserContext.class);
+        UCELParser.InitialiserContext initializer0 = mock(UCELParser.InitialiserContext.class);
+        UCELParser.InitialiserContext initializer1 = mock(UCELParser.InitialiserContext.class);
+        UCELParser.InitialiserContext initializer2 = mock(UCELParser.InitialiserContext.class);
+
+        ArrayList<UCELParser.InitialiserContext> initializers = new ArrayList<>();
+        initializers.add(initializer0);
+        initializers.add(initializer1);
+        initializers.add(initializer2);
+
+        when(initialiserContext.initialiser()).thenReturn(initializers);
+        when(initializer0.accept(visitor)).thenReturn(INT_TYPE);
+        when(initializer1.accept(visitor)).thenReturn(STRING_TYPE);
+        when(initializer2.accept(visitor)).thenReturn(DOUBLE_TYPE);
+
+        Type actual = visitor.visitInitialiser(initialiserContext);
+
+        assertEquals(new Type(Type.TypeEnum.structType,
+                new String[]{"i", "s", "d"},
+                new Type[]{INT_TYPE, STRING_TYPE, DOUBLE_TYPE}), actual);
+    }
+
 
     //endregion
 

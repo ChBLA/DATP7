@@ -13,6 +13,28 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.currentScope = currentScope;
     }
 
+    //region Type
+
+    @Override
+    public Template visitType(UCELParser.TypeContext ctx) {
+        Template result;
+
+        var typeIDTemp = visit(ctx.typeId());
+
+        if (ctx.prefix() != null) {
+            var prefixTemp = visit(ctx.prefix());
+            result = new TypeTemplate(prefixTemp, typeIDTemp);
+        }
+        else {
+            result = new TypeTemplate(typeIDTemp);
+        }
+
+       return result;
+    }
+
+    //endregion
+
+    //region variableDecl
     @Override
     public Template visitVariableDecl(UCELParser.VariableDeclContext ctx) {
         Template result;
@@ -33,6 +55,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         return result;
     }
 
+    //endregion
+
+    //region variableID
     @Override
     public Template visitVariableID(UCELParser.VariableIDContext ctx) {
         Template result;
@@ -58,7 +83,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
         return result;
     }
+    //endregion
 
+    //region arraclDecl
     @Override
     public Template visitArrayDecl(UCELParser.ArrayDeclContext ctx) {
 
@@ -77,7 +104,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
         return result;
     }
-
+    //endregion
 
     //region Expressions
 
