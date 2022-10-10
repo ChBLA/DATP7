@@ -13,6 +13,26 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.currentScope = currentScope;
     }
 
+    //region initialiser
+
+    @Override
+    public Template visitInitialiser(UCELParser.InitialiserContext ctx) {
+        if (ctx.expression() != null) {
+            return visit(ctx.expression());
+        }
+
+        List<Template> initialisers = new ArrayList<>();
+
+        for (var initialiser : ctx.initialiser()) {
+            initialisers.add(visit(initialiser));
+        }
+
+        return new InitialiserTemplate(initialisers);
+    }
+
+
+    //endregion
+
     //region TypeID
 
     @Override

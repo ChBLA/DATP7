@@ -25,6 +25,57 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region initialiser
+
+    @Test
+    void InitialiserExpressionGeneratedCorrectly() {
+        Template expr = generateDefaultExprTemplate(Type.TypeEnum.intType);
+
+        var visitor = new CodeGenVisitor();
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, expr, visitor);
+
+        var node = mock(UCELParser.InitialiserContext.class);
+
+        when(node.expression()).thenReturn(exprMock);
+
+        String actual = visitor.visitInitialiser(node).getOutput();
+
+        assertEquals(expr.getOutput(), actual);
+    }
+
+    @Test
+    void InitialiserNoExpr() {
+        String expected = "{}";
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.InitialiserContext.class);
+
+        String actual = visitor.visitInitialiser(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void InitialiserGeneratedCorrectly() {
+        Template expr = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        String expected = String.format("{%s, %s}", expr.getOutput(), expr.getOutput());
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.InitialiserContext.class);
+        var initialiserMock = mockForVisitorResult(UCELParser.InitialiserContext.class, expr, visitor);
+        List<UCELParser.InitialiserContext> initialiserContextList = new ArrayList<>();
+        initialiserContextList.add(initialiserMock);
+        initialiserContextList.add(initialiserMock);
+
+        when(node.initialiser()).thenReturn(initialiserContextList);
+
+        String actual = visitor.visitInitialiser(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
     //region TypeID
 
     @Test
@@ -389,8 +440,8 @@ public class CodeGenTests {
     @Test
     void variableIDMultipleArrayWithInitGeneratedCorrectly() {
         Template arrayDecl = new ManualTemplate("[]");
-        Template initTemp = new ManualTemplate("[[1,2,3], [1,2,3,4]]");
-        String expected = "var1[][] = [[1,2,3], [1,2,3,4]]";
+        Template initTemp = new ManualTemplate("{{1,2,3}, {1,2,3,4}}");
+        String expected = "var1[][] = {{1,2,3}, {1,2,3,4}}";
         String variableID = "var1";
         // TODO: set correct array type for declarationinfo maybe
         DeclarationInfo variable = new DeclarationInfo(variableID, new Type(Type.TypeEnum.intType));
