@@ -61,11 +61,12 @@ public class CodeGenTests {
         String expected = String.format("{%s, %s}", expr.getOutput(), expr.getOutput());
 
         var visitor = new CodeGenVisitor();
-        var node = mock(UCELParser.InitialiserContext.class);
         var initialiserMock = mockForVisitorResult(UCELParser.InitialiserContext.class, expr, visitor);
         List<UCELParser.InitialiserContext> initialiserContextList = new ArrayList<>();
         initialiserContextList.add(initialiserMock);
         initialiserContextList.add(initialiserMock);
+
+        var node = mock(UCELParser.InitialiserContext.class);
 
         when(node.initialiser()).thenReturn(initialiserContextList);
 
