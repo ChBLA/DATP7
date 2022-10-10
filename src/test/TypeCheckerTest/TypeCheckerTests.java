@@ -56,6 +56,8 @@ public class TypeCheckerTests  {
         assertEquals(INT_TYPE, result);
     }
 
+    //endregion
+
     //region while-loop
 
     @Test
