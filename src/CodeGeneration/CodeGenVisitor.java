@@ -13,6 +13,57 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.currentScope = currentScope;
     }
 
+    //region TypeID
+
+    @Override
+    public Template visitTypeIDID(UCELParser.TypeIDIDContext ctx) {
+        ManualTemplate result;
+        try {
+            result = new ManualTemplate(currentScope.get(ctx.reference).getIdentifier());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return result;
+    }
+
+    @Override
+    public Template visitTypeIDType(UCELParser.TypeIDTypeContext ctx) {
+        return new ManualTemplate(ctx.op.getText());
+    }
+
+    @Override
+    public Template visitTypeIDInt(UCELParser.TypeIDIntContext ctx) {
+        Template expr1 = (ctx.expression(0) != null) ?
+                visit(ctx.expression(0)) :
+                new ManualTemplate("");
+        Template expr2 = (ctx.expression(1) != null) ?
+                visit(ctx.expression(1)) :
+                new ManualTemplate("");
+
+
+        return new TypeIDIntTemplate(expr1, expr2);
+    }
+
+    @Override
+    public Template visitTypeIDScalar(UCELParser.TypeIDScalarContext ctx) {
+        return new TypeIDScalarTemplate(visit(ctx.expression()));
+    }
+
+    @Override
+    public Template visitTypeIDStruct(UCELParser.TypeIDStructContext ctx) {
+        ArrayList<Template> decls = new ArrayList<>();
+
+        for (var fieldDecl : ctx.fieldDecl()) {
+            decls.add(visit(fieldDecl));
+        }
+
+        return new TypeIDStructTemplate(decls);
+    }
+
+    //endregion
+
+
     //region Type
 
     @Override
@@ -353,6 +404,27 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
         return new ReturnStatementTemplate(expr);
     }
+
+    //endregion
+
+    //region Block
+
+    @Override
+    public Template visitBlock(UCELParser.BlockContext ctx) {
+        List<Template> localDecls = new ArrayList<>();
+        List<Template> statements = new ArrayList<>();
+
+        for (var decl : ctx.localDeclaration()) {
+            localDecls.add(visit(decl));
+        }
+
+        for (var stmnt : ctx.statement()) {
+            statements.add(visit(stmnt));
+        }
+
+        return new BlockTemplate(localDecls, statements);
+    }
+
 
     //endregion
 

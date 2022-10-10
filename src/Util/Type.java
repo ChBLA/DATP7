@@ -2,6 +2,10 @@ import java.util.ArrayList;
 
 public class Type {
 
+    enum TypePrefixEnum {
+        urgent, broadcast, meta, constant, noPrefix;
+    }
+
     enum TypeEnum {
         intType,
         doubleType,
@@ -16,6 +20,7 @@ public class Type {
     }
 
     private TypeEnum evaluationType;
+    private TypePrefixEnum prefix;
     private Type[] parameters;
     private String[] parameterNames;
     private int arrayDimensions;
@@ -37,6 +42,7 @@ public class Type {
         this.parameters = parameters;
         this.parameterNames = paramNames;
         this.arrayDimensions = arrayDimensions;
+        this.prefix = TypePrefixEnum.noPrefix;
     }
 
     public Type(TypeEnum evaluationType, Type[] parameters) {
@@ -63,23 +69,22 @@ public class Type {
         return parameters;
     }
 
-    public boolean equalsOrIsArrayOf(Type t) {
-        if(t.getEvaluationType() != this.evaluationType) return false;
-
-        Type[] tParameters = t.getParameters();
-        if((parameters == null || parameters.length == 0) &&
-            tParameters == null || tParameters.length == 0) return true;
-
-        if(parameters.length != tParameters.length) return false;
-        for(int i = 0; i < parameters.length; i++) {
-            if(!parameters[i].equals(tParameters[i])) return false;
-        }
-
-        return true;
-    }
-
     public Type deepCopy() {
         return deepCopy(arrayDimensions);
+    }
+
+    public Type deepCopy(TypePrefixEnum prefix) {
+        Type t = deepCopy();
+        t.setPrefix(prefix);
+        return t;
+    }
+
+    public TypePrefixEnum getPrefix() {
+        return prefix;
+    }
+
+    private void setPrefix(TypePrefixEnum prefix) {
+        this.prefix = prefix;
     }
 
     public Type deepCopy(int newArrayDimensions) {
@@ -95,6 +100,21 @@ public class Type {
         return new Type(evaluationType, parameterNames, parameters, newArrayDimensions);
     }
 
+    public boolean equalsOrIsArrayOf(Type t) {
+        if(t.getEvaluationType() != this.evaluationType || t.getPrefix() != prefix) return false;
+
+        Type[] tParameters = t.getParameters();
+        if((parameters == null || parameters.length == 0) &&
+                tParameters == null || tParameters.length == 0) return true;
+
+        if(parameters.length != tParameters.length) return false;
+        for(int i = 0; i < parameters.length; i++) {
+            if(!parameters[i].equals(tParameters[i])) return false;
+        }
+
+        return true;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Type)) return false;
@@ -106,7 +126,7 @@ public class Type {
 
     @Override
     public String toString() {
-        return "Type: " + evaluationType.toString();
+        return "Type: " + (prefix != TypePrefixEnum.noPrefix ? prefix : "") + " " + evaluationType.toString();
     }
 
 }
