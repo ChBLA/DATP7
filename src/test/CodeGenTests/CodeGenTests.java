@@ -1088,6 +1088,63 @@ public class CodeGenTests {
 
     //endregion
 
+    //region Verification expression
+    @Test
+    void verificationGeneratedCorrectly() {
+        var verificationTemplate = generateDefaultVerificationTemplate();
+        var expected = verificationTemplate.getOutput();
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.VerificationExprContext.class);
+        var verification = mockForVisitorResult(UCELParser.VerificationContext.class, verificationTemplate, visitor);
+
+        when(node.verification()).thenReturn(verification);
+
+        var actual = visitor.visitVerificationExpr(node).getOutput();
+
+        assertEquals(expected, actual);
+
+    }
+
+    @ParameterizedTest(name = "{index} => generating for verification expr {0}")
+    @ValueSource(strings = {"forall", "exists", "sum"})
+    void verificationExpressionGeneratedCorrectly(String op) {
+        var name = "abc";
+        var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var exprTemplate = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        DeclarationInfo variable = new DeclarationInfo(name, new Type(Type.TypeEnum.intType));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+        var expected = String.format("%s (%s:%s) %s", op, name, typeTemplate.getOutput(), exprTemplate.getOutput());
+        var opToken = mock(CommonToken.class);
+
+        var scopeMock = mock(Scope.class);
+
+        var node = mock(UCELParser.VerificationContext.class);
+        node.reference = ref;
+        node.op = opToken;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        CodeGenVisitor visitor = new CodeGenVisitor(scopeMock);
+
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
+
+        when(node.expression()).thenReturn(exprMock);
+        when(node.type()).thenReturn(typeMock);
+        when(opToken.getText()).thenReturn(op);
+
+        String actual = visitor.visitVerification(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
 
     //endregion
 
@@ -1757,6 +1814,18 @@ public class CodeGenTests {
     }
 
     @Test
+    void statementEmptyExpressionGeneratedCorrectly() {
+        var expected = ";\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.StatementContext.class);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
     void statementForLoopGeneratedCorrectly() {
         var forloopResult = generateDefaultForLoopTemplate();
         var expected = forloopResult.getOutput() + "\n";
@@ -1883,7 +1952,9 @@ public class CodeGenTests {
     private Template generateEmptyExprTemplate() {
         return new ManualTemplate("");
     }
-
+    private Template generateDefaultVerificationTemplate() {
+        return new ManualTemplate("forall (abc:int[0,4]) true");
+    }
     private Template generateDefaultStatementTemplate() {
         return new ManualTemplate("{\n}");
     }

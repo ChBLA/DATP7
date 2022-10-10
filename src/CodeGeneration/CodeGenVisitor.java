@@ -342,6 +342,25 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         return new ConditionalExpressionTemplate(condition, posRes, negRes);
     }
 
+    @Override
+    public Template visitVerificationExpr(UCELParser.VerificationExprContext ctx) {
+        return visit(ctx.verification());
+    }
+
+    @Override
+    public Template visitVerification(UCELParser.VerificationContext ctx) {
+        String id = "";
+        try {
+            id = currentScope.get(ctx.reference).getIdentifier();
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        var type = visit(ctx.type());
+        var expr = visit(ctx.expression());
+
+        return new VerificationTemplate(ctx.op.getText(), id, type, expr);
+    }
+
     //endregion
 
     //region Control structures
@@ -452,7 +471,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitStatement(UCELParser.StatementContext ctx) {
-        Template result = new ManualTemplate("");
+        Template result = new ManualTemplate(";");
         if (ctx.block() != null)
             return visit(ctx.block());
         else if (ctx.assignment() != null) {
