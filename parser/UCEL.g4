@@ -107,8 +107,10 @@ expression locals [DeclarationReference reference]
             |  expression op=('&&' | 'and') expression          #LogAnd
             |  expression op=('||' | 'or' | 'imply') expression #LogOr
             |  expression QUESTIONMARK expression COLON expression       #Conditional
-            |  op=('forall' | 'exists' | 'sum') LEFTPAR ID COLON type RIGHTPAR expression #VerificationExpr
+            | verification              #VerificationExpr
             ;
+
+verification locals [Scope scope, DeclarationReference reference] : op=('forall' | 'exists' | 'sum') LEFTPAR ID COLON type RIGHTPAR expression;
 
 assignment  : <assoc=right> expression assign expression #AssignExpr;
 
