@@ -28,6 +28,7 @@ src/main/java/UCELParser_Generated/*
 
 /.idea
 /.gradle
+gradle/
 gradlew
 gradlew.bat
 
