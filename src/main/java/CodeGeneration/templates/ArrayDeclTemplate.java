@@ -1,4 +1,8 @@
-public class ArrayDeclTemplate implements Template{
+package CodeGeneration.templates;
+
+import CodeGeneration.templates.Template;
+
+public class ArrayDeclTemplate implements Template {
     private final String resultingString;
 
     public ArrayDeclTemplate(Template expr) {

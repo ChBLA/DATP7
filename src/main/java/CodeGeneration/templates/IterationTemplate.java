@@ -1,4 +1,8 @@
-public class IterationTemplate implements Template{
+package CodeGeneration.templates;
+
+import CodeGeneration.templates.Template;
+
+public class IterationTemplate implements Template {
     private final String resultingString;
 
     public IterationTemplate(Template id, Template typeResult, Template stmntResult) {

@@ -1,3 +1,5 @@
+package CodeGeneration.templates;
+
 public class TypeIDIntTemplate implements Template {
     private String resultingString;
 

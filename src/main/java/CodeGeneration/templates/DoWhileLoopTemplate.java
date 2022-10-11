@@ -1,3 +1,7 @@
+package CodeGeneration.templates;
+
+import CodeGeneration.templates.Template;
+
 public class DoWhileLoopTemplate implements Template {
     private final String resultingString;
 

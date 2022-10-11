@@ -1,3 +1,5 @@
+package CodeGeneration.templates;
+
 public class ReturnStatementTemplate implements Template{
     private final String resultingString;
 

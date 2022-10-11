@@ -1,3 +1,5 @@
+package CodeGeneration.templates;
+
 public class VerificationTemplate implements Template{
     private final String resultingString;
 

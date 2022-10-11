@@ -1,3 +1,11 @@
+package CodeGeneration;
+
+import CodeGeneration.templates.*;
+import UCELParser_Generated.UCELBaseVisitor;
+import UCELParser_Generated.UCELParser;
+import Util.DeclarationInfo;
+import Util.Scope;
+
 import java.awt.image.renderable.RenderableImage;
 import java.util.ArrayList;
 import java.util.List;

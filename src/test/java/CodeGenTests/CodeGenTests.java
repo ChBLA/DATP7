@@ -1,6 +1,9 @@
 package CodeGenTests;
 
 import CodeGeneration.templates.ManualTemplate;
+import Util.DeclarationInfo;
+import Util.DeclarationReference;
+import Util.Scope;
 import Util.Type;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;

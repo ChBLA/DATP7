@@ -1,6 +1,10 @@
+package CodeGeneration.templates;
+
+import CodeGeneration.templates.Template;
+
 import java.util.List;
 
-public class BlockTemplate implements Template{
+public class BlockTemplate implements Template {
     private final String resultingString;
 
     public BlockTemplate(List<Template> localDecls, List<Template> statements) {

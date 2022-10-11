@@ -1,3 +1,5 @@
+package CodeGeneration.templates;
+
 public class ParenthesisTemplate implements Template{
     private final String resultingString;
 

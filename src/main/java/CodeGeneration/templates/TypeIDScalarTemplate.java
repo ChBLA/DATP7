@@ -1,3 +1,5 @@
+package CodeGeneration.templates;
+
 public class TypeIDScalarTemplate implements Template {
     private final String result;
 

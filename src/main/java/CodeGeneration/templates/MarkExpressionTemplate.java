@@ -1,3 +1,5 @@
+package CodeGeneration.templates;
+
 public class MarkExpressionTemplate implements Template{
     private final String resultingString;
 

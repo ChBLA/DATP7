@@ -1,3 +1,5 @@
+package CodeGeneration.templates;
+
 public class WhileLoopTemplate implements Template{
     private final String resultingString;
 

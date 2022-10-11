@@ -1,6 +1,10 @@
+package CodeGeneration.templates;
+
+import CodeGeneration.templates.Template;
+
 import java.text.MessageFormat;
 
-public class AssignmentTemplate implements Template{
+public class AssignmentTemplate implements Template {
     private final String resultingString;
     public AssignmentTemplate(Template left, Template right) {
         resultingString = String.format("%s = %s", left.getOutput(), right.getOutput());

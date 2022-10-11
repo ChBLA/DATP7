@@ -1,4 +1,8 @@
-public class ConditionalExpressionTemplate implements Template{
+package CodeGeneration.templates;
+
+import CodeGeneration.templates.Template;
+
+public class ConditionalExpressionTemplate implements Template {
     private final String resultingString;
 
     public ConditionalExpressionTemplate(Template condition, Template positiveResult, Template negativeResult) {

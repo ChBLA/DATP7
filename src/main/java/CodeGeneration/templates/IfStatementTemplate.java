@@ -1,3 +1,5 @@
+package CodeGeneration.templates;
+
 public class IfStatementTemplate implements Template{
     private final String resultingString;
     public IfStatementTemplate(Template expr, Template stmnt1, Template stmnt2) {

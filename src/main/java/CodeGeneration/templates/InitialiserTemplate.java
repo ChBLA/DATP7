@@ -1,3 +1,7 @@
+package CodeGeneration.templates;
+
+import CodeGeneration.templates.Template;
+
 import java.util.List;
 
 public class InitialiserTemplate implements Template {

@@ -1,4 +1,8 @@
-public class ForLoopTemplate implements Template{
+package CodeGeneration.templates;
+
+import CodeGeneration.templates.Template;
+
+public class ForLoopTemplate implements Template {
     private final String resultingString;
 
     public ForLoopTemplate(Template assign, Template expr1, Template expr2, Template stmnt) {

@@ -1,12 +1,14 @@
+package Util;
+
 import java.util.ArrayList;
 
 public class Type {
 
-    enum TypePrefixEnum {
+    public enum TypePrefixEnum {
         urgent, broadcast, meta, constant, noPrefix;
     }
 
-    enum TypeEnum {
+    public enum TypeEnum {
         intType,
         doubleType,
         boolType,

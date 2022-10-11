@@ -1,3 +1,7 @@
+package CodeGeneration.templates;
+
+import CodeGeneration.templates.Template;
+
 import java.text.MessageFormat;
 
 public class LiteralTemplate implements Template {

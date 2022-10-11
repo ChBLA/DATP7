@@ -1,3 +1,5 @@
+package CodeGeneration.templates;
+
 import java.util.List;
 
 public class VariableIDTemplate implements Template {

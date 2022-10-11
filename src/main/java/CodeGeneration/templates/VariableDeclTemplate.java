@@ -1,4 +1,6 @@
-import org.junit.platform.commons.util.StringUtils;
+package CodeGeneration.templates;
+
+//import org.junit.platform.commons.util.StringUtils;
 
 import java.util.List;
 

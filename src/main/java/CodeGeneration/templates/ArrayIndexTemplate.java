@@ -1,6 +1,10 @@
+package CodeGeneration.templates;
+
+import CodeGeneration.templates.Template;
+
 import java.text.MessageFormat;
 
-public class ArrayIndexTemplate implements Template{
+public class ArrayIndexTemplate implements Template {
     private final String resultingString;
 
     public ArrayIndexTemplate(Template leftExpr, Template arrayIndexExpr) {
