@@ -2,6 +2,7 @@ import com.sun.jdi.BooleanType;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -142,6 +143,24 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
     @Override
+    public Type visitIfstatement(UCELParser.IfstatementContext ctx) {
+        Type condType = visit(ctx.expression());
+
+        if (!condType.equals(BOOL_TYPE)) {
+            logger.log(new ErrorLog(ctx.expression(), "Condition not a boolean"));
+            return ERROR_TYPE;
+        }
+
+        if (ctx.statement(1) != null) {
+            if (visit(ctx.statement(1)).equals(ERROR_TYPE))
+                return ERROR_TYPE;
+            else if (visit(ctx.statement(1)).equals(VOID_TYPE))
+                return VOID_TYPE;
+        }
+        return visit(ctx.statement(0));
+    }
+
+    @Override
     public Type visitType(UCELParser.TypeContext ctx) {
         String prefix = ctx.prefix() == null ? "" : ctx.prefix().getText();
         Type type = visit(ctx.typeId());
@@ -152,6 +171,87 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             case "const" ->  type.deepCopy(Type.TypePrefixEnum.constant);
             default -> type;
         };
+    }
+
+    @Override
+    public Type visitTypeIDType(UCELParser.TypeIDTypeContext ctx) {
+        return switch (ctx.getText()) {
+            case "int" -> new Type(Type.TypeEnum.intType);
+            case "clock" -> new Type(Type.TypeEnum.clockType);
+            case "chan" -> new Type(Type.TypeEnum.chanType);
+            case "bool" -> new Type(Type.TypeEnum.boolType);
+            case "double" -> new Type(Type.TypeEnum.doubleType);
+            case "string" -> new Type(Type.TypeEnum.stringType);
+            default -> new Type(Type.TypeEnum.errorType);
+        };
+    }
+
+    @Override
+    public Type visitTypeIDID(UCELParser.TypeIDIDContext ctx) {
+        try {
+            return currentScope.get(ctx.reference).getType();
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            return new Type(Type.TypeEnum.errorType);
+        }
+    }
+
+    @Override
+    public Type visitTypeIDInt(UCELParser.TypeIDIntContext ctx) {
+        Type intType =  new Type(Type.TypeEnum.intType);
+        Type errorType = new Type(Type.TypeEnum.errorType);
+        if(ctx.expression().size() == 0) return intType;
+        else {
+            Type left = visit(ctx.expression(0));
+            if(left.equals(intType)) {
+                if(ctx.expression().size() == 1) return intType;
+                else {
+                    Type right = visit(ctx.expression(1));
+                    if(right.equals(intType)) return intType;
+                    else {
+                        logger.log(new ErrorLog(ctx.expression().get(1), "Expected " +
+                                intType + " but found " + right));
+                        return errorType;
+                    }
+                }
+            } else {
+                logger.log(new ErrorLog(ctx.expression().get(0), "Expected " +
+                        intType + " but found " + left));
+                return errorType;
+            }
+        }
+    }
+
+    @Override
+    public Type visitTypeIDScalar(UCELParser.TypeIDScalarContext ctx) {
+        Type intType = new Type(Type.TypeEnum.intType);
+        Type exprType = visit(ctx.expression());
+        if(exprType.equals(intType))
+            return new Type(Type.TypeEnum.scalarType);
+        logger.log(new ErrorLog(ctx.expression(), "Scalar type definition takes an " + intType +
+                " but found " + exprType));
+        return new Type(Type.TypeEnum.errorType);
+    }
+
+    @Override
+    public Type visitTypeIDStruct(UCELParser.TypeIDStructContext ctx) {
+        ArrayList<String> names = new ArrayList<>();
+        ArrayList<Type> types = new ArrayList<>();
+        Type errorType = new Type(Type.TypeEnum.errorType);
+
+        for(UCELParser.FieldDeclContext field : ctx.fieldDecl()) {
+            Type fieldType = visit(field);
+            if(fieldType.equals(errorType)) {
+                //No log passing error through
+                return fieldType;
+            }
+            for(String s : fieldType.getParameterNames()) names.add(s);
+            for(Type t : fieldType.getParameters()) types.add(t);
+        }
+
+        return new Type(Type.TypeEnum.structType,
+                names.toArray(new String[names.size()]),
+                types.toArray(new Type[types.size()]));
     }
 
     @Override

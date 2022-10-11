@@ -32,6 +32,7 @@ public class TypeCheckerTests  {
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
     private static final Type STRING_TYPE = new Type(Type.TypeEnum.stringType);
     private static final Type ERROR_TYPE = new Type(Type.TypeEnum.errorType);
+    private static final Type CLOCK_TYPE = new Type(Type.TypeEnum.clockType);
     private static final Type VOID_TYPE = new Type(Type.TypeEnum.voidType);
     private static final Type CHAN_TYPE = new Type(Type.TypeEnum.chanType);
     private static final Type BOOL_TYPE = new Type(Type.TypeEnum.boolType);
@@ -339,6 +340,94 @@ public class TypeCheckerTests  {
         assertEquals(CHAR_TYPE, result);
     }
 
+    //endregion
+
+    //region if-else
+    @Test
+    void ifCondNotBoolError() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.IfstatementContext node = mock(UCELParser.IfstatementContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, STRING_TYPE, visitor);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+
+        when(node.expression()).thenReturn(condType);
+        when(node.statement(0)).thenReturn(statementType);
+
+        Type result = visitor.visitIfstatement(node);
+
+        assertEquals(ERROR_TYPE, result);
+    }
+
+    @Test
+    void ifNoElseReturnsStatementType() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.IfstatementContext node = mock(UCELParser.IfstatementContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+
+        when(node.expression()).thenReturn(condType);
+        when(node.statement(0)).thenReturn(statementType);
+
+        Type result = visitor.visitIfstatement(node);
+
+        assertEquals(CHAR_TYPE, result);
+    }
+
+    @Test
+    void ifElseReturnsStatementsType() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.IfstatementContext node = mock(UCELParser.IfstatementContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var statementType1 = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+        var statementType2 = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+
+        when(node.expression()).thenReturn(condType);
+        when(node.statement(0)).thenReturn(statementType1);
+        when(node.statement(1)).thenReturn(statementType2);
+
+        Type result = visitor.visitIfstatement(node);
+
+        assertEquals(CHAR_TYPE, result);
+    }
+
+    @Test
+    void ifElseReturnsStatementError() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.IfstatementContext node = mock(UCELParser.IfstatementContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var statementType1 = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+        var statementType2 = mockForVisitorResult(UCELParser.StatementContext.class, ERROR_TYPE, visitor);
+
+        when(node.expression()).thenReturn(condType);
+        when(node.statement(0)).thenReturn(statementType1);
+        when(node.statement(1)).thenReturn(statementType2);
+
+        Type result = visitor.visitIfstatement(node);
+
+        assertEquals(ERROR_TYPE, result);
+    }
+
+    @Test
+    void ifElseReturnsVoidType() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.IfstatementContext node = mock(UCELParser.IfstatementContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var statementType1 = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+        var statementType2 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+
+        when(node.expression()).thenReturn(condType);
+        when(node.statement(0)).thenReturn(statementType1);
+        when(node.statement(1)).thenReturn(statementType2);
+
+        Type result = visitor.visitIfstatement(node);
+
+        assertEquals(VOID_TYPE, result);
+    }
     //endregion
 
     //region declaration
@@ -837,6 +926,182 @@ public class TypeCheckerTests  {
         );
     }
 
+
+    //endregion
+
+    //region typeID
+    @ParameterizedTest(name = "{index} => using type name {0} + type {1} as typeID")
+    @MethodSource("typePrimitives")
+    void typeIDReturnPrimitiveType(String typeName, Type expectedType) {
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+        UCELParser.TypeIDTypeContext typeID = mock(UCELParser.TypeIDTypeContext.class);
+        when(typeID.getText()).thenReturn(typeName);
+        Type actual = visitor.visitTypeIDType(typeID);
+
+        assertEquals(expectedType, actual);
+    }
+
+    @Test
+    void typeByID() {
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        Type expectedType = INT_TYPE;
+
+        UCELParser.TypeIDIDContext typeID = mock(UCELParser.TypeIDIDContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+        typeID.reference = new DeclarationReference(0,0);
+        try{
+            when(scope.get(typeID.reference)).thenReturn(new DeclarationInfo("", expectedType));
+        } catch (Exception e) {
+            fail();
+        }
+        when(typeID.ID()).thenReturn(id);
+
+        Type actual = visitor.visitTypeIDID(typeID);
+
+        assertEquals(expectedType, actual);
+    }
+
+    @Test
+    void typeIDBoundedInt() {
+        Type expectedType = INT_TYPE;
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+        UCELParser.TypeIDIntContext typeID = mock(UCELParser.TypeIDIntContext.class);
+
+        UCELParser.ExpressionContext expr0 = mock(UCELParser.ExpressionContext.class);
+        UCELParser.ExpressionContext expr1 = mock(UCELParser.ExpressionContext.class);
+        ArrayList<UCELParser.ExpressionContext> expressions = new ArrayList<>();
+        expressions.add(expr0);
+        expressions.add(expr1);
+
+        when(typeID.expression()).thenReturn(expressions);
+        when(typeID.expression(0)).thenReturn(expr0);
+        when(typeID.expression(1)).thenReturn(expr1);
+        when(expr0.accept(visitor)).thenReturn(INT_TYPE);
+        when(expr1.accept(visitor)).thenReturn(INT_TYPE);
+
+        Type actual = visitor.visitTypeIDInt(typeID);
+
+        assertEquals(expectedType, actual);
+    }
+
+    @Test
+    void typeIDBoundedIntOnlyBelow() {
+        Type expectedType = INT_TYPE;
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+        UCELParser.TypeIDIntContext typeID = mock(UCELParser.TypeIDIntContext.class);
+
+        UCELParser.ExpressionContext expr0 = mock(UCELParser.ExpressionContext.class);
+        ArrayList<UCELParser.ExpressionContext> expressions = new ArrayList<>();
+        expressions.add(expr0);
+
+        when(typeID.expression(0)).thenReturn(expr0);
+        when(typeID.expression()).thenReturn(expressions);
+        when(expr0.accept(visitor)).thenReturn(INT_TYPE);
+
+        Type actual = visitor.visitTypeIDInt(typeID);
+
+        assertEquals(expectedType, actual);
+    }
+
+    @Test
+    void typeIDBoundedIntNoBounds() {
+        Type expectedType = INT_TYPE;
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.TypeIDIntContext typeID = mock(UCELParser.TypeIDIntContext.class);
+        ArrayList<UCELParser.ExpressionContext> expressions = new ArrayList<>();
+        when(typeID.expression()).thenReturn(expressions);
+
+        Type actual = visitor.visitTypeIDInt(typeID);
+
+        assertEquals(expectedType, actual);
+    }
+
+    @Test
+    void typeIDBoundedIntInvalid() {
+        Type expectedType = ERROR_TYPE;
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+        UCELParser.TypeIDIntContext typeID = mock(UCELParser.TypeIDIntContext.class);
+
+        UCELParser.ExpressionContext expr0 = mock(UCELParser.ExpressionContext.class);
+        UCELParser.ExpressionContext expr1 = mock(UCELParser.ExpressionContext.class);
+        ArrayList<UCELParser.ExpressionContext> expressions = new ArrayList<>();
+        expressions.add(expr0);
+        expressions.add(expr1);
+
+        when(typeID.expression(0)).thenReturn(expr0);
+        when(typeID.expression(1)).thenReturn(expr1);
+        when(typeID.expression()).thenReturn(expressions);
+        when(expr0.accept(visitor)).thenReturn(INT_TYPE);
+        when(expr1.accept(visitor)).thenReturn(DOUBLE_TYPE);
+
+        Type actual = visitor.visitTypeIDInt(typeID);
+
+        assertEquals(expectedType, actual);
+    }
+
+    private static Stream<Arguments> typePrimitives() {
+        return Stream.of(
+                Arguments.arguments("int", INT_TYPE),
+                Arguments.arguments("clock", CLOCK_TYPE),
+                Arguments.arguments("chan", CHAN_TYPE),
+                Arguments.arguments("bool", BOOL_TYPE),
+                Arguments.arguments("double", DOUBLE_TYPE),
+                Arguments.arguments("string", STRING_TYPE)
+        );
+    }
+
+    @Test
+    void typeIDScalar() {
+        Type expectedType = SCALAR_TYPE;
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+        UCELParser.TypeIDScalarContext typeID = mock(UCELParser.TypeIDScalarContext.class);
+
+        UCELParser.ExpressionContext expr0 = mock(UCELParser.ExpressionContext.class);
+
+        when(typeID.expression()).thenReturn(expr0);
+        when(expr0.accept(visitor)).thenReturn(INT_TYPE);
+
+        Type actual = visitor.visitTypeIDScalar(typeID);
+
+        assertEquals(expectedType, actual);
+    }
+
+    @Test
+    void typeIDStructCombineFieldDecls() {
+        Type firstType = new Type(Type.TypeEnum.structType,
+                new String[]{"a", "b", "c"}, new Type[]{INT_TYPE, INT_TYPE, INT_TYPE});
+        Type secondType = new Type(Type.TypeEnum.structType,
+                new String[]{"d", "e"}, new Type[]{STRING_TYPE, STRING_TYPE});
+        Type combinedType = new Type(Type.TypeEnum.structType,
+                new String[]{"a", "b", "c", "d", "e"}, new Type[]{INT_TYPE, INT_TYPE,
+                INT_TYPE, STRING_TYPE, STRING_TYPE});
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+        UCELParser.TypeIDStructContext node = mock(UCELParser.TypeIDStructContext.class);
+        UCELParser.FieldDeclContext firstField = mock(UCELParser.FieldDeclContext.class);
+        UCELParser.FieldDeclContext secondField = mock(UCELParser.FieldDeclContext.class);
+        ArrayList<UCELParser.FieldDeclContext> fields = new ArrayList<>();
+
+        fields.add(firstField);
+        fields.add(secondField);
+
+        when(node.fieldDecl()).thenReturn(fields);
+        when(firstField.accept(visitor)).thenReturn(firstType);
+        when(secondField.accept(visitor)).thenReturn(secondType);
+
+        Type actual = visitor.visitTypeIDStruct(node);
+
+        assertEquals(combinedType, actual);
+    }
 
     //endregion
 
