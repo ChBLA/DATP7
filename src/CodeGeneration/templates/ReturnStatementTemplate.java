@@ -5,6 +5,10 @@ public class ReturnStatementTemplate implements Template{
         resultingString = String.format("return %s;", expr.getOutput());
     }
 
+    public ReturnStatementTemplate() {
+        resultingString = "return;";
+    }
+
     @Override
     public String getOutput() {
         return resultingString;

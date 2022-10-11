@@ -1617,6 +1617,18 @@ public class CodeGenTests {
 
         assertEquals(expected, actual);
     }
+
+    @Test
+    void returnStatementEmptyExprGeneratedCorrectly() {
+        var expected = "return;";
+
+        var node = mock(UCELParser.ReturnstatementContext.class);
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        String actual = visitor.visitReturnstatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
     //endregion
 
     //region Block

@@ -446,9 +446,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitReturnstatement(UCELParser.ReturnstatementContext ctx) {
-        var expr = visit(ctx.expression());
+        var expr = ctx.expression() != null ? visit(ctx.expression()) : null;
 
-        return new ReturnStatementTemplate(expr);
+        return expr != null ? new ReturnStatementTemplate(expr) : new ReturnStatementTemplate();
     }
 
     //endregion
