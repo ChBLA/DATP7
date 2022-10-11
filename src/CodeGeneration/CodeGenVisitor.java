@@ -13,6 +13,34 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.currentScope = currentScope;
     }
 
+    //region prefix
+    @Override
+    public Template visitPrefix(UCELParser.PrefixContext ctx) {
+        return new ManualTemplate(ctx.getText());
+    }
+
+    //endregion
+
+    //region initialiser
+
+    @Override
+    public Template visitInitialiser(UCELParser.InitialiserContext ctx) {
+        if (ctx.expression() != null) {
+            return visit(ctx.expression());
+        }
+
+        List<Template> initialisers = new ArrayList<>();
+
+        for (var initialiser : ctx.initialiser()) {
+            initialisers.add(visit(initialiser));
+        }
+
+        return new InitialiserTemplate(initialisers);
+    }
+
+
+    //endregion
+
     //region TypeID
 
     @Override
@@ -322,6 +350,32 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         return new ConditionalExpressionTemplate(condition, posRes, negRes);
     }
 
+    @Override
+    public Template visitMarkExpr(UCELParser.MarkExprContext ctx) {
+        var expr = visit(ctx.expression());
+
+        return new MarkExpressionTemplate(expr);
+    }
+
+    @Override
+    public Template visitVerificationExpr(UCELParser.VerificationExprContext ctx) {
+        return visit(ctx.verification());
+    }
+
+    @Override
+    public Template visitVerification(UCELParser.VerificationContext ctx) {
+        String id = "";
+        try {
+            id = currentScope.get(ctx.reference).getIdentifier();
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        var type = visit(ctx.type());
+        var expr = visit(ctx.expression());
+
+        return new VerificationTemplate(ctx.op.getText(), id, type, expr);
+    }
+
     //endregion
 
     //region Control structures
@@ -400,9 +454,60 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitReturnstatement(UCELParser.ReturnstatementContext ctx) {
-        var expr = visit(ctx.expression());
+        var expr = ctx.expression() != null ? visit(ctx.expression()) : null;
 
-        return new ReturnStatementTemplate(expr);
+        return expr != null ? new ReturnStatementTemplate(expr) : new ReturnStatementTemplate();
+    }
+
+    //endregion
+
+    //region Block
+
+    @Override
+    public Template visitBlock(UCELParser.BlockContext ctx) {
+        List<Template> localDecls = new ArrayList<>();
+        List<Template> statements = new ArrayList<>();
+
+        for (var decl : ctx.localDeclaration()) {
+            localDecls.add(visit(decl));
+        }
+
+        for (var stmnt : ctx.statement()) {
+            statements.add(visit(stmnt));
+        }
+
+        return new BlockTemplate(localDecls, statements);
+    }
+
+
+    //endregion
+
+    //region Statement
+
+    @Override
+    public Template visitStatement(UCELParser.StatementContext ctx) {
+        Template result = new ManualTemplate(";");
+        if (ctx.block() != null)
+            return visit(ctx.block());
+        else if (ctx.assignment() != null) {
+            result = new ManualTemplate(visit(ctx.assignment()).getOutput() + ";");
+        } else if (ctx.expression() != null) {
+            result = new ManualTemplate(visit(ctx.expression()).getOutput() + ";");
+        } else if (ctx.forLoop() != null) {
+            result = visit(ctx.forLoop());
+        } else if (ctx.iteration() != null) {
+            result = visit(ctx.iteration());
+        } else if (ctx.whileLoop() != null) {
+            result = visit(ctx.whileLoop());
+        } else if (ctx.dowhile() != null) {
+            result = visit(ctx.dowhile());
+        } else if (ctx.ifstatement() != null) {
+            result = visit(ctx.ifstatement());
+        } else if (ctx.returnstatement() != null) {
+            result = visit(ctx.returnstatement());
+        }
+
+        return new ManualTemplate(result.getOutput() + "\n");
     }
 
     //endregion

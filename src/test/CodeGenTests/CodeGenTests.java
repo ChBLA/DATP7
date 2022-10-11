@@ -25,6 +25,73 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region prefix
+    @ParameterizedTest
+    @ValueSource(strings = {"urgent", "beta", "meta", "const"})
+    void PrefixGeneratedCorrectly(String expected) {
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.PrefixContext.class);
+        when(node.getText()).thenReturn(expected);
+
+        String actual = visitor.visitPrefix(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
+    //region initialiser
+
+    @Test
+    void InitialiserExpressionGeneratedCorrectly() {
+        Template expr = generateDefaultExprTemplate(Type.TypeEnum.intType);
+
+        var visitor = new CodeGenVisitor();
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, expr, visitor);
+
+        var node = mock(UCELParser.InitialiserContext.class);
+
+        when(node.expression()).thenReturn(exprMock);
+
+        String actual = visitor.visitInitialiser(node).getOutput();
+
+        assertEquals(expr.getOutput(), actual);
+    }
+
+    @Test
+    void InitialiserNoExpr() {
+        String expected = "{}";
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.InitialiserContext.class);
+
+        String actual = visitor.visitInitialiser(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void InitialiserGeneratedCorrectly() {
+        Template expr = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        String expected = String.format("{%s, %s}", expr.getOutput(), expr.getOutput());
+
+        var visitor = new CodeGenVisitor();
+        var initialiserMock = mockForVisitorResult(UCELParser.InitialiserContext.class, expr, visitor);
+        List<UCELParser.InitialiserContext> initialiserContextList = new ArrayList<>();
+        initialiserContextList.add(initialiserMock);
+        initialiserContextList.add(initialiserMock);
+
+        var node = mock(UCELParser.InitialiserContext.class);
+
+        when(node.initialiser()).thenReturn(initialiserContextList);
+
+        String actual = visitor.visitInitialiser(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
     //region TypeID
 
     @Test
@@ -389,8 +456,8 @@ public class CodeGenTests {
     @Test
     void variableIDMultipleArrayWithInitGeneratedCorrectly() {
         Template arrayDecl = new ManualTemplate("[]");
-        Template initTemp = new ManualTemplate("[[1,2,3], [1,2,3,4]]");
-        String expected = "var1[][] = [[1,2,3], [1,2,3,4]]";
+        Template initTemp = new ManualTemplate("{{1,2,3}, {1,2,3,4}}");
+        String expected = "var1[][] = {{1,2,3}, {1,2,3,4}}";
         String variableID = "var1";
         // TODO: set correct array type for declarationinfo maybe
         DeclarationInfo variable = new DeclarationInfo(variableID, new Type(Type.TypeEnum.intType));
@@ -1036,6 +1103,100 @@ public class CodeGenTests {
 
     //endregion
 
+    //region Mark expression
+    @ParameterizedTest(name = "{index} => generating for mark expr type {0}")
+    @EnumSource(value = Type.TypeEnum.class, names ={"intType", "doubleType", "boolType"})
+    void markExpressionGeneratedCorrectly(Type.TypeEnum type) {
+        var exprTemplate = generateDefaultExprTemplate(type);
+        var expected = exprTemplate.getOutput() + "'";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+        var node = mock(UCELParser.MarkExprContext.class);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitMarkExpr(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void markExpressionIDGeneratedCorrectly() {
+        var exprTemplate = generateDefaultExprTemplate("abc");
+        var expected = exprTemplate.getOutput() + "'";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+        var node = mock(UCELParser.MarkExprContext.class);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitMarkExpr(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region Verification expression
+    @Test
+    void verificationGeneratedCorrectly() {
+        var verificationTemplate = generateDefaultVerificationTemplate();
+        var expected = verificationTemplate.getOutput();
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.VerificationExprContext.class);
+        var verification = mockForVisitorResult(UCELParser.VerificationContext.class, verificationTemplate, visitor);
+
+        when(node.verification()).thenReturn(verification);
+
+        var actual = visitor.visitVerificationExpr(node).getOutput();
+
+        assertEquals(expected, actual);
+
+    }
+
+    @ParameterizedTest(name = "{index} => generating for verification expr {0}")
+    @ValueSource(strings = {"forall", "exists", "sum"})
+    void verificationExpressionGeneratedCorrectly(String op) {
+        var name = "abc";
+        var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var exprTemplate = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        DeclarationInfo variable = new DeclarationInfo(name, new Type(Type.TypeEnum.intType));
+        DeclarationReference ref = new DeclarationReference(0, 1);
+        var expected = String.format("%s (%s:%s) %s", op, name, typeTemplate.getOutput(), exprTemplate.getOutput());
+        var opToken = mock(CommonToken.class);
+
+        var scopeMock = mock(Scope.class);
+
+        var node = mock(UCELParser.VerificationContext.class);
+        node.reference = ref;
+        node.op = opToken;
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("Error in mock. Cannot mock declaration reference");
+        }
+
+        CodeGenVisitor visitor = new CodeGenVisitor(scopeMock);
+
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
+
+        when(node.expression()).thenReturn(exprMock);
+        when(node.type()).thenReturn(typeMock);
+        when(opToken.getText()).thenReturn(op);
+
+        String actual = visitor.visitVerification(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
 
     //endregion
 
@@ -1454,7 +1615,7 @@ public class CodeGenTests {
     //endregion
 
     //region Return statement
-    @ParameterizedTest()
+    @ParameterizedTest(name = "{index} => generating for return type {0}")
     @EnumSource(value = Type.TypeEnum.class, names ={"intType", "doubleType", "boolType"})
     void returnStatementGeneratedCorrectly(Type.TypeEnum type) {
         var exprResult = generateDefaultExprTemplate(type);
@@ -1471,10 +1632,364 @@ public class CodeGenTests {
 
         assertEquals(expected, actual);
     }
+
+    @Test
+    void returnStatementEmptyExprGeneratedCorrectly() {
+        var expected = "return;";
+
+        var node = mock(UCELParser.ReturnstatementContext.class);
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        String actual = visitor.visitReturnstatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
+    //region Block
+    @Test
+    void blockEmptyGeneratedCorrectly() {
+        Template blockResult = generateDefaultStatementTemplate();
+        var expected = blockResult.getOutput();
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.BlockContext.class);
+
+        var actual = visitor.visitBlock(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void blockOneLocalDeclNoStatementGeneratedCorrectly() {
+        Template localDeclTemplate = generateDefaultLocalDeclaration(Type.TypeEnum.intType, "abc");
+        Template blockResult = generateDefaultStatementTemplate(localDeclTemplate.getOutput(), "", true);
+        var expected = blockResult.getOutput();
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var localDecls = new ArrayList<UCELParser.LocalDeclarationContext>()
+            {{ add(mockForVisitorResult(UCELParser.LocalDeclarationContext.class, localDeclTemplate, visitor)); }};
+        var node = mock(UCELParser.BlockContext.class);
+
+        when(node.localDeclaration()).thenReturn(localDecls);
+
+        var actual = visitor.visitBlock(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void blockNoLocalDeclOneStatementGeneratedCorrectly() {
+        Template statementTemplate = generateDefaultNonBlockStatementTemplate();
+        Template blockResult = generateDefaultStatementTemplate("", statementTemplate.getOutput(), false);
+        var expected = blockResult.getOutput();
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var statements = new ArrayList<UCELParser.StatementContext>()
+        {{ add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplate, visitor)); }};
+        var node = mock(UCELParser.BlockContext.class);
+
+        when(node.statement()).thenReturn(statements);
+
+        var actual = visitor.visitBlock(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void blockOneLocalDeclOneStatementGeneratedCorrectly() {
+        Template localDeclTemplate = generateDefaultLocalDeclaration(Type.TypeEnum.intType, "abc");
+        Template statementTemplate = generateDefaultNonBlockStatementTemplate();
+        Template blockResult = generateDefaultStatementTemplate(localDeclTemplate.getOutput(), statementTemplate.getOutput(), true);
+        var expected = blockResult.getOutput();
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var localDecls = new ArrayList<UCELParser.LocalDeclarationContext>()
+            {{ add(mockForVisitorResult(UCELParser.LocalDeclarationContext.class, localDeclTemplate, visitor)); }};
+        var statements = new ArrayList<UCELParser.StatementContext>()
+            {{ add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplate, visitor)); }};
+        var node = mock(UCELParser.BlockContext.class);
+
+
+        when(node.statement()).thenReturn(statements);
+        when(node.localDeclaration()).thenReturn(localDecls);
+
+        var actual = visitor.visitBlock(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void blockMultiLocalDeclOneStatementGeneratedCorrectly() {
+        var localDeclTemplates = new ArrayList<Template>()
+        {{
+            add(generateDefaultLocalDeclaration(Type.TypeEnum.intType, "abc1"));
+            add(generateDefaultLocalDeclaration(Type.TypeEnum.intType, "abc2"));
+        }};
+        var statementTemplates = new ArrayList<Template>() {{
+            add(generateDefaultNonBlockStatementTemplate());
+        }};
+        Template blockResult = generateDefaultStatementTemplate(localDeclTemplates, statementTemplates, true);
+        var expected = blockResult.getOutput();
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var localDecls = new ArrayList<UCELParser.LocalDeclarationContext>()
+        {{
+            add(mockForVisitorResult(UCELParser.LocalDeclarationContext.class, localDeclTemplates.get(0), visitor));
+            add(mockForVisitorResult(UCELParser.LocalDeclarationContext.class, localDeclTemplates.get(1), visitor));
+        }};
+        var statements = new ArrayList<UCELParser.StatementContext>()
+        {{ add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplates.get(0), visitor)); }};
+        var node = mock(UCELParser.BlockContext.class);
+
+
+        when(node.statement()).thenReturn(statements);
+        when(node.localDeclaration()).thenReturn(localDecls);
+
+        var actual = visitor.visitBlock(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void blockOneLocalDeclMultiStatementGeneratedCorrectly() {
+        var localDeclTemplates = new ArrayList<Template>()
+        {{
+            add(generateDefaultLocalDeclaration(Type.TypeEnum.intType, "abc"));
+        }};
+        var statementTemplates = new ArrayList<Template>() {{
+            add(generateDefaultNonBlockStatementTemplate());
+            add(generateDefaultNonBlockStatementTemplate());
+        }};
+        Template blockResult = generateDefaultStatementTemplate(localDeclTemplates, statementTemplates, true);
+        var expected = blockResult.getOutput();
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var localDecls = new ArrayList<UCELParser.LocalDeclarationContext>()
+        {{
+            add(mockForVisitorResult(UCELParser.LocalDeclarationContext.class, localDeclTemplates.get(0), visitor));
+        }};
+        var statements = new ArrayList<UCELParser.StatementContext>()
+        {{
+            add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplates.get(0), visitor));
+            add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplates.get(1), visitor));
+        }};
+        var node = mock(UCELParser.BlockContext.class);
+
+        when(node.statement()).thenReturn(statements);
+        when(node.localDeclaration()).thenReturn(localDecls);
+
+        var actual = visitor.visitBlock(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void blockMultiLocalDeclMultiStatementGeneratedCorrectly() {
+        var localDeclTemplates = new ArrayList<Template>()
+        {{
+            add(generateDefaultLocalDeclaration(Type.TypeEnum.intType, "abc1"));
+            add(generateDefaultLocalDeclaration(Type.TypeEnum.intType, "abc2"));
+        }};
+        var statementTemplates = new ArrayList<Template>() {{
+            add(generateDefaultNonBlockStatementTemplate());
+            add(generateDefaultNonBlockStatementTemplate());
+        }};
+        Template blockResult = generateDefaultStatementTemplate(localDeclTemplates, statementTemplates, true);
+        var expected = blockResult.getOutput();
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var localDecls = new ArrayList<UCELParser.LocalDeclarationContext>()
+        {{
+            add(mockForVisitorResult(UCELParser.LocalDeclarationContext.class, localDeclTemplates.get(0), visitor));
+            add(mockForVisitorResult(UCELParser.LocalDeclarationContext.class, localDeclTemplates.get(1), visitor));
+        }};
+        var statements = new ArrayList<UCELParser.StatementContext>()
+        {{
+            add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplates.get(0), visitor));
+            add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplates.get(1), visitor));
+        }};
+        var node = mock(UCELParser.BlockContext.class);
+
+        when(node.statement()).thenReturn(statements);
+        when(node.localDeclaration()).thenReturn(localDecls);
+
+        var actual = visitor.visitBlock(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
     //endregion
 
     //region Statement
+    @Test
+    void statementBlockGeneratedCorrectly() {
+        var blockResult = generateDefaultStatementTemplate();
+        var expected = blockResult.getOutput();
 
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var blockMock = mockForVisitorResult(UCELParser.BlockContext.class, blockResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.block()).thenReturn(blockMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementAssignmentGeneratedCorrectly() {
+        var assignResult = generateDefaultAssignmentTemplate(Type.TypeEnum.intType);
+        var expected = assignResult.getOutput() + ";\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var assignMock = mockForVisitorResult(UCELParser.AssignmentContext.class, assignResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.assignment()).thenReturn(assignMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementExpressionGeneratedCorrectly() {
+        var exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        var expected = exprResult.getOutput() + ";\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.expression()).thenReturn(exprMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementEmptyExpressionGeneratedCorrectly() {
+        var expected = ";\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.StatementContext.class);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementForLoopGeneratedCorrectly() {
+        var forloopResult = generateDefaultForLoopTemplate();
+        var expected = forloopResult.getOutput() + "\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var forloopMock = mockForVisitorResult(UCELParser.ForLoopContext.class, forloopResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.forLoop()).thenReturn(forloopMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementIterationGeneratedCorrectly() {
+        var iterationResult = generateDefaultIterationTemplate();
+        var expected = iterationResult.getOutput() + "\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var iterationMock = mockForVisitorResult(UCELParser.IterationContext.class, iterationResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.iteration()).thenReturn(iterationMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementWhileLoopGeneratedCorrectly() {
+        var whileResult = generateDefaultWhileLoopTemplate();
+        var expected = whileResult.getOutput() + "\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var whileMock = mockForVisitorResult(UCELParser.WhileLoopContext.class, whileResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.whileLoop()).thenReturn(whileMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementDoWhileGeneratedCorrectly() {
+        var doWhileResult = generateDefaultDoWhileLoopTemplate();
+        var expected = doWhileResult.getOutput() + "\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var doWhileMock = mockForVisitorResult(UCELParser.DowhileContext.class, doWhileResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.dowhile()).thenReturn(doWhileMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementIfStatementGeneratedCorrectly() {
+        var ifResult = generateDefaultIfStatementTemplate();
+        var expected = ifResult.getOutput() + "\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var ifMock = mockForVisitorResult(UCELParser.IfstatementContext.class, ifResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.ifstatement()).thenReturn(ifMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void statementReturnStatementGeneratedCorrectly() {
+        var returnResult = generateDefaultReturnStatementTemplate();
+        var expected = returnResult.getOutput() + "\n";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        var returnMock = mockForVisitorResult(UCELParser.ReturnstatementContext.class, returnResult, visitor);
+        var node = mock(UCELParser.StatementContext.class);
+
+        when(node.returnstatement()).thenReturn(returnMock);
+
+        var actual = visitor.visitStatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
 
     //endregion
 
@@ -1501,11 +2016,50 @@ public class CodeGenTests {
     private Template generateEmptyExprTemplate() {
         return new ManualTemplate("");
     }
-
+    private Template generateDefaultVerificationTemplate() {
+        return new ManualTemplate("forall (abc:int[0,4]) true");
+    }
     private Template generateDefaultStatementTemplate() {
-        return new ManualTemplate("{ }");
+        return new ManualTemplate("{\n}");
+    }
+    private Template generateDefaultStatementTemplate(String localDecls, String statements, boolean withNewline) {
+        return new ManualTemplate(String.format("{\n%s%s%s}", localDecls, withNewline ? "\n" :"", statements));
+    }
+    private Template generateDefaultStatementTemplate(List<Template> localDecls, List<Template> statements, boolean withNewline) {
+        var builder = new StringBuilder();
+        builder.append("{\n");
+        for (var decl : localDecls) {
+            builder.append(String.format("%s\n", decl.getOutput()));
+        }
+        for (var st : statements) {
+            builder.append(String.format("%s", st.getOutput()));
+        }
+        builder.append("}");
+
+        return new ManualTemplate(builder.toString());
     }
 
+    private Template generateDefaultNonBlockStatementTemplate() {
+        return new ManualTemplate("a = a;\n");
+    }
+    private Template generateDefaultForLoopTemplate() {
+        return new ManualTemplate("for (i = 0;i < 10;i++) {\n}");
+    }
+    private Template generateDefaultIterationTemplate() {
+        return new ManualTemplate("for (i:int) {\n}");
+    }
+    private Template generateDefaultWhileLoopTemplate() {
+        return new ManualTemplate("while (true) {\n}");
+    }
+    private Template generateDefaultDoWhileLoopTemplate() {
+        return new ManualTemplate("do {\n} while (true)");
+    }
+    private Template generateDefaultIfStatementTemplate() {
+        return new ManualTemplate("if (true) {\n}");
+    }
+    private Template generateDefaultReturnStatementTemplate() {
+        return new ManualTemplate("return 1;");
+    }
     private Template generateDefaultTypeTemplate(Type.TypeEnum type) {
         return switch (type) {
             case intType -> new ManualTemplate("int");
@@ -1518,6 +2072,16 @@ public class CodeGenTests {
         };
     }
 
+    private Template generateDefaultLocalDeclaration(Type.TypeEnum type, String id) {
+        return switch (type) {
+            case intType -> new ManualTemplate(String.format("int %s;", id));
+            case boolType -> new ManualTemplate(String.format("bool %s;", id));
+            case doubleType -> new ManualTemplate(String.format("double %s;", id));
+            case charType -> new ManualTemplate(String.format("char %s;", id));
+            case stringType -> new ManualTemplate(String.format("char[] %s;", id));
+            default -> new ManualTemplate("");
+        };
+    }
     private Template generateDefaultExprTemplate(String id) {
         return new ManualTemplate(id);
     }

@@ -38,7 +38,7 @@ variableID locals [DeclarationReference reference]
               : ID arrayDecl* ('=' initialiser)?;
 initialiser   : expression?
               |  LEFTCURLYBRACE initialiser (COMMA initialiser)* RIGHTCURLYBRACE;
-typeDecl locals [DeclarationReference reference]
+typeDecl locals [List<DeclarationReference> references]
               : 'typedef' type ID arrayDecl* (COMMA ID arrayDecl*)* END;
 type          : prefix? typeId;
 prefix        : 'urgent' | 'broadcast' | 'meta' | 'const';
@@ -101,14 +101,16 @@ expression locals [DeclarationReference reference]
             |  expression op=('<?' | '>?') expression           #MinMax
             |  expression op=('<' | '<=' | '>=' | '>') expression #RelExpr
             |  expression op=('==' | '!=') expression           #EqExpr
-            |  expression BITAND expression                        #BitAnd
-            |  expression BITXOR expression                        #BitXor
-            |  expression BITOR expression                        #BitOr
+            |  expression BITAND expression                     #BitAnd
+            |  expression BITXOR expression                     #BitXor
+            |  expression BITOR expression                      #BitOr
             |  expression op=('&&' | 'and') expression          #LogAnd
             |  expression op=('||' | 'or' | 'imply') expression #LogOr
             |  expression QUESTIONMARK expression COLON expression       #Conditional
-            |  op=('forall' | 'exists' | 'sum') LEFTPAR ID COLON type RIGHTPAR expression #VerificationExpr
+            |  verification                                     #VerificationExpr
             ;
+
+verification locals [Scope scope, DeclarationReference reference] : op=('forall' | 'exists' | 'sum') LEFTPAR ID COLON type RIGHTPAR expression;
 
 assignment  : <assoc=right> expression assign expression #AssignExpr;
 
