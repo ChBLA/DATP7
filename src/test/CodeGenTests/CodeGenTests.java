@@ -25,6 +25,21 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region prefix
+    @ParameterizedTest
+    @ValueSource(strings = {"urgent", "beta", "meta", "const"})
+    void PrefixGeneratedCorrectly(String expected) {
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.PrefixContext.class);
+        when(node.getText()).thenReturn(expected);
+
+        String actual = visitor.visitPrefix(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
     //region initialiser
 
     @Test
