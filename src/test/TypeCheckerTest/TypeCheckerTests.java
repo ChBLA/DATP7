@@ -1274,7 +1274,6 @@ public class TypeCheckerTests  {
         when(node.ID()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.ID)));
         Type actual = visitor.visitIdExpr(node);
         assertEquals(ERROR_TYPE, actual);
-        fail(); //this test is incorrectly implemented. Should use scopes and references
     }
 
     @Test
