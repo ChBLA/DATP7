@@ -1017,6 +1017,29 @@ public class TypeCheckerTests  {
 
     //endregion
 
+    //region fieldDecl
+
+    @Test
+    void fieldDeclReturnStruct() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+
+        UCELParser.FieldDeclContext node = mock(UCELParser.FieldDeclContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        when(node.type()).thenReturn(type);
+        when(type.accept(visitor)).thenReturn(INT_TYPE);
+
+        TerminalNode id = mock(TerminalNode.class);
+        ArrayList<TerminalNode> ids = new ArrayList<TerminalNode>();
+        ids.add(id);
+        when(node.ID()).thenReturn(ids);
+        when(id.getText()).thenReturn("a");
+        //when(node.arrayDecl())
+
+
+    }
+
+    //endregion
+
     //region VariableID
 
     //region noArray
