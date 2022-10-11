@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'antlr'
-//    id "idea"
+    id "idea"
 }
 
 //apply plugin: "idea"
@@ -16,14 +16,20 @@ repositories {
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.0'
+    testImplementation 'org.mockito:mockito-core:4.8.0'
     testImplementation 'org.mockito:mockito-all:1.10.19'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-params:5.9.0'
-    testRuntimeOnly 'org.mockito:mockito-core:4.8.0'
-    testRuntimeOnly 'org.mockito:mockito-all:1.10.19'
+
+//    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
+//    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-params:5.9.0'
+//    testRuntimeOnly 'org.mockito:mockito-core:4.8.0'
+//    testRuntimeOnly 'org.mockito:mockito-all:1.10.19'
     antlr "org.antlr:antlr4:4.11.1"
     antlr "org.antlr:ST4:4.3.4" // String Template
 }
+
+//compileJava.dependsOn("dependencies")
+//compileJava.dependsOn("generateGrammarSource")
+
 //
 //build2 {
 //    include('./src/**')
@@ -44,7 +50,7 @@ dependencies {
 //        }
 //    }
 //}
-//compileJava.dependsOn("generateGrammarSource")
+
 
 
 //sourceSets.main.java.srcDirs += "${project.buildDir}/generated-src/antlr/main/AntlrParser"
@@ -75,33 +81,50 @@ dependencies {
 
 
 // Test
+//sourceSets.test.java {
+//    srcDir "src/test"
+//    srcDir 'test/TypeCheckerTest'
+//}
+
 test {
     useJUnitPlatform()
 
-//    include 'src/test/**'
-//    include 'test/TypeCheckerTest/TypeCheckerTests.java'
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
+
+//test {
+//    useJUnitPlatform()
+//    testLogging {
+//        events "passed", "skipped", "failed"
+//    }
+//
+////    include 'src/test/*'
+////    include 'test/TypeCheckerTest/TypeCheckerTests.java'
+//
 //
 //    // show standard out and standard error of the test JVM(s) on the console
-//    testLogging.showStandardStreams = true
-//
-//    // set heap size for the test JVM(s)
-//    minHeapSize = "128m"
-//    maxHeapSize = "512m"
-//
-//    // set JVM arguments for the test JVM(s)
-//    jvmArgs '-XX:MaxPermSize=256m'
-//
-//    // listen to events in the test execution lifecycle
-//    beforeTest {
-//        descriptor -> logger.lifecycle("Running test: " + descriptor)
-//    }
-//    // listen to standard out and standard error of the test JVM(s)
-//    onOutput {
-//        descriptor, event -> logger.lifecycle
-//        ("Test: " + descriptor + " produced standard out/err: "
-//                + event.message )
-//    }
-}
+////    testLogging.showStandardStreams = true
+////
+////    // set heap size for the test JVM(s)
+////    minHeapSize = "128m"
+////    maxHeapSize = "512m"
+////
+////    // set JVM arguments for the test JVM(s)
+////    jvmArgs '-XX:MaxPermSize=256m'
+////
+////    // listen to events in the test execution lifecycle
+////    beforeTest {
+////        descriptor -> logger.lifecycle("Running test: " + descriptor)
+////    }
+////    // listen to standard out and standard error of the test JVM(s)
+////    onOutput {
+////        descriptor, event -> logger.lifecycle
+////        ("Test: " + descriptor + " produced standard out/err: "
+////                + event.message )
+////    }
+//}
 
 generateGrammarSource {
     includes = ['*.g4']
