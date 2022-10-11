@@ -25,6 +25,21 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region prefix
+    @ParameterizedTest
+    @ValueSource(strings = {"urgent", "beta", "meta", "const"})
+    void PrefixGeneratedCorrectly(String expected) {
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.PrefixContext.class);
+        when(node.getText()).thenReturn(expected);
+
+        String actual = visitor.visitPrefix(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
     //region initialiser
 
     @Test
@@ -1612,6 +1627,18 @@ public class CodeGenTests {
         var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
 
         when(node.expression()).thenReturn(exprMock);
+
+        String actual = visitor.visitReturnstatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void returnStatementEmptyExprGeneratedCorrectly() {
+        var expected = "return;";
+
+        var node = mock(UCELParser.ReturnstatementContext.class);
+        CodeGenVisitor visitor = new CodeGenVisitor();
 
         String actual = visitor.visitReturnstatement(node).getOutput();
 

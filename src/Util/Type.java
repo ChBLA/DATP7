@@ -13,6 +13,7 @@ public class Type {
         charType,
         stringType,
         chanType,
+        clockType,
         scalarType,
         structType,
         voidType,

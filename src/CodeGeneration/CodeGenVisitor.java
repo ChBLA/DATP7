@@ -13,6 +13,14 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.currentScope = currentScope;
     }
 
+    //region prefix
+    @Override
+    public Template visitPrefix(UCELParser.PrefixContext ctx) {
+        return new ManualTemplate(ctx.getText());
+    }
+
+    //endregion
+
     //region initialiser
 
     @Override
@@ -446,9 +454,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitReturnstatement(UCELParser.ReturnstatementContext ctx) {
-        var expr = visit(ctx.expression());
+        var expr = ctx.expression() != null ? visit(ctx.expression()) : null;
 
-        return new ReturnStatementTemplate(expr);
+        return expr != null ? new ReturnStatementTemplate(expr) : new ReturnStatementTemplate();
     }
 
     //endregion
