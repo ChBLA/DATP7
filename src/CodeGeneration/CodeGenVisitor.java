@@ -13,6 +13,15 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.currentScope = currentScope;
     }
 
+    //region boolean
+
+    @Override
+    public Template visitBoolean(UCELParser.BooleanContext ctx) {
+        return new ManualTemplate(ctx.getText());
+    }
+
+    //endregion
+
     //region TypeDecl
 
     @Override
