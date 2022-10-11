@@ -25,6 +25,20 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region boolean
+    @ParameterizedTest
+    @ValueSource(strings = {"true", "false"})
+    void BooleanGeneratedCorrectly(String expected) {
+        var ctx = mock(UCELParser.BooleanContext.class);
+        when(ctx.getText()).thenReturn(expected);
+
+        var visitor = new CodeGenVisitor();
+        var actual = visitor.visitBoolean(ctx).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
     //region TypeDecl
 
     @Test
