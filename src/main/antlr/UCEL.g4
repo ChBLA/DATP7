@@ -45,16 +45,18 @@ variableID locals [DeclarationReference reference]
               : ID arrayDecl* ('=' initialiser)?;
 initialiser   : expression?
               |  LEFTCURLYBRACE initialiser (COMMA initialiser)* RIGHTCURLYBRACE;
-typeDecl locals [DeclarationReference reference]
+typeDecl locals [List<DeclarationReference> references]
               : 'typedef' type ID arrayDecl* (COMMA ID arrayDecl*)* END;
 type          : prefix? typeId;
 prefix        : 'urgent' | 'broadcast' | 'meta' | 'const';
 
 typeId locals [DeclarationReference reference]
-              : ID | 'int' | 'clock' | 'chan' | 'bool' | 'double' | 'string' | 'in' | 'out'
-              | 'int' LEFTBRACKET expression? COMMA expression? RIGHTBRACKET
-              | 'scalar' LEFTBRACKET expression RIGHTBRACKET
-              | 'struct' LEFTCURLYBRACE fieldDecl (fieldDecl)* RIGHTCURLYBRACE;
+              : ID                                                                               #TypeIDID
+              | op=('int' | 'clock' | 'chan' | 'bool' | 'double' | 'string' | 'in' | 'out')      #TypeIDType
+              | 'int' LEFTBRACKET expression? COMMA expression? RIGHTBRACKET                     #TypeIDInt
+              | 'scalar' LEFTBRACKET expression RIGHTBRACKET                                     #TypeIDScalar
+              | 'struct' LEFTCURLYBRACE fieldDecl (fieldDecl)* RIGHTCURLYBRACE                   #TypeIDStruct
+              ;
 
 fieldDecl     : type ID arrayDecl* (COMMA ID arrayDecl*)* END;
 arrayDecl     : LEFTBRACKET expression? RIGHTBRACKET
@@ -75,11 +77,12 @@ statement       : block
                 | ifstatement
                 | returnstatement;
 
-forLoop	        : FOR LEFTPAR assignment? END expression? END expression? RIGHTPAR statement;
-iteration       : FOR LEFTPAR ID? COLON type? RIGHTPAR statement;
-whileLoop       : WHILE LEFTPAR expression? RIGHTPAR statement;
-dowhile         : DO statement WHILE LEFTPAR expression? RIGHTPAR END;
-ifstatement     : IF LEFTPAR expression? RIGHTPAR statement ( ELSE statement )?;
+forLoop	        : FOR LEFTPAR assignment? END expression END expression? RIGHTPAR statement;
+iteration locals [DeclarationReference reference]
+                : FOR LEFTPAR ID? COLON type? RIGHTPAR statement;
+whileLoop       : WHILE LEFTPAR expression RIGHTPAR statement;
+dowhile         : DO statement WHILE LEFTPAR expression RIGHTPAR END;
+ifstatement     : IF LEFTPAR expression RIGHTPAR statement ( ELSE statement )?;
 returnstatement : RETURN expression? END;
 
 chanPriority : 'chan' 'priority' (chanExpr | 'default') ((COMMA | '<') (chanExpr | 'default'))* END;
@@ -93,10 +96,10 @@ expression locals [DeclarationReference reference]
             |  expression MARK                                  #MarkExpr
             |  LEFTPAR expression RIGHTPAR                      #Paren
             |  expression '.' ID                                #StructAccess
-            |  expression '++'                                  #IncrementPost
-            |  '++' expression                                  #IncrementPre
-            |  expression '--'                                  #DecrementPost
-            |  '--' expression                                  #DecrementPre
+            |  expression INCREMENT                             #IncrementPost
+            |  INCREMENT expression                             #IncrementPre
+            |  expression DECREMENT                             #DecrementPost
+            |  DECREMENT expression                             #DecrementPre
             |  ID LEFTPAR arguments RIGHTPAR                    #FuncCall
             |  <assoc=right> unary expression                   #UnaryExpr
             |  expression op=('*' | '/' | '%') expression       #MultDiv
@@ -105,14 +108,16 @@ expression locals [DeclarationReference reference]
             |  expression op=('<?' | '>?') expression           #MinMax
             |  expression op=('<' | '<=' | '>=' | '>') expression #RelExpr
             |  expression op=('==' | '!=') expression           #EqExpr
-            |  expression BITAND expression                        #BitAnd
-            |  expression BITXOR expression                        #BitXor
-            |  expression BITOR expression                        #BitOr
+            |  expression BITAND expression                     #BitAnd
+            |  expression BITXOR expression                     #BitXor
+            |  expression BITOR expression                      #BitOr
             |  expression op=('&&' | 'and') expression          #LogAnd
             |  expression op=('||' | 'or' | 'imply') expression #LogOr
-            |  expression '?' expression COLON expression       #Conditional
-            |  op=('forall' | 'exists' | 'sum') LEFTPAR ID COLON type RIGHTPAR expression #VerificationExpr
+            |  expression QUESTIONMARK expression COLON expression       #Conditional
+            |  verification                                     #VerificationExpr
             ;
+
+verification locals [Scope scope, DeclarationReference reference] : op=('forall' | 'exists' | 'sum') LEFTPAR ID COLON type RIGHTPAR expression;
 
 assignment  : <assoc=right> expression assign expression #AssignExpr;
 
@@ -161,6 +166,9 @@ NOT : 'not';
 BITAND : '&';
 BITXOR : '^';
 BITOR : '|';
+QUESTIONMARK : '?';
+INCREMENT : '++';
+DECREMENT : '--';
 
 COMP : 'comp';
 DECLARATIONS : 'declarations';

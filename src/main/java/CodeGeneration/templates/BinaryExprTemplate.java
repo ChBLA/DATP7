@@ -4,8 +4,8 @@ import java.text.MessageFormat;
 
 public class BinaryExprTemplate implements Template {
     private final String resultingString;
-    public BinaryExprTemplate(String left, String right, String op) {
-        resultingString = MessageFormat.format("{0} {1} {2}", left, op, right);
+    public BinaryExprTemplate(Template left, Template right, String op) {
+        resultingString = String.format("%s %s %s", left.getOutput(), op, right.getOutput());
     }
 
     @Override

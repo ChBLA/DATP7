@@ -1,6 +1,7 @@
 package TypeChecker;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,13 +31,413 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             this.logger = logger;
         }
 
+    private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
+    private static final Type DOUBLE_TYPE = new Type(Type.TypeEnum.doubleType);
+    private static final Type BOOL_TYPE = new Type(Type.TypeEnum.boolType);
+    private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
+    private static final Type STRING_TYPE = new Type(Type.TypeEnum.stringType);
+    private static final Type ERROR_TYPE = new Type(Type.TypeEnum.errorType);
+    private static final Type INT_ARRAY_TYPE = new Type(Type.TypeEnum.intType, 1);
+    private static final Type DOUBLE_ARRAY_TYPE = new Type(Type.TypeEnum.doubleType, 1);
+    private static final Type BOOL_ARRAY_TYPE = new Type(Type.TypeEnum.boolType, 1);
+    private static final Type CHAR_ARRAY_TYPE = new Type(Type.TypeEnum.charType, 1);
+    private static final Type INVALID_TYPE = new Type(Type.TypeEnum.invalidType);
+    private static final Type VOID_TYPE = new Type(Type.TypeEnum.voidType);
+    private static final Type CHAN_TYPE = new Type(Type.TypeEnum.chanType);
+    private static final Type STRUCT_TYPE = new Type(Type.TypeEnum.structType);
+    private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
+    private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
+
+    @Override
+    public Type visitAssignExpr(UCELParser.AssignExprContext ctx) {
+        Type leftType = visit(ctx.expression(0));
+        Type rightType = visit(ctx.expression(1));
+
+        if (leftType.getEvaluationType() == Type.TypeEnum.errorType ||
+                rightType.getEvaluationType() == Type.TypeEnum.errorType ||
+                leftType.getEvaluationType() == Type.TypeEnum.chanType ||
+                rightType.getEvaluationType() == Type.TypeEnum.chanType ||
+                leftType.getEvaluationType() == Type.TypeEnum.voidType ||
+                rightType.getEvaluationType() == Type.TypeEnum.voidType ||
+                leftType.getEvaluationType() == Type.TypeEnum.invalidType ||
+                rightType.getEvaluationType() == Type.TypeEnum.invalidType) {
+            logger.log(new ErrorLog(ctx, "Type error: cannot assign " + rightType + " to " + leftType));
+            return ERROR_TYPE;
+        }
+
+        if (leftType.equals(rightType)) {
+            return VOID_TYPE;
+        } else {
+            logger.log(new ErrorLog(ctx, "Type error: cannot assign " + rightType + " to " + leftType));
+            return ERROR_TYPE;
+        }
+    }
+
+    @Override
+    public Type visitArrayDecl(UCELParser.ArrayDeclContext ctx) {
+        if (ctx.expression() != null) {
+            var elementType = visit(ctx.expression());
+            return new Type(elementType.getEvaluationType(), 1);
+        } else {
+            var elementType = visit(ctx.type());
+            return new Type(elementType.getEvaluationType(), 1);
+        }
+    }
+
+
+
+    @Override
+    public Type visitReturnstatement(UCELParser.ReturnstatementContext ctx) {
+        var expression = ctx.expression();
+        if (expression != null) {
+            var expressionType = visit(expression);
+            return expressionType;
+        } else {
+            return VOID_TYPE;
+        }
+    }
+
+
+    @Override
+    public Type visitWhileLoop(UCELParser.WhileLoopContext ctx) {
+        Type condType = visit(ctx.expression());
+
+        if (!condType.equals(BOOL_TYPE)) {
+            logger.log(new ErrorLog(ctx.expression(), "Loop condition not a boolean"));
+            return ERROR_TYPE;
+        }
+
+        return visit(ctx.statement());
+    }
+
+    @Override
+    public Type visitDowhile(UCELParser.DowhileContext ctx) {
+        Type condType = visit(ctx.expression());
+
+        if (!condType.equals(BOOL_TYPE)) {
+            logger.log(new ErrorLog(ctx.expression(), "Loop condition not a boolean"));
+            return ERROR_TYPE;
+        }
+
+        return visit(ctx.statement());
+    }
+
+    @Override
+    public Type visitForLoop(UCELParser.ForLoopContext ctx) {
+        if ((ctx.assignment() != null)) {
+            if (visit(ctx.assignment()).equals(ERROR_TYPE)) {
+                logger.log(new ErrorLog(ctx.assignment(), "Assignment is not valid"));
+                return ERROR_TYPE;
+            }
+        }
+
+        Type condType = visit(ctx.expression(0));
+        if (!condType.equals(BOOL_TYPE)) {
+            logger.log(new ErrorLog(ctx.expression(0), "Loop condition not a boolean"));
+            return ERROR_TYPE;
+        }
+
+        if ((ctx.expression(1) != null)) {
+            if (visit(ctx.expression(1)).equals(ERROR_TYPE)) {
+                logger.log(new ErrorLog(ctx.expression(1), "Expression not well typed"));
+                return ERROR_TYPE;
+            }
+        }
+
+        return visit(ctx.statement());
+    }
+
+    @Override
+    public Type visitIfstatement(UCELParser.IfstatementContext ctx) {
+        Type condType = visit(ctx.expression());
+
+        if (!condType.equals(BOOL_TYPE)) {
+            logger.log(new ErrorLog(ctx.expression(), "Condition not a boolean"));
+            return ERROR_TYPE;
+        }
+
+        if (ctx.statement(1) != null) {
+            if (visit(ctx.statement(1)).equals(ERROR_TYPE))
+                return ERROR_TYPE;
+            else if (visit(ctx.statement(1)).equals(VOID_TYPE))
+                return VOID_TYPE;
+        }
+        return visit(ctx.statement(0));
+    }
+
+    @Override
+    public Type visitType(UCELParser.TypeContext ctx) {
+        String prefix = ctx.prefix() == null ? "" : ctx.prefix().getText();
+        Type type = visit(ctx.typeId());
+        return switch (prefix) {
+            case "urgent" ->  type.deepCopy(Type.TypePrefixEnum.urgent);
+            case "broadcast" ->  type.deepCopy(Type.TypePrefixEnum.broadcast);
+            case "meta" -> type.deepCopy(Type.TypePrefixEnum.meta);
+            case "const" ->  type.deepCopy(Type.TypePrefixEnum.constant);
+            default -> type;
+        };
+    }
+
+    @Override
+    public Type visitTypeIDType(UCELParser.TypeIDTypeContext ctx) {
+        return switch (ctx.getText()) {
+            case "int" -> new Type(Type.TypeEnum.intType);
+            case "clock" -> new Type(Type.TypeEnum.clockType);
+            case "chan" -> new Type(Type.TypeEnum.chanType);
+            case "bool" -> new Type(Type.TypeEnum.boolType);
+            case "double" -> new Type(Type.TypeEnum.doubleType);
+            case "string" -> new Type(Type.TypeEnum.stringType);
+            default -> new Type(Type.TypeEnum.errorType);
+        };
+    }
+
+    @Override
+    public Type visitTypeIDID(UCELParser.TypeIDIDContext ctx) {
+        try {
+            return currentScope.get(ctx.reference).getType();
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            return new Type(Type.TypeEnum.errorType);
+        }
+    }
+
+    @Override
+    public Type visitTypeIDInt(UCELParser.TypeIDIntContext ctx) {
+        Type intType =  new Type(Type.TypeEnum.intType);
+        Type errorType = new Type(Type.TypeEnum.errorType);
+        if(ctx.expression().size() == 0) return intType;
+        else {
+            Type left = visit(ctx.expression(0));
+            if(left.equals(intType)) {
+                if(ctx.expression().size() == 1) return intType;
+                else {
+                    Type right = visit(ctx.expression(1));
+                    if(right.equals(intType)) return intType;
+                    else {
+                        logger.log(new ErrorLog(ctx.expression().get(1), "Expected " +
+                                intType + " but found " + right));
+                        return errorType;
+                    }
+                }
+            } else {
+                logger.log(new ErrorLog(ctx.expression().get(0), "Expected " +
+                        intType + " but found " + left));
+                return errorType;
+            }
+        }
+    }
+
+    @Override
+    public Type visitTypeIDScalar(UCELParser.TypeIDScalarContext ctx) {
+        Type intType = new Type(Type.TypeEnum.intType);
+        Type exprType = visit(ctx.expression());
+        if(exprType.equals(intType))
+            return new Type(Type.TypeEnum.scalarType);
+        logger.log(new ErrorLog(ctx.expression(), "Scalar type definition takes an " + intType +
+                " but found " + exprType));
+        return new Type(Type.TypeEnum.errorType);
+    }
+
+    @Override
+    public Type visitTypeIDStruct(UCELParser.TypeIDStructContext ctx) {
+        ArrayList<String> names = new ArrayList<>();
+        ArrayList<Type> types = new ArrayList<>();
+        Type errorType = new Type(Type.TypeEnum.errorType);
+
+        for(UCELParser.FieldDeclContext field : ctx.fieldDecl()) {
+            Type fieldType = visit(field);
+            if(fieldType.equals(errorType)) {
+                //No log passing error through
+                return fieldType;
+            }
+            for(String s : fieldType.getParameterNames()) names.add(s);
+            for(Type t : fieldType.getParameters()) types.add(t);
+        }
+
+        return new Type(Type.TypeEnum.structType,
+                names.toArray(new String[names.size()]),
+                types.toArray(new Type[types.size()]));
+    }
+
+    @Override
+    public Type visitBlock(UCELParser.BlockContext ctx) {
+
+        Type commonType = null;
+        Type errorType = new Type(Type.TypeEnum.errorType);
+        Type voidType = new Type(Type.TypeEnum.voidType);
+        enterScope(ctx.scope);
+
+        for(UCELParser.LocalDeclarationContext ldc : ctx.localDeclaration()) {
+            Type declType = visit(ldc);
+            if(declType.equals(errorType))
+                commonType = declType;
+        }
+
+        if(commonType != null && commonType.equals(errorType)) {
+            //No logging just passing the error up
+            exitScope();
+            return errorType;
+        } else {
+            commonType = null;
+        }
+
+        boolean hasFoundError = false;
+        boolean hasFoundType = false;
+
+        for(UCELParser.StatementContext sc : ctx.statement()) {
+            Type statementType = visit(sc);
+            if (hasFoundType) {
+                exitScope();
+                logger.log(new ErrorLog(sc, "Unreachable code"));
+                return errorType;
+            }
+            if(!(hasFoundError)) {
+                if(statementType.equals(errorType)) {
+                    hasFoundError = true;
+                } else if(!statementType.equals(voidType)) {
+                    hasFoundType = true;
+                    commonType = statementType;
+                }
+            }
+        }
+
+        exitScope();
+
+        if(hasFoundError) return errorType;
+        else if(commonType == null) return voidType;
+        else return commonType;
+    }
+
+    /**
+     * Checks that varid types are equivalent to the declared type
+     * Edge cases include:
+     *      Coercion from int to double
+     *      varid is declared as an array
+     *      struct to array coercion is handled in the varID visitor
+     *
+     * @param ctx
+     * @return
+     */
+    @Override
+    public Type visitVariableDecl(UCELParser.VariableDeclContext ctx) {
+        Type declaredType = null;
+        Type intType = new Type(Type.TypeEnum.intType);
+        Type doubleType = new Type(Type.TypeEnum.doubleType);
+        if(ctx.type() != null) declaredType = visit(ctx.type());
+
+        boolean errorFound = false;
+
+        for(UCELParser.VariableIDContext varID : ctx.variableID()) {
+            Type varIDType = visit(varID);
+            if(declaredType != null && !varIDType.equalsOrIsArrayOf(declaredType)) {
+                if(declaredType.equals(doubleType) &&
+                    varIDType.equals(intType)) {
+
+                    try {
+                        DeclarationInfo declInfo = currentScope.get(varID.reference);
+                        declInfo.setType(doubleType);
+                    } catch (Exception e) {
+                        logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+                        errorFound = true;
+                    }
+                } else {
+                    logger.log(new ErrorLog(varID, "Does not match declared " + declaredType));
+                    errorFound = true;
+                }
+            }
+        }
+
+        if(errorFound) return new Type(Type.TypeEnum.errorType);
+        else return new Type(Type.TypeEnum.voidType);
+    }
+
+    @Override
+    public Type visitVariableID(UCELParser.VariableIDContext ctx) {
+        Type initialiserType = ctx.initialiser() != null ?
+                visit(ctx.initialiser()) : new Type(Type.TypeEnum.voidType);
+        Type errorType = new Type(Type.TypeEnum.errorType);
+
+        boolean errorFound = false;
+        List<UCELParser.ArrayDeclContext> arrayDecls = ctx.arrayDecl();
+        for(UCELParser.ArrayDeclContext arrayDecl : arrayDecls) {
+            Type arrayDeclType = visit(arrayDecl);
+            if(arrayDeclType.equals(errorType))
+                errorFound = true;
+        }
+
+        int arrayDim = arrayDecls == null ? 0 : arrayDecls.size();
+        if(errorFound) return errorType;
+
+        try {
+            Type newType = structToArray(ctx, initialiserType, arrayDim);
+            currentScope.get(ctx.reference).setType(newType);
+            return newType;
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            return errorType;
+        }
+    }
+
+    private Type structToArray(ParserRuleContext ctx, Type type, int arrayDim) {
+        Type voidType =  new Type(Type.TypeEnum.voidType);
+        if(arrayDim == 0) return type;
+        if(type.equals(voidType)) return voidType.deepCopy(arrayDim);
+        if(type.getEvaluationType() != Type.TypeEnum.structType) {
+            logger.log(new ErrorLog(ctx, "Array declaration does not match initializer"));
+        }
+        Type internalType = null;
+        for(Type t : type.getParameters()) {
+            Type paramType = structToArray(ctx, t, arrayDim - 1);
+            if(internalType != null && !internalType.equals(paramType)) {
+                logger.log(new ErrorLog(ctx, "Array initializer cannot contain both " +
+                        paramType + " and " + internalType));
+                return new Type(Type.TypeEnum.errorType);
+            }
+            internalType = paramType;
+        }
+        return internalType.deepCopy(arrayDim);
+    }
+
+    @Override
+    public Type visitInitialiser(UCELParser.InitialiserContext ctx) {
+        if(ctx.expression() != null) return visit(ctx.expression());
+
+        Type[] types = new Type[ctx.initialiser().size()];
+        List<UCELParser.InitialiserContext> innerInitialisers = ctx.initialiser();
+        for(int i = 0; i < innerInitialisers.size(); i++) {
+            types[i] = visit(innerInitialisers.get(i));
+        }
+
+        return new Type(Type.TypeEnum.structType, types);
+    }
+
+    @Override
+    public Type visitAssign(UCELParser.AssignContext ctx) {
+        return super.visitAssign(ctx);
+    }
+
+    @Override
+    public Type visitStatement(UCELParser.StatementContext ctx) {
+        return super.visitStatement(ctx);
+    }
+
+    @Override
+    public Type visitDeclarations(UCELParser.DeclarationsContext ctx) {
+        boolean errorFound = false;
+        Type errorType = new Type(Type.TypeEnum.errorType);
+
+        for(ParseTree pt : ctx.children)
+            if(visit(pt).equals(errorType))
+                errorFound = true;
+
+        if(errorFound) return errorType;
+        else return new Type(Type.TypeEnum.voidType);
+    }
+
     @Override
     public Type visitIdExpr(UCELParser.IdExprContext ctx) {
         try {
-            //TDOD the table reference is set by the reference handler
-            //also it is getText and not toString to get the the text of the ID
-            var ref = currentScope.find(ctx.ID().toString(), true);
-            var variable = currentScope.get(ref);
+            var variable = currentScope.get(ctx.reference);
             return variable.getType();
         } catch (Exception e) {
             return new Type(Type.TypeEnum.errorType);
@@ -453,12 +854,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //endregion
 
-    private void enterScope() {
-        enterScope(false);
-    }
-
-    private void enterScope(boolean isComponent) {
-        this.currentScope = new Scope(this.currentScope, isComponent);
+    private void enterScope(Scope scope) {
+        currentScope = scope;
     }
 
     private void exitScope() {

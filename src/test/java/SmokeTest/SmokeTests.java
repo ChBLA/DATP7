@@ -19,9 +19,9 @@ public class SmokeTests {
 
     private static Stream<Arguments> compilerInput() {
         return Stream.of(
-                Arguments.arguments("12 + 7 > 0"),
-                Arguments.arguments("x * y % 12"),
-                Arguments.arguments("true && !false")
+                Arguments.arguments("{bool b = 12 + 7 > 0;}"),
+                Arguments.arguments("{int i = x * y % 12;}"),
+                Arguments.arguments("{bool b = true && !false;}")
         );
     }
 

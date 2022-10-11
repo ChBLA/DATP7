@@ -194,6 +194,66 @@ public class ReferenceHandlerTests {
     }
 
     @Test
+    void variableIDVisitInitialiser() {
+        String correctVariableName = "cvn";
+        String incorrectVariableName = "icvn";
+
+        ArrayList<DeclarationInfo> variables =new ArrayList<>();
+        variables.add(new DeclarationInfo(incorrectVariableName));
+        variables.add(new DeclarationInfo(incorrectVariableName));
+        ReferenceVisitor visitor = new ReferenceVisitor(new Scope(null, false, variables));
+
+        UCELParser.VariableIDContext node = mock(UCELParser.VariableIDContext.class);
+        TerminalNode idNode = mock(TerminalNode.class);
+        when(idNode.getText()).thenReturn(correctVariableName);
+        when(node.ID()).thenReturn(idNode);
+
+        UCELParser.InitialiserContext initialiser = mock(UCELParser.InitialiserContext.class);
+
+        when(node.initialiser()).thenReturn(initialiser);
+        when(initialiser.accept(visitor)).thenReturn(true);
+
+        visitor.visitVariableID(node);
+
+        verify(initialiser, times(1)).accept(visitor);
+    }
+
+    @Test
+    void variableIDVisitArrayDecl() {
+        String correctVariableName = "cvn";
+        String incorrectVariableName = "icvn";
+
+        ArrayList<DeclarationInfo> variables =new ArrayList<>();
+        variables.add(new DeclarationInfo(incorrectVariableName));
+        variables.add(new DeclarationInfo(incorrectVariableName));
+        ReferenceVisitor visitor = new ReferenceVisitor(new Scope(null, false, variables));
+
+        UCELParser.VariableIDContext node = mock(UCELParser.VariableIDContext.class);
+        TerminalNode idNode = mock(TerminalNode.class);
+        when(idNode.getText()).thenReturn(correctVariableName);
+        when(node.ID()).thenReturn(idNode);
+
+        ArrayList<UCELParser.ArrayDeclContext> arrayDecls = new ArrayList<>();
+
+        UCELParser.ArrayDeclContext arrayDecl0 = mock(UCELParser.ArrayDeclContext.class);
+        UCELParser.ArrayDeclContext arrayDecl1 = mock(UCELParser.ArrayDeclContext.class);
+        UCELParser.ArrayDeclContext arrayDecl2 = mock(UCELParser.ArrayDeclContext.class);
+
+        arrayDecls.add(arrayDecl0);
+        arrayDecls.add(arrayDecl1);
+        arrayDecls.add(arrayDecl2);
+
+        when(node.arrayDecl()).thenReturn(arrayDecls);
+        when(arrayDecl0.accept(visitor)).thenReturn(true);
+        when(arrayDecl1.accept(visitor)).thenReturn(true);
+        when(arrayDecl2.accept(visitor)).thenReturn(true);
+
+        visitor.visitVariableID(node);
+
+        verify(arrayDecl1, times(1)).accept(visitor);
+    }
+
+    @Test
     void variableIDSetVariableReference() {
         String correctVariableName = "cvn";
         String incorrectVariableName = "icvn";

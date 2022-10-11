@@ -19,6 +19,11 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     }
 
     @Override
+    protected Boolean aggregateResult(Boolean aggregate, Boolean nextResult) {
+        return (nextResult == null || nextResult) && (aggregate == null || aggregate);
+    }
+
+    @Override
     public Boolean visitIdExpr(UCELParser.IdExprContext ctx) {
         String identifier = ctx.ID().getText();
 
@@ -69,14 +74,23 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     public Boolean visitVariableID(UCELParser.VariableIDContext ctx) {
         String identifier = ctx.ID().getText();
 
+        //TODO: maybe delegate to Scope.add
         if(!currentScope.isUnique(identifier, true)) {
             logger.log(new ErrorLog(ctx, "The variable name '" + identifier + "' already defined in scope"));
             return false;
         }
 
-        ctx.reference = currentScope.add(new DeclarationInfo(identifier));
+        boolean valid = true;
 
-        return true;
+        for (UCELParser.ArrayDeclContext arrayDecl : ctx.arrayDecl()) {
+            valid = valid && visit(arrayDecl);
+        }
+
+        ctx.reference = currentScope.add(new DeclarationInfo(identifier));
+        if(ctx.initialiser() != null)
+            valid = valid && visit(ctx.initialiser());
+
+        return valid;
     }
 
     @Override
@@ -91,6 +105,8 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         for(UCELParser.StatementContext sc : ctx.statement())
             success &= visit(sc);
+
+        exitScope();
 
         return success;
     }
