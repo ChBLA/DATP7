@@ -38,8 +38,11 @@ variableID locals [DeclarationReference reference]
               : ID arrayDecl* ('=' initialiser)?;
 initialiser   : expression?
               |  LEFTCURLYBRACE initialiser (COMMA initialiser)* RIGHTCURLYBRACE;
-typeDecl locals [List<DeclarationReference> references]
-              : 'typedef' type ID arrayDecl* (COMMA ID arrayDecl*)* END;
+typeDecl : 'typedef' type arrayDeclID (COMMA arrayDeclID)* END;
+
+arrayDeclID locals [DeclarationReference reference]
+              : ID arrayDecl*;
+
 type          : prefix? typeId;
 prefix        : 'urgent' | 'broadcast' | 'meta' | 'const';
 

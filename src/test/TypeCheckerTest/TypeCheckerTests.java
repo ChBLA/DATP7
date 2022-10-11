@@ -342,6 +342,94 @@ public class TypeCheckerTests  {
 
     //endregion
 
+    //region if-else
+    @Test
+    void ifCondNotBoolError() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.IfstatementContext node = mock(UCELParser.IfstatementContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, STRING_TYPE, visitor);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+
+        when(node.expression()).thenReturn(condType);
+        when(node.statement(0)).thenReturn(statementType);
+
+        Type result = visitor.visitIfstatement(node);
+
+        assertEquals(ERROR_TYPE, result);
+    }
+
+    @Test
+    void ifNoElseReturnsStatementType() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.IfstatementContext node = mock(UCELParser.IfstatementContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var statementType = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+
+        when(node.expression()).thenReturn(condType);
+        when(node.statement(0)).thenReturn(statementType);
+
+        Type result = visitor.visitIfstatement(node);
+
+        assertEquals(CHAR_TYPE, result);
+    }
+
+    @Test
+    void ifElseReturnsStatementsType() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.IfstatementContext node = mock(UCELParser.IfstatementContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var statementType1 = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+        var statementType2 = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+
+        when(node.expression()).thenReturn(condType);
+        when(node.statement(0)).thenReturn(statementType1);
+        when(node.statement(1)).thenReturn(statementType2);
+
+        Type result = visitor.visitIfstatement(node);
+
+        assertEquals(CHAR_TYPE, result);
+    }
+
+    @Test
+    void ifElseReturnsStatementError() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.IfstatementContext node = mock(UCELParser.IfstatementContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var statementType1 = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+        var statementType2 = mockForVisitorResult(UCELParser.StatementContext.class, ERROR_TYPE, visitor);
+
+        when(node.expression()).thenReturn(condType);
+        when(node.statement(0)).thenReturn(statementType1);
+        when(node.statement(1)).thenReturn(statementType2);
+
+        Type result = visitor.visitIfstatement(node);
+
+        assertEquals(ERROR_TYPE, result);
+    }
+
+    @Test
+    void ifElseReturnsVoidType() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.IfstatementContext node = mock(UCELParser.IfstatementContext.class);
+        var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var statementType1 = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+        var statementType2 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+
+        when(node.expression()).thenReturn(condType);
+        when(node.statement(0)).thenReturn(statementType1);
+        when(node.statement(1)).thenReturn(statementType2);
+
+        Type result = visitor.visitIfstatement(node);
+
+        assertEquals(VOID_TYPE, result);
+    }
+    //endregion
+
     //region declaration
 
     @Test

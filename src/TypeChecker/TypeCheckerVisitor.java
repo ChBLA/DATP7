@@ -143,6 +143,24 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
     @Override
+    public Type visitIfstatement(UCELParser.IfstatementContext ctx) {
+        Type condType = visit(ctx.expression());
+
+        if (!condType.equals(BOOL_TYPE)) {
+            logger.log(new ErrorLog(ctx.expression(), "Condition not a boolean"));
+            return ERROR_TYPE;
+        }
+
+        if (ctx.statement(1) != null) {
+            if (visit(ctx.statement(1)).equals(ERROR_TYPE))
+                return ERROR_TYPE;
+            else if (visit(ctx.statement(1)).equals(VOID_TYPE))
+                return VOID_TYPE;
+        }
+        return visit(ctx.statement(0));
+    }
+
+    @Override
     public Type visitType(UCELParser.TypeContext ctx) {
         String prefix = ctx.prefix() == null ? "" : ctx.prefix().getText();
         Type type = visit(ctx.typeId());
