@@ -21,6 +21,31 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.currentScope = currentScope;
     }
 
+    //region boolean
+
+    @Override
+    public Template visitBoolean(UCELParser.BooleanContext ctx) {
+        return new ManualTemplate(ctx.getText());
+    }
+
+    //endregion
+
+    //region TypeDecl
+
+    @Override
+    public Template visitTypeDecl(UCELParser.TypeDeclContext ctx) {
+        Template type = visit(ctx.type());
+        List<Template> arrayDeclIDs = new ArrayList<>();
+
+        for (UCELParser.ArrayDeclIDContext arrayDeclIDContext : ctx.arrayDeclID()) {
+            arrayDeclIDs.add(visit(arrayDeclIDContext));
+        }
+
+        return new TypeDeclTemplate(type, arrayDeclIDs);
+    }
+
+    //endregion
+
     //region prefix
     @Override
     public Template visitPrefix(UCELParser.PrefixContext ctx) {
