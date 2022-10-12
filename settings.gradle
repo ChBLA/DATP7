@@ -19,4 +19,7 @@ include('src')
 include 'src:plugin'
 findProject(':src:plugin')?.name = 'plugin'
 include 'compiler'
+include 'plugin'
+findProject(':plugin')?.name = 'Plugin'
+include 'Plugin'
 
