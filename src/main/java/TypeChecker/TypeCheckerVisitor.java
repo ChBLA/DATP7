@@ -85,7 +85,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
 
-    DeclarationInfo currentFunction = null;
+    public DeclarationInfo currentFunction = null;
 
     @Override
     public Type visitFunction(UCELParser.FunctionContext ctx) {
