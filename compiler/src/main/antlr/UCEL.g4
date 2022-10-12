@@ -20,7 +20,7 @@ interfaces : INTERFACES COLON interface_stmnt+;
 interface_stmnt : (IN | OUT) ID ID (COMMA (IN | OUT) ID ID)* END;
 
 links : LINKS COLON link_stmnt+;
-link_stmnt : ID arrayDecl* LINK_OP ID arrayDecl* WITH ID END
+link_stmnt : arrayDeclID LINK_OP arrayDeclID WITH ID END
            | FOR LEFTPAR ID? COLON type? RIGHTPAR link_block
            | IF LEFTPAR expression RIGHTPAR link_block
                 (elif LEFTPAR expression RIGHTPAR link_block)*
@@ -29,7 +29,7 @@ link_block : LEFTCURLYBRACE link_stmnt+ RIGHTCURLYBRACE;
 elif : ELSE IF;
 
 interface_decl : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;
-interfaceVarDecl : type ID arrayDecl* (COMMA type ID arrayDecl*)*;
+interfaceVarDecl : type arrayDeclID (COMMA type arrayDeclID)*;
 
 instantiation : ID ( LEFTPAR parameters? RIGHTPAR )? '=' ID LEFTPAR arguments? RIGHTPAR END;
 progressDecl  : PROGRESS LEFTCURLYBRACE ( expression? END )* RIGHTCURLYBRACE;
@@ -61,7 +61,7 @@ typeId locals [DeclarationReference reference]
               | 'struct' LEFTCURLYBRACE fieldDecl (fieldDecl)* RIGHTCURLYBRACE                   #TypeIDStruct
               ;
 
-fieldDecl     : type ID arrayDecl* (COMMA ID arrayDecl*)* END;
+fieldDecl     : type arrayDeclID (COMMA ID arrayDeclID)* END;
 arrayDecl     : LEFTBRACKET expression? RIGHTBRACKET
               | LEFTBRACKET type RIGHTBRACKET;
 

@@ -1,11 +1,10 @@
-package TypeCheckerTest;
-
-import org.UcelParser.TypeChecker.TypeCheckerVisitor;
-import org.UcelParser.UCELParser_Generated.UCELParser;
-import org.UcelParser.Util.DeclarationInfo;
-import org.UcelParser.Util.DeclarationReference;
-import org.UcelParser.Util.Scope;
-import org.UcelParser.Util.Type;
+import CodeGeneration.CodeGenVisitor;
+import TypeChecker.TypeCheckerVisitor;
+import UCELParser_Generated.UCELParser;
+import Util.DeclarationInfo;
+import Util.DeclarationReference;
+import Util.Scope;
+import Util.Type;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -17,6 +16,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -47,6 +47,16 @@ public class TypeCheckerTests  {
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
 
     //region Assignment
+
+    @Test
+    public void AssigntmentReturnsVoid() {
+        TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor();
+
+        var node = new UCELParser.AssignContext(null, 0);
+
+        Type actual = typeCheckerVisitor.visitAssign(node);
+        assertEquals(VOID_TYPE, actual);
+    }
 
     @ParameterizedTest
     @MethodSource("assignmentTestSource")
@@ -1117,25 +1127,27 @@ public class TypeCheckerTests  {
     //endregion
 
     //region fieldDecl
-
-    @Test
-    void fieldDeclReturnStruct() {
-        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
-
-        UCELParser.FieldDeclContext node = mock(UCELParser.FieldDeclContext.class);
-        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
-        when(node.type()).thenReturn(type);
-        when(type.accept(visitor)).thenReturn(INT_TYPE);
-
-        TerminalNode id = mock(TerminalNode.class);
-        ArrayList<TerminalNode> ids = new ArrayList<TerminalNode>();
-        ids.add(id);
-        when(node.ID()).thenReturn(ids);
-        when(id.getText()).thenReturn("a");
-        //when(node.arrayDecl())
-
-
-    }
+    // TODO: Fix this test
+//    @Test
+//    void fieldDeclReturnStruct() {
+//        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+//
+//        UCELParser.FieldDeclContext node = mock(UCELParser.FieldDeclContext.class);
+//        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+//        when(node.type()).thenReturn(type);
+//        when(type.accept(visitor)).thenReturn(INT_TYPE);
+//
+//        node.
+//
+//        TerminalNode id = mock(TerminalNode.class);
+//        ArrayList<TerminalNode> ids = new ArrayList<TerminalNode>();
+//        ids.add(id);
+//        when(node.ID()).thenReturn(ids);
+//        when(id.getText()).thenReturn("a");
+//        //when(node.arrayDecl())
+//
+//
+//    }
 
     //endregion
 
@@ -1620,10 +1632,10 @@ public class TypeCheckerTests  {
     void boolLiteralTypedCorrectly() {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
-        UCELParser.BoolContext boolCtx = mock(UCELParser.BoolContext.class);
+        UCELParser.BooleanContext boolCtx = mock(UCELParser.BooleanContext.class);
 
         UCELParser.LiteralContext node = mock(UCELParser.LiteralContext.class);
-        when(node.bool()).thenReturn(boolCtx);
+        when(node.boolean_()).thenReturn(boolCtx);
 
         Type actual = visitor.visitLiteral(node);
         assertEquals(BOOL_TYPE, actual);

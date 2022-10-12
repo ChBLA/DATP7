@@ -32,6 +32,40 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region arrayDeclID
+    @Test
+    public void ArrayDeclIDNoArray() {
+        String expected = "var1";
+        UCELParser.ArrayDeclIDContext node = mock(UCELParser.ArrayDeclIDContext.class);
+        TerminalNodeImpl id = new TerminalNodeImpl(new CommonToken(UCELParser.ID, expected));
+        when(node.ID()).thenReturn(id);
+        CodeGenVisitor visitor = new CodeGenVisitor();
+        String template = visitor.visitArrayDeclID(node).getOutput();
+        assertEquals(expected, template);
+    }
+
+    @Test
+    public void ArrayDeclIDWithArray() {
+        Template arrayDecl = new ManualTemplate("[5]");
+        String expected = "var1[5][5]";
+
+        CodeGenVisitor visitor = new CodeGenVisitor();
+
+        UCELParser.ArrayDeclIDContext node = mock(UCELParser.ArrayDeclIDContext.class);
+        var id = new TerminalNodeImpl(new CommonToken(UCELParser.ID, "var1"));
+        var arrayDeclMock = mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDecl, visitor);
+        List<UCELParser.ArrayDeclContext> arrayDeclList = new ArrayList<>();
+        arrayDeclList.add(arrayDeclMock);
+        arrayDeclList.add(arrayDeclMock);
+        when(node.ID()).thenReturn(id);
+        when(node.arrayDecl()).thenReturn(arrayDeclList);
+
+        String actual = visitor.visitArrayDeclID(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
     //region boolean
     @ParameterizedTest
     @ValueSource(strings = {"true", "false"})
