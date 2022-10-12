@@ -2,14 +2,8 @@ package CodeGeneration.templates;
 
 import java.text.MessageFormat;
 
-public class BinaryExprTemplate implements Template {
-    private final String resultingString;
+public class BinaryExprTemplate extends Template {
     public BinaryExprTemplate(Template left, Template right, String op) {
-        resultingString = String.format("%s %s %s", left.getOutput(), op, right.getOutput());
-    }
-
-    @Override
-    public String getOutput() {
-        return resultingString;
+        result = String.format("%s %s %s", left, op, right);
     }
 }

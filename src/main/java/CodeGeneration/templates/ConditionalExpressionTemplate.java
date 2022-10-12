@@ -2,15 +2,8 @@ package CodeGeneration.templates;
 
 import CodeGeneration.templates.Template;
 
-public class ConditionalExpressionTemplate implements Template {
-    private final String resultingString;
-
+public class ConditionalExpressionTemplate extends Template {
     public ConditionalExpressionTemplate(Template condition, Template positiveResult, Template negativeResult) {
-        resultingString = String.format("%s ? %s : %s", condition, positiveResult, negativeResult);
-    }
-
-    @Override
-    public String getOutput() {
-        return resultingString;
+        result = String.format("%s ? %s : %s", condition, positiveResult, negativeResult);
     }
 }

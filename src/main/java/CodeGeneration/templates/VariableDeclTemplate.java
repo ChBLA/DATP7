@@ -4,29 +4,25 @@ package CodeGeneration.templates;
 
 import java.util.List;
 
-public class VariableDeclTemplate implements Template {
-    private String resultingString = "";
+public class VariableDeclTemplate extends Template {
+
 
     public VariableDeclTemplate(Template type, List<Template> variableIds) {
-        if (!type.getOutput().equals("")) {
-            resultingString = String.format("%s ", type.getOutput());
+        if (!type.toString().equals("")) {
+            result = String.format("%s ", type);
         }
 
         for (var variableId : variableIds) {
-            resultingString += String.format("%s, ", variableId.getOutput());
+            result += String.format("%s, ", variableId);
         }
 
         // Remove last comma and space with semicolon
-        assert resultingString != null;
-        resultingString = resultingString.replaceFirst(", $", ";");
+        assert result != null;
+        result = result.replaceFirst(", $", ";");
     }
 
     public VariableDeclTemplate(List<Template> variableIds) {
         this(new ManualTemplate(""), variableIds);
     }
 
-    @Override
-    public String getOutput() {
-        return resultingString;
-    }
 }

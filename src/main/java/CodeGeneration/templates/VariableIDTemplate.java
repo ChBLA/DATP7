@@ -2,26 +2,21 @@ package CodeGeneration.templates;
 
 import java.util.List;
 
-public class VariableIDTemplate implements Template {
-    String resultingString;
+public class VariableIDTemplate extends Template {
 
     public VariableIDTemplate(String ID, List<Template> arrayDecls, Template Init) {
-        resultingString = String.format("%s", ID);
+        result = String.format("%s", ID);
 
         for (var decl : arrayDecls) {
-            resultingString += decl.getOutput();
+            result += decl;
         }
 
-        if (!Init.getOutput().equals(""))
-            resultingString += String.format(" = %s", Init.getOutput());
+        if (!Init.toString().equals(""))
+            result += String.format(" = %s", Init);
     }
 
     public VariableIDTemplate(String ID, List<Template> arrayDecls) {
         this(ID, arrayDecls, new ManualTemplate(""));
     }
 
-    @Override
-    public String getOutput() {
-        return resultingString;
-    }
 }

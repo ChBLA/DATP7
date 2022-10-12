@@ -1,5 +1,8 @@
 package CodeGeneration.templates;
 
-public interface Template {
-    String getOutput();
+public abstract class Template {
+    protected String result = "";
+    public String toString() {
+        return result;
+    }
 }

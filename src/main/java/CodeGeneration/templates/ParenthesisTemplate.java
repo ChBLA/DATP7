@@ -1,14 +1,9 @@
 package CodeGeneration.templates;
 
-public class ParenthesisTemplate implements Template{
-    private final String resultingString;
+public class ParenthesisTemplate extends Template{
 
     public ParenthesisTemplate(Template expr) {
-        resultingString = String.format("(%s)", expr.getOutput());
+        result = String.format("(%s)", expr);
     }
 
-    @Override
-    public String getOutput() {
-        return resultingString;
-    }
 }

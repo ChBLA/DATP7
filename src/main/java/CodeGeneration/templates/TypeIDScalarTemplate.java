@@ -1,14 +1,10 @@
 package CodeGeneration.templates;
 
-public class TypeIDScalarTemplate implements Template {
-    private final String result;
+public class TypeIDScalarTemplate extends Template {
 
     public TypeIDScalarTemplate(Template expr) {
-        result = String.format("scalar[%s]", expr.getOutput());
+        result = String.format("scalar[%s]", expr);
     }
 
-    @Override
-    public String getOutput() {
-        return result;
-    }
+
 }

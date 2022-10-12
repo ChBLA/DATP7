@@ -44,7 +44,7 @@ public class CodeGenTests {
         TerminalNodeImpl id = new TerminalNodeImpl(new CommonToken(UCELParser.ID, expected));
         when(node.ID()).thenReturn(id);
         CodeGenVisitor visitor = new CodeGenVisitor();
-        String template = visitor.visitArrayDeclID(node).getOutput();
+        String template = visitor.visitArrayDeclID(node).toString();
         assertEquals(expected, template);
     }
 
@@ -64,7 +64,7 @@ public class CodeGenTests {
         when(node.ID()).thenReturn(id);
         when(node.arrayDecl()).thenReturn(arrayDeclList);
 
-        String actual = visitor.visitArrayDeclID(node).getOutput();
+        String actual = visitor.visitArrayDeclID(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -78,7 +78,7 @@ public class CodeGenTests {
         when(ctx.getText()).thenReturn(expected);
 
         var visitor = new CodeGenVisitor();
-        var actual = visitor.visitBoolean(ctx).getOutput();
+        var actual = visitor.visitBoolean(ctx).toString();
 
         assertEquals(expected, actual);
     }
@@ -103,7 +103,7 @@ public class CodeGenTests {
         when(node.arrayDeclID()).thenReturn(arrayDeclIDContexts);
         when(node.type()).thenReturn(typeMock);
 
-        String actual = visitor.visitTypeDecl(node).getOutput();
+        String actual = visitor.visitTypeDecl(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -128,7 +128,7 @@ public class CodeGenTests {
         when(node.type()).thenReturn(typeMock);
         when(node.arrayDeclID()).thenReturn(arrayDeclIDContexts);
 
-        String actual = visitor.visitTypeDecl(node).getOutput();
+        String actual = visitor.visitTypeDecl(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -144,7 +144,7 @@ public class CodeGenTests {
         var node = mock(UCELParser.PrefixContext.class);
         when(node.getText()).thenReturn(expected);
 
-        String actual = visitor.visitPrefix(node).getOutput();
+        String actual = visitor.visitPrefix(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -163,9 +163,9 @@ public class CodeGenTests {
 
         when(node.expression()).thenReturn(exprMock);
 
-        String actual = visitor.visitInitialiser(node).getOutput();
+        String actual = visitor.visitInitialiser(node).toString();
 
-        assertEquals(expr.getOutput(), actual);
+        assertEquals(expr.toString(), actual);
     }
 
     @Test
@@ -175,7 +175,7 @@ public class CodeGenTests {
 
         var node = mock(UCELParser.InitialiserContext.class);
 
-        String actual = visitor.visitInitialiser(node).getOutput();
+        String actual = visitor.visitInitialiser(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -183,7 +183,7 @@ public class CodeGenTests {
     @Test
     void InitialiserGeneratedCorrectly() {
         Template expr = generateDefaultExprTemplate(Type.TypeEnum.intType);
-        String expected = String.format("{%s, %s}", expr.getOutput(), expr.getOutput());
+        String expected = String.format("{%s, %s}", expr, expr);
 
         var visitor = new CodeGenVisitor();
         var initialiserMock = mockForVisitorResult(UCELParser.InitialiserContext.class, expr, visitor);
@@ -195,7 +195,7 @@ public class CodeGenTests {
 
         when(node.initialiser()).thenReturn(initialiserContextList);
 
-        String actual = visitor.visitInitialiser(node).getOutput();
+        String actual = visitor.visitInitialiser(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -223,21 +223,21 @@ public class CodeGenTests {
             fail("could not mock scope");
         }
 
-        String actual = visitor.visitTypeIDID(node).getOutput();
+        String actual = visitor.visitTypeIDID(node).toString();
 
         assertEquals(variableID, actual);
     }
 
     @Test
     void TypeIDTypeGeneratedCorrectly() {
-        String expected = generateDefaultTypeTemplate(Type.TypeEnum.doubleType).getOutput();
+        String expected = generateDefaultTypeTemplate(Type.TypeEnum.doubleType).toString();
 
         var visitor = new CodeGenVisitor();
         var node = mock(UCELParser.TypeIDTypeContext.class);
         // Maybe set correct type, but should not matter
         node.op = new CommonToken(0, expected);
 
-        String actual = visitor.visitTypeIDType(node).getOutput();
+        String actual = visitor.visitTypeIDType(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -246,8 +246,7 @@ public class CodeGenTests {
     @Test
     void TypeIDIntGeneratedCorrectly() {
         Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
-        String expected = String.format("int[%s,%s]", exprTemp.getOutput(),
-                                                      exprTemp.getOutput());
+        String expected = String.format("int[%s,%s]", exprTemp, exprTemp);
 
         var visitor = new CodeGenVisitor();
 
@@ -257,7 +256,7 @@ public class CodeGenTests {
         when(node.expression(0)).thenReturn(exprMock);
         when(node.expression(1)).thenReturn(exprMock);
 
-        String actual = visitor.visitTypeIDInt(node).getOutput();
+        String actual = visitor.visitTypeIDInt(node).toString();
 
         assertEquals(expected, actual);
    }
@@ -265,7 +264,7 @@ public class CodeGenTests {
     @Test
     void TypeIDIntNoLeftExprGeneratedCorrectly() {
         Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
-        String expected = String.format("int[,%s]", exprTemp.getOutput());
+        String expected = String.format("int[,%s]", exprTemp);
 
         var visitor = new CodeGenVisitor();
 
@@ -274,14 +273,14 @@ public class CodeGenTests {
 
         when(node.expression(1)).thenReturn(exprMock);
 
-        String actual = visitor.visitTypeIDInt(node).getOutput();
+        String actual = visitor.visitTypeIDInt(node).toString();
 
         assertEquals(expected, actual);
     }
     @Test
     void TypeIDIntNoRightExprGeneratedCorrectly() {
         Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
-        String expected = String.format("int[%s,]", exprTemp.getOutput());
+        String expected = String.format("int[%s,]", exprTemp);
 
         var visitor = new CodeGenVisitor();
 
@@ -290,7 +289,7 @@ public class CodeGenTests {
 
         when(node.expression(0)).thenReturn(exprMock);
 
-        String actual = visitor.visitTypeIDInt(node).getOutput();
+        String actual = visitor.visitTypeIDInt(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -299,7 +298,7 @@ public class CodeGenTests {
     void TypeIDScalarGeneratedCorrectly() {
         Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
         Template scalarTemp = generateDefaultTypeTemplate(Type.TypeEnum.scalarType);
-        String expected = String.format("%s[%s]", scalarTemp.getOutput(), exprTemp.getOutput());
+        String expected = String.format("%s[%s]", scalarTemp, exprTemp);
 
         var visitor = new CodeGenVisitor();
 
@@ -308,7 +307,7 @@ public class CodeGenTests {
 
         when(node.expression()).thenReturn(exprMock);
 
-        String actual = visitor.visitTypeIDScalar(node).getOutput();
+        String actual = visitor.visitTypeIDScalar(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -318,8 +317,8 @@ public class CodeGenTests {
         Template fieldDecl1Temp = new ManualTemplate("int a;");
         Template fieldDecl2Temp = new ManualTemplate("int b;");
         String expected = String.format("struct {\n%s\n%s\n}",
-                fieldDecl1Temp.getOutput(),
-                fieldDecl2Temp.getOutput());
+                fieldDecl1Temp,
+                fieldDecl2Temp);
 
         var visitor = new CodeGenVisitor();
 
@@ -333,7 +332,7 @@ public class CodeGenTests {
 
         when(node.fieldDecl()).thenReturn(fieldDeclContextList);
 
-        String actual = visitor.visitTypeIDStruct(node).getOutput();
+        String actual = visitor.visitTypeIDStruct(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -355,7 +354,7 @@ public class CodeGenTests {
         when(node.prefix()).thenReturn(prefixMock);
         when(node.typeId()).thenReturn(typeIDMock);
 
-        String actual = visitor.visitType(node).getOutput();
+        String actual = visitor.visitType(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -372,7 +371,7 @@ public class CodeGenTests {
         var node = mock(UCELParser.TypeContext.class);
         when(node.typeId()).thenReturn(typeIDMock);
 
-        String actual = visitor.visitType(node).getOutput();
+        String actual = visitor.visitType(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -396,7 +395,7 @@ public class CodeGenTests {
         when(node.variableID()).thenReturn(variableIDContextList);
         when(node.type()).thenReturn(typeMock);
 
-        var actual = visitor.visitVariableDecl(node).getOutput();
+        var actual = visitor.visitVariableDecl(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -421,7 +420,7 @@ public class CodeGenTests {
         when(node.variableID()).thenReturn(variableIDContextList);
         when(node.type()).thenReturn(typeMock);
 
-        var actual = visitor.visitVariableDecl(node).getOutput();
+        var actual = visitor.visitVariableDecl(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -440,7 +439,7 @@ public class CodeGenTests {
         var node = mock(UCELParser.VariableDeclContext.class);
         when(node.variableID()).thenReturn(variableIDContextList);
 
-        var actual = visitor.visitVariableDecl(node).getOutput();
+        var actual = visitor.visitVariableDecl(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -462,7 +461,7 @@ public class CodeGenTests {
         var node = mock(UCELParser.VariableDeclContext.class);
         when(node.variableID()).thenReturn(variableIDContextList);
 
-        var actual = visitor.visitVariableDecl(node).getOutput();
+        var actual = visitor.visitVariableDecl(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -495,7 +494,7 @@ public class CodeGenTests {
             fail("Error in mock. Cannot mock declaration reference");
         }
 
-        var actual = visitor.visitVariableID(node).getOutput();
+        var actual = visitor.visitVariableID(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -522,7 +521,7 @@ public class CodeGenTests {
             fail("Error in mock. Cannot mock declaration reference");
         }
 
-        var actual = visitor.visitVariableID(node).getOutput();
+        var actual = visitor.visitVariableID(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -558,7 +557,7 @@ public class CodeGenTests {
             fail("Error in mock. Cannot mock declaration reference");
         }
 
-        var actual = visitor.visitVariableID(node).getOutput();
+        var actual = visitor.visitVariableID(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -594,7 +593,7 @@ public class CodeGenTests {
             fail("Error in mock. Cannot mock declaration reference");
         }
 
-        var actual = visitor.visitVariableID(node).getOutput();
+        var actual = visitor.visitVariableID(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -617,7 +616,7 @@ public class CodeGenTests {
 
         when(node.expression()).thenReturn(expr);
 
-        var actual = visitor.visitArrayDecl(node).getOutput();
+        var actual = visitor.visitArrayDecl(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -634,7 +633,7 @@ public class CodeGenTests {
 
         when(node.type()).thenReturn(type);
 
-        var actual = visitor.visitArrayDecl(node).getOutput();
+        var actual = visitor.visitArrayDecl(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -647,7 +646,7 @@ public class CodeGenTests {
 
         var node = mock(UCELParser.ArrayDeclContext.class);
 
-        var actual = visitor.visitArrayDecl(node).getOutput();
+        var actual = visitor.visitArrayDecl(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -662,7 +661,7 @@ public class CodeGenTests {
     void assignmentGeneratedCorrectly(String left, String right) {
         Template leftExpr = new ManualTemplate(left);
         Template rightExpr = new ManualTemplate(right);
-        String expected = String.format("%s = %s", leftExpr.getOutput(), rightExpr.getOutput());
+        String expected = String.format("%s = %s", leftExpr, rightExpr);
 
         var visitor = new CodeGenVisitor();
 
@@ -673,7 +672,7 @@ public class CodeGenTests {
         when(node.expression(0)).thenReturn(expr1);
         when(node.expression(1)).thenReturn(expr2);
 
-        var actual = visitor.visitAssignExpr(node).getOutput();
+        var actual = visitor.visitAssignExpr(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -718,7 +717,7 @@ public class CodeGenTests {
 
         CodeGenVisitor visitor = new CodeGenVisitor(scopeMock);
 
-        String actual = visitor.visitIdExpr(node).getOutput();
+        String actual = visitor.visitIdExpr(node).toString();
 
         assertEquals(name, actual);
 
@@ -736,7 +735,7 @@ public class CodeGenTests {
         var node = mock(UCELParser.LiteralContext.class);
         when(node.getText()).thenReturn(expectedLiteral);
 
-        var actual = visitor.visitLiteral(node).getOutput();
+        var actual = visitor.visitLiteral(node).toString();
 
         assertEquals(expectedLiteral, actual);
     }
@@ -749,7 +748,7 @@ public class CodeGenTests {
         CodeGenVisitor visitor = new CodeGenVisitor();
         Template left = generateDefaultExprTemplate("abec");
         Template right = generateDefaultExprTemplate(Type.TypeEnum.intType);
-        String expected = String.format("%s[%s]", left.getOutput(), right.getOutput()); // abc[0]
+        String expected = String.format("%s[%s]", left, right); // abc[0]
 
         var exprLeft = mockForVisitorResult(UCELParser.ExpressionContext.class, left, visitor);
         var exprRight = mockForVisitorResult(UCELParser.ExpressionContext.class, right, visitor);
@@ -759,7 +758,7 @@ public class CodeGenTests {
         when(node.expression(0)).thenReturn(exprLeft);
         when(node.expression(1)).thenReturn(exprRight);
 
-        var actual = visitor.visitArrayIndex(node).getOutput();
+        var actual = visitor.visitArrayIndex(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -784,7 +783,7 @@ public class CodeGenTests {
         when(node.expression(1)).thenReturn(expr);
         when(opToken.getText()).thenReturn(op);
 
-        var actual = visitor.visitAddSub(node).getOutput();
+        var actual = visitor.visitAddSub(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -809,7 +808,7 @@ public class CodeGenTests {
         when(node.expression(1)).thenReturn(expr);
         when(opToken.getText()).thenReturn(op);
 
-        var actual = visitor.visitMultDiv(node).getOutput();
+        var actual = visitor.visitMultDiv(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -819,7 +818,7 @@ public class CodeGenTests {
     @Test
     void incrementPostExprGeneratedCorrectly() {
         Template exprResult = generateDefaultExprTemplate("abec");
-        String expected = String.format("%s++", exprResult.getOutput());
+        String expected = String.format("%s++", exprResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -832,7 +831,7 @@ public class CodeGenTests {
 
         when(node.expression()).thenReturn(expr);
 
-        var actual = visitor.visitIncrementPost(node).getOutput();
+        var actual = visitor.visitIncrementPost(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -840,7 +839,7 @@ public class CodeGenTests {
     @Test
     void incrementPreExprGeneratedCorrectly() {
         Template exprResult = generateDefaultExprTemplate("abec");
-        String expected = String.format("++%s", exprResult.getOutput());
+        String expected = String.format("++%s", exprResult);
 
 
         CodeGenVisitor visitor = new CodeGenVisitor();
@@ -854,14 +853,14 @@ public class CodeGenTests {
 
         when(node.expression()).thenReturn(expr);
 
-        var actual = visitor.visitIncrementPre(node).getOutput();
+        var actual = visitor.visitIncrementPre(node).toString();
 
         assertEquals(expected, actual);
     }
     @Test
     void decrementPostExprGeneratedCorrectly() {
         Template exprResult = generateDefaultExprTemplate("abec");
-        String expected = String.format("%s--", exprResult.getOutput());
+        String expected = String.format("%s--", exprResult);
 
 
         CodeGenVisitor visitor = new CodeGenVisitor();
@@ -875,14 +874,14 @@ public class CodeGenTests {
 
         when(node.expression()).thenReturn(expr);
 
-        var actual = visitor.visitDecrementPost(node).getOutput();
+        var actual = visitor.visitDecrementPost(node).toString();
 
         assertEquals(expected, actual);
     }
     @Test
     void decrementPreExprGeneratedCorrectly() {
         Template exprResult = generateDefaultExprTemplate("abec");
-        String expected = String.format("--%s", exprResult.getOutput());
+        String expected = String.format("--%s", exprResult);
 
 
         CodeGenVisitor visitor = new CodeGenVisitor();
@@ -896,7 +895,7 @@ public class CodeGenTests {
 
         when(node.expression()).thenReturn(expr);
 
-        var actual = visitor.visitDecrementPre(node).getOutput();
+        var actual = visitor.visitDecrementPre(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -907,7 +906,7 @@ public class CodeGenTests {
     @ParameterizedTest(name = "{index} => generating for {0} expr")
     @ValueSource(strings = {"+", "-"})
     void unaryPlusMinusExprGeneratedCorrectly(String op) {
-        String expected = String.format("%s%s", op, generateDefaultExprTemplate(Type.TypeEnum.intType).getOutput());
+        String expected = String.format("%s%s", op, generateDefaultExprTemplate(Type.TypeEnum.intType));
         Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
@@ -919,7 +918,7 @@ public class CodeGenTests {
         when(node.expression()).thenReturn(expr);
         when(node.unary()).thenReturn(unaryNode);
 
-        var actual = visitor.visitUnaryExpr(node).getOutput();
+        var actual = visitor.visitUnaryExpr(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -928,7 +927,7 @@ public class CodeGenTests {
     @ValueSource(strings = {"not", "!"})
     void unaryNotNegExprGeneratedCorrectly(String op) {
         String sanitizeOp = Objects.equals(op, "not") ? op + " " : op;
-        String expected = String.format("%s%s", sanitizeOp, generateDefaultExprTemplate(Type.TypeEnum.boolType).getOutput());
+        String expected = String.format("%s%s", sanitizeOp, generateDefaultExprTemplate(Type.TypeEnum.boolType));
         Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.boolType);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
@@ -940,7 +939,7 @@ public class CodeGenTests {
         when(node.expression()).thenReturn(expr);
         when(node.unary()).thenReturn(unaryNode);
 
-        var actual = visitor.visitUnaryExpr(node).getOutput();
+        var actual = visitor.visitUnaryExpr(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -950,7 +949,7 @@ public class CodeGenTests {
     //region Parenthesis
     @Test
     void parenGeneratedCorrectly() {
-        String expected = String.format("(%s)", generateDefaultExprTemplate(Type.TypeEnum.intType).getOutput());
+        String expected = String.format("(%s)", generateDefaultExprTemplate(Type.TypeEnum.intType));
         Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
@@ -960,7 +959,7 @@ public class CodeGenTests {
 
         when(node.expression()).thenReturn(expr);
 
-        var actual = visitor.visitParen(node).getOutput();
+        var actual = visitor.visitParen(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -987,7 +986,7 @@ public class CodeGenTests {
         when(node.expression(1)).thenReturn(expr);
         when(opToken.getText()).thenReturn(op);
 
-        var actual = visitor.visitBitshift(node).getOutput();
+        var actual = visitor.visitBitshift(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1013,7 +1012,7 @@ public class CodeGenTests {
         when(token.getText()).thenReturn(op);
         when(node.BITAND()).thenReturn(token);
 
-        var actual = visitor.visitBitAnd(node).getOutput();
+        var actual = visitor.visitBitAnd(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1036,7 +1035,7 @@ public class CodeGenTests {
         when(token.getText()).thenReturn(op);
         when(node.BITXOR()).thenReturn(token);
 
-        var actual = visitor.visitBitXor(node).getOutput();
+        var actual = visitor.visitBitXor(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1059,7 +1058,7 @@ public class CodeGenTests {
         when(token.getText()).thenReturn(op);
         when(node.BITOR()).thenReturn(token);
 
-        var actual = visitor.visitBitOr(node).getOutput();
+        var actual = visitor.visitBitOr(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1085,7 +1084,7 @@ public class CodeGenTests {
         when(node.expression(1)).thenReturn(expr);
         when(opToken.getText()).thenReturn(op);
 
-        var actual = visitor.visitEqExpr(node).getOutput();
+        var actual = visitor.visitEqExpr(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1110,7 +1109,7 @@ public class CodeGenTests {
         when(node.expression(1)).thenReturn(expr);
         when(opToken.getText()).thenReturn(op);
 
-        var actual = visitor.visitMinMax(node).getOutput();
+        var actual = visitor.visitMinMax(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1135,7 +1134,7 @@ public class CodeGenTests {
         when(node.expression(1)).thenReturn(expr);
         when(opToken.getText()).thenReturn(op);
 
-        var actual = visitor.visitRelExpr(node).getOutput();
+        var actual = visitor.visitRelExpr(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1160,7 +1159,7 @@ public class CodeGenTests {
         when(node.expression(1)).thenReturn(expr);
         when(opToken.getText()).thenReturn(op);
 
-        var actual = visitor.visitLogAnd(node).getOutput();
+        var actual = visitor.visitLogAnd(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1183,7 +1182,7 @@ public class CodeGenTests {
         when(node.expression(1)).thenReturn(expr);
         when(opToken.getText()).thenReturn(op);
 
-        var actual = visitor.visitLogOr(node).getOutput();
+        var actual = visitor.visitLogOr(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1206,7 +1205,7 @@ public class CodeGenTests {
         when(node.expression(1)).thenReturn(intExpr);
         when(node.expression(2)).thenReturn(intExpr);
 
-        var actual = visitor.visitConditional(node).getOutput();
+        var actual = visitor.visitConditional(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1218,7 +1217,7 @@ public class CodeGenTests {
     @EnumSource(value = Type.TypeEnum.class, names ={"intType", "doubleType", "boolType"})
     void markExpressionGeneratedCorrectly(Type.TypeEnum type) {
         var exprTemplate = generateDefaultExprTemplate(type);
-        var expected = exprTemplate.getOutput() + "'";
+        var expected = exprTemplate + "'";
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1227,14 +1226,14 @@ public class CodeGenTests {
 
         when(node.expression()).thenReturn(expr);
 
-        var actual = visitor.visitMarkExpr(node).getOutput();
+        var actual = visitor.visitMarkExpr(node).toString();
 
         assertEquals(expected, actual);
     }
     @Test
     void markExpressionIDGeneratedCorrectly() {
         var exprTemplate = generateDefaultExprTemplate("abc");
-        var expected = exprTemplate.getOutput() + "'";
+        var expected = exprTemplate + "'";
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1243,7 +1242,7 @@ public class CodeGenTests {
 
         when(node.expression()).thenReturn(expr);
 
-        var actual = visitor.visitMarkExpr(node).getOutput();
+        var actual = visitor.visitMarkExpr(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1254,7 +1253,7 @@ public class CodeGenTests {
     @Test
     void verificationGeneratedCorrectly() {
         var verificationTemplate = generateDefaultVerificationTemplate();
-        var expected = verificationTemplate.getOutput();
+        var expected = verificationTemplate.toString();
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1263,7 +1262,7 @@ public class CodeGenTests {
 
         when(node.verification()).thenReturn(verification);
 
-        var actual = visitor.visitVerificationExpr(node).getOutput();
+        var actual = visitor.visitVerificationExpr(node).toString();
 
         assertEquals(expected, actual);
 
@@ -1277,7 +1276,7 @@ public class CodeGenTests {
         var exprTemplate = generateDefaultExprTemplate(Type.TypeEnum.boolType);
         DeclarationInfo variable = new DeclarationInfo(name, new Type(Type.TypeEnum.intType));
         DeclarationReference ref = new DeclarationReference(0, 1);
-        var expected = String.format("%s (%s:%s) %s", op, name, typeTemplate.getOutput(), exprTemplate.getOutput());
+        var expected = String.format("%s (%s:%s) %s", op, name, typeTemplate, exprTemplate);
         var opToken = mock(CommonToken.class);
 
         var scopeMock = mock(Scope.class);
@@ -1301,7 +1300,7 @@ public class CodeGenTests {
         when(node.type()).thenReturn(typeMock);
         when(opToken.getText()).thenReturn(op);
 
-        String actual = visitor.visitVerification(node).getOutput();
+        String actual = visitor.visitVerification(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1316,7 +1315,7 @@ public class CodeGenTests {
     void ifStatementNoElseCorrectlyGenerated() {
         Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.boolType);
         Template stmntResult = generateDefaultStatementTemplate();
-        String expected = String.format("if (%s) %s", exprResult.getOutput(), stmntResult.getOutput());
+        String expected = String.format("if (%s) %s", exprResult, stmntResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1327,7 +1326,7 @@ public class CodeGenTests {
         when(node.expression()).thenReturn(expr);
         when(node.statement(0)).thenReturn(stmnt);
 
-        var actual = visitor.visitIfstatement(node).getOutput();
+        var actual = visitor.visitIfstatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1337,7 +1336,7 @@ public class CodeGenTests {
         Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.boolType);
         Template stmnt1Result = generateDefaultStatementTemplate();
         Template stmnt2Result = generateDefaultStatementTemplate();
-        String expected = String.format("if (%s) %s else %s", exprResult.getOutput(), stmnt1Result.getOutput(), stmnt2Result.getOutput());
+        String expected = String.format("if (%s) %s else %s", exprResult, stmnt1Result, stmnt2Result);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1350,7 +1349,7 @@ public class CodeGenTests {
         when(node.statement(0)).thenReturn(stmnt1);
         when(node.statement(1)).thenReturn(stmnt2);
 
-        var actual = visitor.visitIfstatement(node).getOutput();
+        var actual = visitor.visitIfstatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1362,7 +1361,7 @@ public class CodeGenTests {
     void whileStatementCorrectlyGenerated() {
         Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.boolType);
         Template stmntResult = generateDefaultStatementTemplate();
-        String expected = String.format("while (%s) %s", exprResult.getOutput(), stmntResult.getOutput());
+        String expected = String.format("while (%s) %s", exprResult, stmntResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1373,7 +1372,7 @@ public class CodeGenTests {
         when(node.expression()).thenReturn(expr);
         when(node.statement()).thenReturn(stmnt);
 
-        var actual = visitor.visitWhileLoop(node).getOutput();
+        var actual = visitor.visitWhileLoop(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1385,7 +1384,7 @@ public class CodeGenTests {
     void doWhileStatementCorrectlyGenerated() {
         Template exprResult = generateDefaultExprTemplate(Type.TypeEnum.boolType);
         Template stmntResult = generateDefaultStatementTemplate();
-        String expected = String.format("do %s while (%s);", stmntResult.getOutput(), exprResult.getOutput());
+        String expected = String.format("do %s while (%s);", stmntResult, exprResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1396,7 +1395,7 @@ public class CodeGenTests {
         when(node.expression()).thenReturn(expr);
         when(node.statement()).thenReturn(stmnt);
 
-        var actual = visitor.visitDowhile(node).getOutput();
+        var actual = visitor.visitDowhile(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1411,7 +1410,7 @@ public class CodeGenTests {
         Template expr2Result = generateDefaultExprTemplate(Type.TypeEnum.boolType);
         Template assignResult = generateDefaultAssignmentTemplate(Type.TypeEnum.boolType);
         Template stmntResult = generateDefaultStatementTemplate();
-        String expected = String.format("for (%s;%s;%s) %s", assignResult.getOutput(), expr1Result.getOutput(), expr2Result.getOutput(), stmntResult.getOutput());
+        String expected = String.format("for (%s;%s;%s) %s", assignResult, expr1Result, expr2Result, stmntResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1426,7 +1425,7 @@ public class CodeGenTests {
         when(node.assignment()).thenReturn(assign);
         when(node.statement()).thenReturn(stmnt);
 
-        var actual = visitor.visitForLoop(node).getOutput();
+        var actual = visitor.visitForLoop(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1435,7 +1434,7 @@ public class CodeGenTests {
         Template expr1Result = generateDefaultExprTemplate(Type.TypeEnum.boolType);
         Template expr2Result = generateDefaultExprTemplate(Type.TypeEnum.boolType);
         Template stmntResult = generateDefaultStatementTemplate();
-        String expected = String.format("for (%s;%s;%s) %s", generateEmptyAssignTemplate().getOutput(), expr1Result.getOutput(), expr2Result.getOutput(), stmntResult.getOutput());
+        String expected = String.format("for (%s;%s;%s) %s", generateEmptyAssignTemplate(), expr1Result, expr2Result, stmntResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1449,7 +1448,7 @@ public class CodeGenTests {
         when(node.assignment()).thenReturn(null);
         when(node.statement()).thenReturn(stmnt);
 
-        var actual = visitor.visitForLoop(node).getOutput();
+        var actual = visitor.visitForLoop(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1460,7 +1459,7 @@ public class CodeGenTests {
         Template expr2Result = generateDefaultExprTemplate(Type.TypeEnum.boolType);
         Template assignResult = generateDefaultAssignmentTemplate(Type.TypeEnum.boolType);
         Template stmntResult = generateDefaultStatementTemplate();
-        String expected = String.format("for (%s;%s;%s) %s", assignResult.getOutput(), expr1Result.getOutput(), expr2Result.getOutput(), stmntResult.getOutput());
+        String expected = String.format("for (%s;%s;%s) %s", assignResult, expr1Result, expr2Result, stmntResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1474,7 +1473,7 @@ public class CodeGenTests {
         when(node.assignment()).thenReturn(assign);
         when(node.statement()).thenReturn(stmnt);
 
-        var actual = visitor.visitForLoop(node).getOutput();
+        var actual = visitor.visitForLoop(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1484,7 +1483,7 @@ public class CodeGenTests {
         Template expr2Result = generateEmptyExprTemplate();
         Template assignResult = generateDefaultAssignmentTemplate(Type.TypeEnum.boolType);
         Template stmntResult = generateDefaultStatementTemplate();
-        String expected = String.format("for (%s;%s;%s) %s", assignResult.getOutput(), expr1Result.getOutput(), expr2Result.getOutput(), stmntResult.getOutput());
+        String expected = String.format("for (%s;%s;%s) %s", assignResult, expr1Result, expr2Result, stmntResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1498,7 +1497,7 @@ public class CodeGenTests {
         when(node.assignment()).thenReturn(assign);
         when(node.statement()).thenReturn(stmnt);
 
-        var actual = visitor.visitForLoop(node).getOutput();
+        var actual = visitor.visitForLoop(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1506,7 +1505,7 @@ public class CodeGenTests {
     void forLoopEmptyExpr1Expr2GeneratedCorrectly() {
         Template assignResult = generateDefaultAssignmentTemplate(Type.TypeEnum.boolType);
         Template stmntResult = generateDefaultStatementTemplate();
-        String expected = String.format("for (%s;%s;%s) %s", assignResult.getOutput(), generateEmptyExprTemplate().getOutput(), generateEmptyExprTemplate().getOutput(), stmntResult.getOutput());
+        String expected = String.format("for (%s;%s;%s) %s", assignResult, generateEmptyExprTemplate(), generateEmptyExprTemplate(), stmntResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1519,7 +1518,7 @@ public class CodeGenTests {
         when(node.assignment()).thenReturn(assign);
         when(node.statement()).thenReturn(stmnt);
 
-        var actual = visitor.visitForLoop(node).getOutput();
+        var actual = visitor.visitForLoop(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1527,7 +1526,7 @@ public class CodeGenTests {
     void forLoopEmptyAssignExpr1GeneratedCorrectly() {
         Template expr2Result = generateDefaultExprTemplate(Type.TypeEnum.boolType);
         Template stmntResult = generateDefaultStatementTemplate();
-        String expected = String.format("for (%s;%s;%s) %s", generateEmptyAssignTemplate().getOutput(), generateEmptyExprTemplate().getOutput(), expr2Result.getOutput(), stmntResult.getOutput());
+        String expected = String.format("for (%s;%s;%s) %s", generateEmptyAssignTemplate(), generateEmptyExprTemplate(), expr2Result, stmntResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1540,7 +1539,7 @@ public class CodeGenTests {
         when(node.assignment()).thenReturn(null);
         when(node.statement()).thenReturn(stmnt);
 
-        var actual = visitor.visitForLoop(node).getOutput();
+        var actual = visitor.visitForLoop(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1548,7 +1547,7 @@ public class CodeGenTests {
     void forLoopEmptyAssignExpr2GeneratedCorrectly() {
         Template expr1Result = generateDefaultExprTemplate(Type.TypeEnum.boolType);
         Template stmntResult = generateDefaultStatementTemplate();
-        String expected = String.format("for (%s;%s;%s) %s", generateEmptyAssignTemplate().getOutput(), expr1Result.getOutput(), generateEmptyExprTemplate().getOutput(), stmntResult.getOutput());
+        String expected = String.format("for (%s;%s;%s) %s", generateEmptyAssignTemplate(), expr1Result, generateEmptyExprTemplate(), stmntResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1561,14 +1560,14 @@ public class CodeGenTests {
         when(node.assignment()).thenReturn(null);
         when(node.statement()).thenReturn(stmnt);
 
-        var actual = visitor.visitForLoop(node).getOutput();
+        var actual = visitor.visitForLoop(node).toString();
 
         assertEquals(expected, actual);
     }
     @Test
     void forLoopEmptyAssignExprsGeneratedCorrectly() {
         Template stmntResult = generateDefaultStatementTemplate();
-        String expected = String.format("for (%s;%s;%s) %s", generateEmptyAssignTemplate().getOutput(), generateEmptyExprTemplate().getOutput(), generateEmptyExprTemplate().getOutput(), stmntResult.getOutput());
+        String expected = String.format("for (%s;%s;%s) %s", generateEmptyAssignTemplate(), generateEmptyExprTemplate(), generateEmptyExprTemplate(), stmntResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1580,7 +1579,7 @@ public class CodeGenTests {
         when(node.assignment()).thenReturn(null);
         when(node.statement()).thenReturn(stmnt);
 
-        var actual = visitor.visitForLoop(node).getOutput();
+        var actual = visitor.visitForLoop(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1593,9 +1592,9 @@ public class CodeGenTests {
         var idResult = new ManualTemplate("name");
         var typeResult = generateDefaultTypeTemplate(Type.TypeEnum.intType);
         var stmntResult = generateDefaultStatementTemplate();
-        var expected = String.format("for (%s:%s) %s", idResult.getOutput(), typeResult.getOutput(), stmntResult.getOutput());
+        var expected = String.format("for (%s:%s) %s", idResult, typeResult, stmntResult);
 
-        DeclarationInfo variable = new DeclarationInfo(idResult.getOutput(), new Type(Type.TypeEnum.intType, 1));
+        DeclarationInfo variable = new DeclarationInfo(idResult.toString(), new Type(Type.TypeEnum.intType, 1));
         DeclarationReference ref = new DeclarationReference(0, 1);
 
         var scopeMock = mock(Scope.class);
@@ -1617,7 +1616,7 @@ public class CodeGenTests {
         when(node.type()).thenReturn(typeMock);
         when(node.statement()).thenReturn(stmntMock);
 
-        String actual = visitor.visitIteration(node).getOutput();
+        String actual = visitor.visitIteration(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1627,9 +1626,9 @@ public class CodeGenTests {
         var idResult = new ManualTemplate("");
         var typeResult = generateDefaultTypeTemplate(Type.TypeEnum.intType);
         var stmntResult = generateDefaultStatementTemplate();
-        var expected = String.format("for (%s:%s) %s", idResult.getOutput(), typeResult.getOutput(), stmntResult.getOutput());
+        var expected = String.format("for (%s:%s) %s", idResult, typeResult, stmntResult);
 
-        DeclarationInfo variable = new DeclarationInfo(idResult.getOutput(), new Type(Type.TypeEnum.intType, 1));
+        DeclarationInfo variable = new DeclarationInfo(idResult.toString(), new Type(Type.TypeEnum.intType, 1));
         DeclarationReference ref = new DeclarationReference(0, 1);
 
         var scopeMock = mock(Scope.class);
@@ -1651,7 +1650,7 @@ public class CodeGenTests {
         when(node.type()).thenReturn(typeMock);
         when(node.statement()).thenReturn(stmntMock);
 
-        String actual = visitor.visitIteration(node).getOutput();
+        String actual = visitor.visitIteration(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1660,9 +1659,9 @@ public class CodeGenTests {
         var idResult = new ManualTemplate("");
         var typeResult = new ManualTemplate("");
         var stmntResult = generateDefaultStatementTemplate();
-        var expected = String.format("for (%s:%s) %s", idResult.getOutput(), typeResult.getOutput(), stmntResult.getOutput());
+        var expected = String.format("for (%s:%s) %s", idResult, typeResult, stmntResult);
 
-        DeclarationInfo variable = new DeclarationInfo(idResult.getOutput(), new Type(Type.TypeEnum.intType, 1));
+        DeclarationInfo variable = new DeclarationInfo(idResult.toString(), new Type(Type.TypeEnum.intType, 1));
         DeclarationReference ref = new DeclarationReference(0, 1);
 
         var scopeMock = mock(Scope.class);
@@ -1684,7 +1683,7 @@ public class CodeGenTests {
         when(node.type()).thenReturn(typeMock);
         when(node.statement()).thenReturn(stmntMock);
 
-        String actual = visitor.visitIteration(node).getOutput();
+        String actual = visitor.visitIteration(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1693,9 +1692,9 @@ public class CodeGenTests {
         var idResult = new ManualTemplate("");
         var typeResult = new ManualTemplate("");
         var stmntResult = generateDefaultStatementTemplate();
-        var expected = String.format("for (%s:%s) %s", idResult.getOutput(), typeResult.getOutput(), stmntResult.getOutput());
+        var expected = String.format("for (%s:%s) %s", idResult, typeResult, stmntResult);
 
-        DeclarationInfo variable = new DeclarationInfo(idResult.getOutput(), new Type(Type.TypeEnum.intType, 1));
+        DeclarationInfo variable = new DeclarationInfo(idResult.toString(), new Type(Type.TypeEnum.intType, 1));
         DeclarationReference ref = new DeclarationReference(0, 1);
 
         var scopeMock = mock(Scope.class);
@@ -1717,7 +1716,7 @@ public class CodeGenTests {
         when(node.type()).thenReturn(typeMock);
         when(node.statement()).thenReturn(stmntMock);
 
-        String actual = visitor.visitIteration(node).getOutput();
+        String actual = visitor.visitIteration(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1729,7 +1728,7 @@ public class CodeGenTests {
     @EnumSource(value = Type.TypeEnum.class, names ={"intType", "doubleType", "boolType"})
     void returnStatementGeneratedCorrectly(Type.TypeEnum type) {
         var exprResult = generateDefaultExprTemplate(type);
-        var expected = String.format("return %s;", exprResult.getOutput());
+        var expected = String.format("return %s;", exprResult);
 
         var node = mock(UCELParser.ReturnstatementContext.class);
         CodeGenVisitor visitor = new CodeGenVisitor();
@@ -1738,7 +1737,7 @@ public class CodeGenTests {
 
         when(node.expression()).thenReturn(exprMock);
 
-        String actual = visitor.visitReturnstatement(node).getOutput();
+        String actual = visitor.visitReturnstatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1750,7 +1749,7 @@ public class CodeGenTests {
         var node = mock(UCELParser.ReturnstatementContext.class);
         CodeGenVisitor visitor = new CodeGenVisitor();
 
-        String actual = visitor.visitReturnstatement(node).getOutput();
+        String actual = visitor.visitReturnstatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1760,13 +1759,13 @@ public class CodeGenTests {
     @Test
     void blockEmptyGeneratedCorrectly() {
         Template blockResult = generateDefaultStatementTemplate();
-        var expected = blockResult.getOutput();
+        var expected = blockResult.toString();
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
         var node = mock(UCELParser.BlockContext.class);
 
-        var actual = visitor.visitBlock(node).getOutput();
+        var actual = visitor.visitBlock(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1774,8 +1773,8 @@ public class CodeGenTests {
     @Test
     void blockOneLocalDeclNoStatementGeneratedCorrectly() {
         Template localDeclTemplate = generateDefaultLocalDeclaration(Type.TypeEnum.intType, "abc");
-        Template blockResult = generateDefaultStatementTemplate(localDeclTemplate.getOutput(), "", true);
-        var expected = blockResult.getOutput();
+        Template blockResult = generateDefaultStatementTemplate(localDeclTemplate.toString(), "", true);
+        var expected = blockResult.toString();
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1785,7 +1784,7 @@ public class CodeGenTests {
 
         when(node.localDeclaration()).thenReturn(localDecls);
 
-        var actual = visitor.visitBlock(node).getOutput();
+        var actual = visitor.visitBlock(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1793,8 +1792,8 @@ public class CodeGenTests {
     @Test
     void blockNoLocalDeclOneStatementGeneratedCorrectly() {
         Template statementTemplate = generateDefaultNonBlockStatementTemplate();
-        Template blockResult = generateDefaultStatementTemplate("", statementTemplate.getOutput(), false);
-        var expected = blockResult.getOutput();
+        Template blockResult = generateDefaultStatementTemplate("", statementTemplate.toString(), false);
+        var expected = blockResult.toString();
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1804,7 +1803,7 @@ public class CodeGenTests {
 
         when(node.statement()).thenReturn(statements);
 
-        var actual = visitor.visitBlock(node).getOutput();
+        var actual = visitor.visitBlock(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1812,8 +1811,8 @@ public class CodeGenTests {
     void blockOneLocalDeclOneStatementGeneratedCorrectly() {
         Template localDeclTemplate = generateDefaultLocalDeclaration(Type.TypeEnum.intType, "abc");
         Template statementTemplate = generateDefaultNonBlockStatementTemplate();
-        Template blockResult = generateDefaultStatementTemplate(localDeclTemplate.getOutput(), statementTemplate.getOutput(), true);
-        var expected = blockResult.getOutput();
+        Template blockResult = generateDefaultStatementTemplate(localDeclTemplate.toString(), statementTemplate.toString(), true);
+        var expected = blockResult.toString();
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1827,7 +1826,7 @@ public class CodeGenTests {
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
 
-        var actual = visitor.visitBlock(node).getOutput();
+        var actual = visitor.visitBlock(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1843,7 +1842,7 @@ public class CodeGenTests {
             add(generateDefaultNonBlockStatementTemplate());
         }};
         Template blockResult = generateDefaultStatementTemplate(localDeclTemplates, statementTemplates, true);
-        var expected = blockResult.getOutput();
+        var expected = blockResult.toString();
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1860,7 +1859,7 @@ public class CodeGenTests {
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
 
-        var actual = visitor.visitBlock(node).getOutput();
+        var actual = visitor.visitBlock(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1876,7 +1875,7 @@ public class CodeGenTests {
             add(generateDefaultNonBlockStatementTemplate());
         }};
         Template blockResult = generateDefaultStatementTemplate(localDeclTemplates, statementTemplates, true);
-        var expected = blockResult.getOutput();
+        var expected = blockResult.toString();
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1894,7 +1893,7 @@ public class CodeGenTests {
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
 
-        var actual = visitor.visitBlock(node).getOutput();
+        var actual = visitor.visitBlock(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1910,7 +1909,7 @@ public class CodeGenTests {
             add(generateDefaultNonBlockStatementTemplate());
         }};
         Template blockResult = generateDefaultStatementTemplate(localDeclTemplates, statementTemplates, true);
-        var expected = blockResult.getOutput();
+        var expected = blockResult.toString();
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1929,7 +1928,7 @@ public class CodeGenTests {
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
 
-        var actual = visitor.visitBlock(node).getOutput();
+        var actual = visitor.visitBlock(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1939,7 +1938,7 @@ public class CodeGenTests {
     @Test
     void statementBlockGeneratedCorrectly() {
         var blockResult = generateDefaultStatementTemplate();
-        var expected = blockResult.getOutput();
+        var expected = blockResult.toString();
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1948,7 +1947,7 @@ public class CodeGenTests {
 
         when(node.block()).thenReturn(blockMock);
 
-        var actual = visitor.visitStatement(node).getOutput();
+        var actual = visitor.visitStatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1956,7 +1955,7 @@ public class CodeGenTests {
     @Test
     void statementAssignmentGeneratedCorrectly() {
         var assignResult = generateDefaultAssignmentTemplate(Type.TypeEnum.intType);
-        var expected = assignResult.getOutput() + ";\n";
+        var expected = assignResult + ";\n";
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1965,7 +1964,7 @@ public class CodeGenTests {
 
         when(node.assignment()).thenReturn(assignMock);
 
-        var actual = visitor.visitStatement(node).getOutput();
+        var actual = visitor.visitStatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1973,7 +1972,7 @@ public class CodeGenTests {
     @Test
     void statementExpressionGeneratedCorrectly() {
         var exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
-        var expected = exprResult.getOutput() + ";\n";
+        var expected = exprResult + ";\n";
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1982,7 +1981,7 @@ public class CodeGenTests {
 
         when(node.expression()).thenReturn(exprMock);
 
-        var actual = visitor.visitStatement(node).getOutput();
+        var actual = visitor.visitStatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1994,7 +1993,7 @@ public class CodeGenTests {
         CodeGenVisitor visitor = new CodeGenVisitor();
         var node = mock(UCELParser.StatementContext.class);
 
-        var actual = visitor.visitStatement(node).getOutput();
+        var actual = visitor.visitStatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -2002,7 +2001,7 @@ public class CodeGenTests {
     @Test
     void statementForLoopGeneratedCorrectly() {
         var forloopResult = generateDefaultForLoopTemplate();
-        var expected = forloopResult.getOutput() + "\n";
+        var expected = forloopResult + "\n";
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2011,7 +2010,7 @@ public class CodeGenTests {
 
         when(node.forLoop()).thenReturn(forloopMock);
 
-        var actual = visitor.visitStatement(node).getOutput();
+        var actual = visitor.visitStatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -2019,7 +2018,7 @@ public class CodeGenTests {
     @Test
     void statementIterationGeneratedCorrectly() {
         var iterationResult = generateDefaultIterationTemplate();
-        var expected = iterationResult.getOutput() + "\n";
+        var expected = iterationResult + "\n";
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2028,7 +2027,7 @@ public class CodeGenTests {
 
         when(node.iteration()).thenReturn(iterationMock);
 
-        var actual = visitor.visitStatement(node).getOutput();
+        var actual = visitor.visitStatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -2036,7 +2035,7 @@ public class CodeGenTests {
     @Test
     void statementWhileLoopGeneratedCorrectly() {
         var whileResult = generateDefaultWhileLoopTemplate();
-        var expected = whileResult.getOutput() + "\n";
+        var expected = whileResult + "\n";
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2045,7 +2044,7 @@ public class CodeGenTests {
 
         when(node.whileLoop()).thenReturn(whileMock);
 
-        var actual = visitor.visitStatement(node).getOutput();
+        var actual = visitor.visitStatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -2053,7 +2052,7 @@ public class CodeGenTests {
     @Test
     void statementDoWhileGeneratedCorrectly() {
         var doWhileResult = generateDefaultDoWhileLoopTemplate();
-        var expected = doWhileResult.getOutput() + "\n";
+        var expected = doWhileResult + "\n";
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2062,7 +2061,7 @@ public class CodeGenTests {
 
         when(node.dowhile()).thenReturn(doWhileMock);
 
-        var actual = visitor.visitStatement(node).getOutput();
+        var actual = visitor.visitStatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -2070,7 +2069,7 @@ public class CodeGenTests {
     @Test
     void statementIfStatementGeneratedCorrectly() {
         var ifResult = generateDefaultIfStatementTemplate();
-        var expected = ifResult.getOutput() + "\n";
+        var expected = ifResult + "\n";
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2079,7 +2078,7 @@ public class CodeGenTests {
 
         when(node.ifstatement()).thenReturn(ifMock);
 
-        var actual = visitor.visitStatement(node).getOutput();
+        var actual = visitor.visitStatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -2087,7 +2086,7 @@ public class CodeGenTests {
     @Test
     void statementReturnStatementGeneratedCorrectly() {
         var returnResult = generateDefaultReturnStatementTemplate();
-        var expected = returnResult.getOutput() + "\n";
+        var expected = returnResult + "\n";
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2096,7 +2095,7 @@ public class CodeGenTests {
 
         when(node.returnstatement()).thenReturn(returnMock);
 
-        var actual = visitor.visitStatement(node).getOutput();
+        var actual = visitor.visitStatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -2139,10 +2138,10 @@ public class CodeGenTests {
         var builder = new StringBuilder();
         builder.append("{\n");
         for (var decl : localDecls) {
-            builder.append(String.format("%s\n", decl.getOutput()));
+            builder.append(String.format("%s\n", decl));
         }
         for (var st : statements) {
-            builder.append(String.format("%s", st.getOutput()));
+            builder.append(String.format("%s", st));
         }
         builder.append("}");
 

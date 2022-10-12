@@ -4,14 +4,8 @@ import CodeGeneration.templates.Template;
 
 import java.text.MessageFormat;
 
-public class AssignmentTemplate implements Template {
-    private final String resultingString;
+public class AssignmentTemplate extends Template {
     public AssignmentTemplate(Template left, Template right) {
-        resultingString = String.format("%s = %s", left.getOutput(), right.getOutput());
-    }
-
-    @Override
-    public String getOutput() {
-        return resultingString;
+        result = String.format("%s = %s", left, right);
     }
 }

@@ -4,14 +4,10 @@ import CodeGeneration.templates.Template;
 
 import java.text.MessageFormat;
 
-public class ArrayIndexTemplate implements Template {
-    private final String resultingString;
+public class ArrayIndexTemplate extends Template {
 
     public ArrayIndexTemplate(Template leftExpr, Template arrayIndexExpr) {
-        resultingString = String.format("%s[%s]", leftExpr.getOutput(), arrayIndexExpr.getOutput());
+        result = String.format("%s[%s]", leftExpr, arrayIndexExpr);
     }
-    @Override
-    public String getOutput() {
-        return resultingString;
-    }
+
 }

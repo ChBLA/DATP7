@@ -2,19 +2,14 @@ package CodeGeneration.templates;
 
 import CodeGeneration.templates.Template;
 
-public class ArrayDeclTemplate implements Template {
-    private final String resultingString;
+public class ArrayDeclTemplate extends Template {
 
     public ArrayDeclTemplate(Template expr) {
-        resultingString = String.format("[%s]", expr.getOutput());
+        result = String.format("[%s]", expr);
     }
 
     public ArrayDeclTemplate() {
-        resultingString = "[]";
+        result = "[]";
     }
 
-    @Override
-    public String getOutput() {
-        return resultingString;
-    }
 }

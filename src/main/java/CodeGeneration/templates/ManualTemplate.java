@@ -1,14 +1,9 @@
 package CodeGeneration.templates;
 
-public class ManualTemplate implements Template{
-    private String output;
+public class ManualTemplate extends Template{
 
     public ManualTemplate(String s) {
-        output = s;
+        result = s;
     }
 
-    @Override
-    public String getOutput() {
-        return output;
-    }
 }

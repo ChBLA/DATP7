@@ -1,14 +1,9 @@
 package CodeGeneration.templates;
 
-public class MarkExpressionTemplate implements Template{
-    private final String resultingString;
+public class MarkExpressionTemplate extends Template{
 
     public MarkExpressionTemplate(Template expr) {
-        resultingString = String.format("%s'", expr.getOutput());
+        result = String.format("%s'", expr);
     }
 
-    @Override
-    public String getOutput() {
-        return resultingString;
-    }
 }

@@ -2,15 +2,10 @@ package CodeGeneration.templates;
 
 import CodeGeneration.templates.Template;
 
-public class DoWhileLoopTemplate implements Template {
-    private final String resultingString;
+public class DoWhileLoopTemplate extends Template {
 
     public DoWhileLoopTemplate(Template expr, Template stmnt) {
-        resultingString = String.format("do %s while (%s);", stmnt.getOutput(), expr.getOutput());
+        result = String.format("do %s while (%s);", stmnt, expr);
     }
 
-    @Override
-    public String getOutput() {
-        return resultingString;
-    }
 }

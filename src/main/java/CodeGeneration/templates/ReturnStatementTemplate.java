@@ -1,18 +1,13 @@
 package CodeGeneration.templates;
 
-public class ReturnStatementTemplate implements Template{
-    private final String resultingString;
+public class ReturnStatementTemplate extends Template{
 
     public ReturnStatementTemplate(Template expr) {
-        resultingString = String.format("return %s;", expr.getOutput());
+        result = String.format("return %s;", expr);
     }
 
     public ReturnStatementTemplate() {
-        resultingString = "return;";
+        result = "return;";
     }
 
-    @Override
-    public String getOutput() {
-        return resultingString;
-    }
 }

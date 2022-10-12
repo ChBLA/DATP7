@@ -1,15 +1,10 @@
 package CodeGeneration.templates;
 
-public class WhileLoopTemplate implements Template{
-    private final String resultingString;
+public class WhileLoopTemplate extends Template{
 
     public WhileLoopTemplate(Template expr, Template stmnt) {
-        resultingString = String.format("while (%s) %s", expr.getOutput(), stmnt.getOutput());
+        result = String.format("while (%s) %s", expr, stmnt);
     }
 
 
-    @Override
-    public String getOutput() {
-        return resultingString;
-    }
 }

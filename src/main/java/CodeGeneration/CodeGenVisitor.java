@@ -537,9 +537,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         if (ctx.block() != null)
             return visit(ctx.block());
         else if (ctx.assignment() != null) {
-            result = new ManualTemplate(visit(ctx.assignment()).getOutput() + ";");
+            result = new ManualTemplate(visit(ctx.assignment()) + ";");
         } else if (ctx.expression() != null) {
-            result = new ManualTemplate(visit(ctx.expression()).getOutput() + ";");
+            result = new ManualTemplate(visit(ctx.expression()) + ";");
         } else if (ctx.forLoop() != null) {
             result = visit(ctx.forLoop());
         } else if (ctx.iteration() != null) {
@@ -554,7 +554,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
             result = visit(ctx.returnstatement());
         }
 
-        return new ManualTemplate(result.getOutput() + "\n");
+        return new ManualTemplate(result + "\n");
     }
 
     //endregion

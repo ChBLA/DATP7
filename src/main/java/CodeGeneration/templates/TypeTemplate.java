@@ -1,23 +1,15 @@
 package CodeGeneration.templates;
 
-public class TypeTemplate implements Template {
-    private final String resultingString;
+public class TypeTemplate extends Template {
+
 
     public TypeTemplate(Template prefix, Template typeID) {
-        if (prefix.getOutput().equals("")) {
-            resultingString = typeID.getOutput();
-        }
-        else {
-            resultingString = String.format("%s %s", prefix.getOutput(), typeID.getOutput());
-        }
+        result = prefix.toString().equals("") ? typeID.toString() : String.format("%s %s", prefix, typeID);
     }
 
     public TypeTemplate(Template typeID) {
         this(new ManualTemplate(""), typeID);
     }
 
-    @Override
-    public String getOutput() {
-        return resultingString;
-    }
+
 }

@@ -1,17 +1,12 @@
 package CodeGeneration.templates;
 
-public class IfStatementTemplate implements Template{
-    private final String resultingString;
+public class IfStatementTemplate extends Template{
     public IfStatementTemplate(Template expr, Template stmnt1, Template stmnt2) {
-        resultingString = String.format("if (%s) %s else %s", expr.getOutput(), stmnt1.getOutput(), stmnt2.getOutput());
+        result = String.format("if (%s) %s else %s", expr, stmnt1, stmnt2);
     }
 
     public IfStatementTemplate(Template expr, Template stmnt1) {
-        resultingString = String.format("if (%s) %s", expr.getOutput(), stmnt1.getOutput());
+        result = String.format("if (%s) %s", expr, stmnt1);
     }
 
-    @Override
-    public String getOutput() {
-        return resultingString;
-    }
 }

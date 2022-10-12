@@ -1,14 +1,10 @@
 package CodeGeneration.templates;
 
-public class TypeIDIntTemplate implements Template {
-    private String resultingString;
+public class TypeIDIntTemplate extends Template {
 
     public TypeIDIntTemplate(Template expr1, Template expr2) {
-        resultingString = String.format("int[%s,%s]", expr1.getOutput(), expr2.getOutput());
+        result = String.format("int[%s,%s]", expr1, expr2);
     }
 
-    @Override
-    public String getOutput() {
-        return resultingString;
-    }
+
 }

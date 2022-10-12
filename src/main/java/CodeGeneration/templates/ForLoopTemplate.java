@@ -2,15 +2,10 @@ package CodeGeneration.templates;
 
 import CodeGeneration.templates.Template;
 
-public class ForLoopTemplate implements Template {
-    private final String resultingString;
+public class ForLoopTemplate extends Template {
 
     public ForLoopTemplate(Template assign, Template expr1, Template expr2, Template stmnt) {
-        resultingString = String.format("for (%s;%s;%s) %s", assign.getOutput(), expr1.getOutput(), expr2.getOutput(), stmnt.getOutput());
+        result = String.format("for (%s;%s;%s) %s", assign, expr1, expr2, stmnt);
     }
 
-    @Override
-    public String getOutput() {
-        return resultingString;
-    }
 }
