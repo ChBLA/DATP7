@@ -47,8 +47,7 @@ initialiser   : expression?
               |  LEFTCURLYBRACE initialiser (COMMA initialiser)* RIGHTCURLYBRACE;
 typeDecl : 'typedef' type arrayDeclID (COMMA arrayDeclID)* END;
 
-arrayDeclID locals [DeclarationReference reference]
-              : ID arrayDecl*;
+arrayDeclID : ID arrayDecl*;
 
 type          : prefix? typeId;
 prefix        : 'urgent' | 'broadcast' | 'meta' | 'const';
@@ -61,7 +60,7 @@ typeId locals [DeclarationReference reference]
               | 'struct' LEFTCURLYBRACE fieldDecl (fieldDecl)* RIGHTCURLYBRACE                   #TypeIDStruct
               ;
 
-fieldDecl     : type arrayDeclID (COMMA ID arrayDeclID)* END;
+fieldDecl     : type arrayDeclID (COMMA arrayDeclID)* END;
 arrayDecl     : LEFTBRACKET expression? RIGHTBRACKET
               | LEFTBRACKET type RIGHTBRACKET;
 
