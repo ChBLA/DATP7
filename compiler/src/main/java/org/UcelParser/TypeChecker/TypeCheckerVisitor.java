@@ -282,6 +282,40 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
     @Override
+    public Type visitFieldDecl(UCELParser.FieldDeclContext ctx) {
+        Type type = visit(ctx.type());
+        Type errorType = new Type(Type.TypeEnum.errorType);
+        if(type.equals(errorType)) {
+            //No logging, passing error through
+            return errorType;
+        }
+
+        int idCount = ctx.arrayDeclID().size();
+        Type[] fieldTypes = new Type[idCount];
+        String[] fieldNames = new String[idCount];
+        boolean foundErrors = false;
+
+        for(int i = 0; i < idCount; i++) {
+            UCELParser.ArrayDeclIDContext aDclID = ctx.arrayDeclID().get(i);
+            int arrayDim = aDclID.arrayDecl().size();
+            fieldTypes[i] = type.deepCopy(arrayDim);
+            fieldNames[i] = aDclID.ID().getText();
+
+            for(int ii = 0; ii < arrayDim; ii++) {
+                Type t = visit(aDclID.arrayDecl().get(ii));
+                foundErrors = foundErrors || t.equals(errorType);
+            }
+        }
+
+        if(foundErrors) {
+            //No logging, passing error through
+            return errorType;
+        }
+
+        return new Type(Type.TypeEnum.structType, fieldNames, fieldTypes);
+    }
+
+    @Override
     public Type visitBlock(UCELParser.BlockContext ctx) {
 
         Type commonType = null;
