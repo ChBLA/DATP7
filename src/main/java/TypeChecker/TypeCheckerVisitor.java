@@ -1,5 +1,6 @@
 package TypeChecker;
 
+import CodeGeneration.templates.ManualTemplate;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.ArrayList;
@@ -434,7 +435,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     @Override
     public Type visitAssign(UCELParser.AssignContext ctx) {
-        return super.visitAssign(ctx);
+        return VOID_TYPE;
     }
 
     @Override

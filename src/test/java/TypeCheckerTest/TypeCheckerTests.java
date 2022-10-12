@@ -1,3 +1,4 @@
+import CodeGeneration.CodeGenVisitor;
 import TypeChecker.TypeCheckerVisitor;
 import UCELParser_Generated.UCELParser;
 import Util.DeclarationInfo;
@@ -46,6 +47,16 @@ public class TypeCheckerTests  {
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
 
     //region Assignment
+
+    @Test
+    public void AssigntmentReturnsVoid() {
+        TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor();
+
+        var node = new UCELParser.AssignContext(null, 0);
+
+        Type actual = typeCheckerVisitor.visitAssign(node);
+        assertEquals(VOID_TYPE, actual);
+    }
 
     @ParameterizedTest
     @MethodSource("assignmentTestSource")
