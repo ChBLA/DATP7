@@ -379,13 +379,14 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type declaredType = null;
         Type intType = new Type(Type.TypeEnum.intType);
         Type doubleType = new Type(Type.TypeEnum.doubleType);
+        Type voidType = new Type(Type.TypeEnum.voidType);
         if(ctx.type() != null) declaredType = visit(ctx.type());
 
         boolean errorFound = false;
 
         for(UCELParser.VariableIDContext varID : ctx.variableID()) {
             Type varIDType = visit(varID);
-            if(declaredType != null && !varIDType.equalsOrIsArrayOf(declaredType)) {
+            if(declaredType != null && !varIDType.equals(voidType) && !varIDType.equalsOrIsArrayOf(declaredType)) {
                 if(declaredType.equals(doubleType) &&
                     varIDType.equals(intType)) {
 
@@ -404,7 +405,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
 
         if(errorFound) return new Type(Type.TypeEnum.errorType);
-        else return new Type(Type.TypeEnum.voidType);
+        else return voidType;
     }
 
     @Override
