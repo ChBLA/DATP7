@@ -1,0 +1,61 @@
+plugins {
+    id 'java'
+}
+
+group 'org.UcelPlugin'
+version "0.1"
+
+def UPPAAL_HOME = System.getenv('UPPAAL_HOME')
+
+repositories {
+    mavenCentral()
+}
+
+jar.manifest.attributes 'Uppaal-Plugin': 'org.UcelPlugin.PluginDemo'
+
+if(UPPAAL_HOME != null)
+{
+    dependencies {
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+
+        implementation fileTree(UPPAAL_HOME) { include '*.jar' }
+    }
+
+
+    task installPlugin(type: Copy) {
+        dependsOn(build)
+
+        from 'build/libs/Plugin-0.1.jar'
+        into "$UPPAAL_HOME/plugins"
+        rename { 'UCEL.jar' }
+    }
+
+    task runUppaalWithPlugin(type: JavaExec) {
+        dependsOn(installPlugin)
+
+        main = "-jar";
+        args "$UPPAAL_HOME/Uppaal.jar"
+    }
+
+    task runUppaal(type: JavaExec, dependsOn: installPlugin) {
+        args "$UPPAAL_HOME/Uppaal.jar"
+        main "-jar"
+        workingDir "$UPPAAL_HOME/"
+    }
+}
+else
+{
+    sourceSets {
+        main {
+            java {
+                exclude("**/UcelPlugin/**")
+            }
+        }
+    }
+    project.logger.lifecycle("Could not find enviroment variable `UPPAAL_HOME`, plugin has been omitted from build.\nConsult readme.me for further info.")
+}
+
+test {
+    useJUnitPlatform()
+}
