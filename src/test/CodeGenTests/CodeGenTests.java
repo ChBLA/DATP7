@@ -25,6 +25,86 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region boolean
+    @ParameterizedTest
+    @ValueSource(strings = {"true", "false"})
+    void BooleanGeneratedCorrectly(String expected) {
+        var ctx = mock(UCELParser.BooleanContext.class);
+        when(ctx.getText()).thenReturn(expected);
+
+        var visitor = new CodeGenVisitor();
+        var actual = visitor.visitBoolean(ctx).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
+    //region TypeDecl
+
+    @Test
+    void typeDeclOneIDCorrectly() {
+        Template arrayDeclIdTemp = new ManualTemplate("number");
+        Template typeTemp = new ManualTemplate("int");
+        String expected = "typedef int number;";
+
+        var node = mock(UCELParser.TypeDeclContext.class);
+        var visitor = new CodeGenVisitor();
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeTemp, visitor);
+        var arrayDeclIDMock = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclIdTemp, visitor);
+
+        List<UCELParser.ArrayDeclIDContext> arrayDeclIDContexts = new ArrayList<>();
+        arrayDeclIDContexts.add(arrayDeclIDMock);
+
+        when(node.arrayDeclID()).thenReturn(arrayDeclIDContexts);
+        when(node.type()).thenReturn(typeMock);
+
+        String actual = visitor.visitTypeDecl(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void typeDeclMultipleIDsCorrectly() {
+        Template arrayDeclIdTemp1 = new ManualTemplate("numberType1");
+        Template arrayDeclIdTemp2 = new ManualTemplate("numberType2");
+        Template typeTemp = new ManualTemplate("int");
+        String expected = "typedef int numberType1, numberType2;";
+
+        var node = mock(UCELParser.TypeDeclContext.class);
+        var visitor = new CodeGenVisitor();
+        var arrayDeclIdTemp1Mock = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclIdTemp1, visitor);
+        var arrayDeclIdTemp2Mock = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclIdTemp2, visitor);
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeTemp, visitor);
+
+        List<UCELParser.ArrayDeclIDContext> arrayDeclIDContexts = new ArrayList<>();
+        arrayDeclIDContexts.add(arrayDeclIdTemp1Mock);
+        arrayDeclIDContexts.add(arrayDeclIdTemp2Mock);
+
+        when(node.type()).thenReturn(typeMock);
+        when(node.arrayDeclID()).thenReturn(arrayDeclIDContexts);
+
+        String actual = visitor.visitTypeDecl(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region prefix
+    @ParameterizedTest
+    @ValueSource(strings = {"urgent", "beta", "meta", "const"})
+    void PrefixGeneratedCorrectly(String expected) {
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.PrefixContext.class);
+        when(node.getText()).thenReturn(expected);
+
+        String actual = visitor.visitPrefix(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
     //region initialiser
 
     @Test
@@ -1612,6 +1692,18 @@ public class CodeGenTests {
         var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
 
         when(node.expression()).thenReturn(exprMock);
+
+        String actual = visitor.visitReturnstatement(node).getOutput();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void returnStatementEmptyExprGeneratedCorrectly() {
+        var expected = "return;";
+
+        var node = mock(UCELParser.ReturnstatementContext.class);
+        CodeGenVisitor visitor = new CodeGenVisitor();
 
         String actual = visitor.visitReturnstatement(node).getOutput();
 

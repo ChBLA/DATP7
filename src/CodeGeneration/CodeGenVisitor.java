@@ -13,6 +13,39 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.currentScope = currentScope;
     }
 
+    //region boolean
+
+    @Override
+    public Template visitBoolean(UCELParser.BooleanContext ctx) {
+        return new ManualTemplate(ctx.getText());
+    }
+
+    //endregion
+
+    //region TypeDecl
+
+    @Override
+    public Template visitTypeDecl(UCELParser.TypeDeclContext ctx) {
+        Template type = visit(ctx.type());
+        List<Template> arrayDeclIDs = new ArrayList<>();
+
+        for (UCELParser.ArrayDeclIDContext arrayDeclIDContext : ctx.arrayDeclID()) {
+            arrayDeclIDs.add(visit(arrayDeclIDContext));
+        }
+
+        return new TypeDeclTemplate(type, arrayDeclIDs);
+    }
+
+    //endregion
+
+    //region prefix
+    @Override
+    public Template visitPrefix(UCELParser.PrefixContext ctx) {
+        return new ManualTemplate(ctx.getText());
+    }
+
+    //endregion
+
     //region initialiser
 
     @Override
@@ -446,9 +479,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitReturnstatement(UCELParser.ReturnstatementContext ctx) {
-        var expr = visit(ctx.expression());
+        var expr = ctx.expression() != null ? visit(ctx.expression()) : null;
 
-        return new ReturnStatementTemplate(expr);
+        return expr != null ? new ReturnStatementTemplate(expr) : new ReturnStatementTemplate();
     }
 
     //endregion
