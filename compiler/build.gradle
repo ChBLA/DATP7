@@ -1,0 +1,42 @@
+plugins {
+    id 'java'
+    id 'antlr'
+    id "idea"
+}
+
+group 'org.example'
+version 'unspecified'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    antlr "org.antlr:antlr4:4.7.1"
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.0'
+    testImplementation 'org.junit.platform:junit-platform-commons:1.9.0'
+    testImplementation 'org.mockito:mockito-core:4.8.0'
+    testImplementation 'org.mockito:mockito-all:1.10.19'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+generateGrammarSource {
+    includes = ['*.g4']
+    // https://stackoverflow.com/questions/36469546/what-is-minimal-sample-gradle-project-for-antlr4-with-antlr-plugin
+    //outputDirectory = file("./src/main/antlr/parser")
+    //outputDirectory = new File("${project.buildDir}/generated-src/java/TypeChecker".toString())
+    outputDirectory = new File("src/main/java/org/UcelParser/UCELParser_Generated".toString())
+
+    arguments += ["-listener", "-visitor"]
+}

@@ -16,3 +16,7 @@ include('src')
 //test {
 //    include '**my.package.name/*'
 //}
+include 'src:plugin'
+findProject(':src:plugin')?.name = 'plugin'
+include 'compiler'
+
