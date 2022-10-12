@@ -1,4 +1,4 @@
-package CodeGeneration.templates;
+package org.UcelParser.CodeGeneration.templates;
 
 import java.util.List;
 

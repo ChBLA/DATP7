@@ -1,10 +1,10 @@
-import CodeGeneration.CodeGenVisitor;
-import TypeChecker.TypeCheckerVisitor;
-import UCELParser_Generated.UCELParser;
-import Util.DeclarationInfo;
-import Util.DeclarationReference;
-import Util.Scope;
-import Util.Type;
+import org.UcelParser.CodeGeneration.CodeGenVisitor;
+import org.UcelParser.TypeChecker.TypeCheckerVisitor;
+import org.UcelParser.UCELParser_Generated.UCELParser;
+import org.UcelParser.Util.DeclarationInfo;
+import org.UcelParser.Util.DeclarationReference;
+import org.UcelParser.Util.Scope;
+import org.UcelParser.Util.Type;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -1632,10 +1632,10 @@ public class TypeCheckerTests  {
     void boolLiteralTypedCorrectly() {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
-        UCELParser.BooleanContext boolCtx = mock(UCELParser.BooleanContext.class);
+        UCELParser.BoolContext boolCtx = mock(UCELParser.BoolContext.class);
 
         UCELParser.LiteralContext node = mock(UCELParser.LiteralContext.class);
-        when(node.boolean_()).thenReturn(boolCtx);
+        when(node.bool()).thenReturn(boolCtx);
 
         Type actual = visitor.visitLiteral(node);
         assertEquals(BOOL_TYPE, actual);

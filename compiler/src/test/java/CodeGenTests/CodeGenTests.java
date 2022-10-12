@@ -8,6 +8,7 @@ import org.UcelParser.Util.Type;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

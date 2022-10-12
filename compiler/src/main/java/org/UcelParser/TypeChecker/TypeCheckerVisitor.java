@@ -1,6 +1,6 @@
 package org.UcelParser.TypeChecker;
 
-import CodeGeneration.templates.ManualTemplate;
+import org.UcelParser.CodeGeneration.templates.ManualTemplate;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.ArrayList;
