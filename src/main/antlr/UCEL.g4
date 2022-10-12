@@ -61,7 +61,7 @@ typeId locals [DeclarationReference reference]
               | 'struct' LEFTCURLYBRACE fieldDecl (fieldDecl)* RIGHTCURLYBRACE                   #TypeIDStruct
               ;
 
-fieldDecl     : type ID arrayDecl* (COMMA ID arrayDecl*)* END;
+fieldDecl     : type arrayDeclID (COMMA ID arrayDeclID)* END;
 arrayDecl     : LEFTBRACKET expression? RIGHTBRACKET
               | LEFTBRACKET type RIGHTBRACKET;
 
