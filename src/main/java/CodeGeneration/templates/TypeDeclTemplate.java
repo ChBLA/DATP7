@@ -1,3 +1,5 @@
+package CodeGeneration.templates;
+
 import java.util.ArrayList;
 import java.util.List;
 
