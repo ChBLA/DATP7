@@ -31,11 +31,13 @@ test {
     }
 }
 
+build {
+    dependsOn('dependencies')
+    dependsOn(generateGrammarSource)
+}
+
 generateGrammarSource {
     includes = ['*.g4']
-    // https://stackoverflow.com/questions/36469546/what-is-minimal-sample-gradle-project-for-antlr4-with-antlr-plugin
-    //outputDirectory = file("./src/main/antlr/parser")
-    //outputDirectory = new File("${project.buildDir}/generated-src/java/TypeChecker".toString())
     outputDirectory = new File("src/main/java/org/UcelParser/UCELParser_Generated".toString())
 
     arguments += ["-listener", "-visitor"]
