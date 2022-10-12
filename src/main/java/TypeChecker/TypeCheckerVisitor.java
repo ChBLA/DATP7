@@ -85,13 +85,34 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
 
+    DeclarationInfo currentFunction = null;
+
+    @Override
+    public Type visitFunction(UCELParser.FunctionContext ctx) {
+        try {
+            var funcRef = currentScope.find(ctx.ID().getText(), false);
+            var funcInfo = currentScope.get(funcRef);
+            currentFunction = funcInfo;
+            visit(ctx.parameters());
+            visit(ctx.block());
+            return funcInfo.getType();
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "ID is not in scope, and function type information unavailable"));
+            return ERROR_TYPE;
+        }
+    }
 
     @Override
     public Type visitReturnstatement(UCELParser.ReturnstatementContext ctx) {
         var expression = ctx.expression();
         if (expression != null) {
             var expressionType = visit(expression);
-            return expressionType;
+            if (currentFunction != null && expressionType == currentFunction.getType()) {
+                return expressionType;
+            } else {
+                logger.log(new ErrorLog(ctx, "Expression in return is of the wrong type"));
+                return ERROR_TYPE;
+            }
         } else {
             return VOID_TYPE;
         }

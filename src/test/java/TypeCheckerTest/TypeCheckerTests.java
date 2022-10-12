@@ -159,11 +159,15 @@ public class TypeCheckerTests  {
     }
 
     @Test
-    void returnIntOnIntExpression() {
-        var visitor = new TypeCheckerVisitor();
+    void returnIntOnIntExpressionInIntFunction() {
+        var scope = new Scope(null, false);
+        var funcDecl = new DeclarationInfo("fib", INT_TYPE);
+        scope.add(funcDecl);
+        var visitor = new TypeCheckerVisitor(scope);
         var node = mock(UCELParser.ReturnstatementContext.class);
         var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
         when(node.expression()).thenReturn(expr);
+        visitor.currentFunction = funcDecl;
         var result = visitor.visitReturnstatement(node);
         assertEquals(INT_TYPE, result);
     }
