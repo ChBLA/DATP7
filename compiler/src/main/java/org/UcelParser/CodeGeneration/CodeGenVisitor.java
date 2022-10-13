@@ -29,6 +29,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.logger = logger;
     }
 
+
+
     //region ArrayDeclID
 
     @Override
@@ -59,9 +61,24 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         Template type = visit(ctx.type());
         List<Template> arrayDeclIDs = new ArrayList<>();
 
-        for (UCELParser.ArrayDeclIDContext arrayDeclIDContext : ctx.arrayDeclID()) {
-            arrayDeclIDs.add(visit(arrayDeclIDContext));
+        assert ctx.references.size() == ctx.arrayDeclID().size();
+
+        for (int i = 0; i < ctx.arrayDeclID().size(); i++) {
+            Template arrayDeclID = visit(ctx.arrayDeclID(i));
+
+            try {
+                String identifier = currentScope.get(ctx.references.get(i)).getIdentifier();
+                arrayDeclID = arrayDeclID.replaceValue("ID", identifier);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            arrayDeclIDs.add(arrayDeclID);
         }
+
+//        for (UCELParser.ArrayDeclIDContext arrayDeclIDContext : ctx.arrayDeclID()) {
+//            arrayDeclIDs.add(visit(arrayDeclIDContext));
+//        }
 
         return new TypeDeclTemplate(type, arrayDeclIDs);
     }

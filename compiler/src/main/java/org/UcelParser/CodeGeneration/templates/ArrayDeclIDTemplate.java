@@ -1,13 +1,13 @@
 package org.UcelParser.CodeGeneration.templates;
 
+import org.stringtemplate.v4.ST;
+
 import java.util.List;
 
 public class ArrayDeclIDTemplate extends Template {
     public ArrayDeclIDTemplate(String ID, List<Template> arrayDecls) {
-        result = ID;
-
-        for (Template arrayDecl : arrayDecls) {
-            result += arrayDecl;
-        }
+        template = new ST("<ID><arrayDecls; separator=\"\">");
+        template.add("ID", ID);
+        template.add("arrayDecls", arrayDecls);
     }
 }

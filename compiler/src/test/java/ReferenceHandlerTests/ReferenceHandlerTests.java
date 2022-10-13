@@ -173,7 +173,7 @@ public class ReferenceHandlerTests {
 
     //endregion
 
-    //region
+    //region VariableID
 
     @Test
     void variableIDAddVariableToScope() {
@@ -297,6 +297,8 @@ public class ReferenceHandlerTests {
 
     //endregion
 
+    //region Block
+
     @Test
     void scopeForBlockIsAdded() {
 
@@ -348,5 +350,77 @@ public class ReferenceHandlerTests {
 
         verify(statementContext, times(1)).accept(referenceVisitor);
     }
+
+    //endregion
+
+    //region iteration
+
+    @Test
+    void iterationReferenceSet() {
+        String identifier = "a";
+        Scope scope = mock(Scope.class);
+
+        ReferenceVisitor referenceVisitor = new ReferenceVisitor(scope);
+
+        UCELParser.IterationContext node = mock(UCELParser.IterationContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+        UCELParser.StatementContext statement = mock(UCELParser.StatementContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        when(node.type()).thenReturn(type);
+        when(node.statement()).thenReturn(statement);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(identifier);
+
+        when(type.accept(referenceVisitor)).thenReturn(true);
+        when(statement.accept(referenceVisitor)).thenReturn(true);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(identifier, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {
+            fail();
+        }
+
+        referenceVisitor.visitIteration(node);
+
+        assertEquals(declRef, node.reference);
+    }
+
+    @Test
+    void iterationStatementVisited() {
+        String identifier = "a";
+        Scope scope = mock(Scope.class);
+
+        ReferenceVisitor referenceVisitor = new ReferenceVisitor(scope);
+
+        UCELParser.IterationContext node = mock(UCELParser.IterationContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+        UCELParser.StatementContext statement = mock(UCELParser.StatementContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        when(node.type()).thenReturn(type);
+        when(node.statement()).thenReturn(statement);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(identifier);
+
+        when(type.accept(referenceVisitor)).thenReturn(true);
+        when(statement.accept(referenceVisitor)).thenReturn(true);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(identifier, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {
+            fail();
+        }
+
+        referenceVisitor.visitIteration(node);
+
+        verify(statement, times(1)).accept(referenceVisitor);
+    }
+
+    //endregion
 
 }
