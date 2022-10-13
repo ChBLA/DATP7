@@ -94,6 +94,26 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     }
 
     @Override
+    public Boolean visitIteration(UCELParser.IterationContext ctx) {
+        String identifier = ctx.ID().getText();
+        visit(ctx.type());
+
+        try {
+            if(!currentScope.isUnique(identifier, true)) {
+                logger.log(new ErrorLog(ctx, "Variable '" + identifier + "' already exists in scope"));
+                return false;
+            }
+            DeclarationReference declRef = currentScope.add(new DeclarationInfo(identifier));
+            ctx.reference = declRef;
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error" + e.getMessage()));
+            return false;
+        }
+
+        return visit(ctx.statement());
+    }
+
+    @Override
     public Boolean visitBlock(UCELParser.BlockContext ctx) {
 
         boolean success = true;
