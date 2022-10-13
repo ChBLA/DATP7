@@ -1,15 +1,23 @@
 package org.UcelParser.CodeGeneration.templates;
 
+import org.stringtemplate.v4.ST;
+
 import java.util.List;
 
 public class TypeDeclTemplate extends Template {
     public TypeDeclTemplate(Template type, List<Template> arrayDeclIDs) {
-        result = String.format("typedef %s ", type);
+        ST template = new ST("typedef <type> <arrayDeclIDs; separator=\", \">;");
 
-        for (var arrayDeclIDsItem : arrayDeclIDs) {
-            result += arrayDeclIDsItem + ", ";
-        }
+        template.add("type", type);
+        template.add("arrayDeclIDs", arrayDeclIDs);
 
-        result = result.replaceFirst(", $", ";");
+//        result = String.format("typedef %s ", type);
+//
+//        for (var arrayDeclIDsItem : arrayDeclIDs) {
+//            result += arrayDeclIDsItem + ", ";
+//        }
+//
+//        result = result.replaceFirst(", $", ";");
+        this.template = template;
     }
 }
