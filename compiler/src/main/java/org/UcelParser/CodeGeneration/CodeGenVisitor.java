@@ -4,6 +4,7 @@ import org.UcelParser.CodeGeneration.templates.*;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.DeclarationInfo;
+import org.UcelParser.Util.Logging.Logger;
 import org.UcelParser.Util.Scope;
 import org.UcelParser.CodeGeneration.templates.ManualTemplate;
 import org.UcelParser.CodeGeneration.templates.Template;
@@ -13,13 +14,19 @@ import java.util.List;
 
 public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     private Scope currentScope;
+    private final Logger logger;
 
     public CodeGenVisitor() {
-
+        this.logger = new Logger();
     }
 
     public CodeGenVisitor(Scope currentScope) {
         this.currentScope = currentScope;
+        this.logger = new Logger();
+    }
+
+    public CodeGenVisitor(Logger logger) {
+        this.logger = logger;
     }
 
     //region ArrayDeclID
@@ -513,6 +520,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitBlock(UCELParser.BlockContext ctx) {
+        enterScope(ctx.scope);
         List<Template> localDecls = new ArrayList<>();
         List<Template> statements = new ArrayList<>();
 
@@ -524,6 +532,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
             statements.add(visit(stmnt));
         }
 
+        exitScope();
         return new BlockTemplate(localDecls, statements);
     }
 
@@ -569,4 +578,14 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
         return new AssignmentTemplate(left, right);
     }
+
+    //region Helper functions
+    private void enterScope(Scope scope) {
+        currentScope = scope;
+    }
+
+    private void exitScope() {
+        this.currentScope = this.currentScope.getParent();
+    }
+    //endregion
 }

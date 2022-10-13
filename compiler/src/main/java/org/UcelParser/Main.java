@@ -1,5 +1,9 @@
 package org.UcelParser;
 
+import org.UcelParser.CodeGeneration.CodeGenVisitor;
+import org.UcelParser.CodeGeneration.templates.Template;
+import org.UcelParser.Util.Exception.ErrorsFoundException;
+import org.antlr.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -31,15 +35,33 @@ public class Main {
         UCELParser parser = new UCELParser(tokenStream);
 
         Logger logger = new Logger(input);
-        ReferenceVisitor referenceVisitor = new ReferenceVisitor(logger);
-        TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor(logger);
+        var referenceVisitor = new ReferenceVisitor(logger);
+        var typeCheckerVisitor = new TypeCheckerVisitor(logger);
+        var codeGenerationVisitor = new CodeGenVisitor(logger);
 
         UCELParser.BlockContext block = parser.block();
 
-        referenceVisitor.visit(block);
-        Type type = typeCheckerVisitor.visit(block);
+        try {
+            var refTree = runVisitor(referenceVisitor, block, logger);
+            var typeTree = runVisitor(typeCheckerVisitor, refTree, logger);
+            var generatedCode = runVisitor(codeGenerationVisitor, typeTree, logger);
+            System.out.println(generatedCode);
+        } catch (ErrorsFoundException ignored) {
+        }
 
-        System.out.println(type);
         logger.printLogs();
+    }
+
+    private ParserRuleContext runVisitor(UCELBaseVisitor visitor, ParserRuleContext tree, Logger logger) throws ErrorsFoundException{
+        visitor.visit(tree);
+        if (logger.hasErrors())
+            throw new ErrorsFoundException(String.format("Found errors in visitor %s", visitor.getClass().toString()));
+        return tree;
+    }
+    private Template runVisitor(CodeGenVisitor visitor, ParserRuleContext tree, Logger logger) throws ErrorsFoundException{
+        var output = visitor.visit(tree);
+        if (logger.hasErrors())
+            throw new ErrorsFoundException(String.format("Found errors in visitor %s", visitor.getClass().toString()));
+        return output;
     }
 }

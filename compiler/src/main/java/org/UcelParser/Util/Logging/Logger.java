@@ -30,9 +30,10 @@ public class Logger {
         if(!testMode) log.unpack();
     }
 
-    public int GetErrorCount() {
+    public int getErrorCount() {
         return errorCount;
     }
+    public boolean hasErrors() { return errorCount > 0; }
 
     public void printLogs() {
         formatLogs(true);
