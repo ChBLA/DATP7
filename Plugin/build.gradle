@@ -19,7 +19,7 @@ if(UPPAAL_HOME != null)
         testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
         testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 
-        implementation fileTree(UPPAAL_HOME) { include '*.jar' }
+        implementation fileTree(UPPAAL_HOME) { include '**/*.jar' }
     }
 
 
@@ -31,14 +31,9 @@ if(UPPAAL_HOME != null)
         rename { 'UCEL.jar' }
     }
 
-    task runUppaalWithPlugin(type: JavaExec) {
+    task runUppaal(type: JavaExec) {
         dependsOn(installPlugin)
 
-        main = "-jar";
-        args "$UPPAAL_HOME/Uppaal.jar"
-    }
-
-    task runUppaal(type: JavaExec, dependsOn: installPlugin) {
         args "$UPPAAL_HOME/Uppaal.jar"
         main "-jar"
         workingDir "$UPPAAL_HOME/"
