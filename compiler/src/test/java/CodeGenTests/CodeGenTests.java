@@ -7,6 +7,7 @@ import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Type;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.lang.reflect.Field;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -34,6 +36,31 @@ import static org.mockito.Mockito.when;
 
 
 public class CodeGenTests {
+    //region Declarations
+    @Test
+    public void declarationsGeneratedCorrectly() {
+        Template variableDecl1 = generateDefaultLocalDeclaration(Type.TypeEnum.intType, "a");
+        Template variableDecl2 = generateDefaultLocalDeclaration(Type.TypeEnum.boolType, "b");
+
+        String expected = String.format("%s%n%s", variableDecl1, variableDecl2);
+
+        var visitor = new CodeGenVisitor();
+
+        var variableDecl1Mock = mockForVisitorResult(UCELParser.VariableDeclContext.class, variableDecl1, visitor);
+        var variableDecl2Mock = mockForVisitorResult(UCELParser.VariableDeclContext.class, variableDecl2, visitor);
+
+        var declarations = new ArrayList<ParseTree>();
+        declarations.add(variableDecl1Mock);
+        declarations.add(variableDecl2Mock);
+
+        var node = mock(UCELParser.DeclarationsContext.class);
+        node.children = declarations;
+
+        var actual = visitor.visitDeclarations(node).toString();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
 
     //region fieldDecl
     @Test
@@ -473,7 +500,7 @@ public class CodeGenTests {
     void typeIDStructGeneratedCorrectly() {
         Template fieldDecl1Temp = new ManualTemplate("int a;");
         Template fieldDecl2Temp = new ManualTemplate("int b;");
-        String expected = String.format("struct {\n%s\n%s\n}",
+        String expected = String.format("struct {%n%s%n%s%n}",
                 fieldDecl1Temp,
                 fieldDecl2Temp);
 
@@ -2137,7 +2164,7 @@ public class CodeGenTests {
     @Test
     void statementAssignmentGeneratedCorrectly() {
         var assignResult = generateDefaultAssignmentTemplate(Type.TypeEnum.intType);
-        var expected = assignResult + ";\n";
+        var expected = String.format("%s;%n", assignResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2154,7 +2181,7 @@ public class CodeGenTests {
     @Test
     void statementExpressionGeneratedCorrectly() {
         var exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
-        var expected = exprResult + ";\n";
+        var expected = String.format("%s;%n", exprResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2170,7 +2197,7 @@ public class CodeGenTests {
 
     @Test
     void statementEmptyExpressionGeneratedCorrectly() {
-        var expected = ";\n";
+        var expected = String.format(";%n");
 
         CodeGenVisitor visitor = new CodeGenVisitor();
         var node = mock(UCELParser.StatementContext.class);
@@ -2183,7 +2210,7 @@ public class CodeGenTests {
     @Test
     void statementForLoopGeneratedCorrectly() {
         var forloopResult = generateDefaultForLoopTemplate();
-        var expected = forloopResult + "\n";
+        var expected = String.format("%s%n", forloopResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2200,7 +2227,7 @@ public class CodeGenTests {
     @Test
     void statementIterationGeneratedCorrectly() {
         var iterationResult = generateDefaultIterationTemplate();
-        var expected = iterationResult + "\n";
+        var expected = String.format("%s%n", iterationResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2217,7 +2244,7 @@ public class CodeGenTests {
     @Test
     void statementWhileLoopGeneratedCorrectly() {
         var whileResult = generateDefaultWhileLoopTemplate();
-        var expected = whileResult + "\n";
+        var expected = String.format("%s%n", whileResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2234,7 +2261,7 @@ public class CodeGenTests {
     @Test
     void statementDoWhileGeneratedCorrectly() {
         var doWhileResult = generateDefaultDoWhileLoopTemplate();
-        var expected = doWhileResult + "\n";
+        var expected = String.format("%s%n", doWhileResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2251,7 +2278,7 @@ public class CodeGenTests {
     @Test
     void statementIfStatementGeneratedCorrectly() {
         var ifResult = generateDefaultIfStatementTemplate();
-        var expected = ifResult + "\n";
+        var expected = String.format("%s%n", ifResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2268,7 +2295,7 @@ public class CodeGenTests {
     @Test
     void statementReturnStatementGeneratedCorrectly() {
         var returnResult = generateDefaultReturnStatementTemplate();
-        var expected = returnResult + "\n";
+        var expected = String.format("%s%n", returnResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2311,16 +2338,16 @@ public class CodeGenTests {
         return new ManualTemplate("forall (abc:int[0,4]) true");
     }
     private Template generateDefaultStatementTemplate() {
-        return new ManualTemplate("{\n}");
+        return new ManualTemplate(String.format("{%n}"));
     }
     private Template generateDefaultStatementTemplate(String localDecls, String statements, boolean withNewline) {
-        return new ManualTemplate(String.format("{\n%s%s%s}", localDecls, withNewline ? "\n" :"", statements));
+        return new ManualTemplate(String.format("{%n%s%s%s}", localDecls, withNewline ? String.format("%n") : "", statements));
     }
     private Template generateDefaultStatementTemplate(List<Template> localDecls, List<Template> statements, boolean withNewline) {
         var builder = new StringBuilder();
-        builder.append("{\n");
+        builder.append(String.format("{%n"));
         for (var decl : localDecls) {
-            builder.append(String.format("%s\n", decl));
+            builder.append(String.format("%s%n", decl));
         }
         for (var st : statements) {
             builder.append(String.format("%s", st));
@@ -2331,22 +2358,22 @@ public class CodeGenTests {
     }
 
     private Template generateDefaultNonBlockStatementTemplate() {
-        return new ManualTemplate("a = a;\n");
+        return new ManualTemplate(String.format("a = a;%n"));
     }
     private Template generateDefaultForLoopTemplate() {
-        return new ManualTemplate("for (i = 0;i < 10;i++) {\n}");
+        return new ManualTemplate(String.format("for (i = 0;i < 10;i++) {%n}"));
     }
     private Template generateDefaultIterationTemplate() {
-        return new ManualTemplate("for (i:int) {\n}");
+        return new ManualTemplate(String.format("for (i:int) {%n}"));
     }
     private Template generateDefaultWhileLoopTemplate() {
-        return new ManualTemplate("while (true) {\n}");
+        return new ManualTemplate(String.format("while (true) {%n}"));
     }
     private Template generateDefaultDoWhileLoopTemplate() {
-        return new ManualTemplate("do {\n} while (true)");
+        return new ManualTemplate(String.format("do {%n} while (true)"));
     }
     private Template generateDefaultIfStatementTemplate() {
-        return new ManualTemplate("if (true) {\n}");
+        return new ManualTemplate(String.format("if (true) {%n}"));
     }
     private Template generateDefaultReturnStatementTemplate() {
         return new ManualTemplate("return 1;");

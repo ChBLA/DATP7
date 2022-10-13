@@ -30,8 +30,23 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
 
+    //region Declarations
+
+    @Override
+    public Template visitDeclarations(UCELParser.DeclarationsContext ctx) {
+        List<Template> declarations = new ArrayList<>();
+
+        for (var declarationContext : ctx.children) {
+            declarations.add(visit(declarationContext));
+        }
+
+        return new DeclarationsTemplate(declarations);
+    }
 
 
+    //endregion
+
+    //region arrayDecl
     @Override
     public Template visitArrayDeclID(UCELParser.ArrayDeclIDContext ctx) {
         List<Template> arrayDecls = new ArrayList<>();
@@ -42,6 +57,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
         return new ArrayDeclIDTemplate(ctx.ID().getText(), arrayDecls);
     }
+
+    //endregion
 
     //region FieldDecl
 
