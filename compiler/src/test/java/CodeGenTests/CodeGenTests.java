@@ -212,6 +212,53 @@ public class CodeGenTests {
     }
     //endregion
 
+    //region Unary
+    @ParameterizedTest
+    @ValueSource(strings = {"+", "-", "not ", "!"})
+    void unaryGeneratedCorrectly(String expected) {
+        var node = mock(UCELParser.UnaryContext.class);
+        when(node.getText()).thenReturn(expected);
+
+        var visitor = new CodeGenVisitor();
+        var actual = visitor.visitUnary(node).toString();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
+    //region Arguments (and ArgumentsImd)
+//    @Test
+//    void argumentsNoExpressionsGeneratedCorrectly() {
+//        var expected = "";
+//        var visitor = new CodeGenVisitor();
+//
+//        var node = mock(UCELParser.ArgumentsContext.class);
+//        var actual = visitor.visitArguments(node).toString();
+//
+//        assertEquals(expected, actual);
+//    }
+//    @Test
+//    void argumentsOneExpressionsGeneratedCorrectly() {
+//
+//    }
+//    @Test
+//    void argumentsManyExpressionsGeneratedCorrectly() {
+//
+//    }
+//
+//    @Test
+//    void argumentsImdExpressionGeneratedCorrectly() {
+//
+//    }
+//
+//    @Test
+//    void argumentsImdRefIDGeneratedCorrectly() {
+//
+//    }
+
+    //endregion
+
+
     //region TypeDecl
 
     @Test

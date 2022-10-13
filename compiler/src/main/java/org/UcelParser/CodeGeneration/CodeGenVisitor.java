@@ -98,6 +98,15 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     //endregion
 
+    //region Unary
+
+    @Override
+    public Template visitUnary(UCELParser.UnaryContext ctx) {
+        return new ManualTemplate(ctx.getText());
+    }
+
+    //endregion
+
     //region TypeDecl
 
     @Override
