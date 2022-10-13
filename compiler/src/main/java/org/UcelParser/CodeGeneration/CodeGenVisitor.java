@@ -31,7 +31,6 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
 
 
-    //region ArrayDeclID
 
     @Override
     public Template visitArrayDeclID(UCELParser.ArrayDeclIDContext ctx) {
@@ -44,9 +43,37 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         return new ArrayDeclIDTemplate(ctx.ID().getText(), arrayDecls);
     }
 
+    //region FieldDecl
+
+    @Override
+    public Template visitFieldDecl(UCELParser.FieldDeclContext ctx) {
+        Template type = visit(ctx.type());
+        List<Template> arrayDeclIDs = new ArrayList<>();
+
+        for (var arrayDeclID : ctx.arrayDeclID()) {
+            arrayDeclIDs.add(visit(arrayDeclID));
+        }
+
+        return new FieldDeclTemplate(type, arrayDeclIDs);
+    }
+
+    //endregion
+
+    //region literal
+
+
+
+    @Override
+    public Template visitLiteralExpr(UCELParser.LiteralExprContext ctx) {
+        return visit(ctx.literal());
+    }
+
+
+    //endregion
 
     //region boolean
 
+    // TODO: This is probably not needed
     @Override
     public Template visitBool(UCELParser.BoolContext ctx) {
         return new ManualTemplate(ctx.getText());
@@ -592,8 +619,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitAssignExpr(UCELParser.AssignExprContext ctx) {
         var left = visit(ctx.expression(0));
         var right = visit(ctx.expression(1));
+        var op = new ManualTemplate(ctx.assign().getText());
 
-        return new AssignmentTemplate(left, right);
+        return new AssignmentTemplate(left, op, right);
     }
 
     //region Helper functions
