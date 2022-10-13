@@ -7,14 +7,6 @@ import java.util.List;
 public class VariableIDTemplate extends Template {
 
     public VariableIDTemplate(String ID, List<Template> arrayDecls, Template Init) {
-//        result = String.format("%s", ID);
-//
-//        for (var decl : arrayDecls) {
-//            result += decl;
-//        }
-//
-//        if (!Init.toString().equals(""))
-//            result += String.format(" = %s", Init);
         template = new ST("<ID><arrayDecls; separator=\"\"><Init>");
         template.add("ID", ID);
         template.add("arrayDecls", arrayDecls);

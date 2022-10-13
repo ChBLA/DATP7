@@ -6,7 +6,6 @@ public class TypeTemplate extends Template {
 
 
     public TypeTemplate(Template prefix, Template typeID) {
-//        result = prefix.toString().equals("") ? typeID.toString() : String.format("%s %s", prefix, typeID);
         template = new ST("<prefix><typeID>");
         template.add("prefix", (!prefix.toString().isEmpty()) ? prefix + " " : "");
         template.add("typeID", typeID);

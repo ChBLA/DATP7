@@ -5,7 +5,6 @@ import org.stringtemplate.v4.ST;
 import java.util.Map;
 
 public abstract class Template {
-    protected String result = "";
     public ST template;
 
     public Template replaceValue(String key, Object value) {
@@ -13,7 +12,6 @@ public abstract class Template {
         template.add(key, value);
         return this;
     }
-
     public String toString() {
         return template.render();
     }
