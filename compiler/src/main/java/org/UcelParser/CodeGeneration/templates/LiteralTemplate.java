@@ -1,9 +1,12 @@
 package org.UcelParser.CodeGeneration.templates;
 
+import org.stringtemplate.v4.ST;
+
 public class LiteralTemplate extends Template {
 
     public LiteralTemplate(String literal) {
-        result = String.format("%s", literal);
+        template = new ST("<literal>");
+        template.add("literal", literal);
     }
 
 

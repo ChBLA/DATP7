@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 import org.UcelParser.CodeGeneration.CodeGenVisitor;
 import org.UcelParser.CodeGeneration.templates.Template;
 import org.UcelParser.UCELParser_Generated.UCELParser;
+import org.stringtemplate.v4.ST;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -33,33 +34,48 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region TypeDecl
+
+
+    //endregion
+
     //region arrayDeclID
     @Test
     public void ArrayDeclIDNoArray() {
         String expected = "var1";
+
+//        Template arrayDeclIDTemplate = mock(Template.class);
+//        arrayDeclIDTemplate.template = new ST("<ID>");
+//        arrayDeclIDTemplate.template.add("ID", expected);
+
         UCELParser.ArrayDeclIDContext node = mock(UCELParser.ArrayDeclIDContext.class);
         TerminalNodeImpl id = new TerminalNodeImpl(new CommonToken(UCELParser.ID, expected));
         when(node.ID()).thenReturn(id);
         CodeGenVisitor visitor = new CodeGenVisitor();
-        String template = visitor.visitArrayDeclID(node).toString();
-        assertEquals(expected, template);
+        String actual = visitor.visitArrayDeclID(node).toString();
+
+        assertEquals(expected, actual);
     }
 
     @Test
     public void ArrayDeclIDWithArray() {
+        String expected = "var1[5][5][5]";
+
         Template arrayDecl = new ManualTemplate("[5]");
-        String expected = "var1[5][5]";
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
         UCELParser.ArrayDeclIDContext node = mock(UCELParser.ArrayDeclIDContext.class);
-        var id = new TerminalNodeImpl(new CommonToken(UCELParser.ID, "var1"));
+
         var arrayDeclMock = mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDecl, visitor);
         List<UCELParser.ArrayDeclContext> arrayDeclList = new ArrayList<>();
         arrayDeclList.add(arrayDeclMock);
         arrayDeclList.add(arrayDeclMock);
-        when(node.ID()).thenReturn(id);
+        arrayDeclList.add(arrayDeclMock);
         when(node.arrayDecl()).thenReturn(arrayDeclList);
+
+        TerminalNodeImpl id = new TerminalNodeImpl(new CommonToken(UCELParser.ID, "var1"));
+        when(node.ID()).thenReturn(id);
 
         String actual = visitor.visitArrayDeclID(node).toString();
 
@@ -84,21 +100,44 @@ public class CodeGenTests {
     //region TypeDecl
 
     @Test
-    void typeDeclOneIDCorrectly() {
-        Template arrayDeclIdTemp = new ManualTemplate("number");
-        Template typeTemp = new ManualTemplate("int");
-        String expected = "typedef int number;";
+    public void TypeDeclOneIDGeneratedCorrectly() {
+        String expected = "typedef int list[10];";
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference declarationReferenceMock = mock(DeclarationReference.class);
+        DeclarationInfo declarationInfoMock = mock(DeclarationInfo.class);
+
+        List<DeclarationReference> declarationReferences = new ArrayList<>();
+        declarationReferences.add(declarationReferenceMock);
+
+        when(declarationInfoMock.getIdentifier()).thenReturn("list");
+
+        try {
+            when(scopeMock.get(declarationReferenceMock)).thenReturn(declarationInfoMock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var arrayDeclIDMock = mock(Template.class);
+        var arrayDeclIDContext = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclIDMock, visitor);
+
+        var arrayDeclIDMockModified = mock(Template.class);
+
+        List<UCELParser.ArrayDeclIDContext> arrayDeclIDs = new ArrayList<>();
+        arrayDeclIDs.add(arrayDeclIDContext);
+
+        Template type = new ManualTemplate("int");
+        var typeContext = mockForVisitorResult(UCELParser.TypeContext.class, type, visitor);
 
         var node = mock(UCELParser.TypeDeclContext.class);
-        var visitor = new CodeGenVisitor();
-        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeTemp, visitor);
-        var arrayDeclIDMock = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclIdTemp, visitor);
 
-        List<UCELParser.ArrayDeclIDContext> arrayDeclIDContexts = new ArrayList<>();
-        arrayDeclIDContexts.add(arrayDeclIDMock);
-
-        when(node.arrayDeclID()).thenReturn(arrayDeclIDContexts);
-        when(node.type()).thenReturn(typeMock);
+        when(arrayDeclIDMockModified.toString()).thenReturn("list[10]");
+        when(arrayDeclIDMock.replaceValue("ID", "list")).thenReturn(arrayDeclIDMockModified);
+        when(node.type()).thenReturn(typeContext);
+        when(node.arrayDeclID()).thenReturn(arrayDeclIDs);
+        when(node.arrayDeclID(0)).thenReturn(arrayDeclIDContext);
+        node.references = declarationReferences;
 
         String actual = visitor.visitTypeDecl(node).toString();
 
@@ -107,23 +146,56 @@ public class CodeGenTests {
 
     @Test
     void typeDeclMultipleIDsCorrectly() {
-        Template arrayDeclIdTemp1 = new ManualTemplate("numberType1");
-        Template arrayDeclIdTemp2 = new ManualTemplate("numberType2");
-        Template typeTemp = new ManualTemplate("int");
-        String expected = "typedef int numberType1, numberType2;";
+        String expected = "typedef int list[10], betterInt;";
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference declarationReferenceMock1 = mock(DeclarationReference.class);
+        DeclarationInfo declarationInfoMock1 = mock(DeclarationInfo.class);
+
+        DeclarationReference declarationReferenceMock2 = mock(DeclarationReference.class);
+        DeclarationInfo declarationInfoMock2 = mock(DeclarationInfo.class);
+
+        List<DeclarationReference> declarationReferences = new ArrayList<>();
+        declarationReferences.add(declarationReferenceMock1);
+        declarationReferences.add(declarationReferenceMock2);
+
+
+        when(declarationInfoMock1.getIdentifier()).thenReturn("list");
+        when(declarationInfoMock2.getIdentifier()).thenReturn("betterInt");
+
+        try {
+            when(scopeMock.get(declarationReferenceMock1)).thenReturn(declarationInfoMock1);
+            when(scopeMock.get(declarationReferenceMock2)).thenReturn(declarationInfoMock2);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var arrayDeclIDMock = mock(Template.class);
+        var arrayDeclIDContext = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclIDMock, visitor);
+
+        var arrayDeclIDMockModified1 = mock(Template.class);
+        var arrayDeclIDMockModified2 = mock(Template.class);
+
+        List<UCELParser.ArrayDeclIDContext> arrayDeclIDs = new ArrayList<>();
+        arrayDeclIDs.add(arrayDeclIDContext);
+        arrayDeclIDs.add(arrayDeclIDContext);
+
+        Template type = new ManualTemplate("int");
+        var typeContext = mockForVisitorResult(UCELParser.TypeContext.class, type, visitor);
 
         var node = mock(UCELParser.TypeDeclContext.class);
-        var visitor = new CodeGenVisitor();
-        var arrayDeclIdTemp1Mock = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclIdTemp1, visitor);
-        var arrayDeclIdTemp2Mock = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclIdTemp2, visitor);
-        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeTemp, visitor);
 
-        List<UCELParser.ArrayDeclIDContext> arrayDeclIDContexts = new ArrayList<>();
-        arrayDeclIDContexts.add(arrayDeclIdTemp1Mock);
-        arrayDeclIDContexts.add(arrayDeclIdTemp2Mock);
+        when(arrayDeclIDMockModified1.toString()).thenReturn("list[10]");
+        when(arrayDeclIDMockModified2.toString()).thenReturn("betterInt");
+        when(arrayDeclIDMock.replaceValue("ID", "list")).thenReturn(arrayDeclIDMockModified1);
+        when(arrayDeclIDMock.replaceValue("ID", "betterInt")).thenReturn(arrayDeclIDMockModified2);
+        when(node.type()).thenReturn(typeContext);
+        when(node.arrayDeclID()).thenReturn(arrayDeclIDs);
+        when(node.arrayDeclID(0)).thenReturn(arrayDeclIDContext);
+        when(node.arrayDeclID(1)).thenReturn(arrayDeclIDContext);
 
-        when(node.type()).thenReturn(typeMock);
-        when(node.arrayDeclID()).thenReturn(arrayDeclIDContexts);
+        node.references = declarationReferences;
 
         String actual = visitor.visitTypeDecl(node).toString();
 
