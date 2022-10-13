@@ -38,8 +38,8 @@ public class CodeGenTests {
     //region fieldDecl
     @Test
     public void fieldDeclSingle() {
-        Template type = new ManualTemplate("int");
-        Template arrayDeclID = new ManualTemplate("a");
+        Template type = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        Template arrayDeclID = generateDefaultExprTemplate("a");
         String expected = String.format("%s %s;", type, arrayDeclID);
 
         var visitor = new CodeGenVisitor();
@@ -62,9 +62,9 @@ public class CodeGenTests {
 
     @Test
     public void fieldDeclMultiple() {
-        Template arrayDeclID1 = new ManualTemplate("a");
-        Template arrayDeclID2 = new ManualTemplate("b");
-        Template template = new ManualTemplate("int");
+        Template arrayDeclID1 = generateDefaultExprTemplate("a");
+        Template arrayDeclID2 = generateDefaultExprTemplate("b");
+        Template template = generateDefaultTypeTemplate(Type.TypeEnum.intType);
         String expected = String.format("%s %s, %s;", template, arrayDeclID1, arrayDeclID2);
 
         var visitor = new CodeGenVisitor();
