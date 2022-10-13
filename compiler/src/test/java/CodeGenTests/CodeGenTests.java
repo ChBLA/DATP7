@@ -1761,6 +1761,10 @@ public class CodeGenTests {
         CodeGenVisitor visitor = new CodeGenVisitor();
 
         var node = mock(UCELParser.BlockContext.class);
+        var scopeMock = mock(Scope.class);
+
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1778,8 +1782,12 @@ public class CodeGenTests {
         var localDecls = new ArrayList<UCELParser.LocalDeclarationContext>()
             {{ add(mockForVisitorResult(UCELParser.LocalDeclarationContext.class, localDeclTemplate, visitor)); }};
         var node = mock(UCELParser.BlockContext.class);
+        var scopeMock = mock(Scope.class);
 
         when(node.localDeclaration()).thenReturn(localDecls);
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
+
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1797,8 +1805,11 @@ public class CodeGenTests {
         var statements = new ArrayList<UCELParser.StatementContext>()
         {{ add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplate, visitor)); }};
         var node = mock(UCELParser.BlockContext.class);
+        var scopeMock = mock(Scope.class);
 
         when(node.statement()).thenReturn(statements);
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1818,10 +1829,12 @@ public class CodeGenTests {
         var statements = new ArrayList<UCELParser.StatementContext>()
             {{ add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplate, visitor)); }};
         var node = mock(UCELParser.BlockContext.class);
-
+        var scopeMock = mock(Scope.class);
 
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
+        when(scopeMock.getParent()).thenReturn(scopeMock);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1851,10 +1864,12 @@ public class CodeGenTests {
         var statements = new ArrayList<UCELParser.StatementContext>()
         {{ add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplates.get(0), visitor)); }};
         var node = mock(UCELParser.BlockContext.class);
-
+        var scopeMock = mock(Scope.class);
 
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1886,9 +1901,12 @@ public class CodeGenTests {
             add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplates.get(1), visitor));
         }};
         var node = mock(UCELParser.BlockContext.class);
+        var scopeMock = mock(Scope.class);
 
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1921,9 +1939,12 @@ public class CodeGenTests {
             add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplates.get(1), visitor));
         }};
         var node = mock(UCELParser.BlockContext.class);
+        var scopeMock = mock(Scope.class);
 
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
