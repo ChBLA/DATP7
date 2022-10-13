@@ -45,7 +45,9 @@ variableID locals [DeclarationReference reference]
               : ID arrayDecl* ('=' initialiser)?;
 initialiser   : expression?
               |  LEFTCURLYBRACE initialiser (COMMA initialiser)* RIGHTCURLYBRACE;
-typeDecl : 'typedef' type arrayDeclID (COMMA arrayDeclID)* END;
+
+typeDecl locals [List<DeclarationReference> references]
+              : 'typedef' type arrayDeclID (COMMA arrayDeclID)* END;
 
 arrayDeclID : ID arrayDecl*;
 
