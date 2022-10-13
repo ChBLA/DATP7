@@ -98,7 +98,7 @@ public class Type {
             }
         }
 
-        return new Type(evaluationType, parameterNames, parameters, newArrayDimensions);
+        return new Type(evaluationType, parameterNames, parameterCopies, newArrayDimensions);
     }
 
     public boolean equalsOrIsArrayOf(Type t) {

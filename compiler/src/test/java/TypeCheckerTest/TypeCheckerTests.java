@@ -1,3 +1,5 @@
+package TypeCheckerTest;
+
 import org.UcelParser.CodeGeneration.CodeGenVisitor;
 import org.UcelParser.TypeChecker.TypeCheckerVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
@@ -5,6 +7,7 @@ import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.DeclarationReference;
 import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Type;
+
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -15,6 +18,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -792,6 +796,61 @@ public class TypeCheckerTests  {
     }
 
     @Test
+    void variableDeclNoInitialiser() {
+        Type declType = INT_TYPE;
+        Type varIDType = VOID_TYPE;
+
+        DeclarationInfo info0 = new DeclarationInfo("", declType);
+        DeclarationInfo info1 = new DeclarationInfo("", varIDType);
+        DeclarationInfo info2 = new DeclarationInfo("", declType);
+
+        Scope scope = mock(Scope.class);
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        when(type.accept(visitor)).thenReturn(declType);
+
+        UCELParser.VariableIDContext varID0 = mock(UCELParser.VariableIDContext.class);
+        UCELParser.VariableIDContext varID1 = mock(UCELParser.VariableIDContext.class);
+        UCELParser.VariableIDContext varID2 = mock(UCELParser.VariableIDContext.class);
+
+        DeclarationReference dr0 = new DeclarationReference(0, 0);
+        DeclarationReference dr1 = new DeclarationReference(0, 1);
+        DeclarationReference dr2 = new DeclarationReference(0, 2);
+
+        varID0.reference = dr0;
+        varID1.reference = dr1;
+        varID2.reference = dr2;
+
+        try {
+            when(scope.get(dr0)).thenReturn(info0);
+            when(scope.get(dr1)).thenReturn(info1);
+            when(scope.get(dr2)).thenReturn(info2);
+        } catch (Exception e) {
+            fail();
+        }
+
+        when(varID0.accept(visitor)).thenReturn(declType);
+        when(varID1.accept(visitor)).thenReturn(varIDType);
+        when(varID2.accept(visitor)).thenReturn(declType);
+
+        ArrayList<UCELParser.VariableIDContext> varIDs = new ArrayList<>();
+
+        varIDs.add(varID0);
+        varIDs.add(varID1);
+        varIDs.add(varID2);
+
+        UCELParser.VariableDeclContext varDecl = mock(UCELParser.VariableDeclContext.class);
+        when(varDecl.variableID()).thenReturn(varIDs);
+        when(varDecl.type()).thenReturn(type);
+
+        Type result = visitor.visitVariableDecl(varDecl);
+
+        assertEquals(result, VOID_TYPE);
+    }
+
+    @Test
     void variableDeclCorrectType() {
         Type declType = INT_TYPE;
         Type varIDType = INT_TYPE;
@@ -1127,27 +1186,128 @@ public class TypeCheckerTests  {
     //endregion
 
     //region fieldDecl
-    // TODO: Fix this test
-//    @Test
-//    void fieldDeclReturnStruct() {
-//        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
-//
-//        UCELParser.FieldDeclContext node = mock(UCELParser.FieldDeclContext.class);
-//        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
-//        when(node.type()).thenReturn(type);
-//        when(type.accept(visitor)).thenReturn(INT_TYPE);
-//
-//        node.
-//
-//        TerminalNode id = mock(TerminalNode.class);
-//        ArrayList<TerminalNode> ids = new ArrayList<TerminalNode>();
-//        ids.add(id);
-//        when(node.ID()).thenReturn(ids);
-//        when(id.getText()).thenReturn("a");
-//        //when(node.arrayDecl())
-//
-//
-//    }
+    @Test
+    void fieldDeclReturnStruct() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+        Type expected = new Type(Type.TypeEnum.structType, new String[]{"a"}, new Type[]{INT_TYPE});
+
+        UCELParser.FieldDeclContext node = mock(UCELParser.FieldDeclContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        when(node.type()).thenReturn(type);
+        when(type.accept(visitor)).thenReturn(INT_TYPE);
+
+        ArrayList<UCELParser.ArrayDeclIDContext> arrayDecls = new ArrayList<>();
+        UCELParser.ArrayDeclIDContext arrayDecl0 = mock(UCELParser.ArrayDeclIDContext.class);
+        arrayDecls.add(arrayDecl0);
+
+        when(node.arrayDeclID()).thenReturn(arrayDecls);
+
+        TerminalNode id = mock(TerminalNode.class);
+        when(arrayDecl0.ID()).thenReturn(id);
+        when(id.getText()).thenReturn("a");
+
+        when(arrayDecl0.arrayDecl()).thenReturn(new ArrayList<>());
+
+        Type actual = visitor.visitFieldDecl(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void fieldDeclVsitsArrayDecl() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+
+        UCELParser.FieldDeclContext node = mock(UCELParser.FieldDeclContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        when(node.type()).thenReturn(type);
+        when(type.accept(visitor)).thenReturn(INT_TYPE);
+
+        ArrayList<UCELParser.ArrayDeclIDContext> arrayDeclIDs = new ArrayList<>();
+        UCELParser.ArrayDeclIDContext arrayDeclID0 = mock(UCELParser.ArrayDeclIDContext.class);
+        arrayDeclIDs.add(arrayDeclID0);
+
+        when(node.arrayDeclID()).thenReturn(arrayDeclIDs);
+
+        TerminalNode id = mock(TerminalNode.class);
+        when(arrayDeclID0.ID()).thenReturn(id);
+        when(id.getText()).thenReturn("a");
+
+        ArrayList<UCELParser.ArrayDeclContext> arrayDecls = new ArrayList<>();
+        UCELParser.ArrayDeclContext arrayDecl00 = mock(UCELParser.ArrayDeclContext.class);
+        arrayDecls.add(arrayDecl00);
+        when(arrayDecl00.accept(visitor)).thenReturn(VOID_TYPE);
+
+        when(arrayDeclID0.arrayDecl()).thenReturn(arrayDecls);
+
+        visitor.visitFieldDecl(node);
+
+        verify(arrayDecl00, times(1)).accept(visitor);
+    }
+
+    @Test
+    void fieldDeclReturnStructWithArrayType() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+        Type expected = new Type(Type.TypeEnum.structType, new String[]{"a"}, new Type[]{INT_ARRAY_TYPE});
+
+        UCELParser.FieldDeclContext node = mock(UCELParser.FieldDeclContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        when(node.type()).thenReturn(type);
+        when(type.accept(visitor)).thenReturn(INT_TYPE);
+
+        ArrayList<UCELParser.ArrayDeclIDContext> arrayDeclIDs = new ArrayList<>();
+        UCELParser.ArrayDeclIDContext arrayDeclID0 = mock(UCELParser.ArrayDeclIDContext.class);
+        arrayDeclIDs.add(arrayDeclID0);
+
+        when(node.arrayDeclID()).thenReturn(arrayDeclIDs);
+
+        TerminalNode id = mock(TerminalNode.class);
+        when(arrayDeclID0.ID()).thenReturn(id);
+        when(id.getText()).thenReturn("a");
+
+        ArrayList<UCELParser.ArrayDeclContext> arrayDecls = new ArrayList<>();
+        UCELParser.ArrayDeclContext arrayDecl00 = mock(UCELParser.ArrayDeclContext.class);
+        arrayDecls.add(arrayDecl00);
+        when(arrayDecl00.accept(visitor)).thenReturn(VOID_TYPE);
+
+        when(arrayDeclID0.arrayDecl()).thenReturn(arrayDecls);
+
+        Type actual = visitor.visitFieldDecl(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void fieldDeclReturnStructTwoVariables() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+        Type expected = new Type(Type.TypeEnum.structType, new String[]{"a", "b"}, new Type[]{INT_TYPE, INT_TYPE});
+
+        UCELParser.FieldDeclContext node = mock(UCELParser.FieldDeclContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        when(node.type()).thenReturn(type);
+        when(type.accept(visitor)).thenReturn(INT_TYPE);
+
+        ArrayList<UCELParser.ArrayDeclIDContext> arrayDecls = new ArrayList<>();
+        UCELParser.ArrayDeclIDContext arrayDecl0 = mock(UCELParser.ArrayDeclIDContext.class);
+        UCELParser.ArrayDeclIDContext arrayDecl1 = mock(UCELParser.ArrayDeclIDContext.class);
+        arrayDecls.add(arrayDecl0);
+        arrayDecls.add(arrayDecl1);
+
+        when(node.arrayDeclID()).thenReturn(arrayDecls);
+
+        TerminalNode id0 = mock(TerminalNode.class);
+        TerminalNode id1 = mock(TerminalNode.class);
+        when(arrayDecl0.ID()).thenReturn(id0);
+        when(arrayDecl1.ID()).thenReturn(id1);
+        when(id0.getText()).thenReturn("a");
+        when(id1.getText()).thenReturn("b");
+
+        when(arrayDecl0.arrayDecl()).thenReturn(new ArrayList<>());
+        when(arrayDecl1.arrayDecl()).thenReturn(new ArrayList<>());
+
+        Type actual = visitor.visitFieldDecl(node);
+
+        assertEquals(expected, actual);
+    }
 
     //endregion
 
