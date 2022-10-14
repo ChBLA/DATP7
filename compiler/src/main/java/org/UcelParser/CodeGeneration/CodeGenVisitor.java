@@ -238,6 +238,15 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     //endregion
 
+    //region Local Declaration
+
+    @Override
+    public Template visitLocalDeclaration(UCELParser.LocalDeclarationContext ctx) {
+        return ctx.typeDecl() != null ? visit(ctx.typeDecl()) : (ctx.variableDecl() != null ? visit(ctx.variableDecl()) : new ManualTemplate(""));
+    }
+
+    //endregion
+
     //region variableDecl
     @Override
     public Template visitVariableDecl(UCELParser.VariableDeclContext ctx) {

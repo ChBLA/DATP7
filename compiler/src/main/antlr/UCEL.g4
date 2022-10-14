@@ -127,8 +127,6 @@ assignment  : <assoc=right> expression assign expression #AssignExpr;
 
 arguments  : ((expression | REF ID) (COMMA (expression | REF ID))*)?;
 
-argumentsImd locals [DeclarationReference reference] : (expression | REF ID);
-
 assign     : '=' | ':=' | '+=' | '-=' | '*=' | '/=' | '%='
            | '|=' | '&=' | '^=' | '<<=' | '>>=';
 unary      : PLUS | MINUS | NEG | NOT;

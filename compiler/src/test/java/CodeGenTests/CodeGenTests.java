@@ -258,6 +258,39 @@ public class CodeGenTests {
 
     //endregion
 
+    //region LocalDeclaration
+    @Test
+    void localDeclarationTypeDeclGeneratedCorrectly() {
+        var typeDeclTemplate = generateDefaultTypeDeclTemplate("a", "10");
+        var expected = typeDeclTemplate.toString();
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.LocalDeclarationContext.class);
+        var typeDeclNode = mockForVisitorResult(UCELParser.TypeDeclContext.class, typeDeclTemplate, visitor);
+
+        when(node.typeDecl()).thenReturn(typeDeclNode);
+
+        var actual = visitor.visitLocalDeclaration(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void localDeclarationVariableDeclGeneratedCorrectly() {
+        var varDeclTemplate = generateDefaultVariableDeclTemplate("a", "10");
+        var expected = varDeclTemplate.toString();
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.LocalDeclarationContext.class);
+        var typeDeclNode = mockForVisitorResult(UCELParser.VariableDeclContext.class, varDeclTemplate, visitor);
+
+        when(node.variableDecl()).thenReturn(typeDeclNode);
+
+        var actual = visitor.visitLocalDeclaration(node).toString();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
 
     //region TypeDecl
 
@@ -632,7 +665,7 @@ public class CodeGenTests {
     }
 
     @Test
-    void tariableDeclMultipleVarWithType() {
+    void variableDeclMultipleVarWithType() {
         Template typeTemp = new ManualTemplate("int[0,10]");
         Template variableIdTemp = new ManualTemplate("goimer = 5");
         // Not valid but should not matter for these tests
@@ -2435,6 +2468,22 @@ public class CodeGenTests {
             case scalarType -> new ManualTemplate("scalar");
             default -> new ManualTemplate("");
         };
+    }
+
+    private Template generateDefaultTypeDeclTemplate(String id, String size) {
+        return new ManualTemplate(String.format("typedef int %s[%s];", id, size));
+    }
+
+    private Template generateDefaultVariableDeclTemplate(String id, String expr) {
+        return new ManualTemplate(String.format("%s = %s;", id, expr));
+    }
+
+    private Template generateDefaultParametersTemplate(String type, String id) {
+        return new ManualTemplate(String.format("%s %s", type, id));
+    }
+
+    private Template generateDefaultArgumentsTemplate(Type.TypeEnum type) {
+        return generateDefaultExprTemplate(type);
     }
 
     private Template generateDefaultLocalDeclaration(Type.TypeEnum type, String id) {
