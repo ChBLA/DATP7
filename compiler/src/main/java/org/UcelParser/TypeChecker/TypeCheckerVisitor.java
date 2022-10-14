@@ -169,6 +169,26 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         return visit(ctx.statement());
     }
 
+
+    @Override
+    public Type visitIteration(UCELParser.IterationContext ctx) {
+        Type type = visit(ctx.type());
+
+        if(type == null || !(type.equals(INT_TYPE) || type.equals(SCALAR_TYPE))) {
+            logger.log(new ErrorLog(ctx.type(), "Unexpected type for iteration: " + type));
+            return ERROR_TYPE;
+        }
+
+        try {
+            currentScope.get(ctx.reference).setType(INT_TYPE);
+        } catch (Exception e) {
+            return ERROR_TYPE;
+        }
+
+        Type statementType = visit(ctx.statement());
+        return statementType;
+    }
+
     @Override
     public Type visitIfstatement(UCELParser.IfstatementContext ctx) {
         Type condType = visit(ctx.expression());
@@ -203,13 +223,13 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitTypeIDType(UCELParser.TypeIDTypeContext ctx) {
         return switch (ctx.getText()) {
-            case "int" -> new Type(Type.TypeEnum.intType);
+            case "int" -> INT_TYPE;
             case "clock" -> new Type(Type.TypeEnum.clockType);
-            case "chan" -> new Type(Type.TypeEnum.chanType);
-            case "bool" -> new Type(Type.TypeEnum.boolType);
-            case "double" -> new Type(Type.TypeEnum.doubleType);
-            case "string" -> new Type(Type.TypeEnum.stringType);
-            default -> new Type(Type.TypeEnum.errorType);
+            case "chan" -> CHAN_TYPE;
+            case "bool" -> BOOL_TYPE;
+            case "double" -> DOUBLE_TYPE;
+            case "string" -> STRING_TYPE;
+            default -> ERROR_TYPE;
         };
     }
 
@@ -219,56 +239,52 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return currentScope.get(ctx.reference).getType();
         } catch (Exception e) {
             logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         }
     }
 
     @Override
     public Type visitTypeIDInt(UCELParser.TypeIDIntContext ctx) {
-        Type intType =  new Type(Type.TypeEnum.intType);
-        Type errorType = new Type(Type.TypeEnum.errorType);
-        if(ctx.expression().size() == 0) return intType;
+        if(ctx.expression().size() == 0) return INT_TYPE;
         else {
             Type left = visit(ctx.expression(0));
-            if(left.equals(intType)) {
-                if(ctx.expression().size() == 1) return intType;
+            if(left.equals(INT_TYPE)) {
+                if(ctx.expression().size() == 1) return INT_TYPE;
                 else {
                     Type right = visit(ctx.expression(1));
-                    if(right.equals(intType)) return intType;
+                    if(right.equals(INT_TYPE)) return INT_TYPE;
                     else {
                         logger.log(new ErrorLog(ctx.expression().get(1), "Expected " +
-                                intType + " but found " + right));
-                        return errorType;
+                                INT_TYPE + " but found " + right));
+                        return ERROR_TYPE;
                     }
                 }
             } else {
                 logger.log(new ErrorLog(ctx.expression().get(0), "Expected " +
-                        intType + " but found " + left));
-                return errorType;
+                        INT_TYPE + " but found " + left));
+                return ERROR_TYPE;
             }
         }
     }
 
     @Override
     public Type visitTypeIDScalar(UCELParser.TypeIDScalarContext ctx) {
-        Type intType = new Type(Type.TypeEnum.intType);
         Type exprType = visit(ctx.expression());
-        if(exprType.equals(intType))
-            return new Type(Type.TypeEnum.scalarType);
-        logger.log(new ErrorLog(ctx.expression(), "Scalar type definition takes an " + intType +
+        if(exprType.equals(INT_TYPE))
+            return SCALAR_TYPE;
+        logger.log(new ErrorLog(ctx.expression(), "Scalar type definition takes an " + INT_TYPE +
                 " but found " + exprType));
-        return new Type(Type.TypeEnum.errorType);
+        return ERROR_TYPE;
     }
 
     @Override
     public Type visitTypeIDStruct(UCELParser.TypeIDStructContext ctx) {
         ArrayList<String> names = new ArrayList<>();
         ArrayList<Type> types = new ArrayList<>();
-        Type errorType = new Type(Type.TypeEnum.errorType);
 
         for(UCELParser.FieldDeclContext field : ctx.fieldDecl()) {
             Type fieldType = visit(field);
-            if(fieldType.equals(errorType)) {
+            if(fieldType.equals(ERROR_TYPE)) {
                 //No log passing error through
                 return fieldType;
             }
@@ -284,10 +300,9 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitFieldDecl(UCELParser.FieldDeclContext ctx) {
         Type type = visit(ctx.type());
-        Type errorType = new Type(Type.TypeEnum.errorType);
-        if(type.equals(errorType)) {
+        if(type.equals(ERROR_TYPE)) {
             //No logging, passing error through
-            return errorType;
+            return ERROR_TYPE;
         }
 
         int idCount = ctx.arrayDeclID().size();
@@ -303,13 +318,13 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
             for(int ii = 0; ii < arrayDim; ii++) {
                 Type t = visit(aDclID.arrayDecl().get(ii));
-                foundErrors = foundErrors || t.equals(errorType);
+                foundErrors = foundErrors || t.equals(ERROR_TYPE);
             }
         }
 
         if(foundErrors) {
             //No logging, passing error through
-            return errorType;
+            return ERROR_TYPE;
         }
 
         return new Type(Type.TypeEnum.structType, fieldNames, fieldTypes);
@@ -319,20 +334,18 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public Type visitBlock(UCELParser.BlockContext ctx) {
 
         Type commonType = null;
-        Type errorType = new Type(Type.TypeEnum.errorType);
-        Type voidType = new Type(Type.TypeEnum.voidType);
         enterScope(ctx.scope);
 
         for(UCELParser.LocalDeclarationContext ldc : ctx.localDeclaration()) {
             Type declType = visit(ldc);
-            if(declType.equals(errorType))
+            if(declType.equals(ERROR_TYPE))
                 commonType = declType;
         }
 
-        if(commonType != null && commonType.equals(errorType)) {
+        if(commonType != null && commonType.equals(ERROR_TYPE)) {
             //No logging just passing the error up
             exitScope();
-            return errorType;
+            return ERROR_TYPE;
         } else {
             commonType = null;
         }
@@ -345,12 +358,12 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             if (hasFoundType) {
                 exitScope();
                 logger.log(new ErrorLog(sc, "Unreachable code"));
-                return errorType;
+                return ERROR_TYPE;
             }
             if(!(hasFoundError)) {
-                if(statementType.equals(errorType)) {
+                if(statementType.equals(ERROR_TYPE)) {
                     hasFoundError = true;
-                } else if(!statementType.equals(voidType)) {
+                } else if(!statementType.equals(VOID_TYPE)) {
                     hasFoundType = true;
                     commonType = statementType;
                 }
@@ -359,8 +372,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         exitScope();
 
-        if(hasFoundError) return errorType;
-        else if(commonType == null) return voidType;
+        if(hasFoundError) return ERROR_TYPE;
+        else if(commonType == null) return VOID_TYPE;
         else return commonType;
     }
 
@@ -377,22 +390,19 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitVariableDecl(UCELParser.VariableDeclContext ctx) {
         Type declaredType = null;
-        Type intType = new Type(Type.TypeEnum.intType);
-        Type doubleType = new Type(Type.TypeEnum.doubleType);
-        Type voidType = new Type(Type.TypeEnum.voidType);
         if(ctx.type() != null) declaredType = visit(ctx.type());
 
         boolean errorFound = false;
 
         for(UCELParser.VariableIDContext varID : ctx.variableID()) {
             Type varIDType = visit(varID);
-            if(declaredType != null && !varIDType.equals(voidType) && !varIDType.equalsOrIsArrayOf(declaredType)) {
-                if(declaredType.equals(doubleType) &&
-                    varIDType.equals(intType)) {
+            if(declaredType != null && !varIDType.equals(VOID_TYPE) && !varIDType.equalsOrIsArrayOf(declaredType)) {
+                if(declaredType.equals(DOUBLE_TYPE) &&
+                    varIDType.equals(INT_TYPE)) {
 
                     try {
                         DeclarationInfo declInfo = currentScope.get(varID.reference);
-                        declInfo.setType(doubleType);
+                        declInfo.setType(DOUBLE_TYPE);
                     } catch (Exception e) {
                         logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
                         errorFound = true;
@@ -404,15 +414,15 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             }
         }
 
-        if(errorFound) return new Type(Type.TypeEnum.errorType);
-        else return voidType;
+        if(errorFound) return ERROR_TYPE;
+        else return VOID_TYPE;
     }
 
     @Override
     public Type visitVariableID(UCELParser.VariableIDContext ctx) {
         Type initialiserType = ctx.initialiser() != null ?
-                visit(ctx.initialiser()) : new Type(Type.TypeEnum.voidType);
-        Type errorType = new Type(Type.TypeEnum.errorType);
+                visit(ctx.initialiser()) : VOID_TYPE;
+        Type errorType = ERROR_TYPE;
 
         boolean errorFound = false;
         List<UCELParser.ArrayDeclContext> arrayDecls = ctx.arrayDecl();
@@ -436,9 +446,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
     private Type structToArray(ParserRuleContext ctx, Type type, int arrayDim) {
-        Type voidType =  new Type(Type.TypeEnum.voidType);
         if(arrayDim == 0) return type;
-        if(type.equals(voidType)) return voidType.deepCopy(arrayDim);
+        if(type.equals(VOID_TYPE)) return VOID_TYPE.deepCopy(arrayDim);
         if(type.getEvaluationType() != Type.TypeEnum.structType) {
             logger.log(new ErrorLog(ctx, "Array declaration does not match initializer"));
         }
@@ -448,7 +457,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             if(internalType != null && !internalType.equals(paramType)) {
                 logger.log(new ErrorLog(ctx, "Array initializer cannot contain both " +
                         paramType + " and " + internalType));
-                return new Type(Type.TypeEnum.errorType);
+                return ERROR_TYPE;
             }
             internalType = paramType;
         }
@@ -481,14 +490,14 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitDeclarations(UCELParser.DeclarationsContext ctx) {
         boolean errorFound = false;
-        Type errorType = new Type(Type.TypeEnum.errorType);
+        Type errorType = ERROR_TYPE;
 
         for(ParseTree pt : ctx.children)
             if(visit(pt).equals(errorType))
                 errorFound = true;
 
         if(errorFound) return errorType;
-        else return new Type(Type.TypeEnum.voidType);
+        else return VOID_TYPE;
     }
 
     @Override
@@ -497,7 +506,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             var variable = currentScope.get(ctx.reference);
             return variable.getType();
         } catch (Exception e) {
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         }
     }
 
@@ -517,8 +526,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         if(structType.getEvaluationType() != Type.TypeEnum.structType ||
             parameterTypes == null || parameterNames == null) {
-            //TODO logger
-            return new Type(Type.TypeEnum.errorType);
+            logger.log(new ErrorLog(ctx, "Invalid struct"));
+            return ERROR_TYPE;
         }
 
         for (int i = 0; i < parameterNames.length; i++) {
@@ -527,8 +536,9 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
                 return parameterTypes[i];
             }
         }
-        //TODO logger not found
-        return new Type(Type.TypeEnum.errorType);
+
+        logger.log(new ErrorLog(ctx, "Struct type " + structType + " does not contain field '" + identifier + "'"));
+        return ERROR_TYPE;
     }
 
     @Override
@@ -545,10 +555,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type arrayIndex = visit(ctx.expression(1));
 
         if (!isArray(arrayType)) {
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         }
         if (!(arrayIndex.getEvaluationType() == Type.TypeEnum.intType))
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
 
         return arrayType;
     }
@@ -569,7 +579,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private Type intDoubleBinaryOp(ParserRuleContext ctx, Type leftType, Type rightType) {
         if(isArray(leftType) || isArray(rightType)) {
             logger.log(new ErrorLog(ctx, "Array type not supported for operator"));
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         }
 
         Type.TypeEnum leftEnum = leftType.getEvaluationType();
@@ -577,28 +587,28 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         // Error || Error -> Error
         if(leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType)
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
 
         // Same types: int || int -> int
         else if(leftEnum == Type.TypeEnum.intType && rightEnum == Type.TypeEnum.intType)
-            return new Type(Type.TypeEnum.intType);
+            return INT_TYPE;
 
         // Same types: double || double -> double
         else if(leftEnum == Type.TypeEnum.doubleType && rightEnum == Type.TypeEnum.doubleType)
-            return new Type(Type.TypeEnum.doubleType);
+            return DOUBLE_TYPE;
 
         // Mixed types: double || int -> double
         else if(leftEnum == Type.TypeEnum.doubleType && rightEnum == Type.TypeEnum.intType)
-            return new Type(Type.TypeEnum.doubleType);
+            return DOUBLE_TYPE;
 
         // Mixed types: int || double -> double
         else if(leftEnum == Type.TypeEnum.intType && rightEnum == Type.TypeEnum.doubleType)
-            return new Type(Type.TypeEnum.doubleType);
+            return DOUBLE_TYPE;
 
         else {
             logger.log(new ErrorLog(ctx, "The types " + leftType.toString() + " and " +
                                         leftType.toString() + " are not supported for operator"));
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         }
     }
 
@@ -607,14 +617,14 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public Type visitLiteral(UCELParser.LiteralContext ctx) {
         Type type;
         if (ctx.NAT() != null) {
-            type = new Type(Type.TypeEnum.intType);
+            type = INT_TYPE;
         } else if (ctx.DOUBLE() != null) {
-            type = new Type(Type.TypeEnum.doubleType);
+            type = DOUBLE_TYPE;
         } else if (ctx.bool() != null) {
-            type = new Type(Type.TypeEnum.boolType);
+            type = BOOL_TYPE;
         } else {
             logger.log(new ErrorLog(ctx, "Unsupported literal"));
-            type = new Type(Type.TypeEnum.errorType);
+            type = ERROR_TYPE;
         }
 
         return type;
@@ -638,7 +648,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             evaluationType = exprType;
         } else {
             logger.log(new ErrorLog(ctx, typeEnum + " is unsupported for this unary operator"));
-            evaluationType = new Type(Type.TypeEnum.errorType);
+            evaluationType = ERROR_TYPE;
         }
 
         return evaluationType;
@@ -666,7 +676,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         // Array
         if(isArray(typeOfVariable)) {
             logger.log(new ErrorLog(ctx, "Array type not supported for increment and decrement"));
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         }
 
         // Base types
@@ -676,7 +686,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
                 return typeOfVariable;
             default:
                 logger.log(new ErrorLog(ctx, typeOfVariable.getEvaluationType() + " is unsupported for increment and decrement"));
-                return new Type(Type.TypeEnum.errorType);
+                return ERROR_TYPE;
         }
     }
     //endregion
@@ -694,7 +704,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             funcType = funcDecl.getType();
         } catch (Exception e) {
             logger.log(new ErrorLog(ctx, "Definition not found for "));
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         }
 
         // Compare input parameter types
@@ -704,7 +714,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         if(declParams.length != argsParams.length) {
             logger.log(new ErrorLog(ctx.arguments(), String.format("Function expected {0} arguments, but got {1}", declParams.length, argsParams.length)));
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         }
 
         boolean argsMismatch = false;
@@ -716,7 +726,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             }
         }
         if(argsMismatch)
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
 
         return funcType;
     }
@@ -761,16 +771,16 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         List<Type.TypeEnum> comparableTypes = new ArrayList<>() {{ add(Type.TypeEnum.intType); add(Type.TypeEnum.doubleType);}};
         if (leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType) {
             // Error propagated, no logging
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         } else if (!(comparableTypes.contains(leftEnum) && comparableTypes.contains(rightEnum)) && leftEnum != rightEnum) {
             logger.log(new ErrorLog(ctx, leftEnum + " and " + rightEnum + " are unsupported for relation"));
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         } else if (isArray(leftNode) || isArray(rightNode)) {
             logger.log(new ErrorLog(ctx, "Array types are unsupported for relation"));
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         }
 
-        return new Type(Type.TypeEnum.boolType);
+        return BOOL_TYPE;
     }
 
     @Override
@@ -785,18 +795,18 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         if (leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType) {
             // Error propagated, no logging
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         } else if (!(comparableTypes.contains(leftEnum) && leftEnum == rightEnum)
                 && !(leftEnum == Type.TypeEnum.intType && rightEnum == Type.TypeEnum.doubleType)
                 && !(leftEnum == Type.TypeEnum.doubleType && rightEnum == Type.TypeEnum.intType)) {
             logger.log(new ErrorLog(ctx, leftEnum + " and " + rightEnum + " are unsupported for equivalence"));
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         } else if (isArray(leftNode) || isArray(rightNode)) {
             logger.log(new ErrorLog(ctx, "Array types are unsupported for equivalence"));
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         }
 
-        return new Type(Type.TypeEnum.boolType);
+        return BOOL_TYPE;
     }
     //endregion
 
@@ -838,16 +848,16 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         if (leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType) {
             // Error propagated, no logging
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         } else if (!(leftEnum == Type.TypeEnum.intType && rightEnum == Type.TypeEnum.intType)) {
             logger.log(new ErrorLog(ctx, leftEnum + " and " + rightEnum + " are unsupported for bit operator"));
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         } else if (isArray(left) || isArray(right)) {
             logger.log(new ErrorLog(ctx, "Array types are unsupported for bit operator"));
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         }
 
-        return new Type(Type.TypeEnum.intType);
+        return INT_TYPE;
     }
     //endregion
 
@@ -873,16 +883,16 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type.TypeEnum rightEnum = right.getEvaluationType();
 
         if (leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType)
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         else if (leftEnum != Type.TypeEnum.boolType || rightEnum != Type.TypeEnum.boolType) {
             logger.log(new ErrorLog(ctx, leftEnum + " and " + rightEnum + " are unsupported for logical operator"));
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         } else if (isArray(left) || isArray(right)) {
             logger.log(new ErrorLog(ctx, "Array types are unsupported for logical operator"));
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         }
 
-        return new Type(Type.TypeEnum.boolType);
+        return BOOL_TYPE;
     }
 
     //endregion
@@ -897,7 +907,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         // Condition must be boolean
         if(condType.getEvaluationType() != Type.TypeEnum.boolType) {
             logger.log(new ErrorLog(ctx, condType.getEvaluationType() + "is not supported as predicate in conditional operator"));
-            return new Type(Type.TypeEnum.errorType);
+            return ERROR_TYPE;
         }
 
 

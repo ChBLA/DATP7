@@ -18,11 +18,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import javax.lang.model.element.TypeElement;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -363,6 +361,76 @@ public class TypeCheckerTests  {
         Type result = visitor.visitForLoop(node);
 
         assertEquals(CHAR_TYPE, result);
+    }
+
+    //endregion
+
+    //region iteration
+
+    @ParameterizedTest(name = "{index} => iterates over {0} + from {1}")
+    @MethodSource("iterationTypes")
+    void iterationTypeOfIDSet(Type idType, Type collectionType) {
+
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.IterationContext iteration = mock(UCELParser.IterationContext.class);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+        iteration.reference = declRef;
+
+        DeclarationInfo declInfo = new DeclarationInfo("a");
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        UCELParser.StatementContext statement = mock(UCELParser.StatementContext.class);
+
+        when(iteration.type()).thenReturn(type);
+        when(iteration.statement()).thenReturn(statement);
+
+        when(statement.accept(visitor)).thenReturn(VOID_TYPE);
+        when(type.accept(visitor)).thenReturn(collectionType);
+
+        try {
+            when(scope.get(declRef)).thenReturn(declInfo);
+        } catch (Exception e) {fail();}
+
+        visitor.visitIteration(iteration);
+
+        assertEquals(idType, declInfo.getType());
+    }
+
+    @Test
+    void iterationReturnTypeOfStatement() {
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.IterationContext iteration = mock(UCELParser.IterationContext.class);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+        iteration.reference = declRef;
+
+        DeclarationInfo declInfo = new DeclarationInfo("a");
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        UCELParser.StatementContext statement = mock(UCELParser.StatementContext.class);
+
+        when(iteration.type()).thenReturn(type);
+        when(iteration.statement()).thenReturn(statement);
+        when(statement.accept(visitor)).thenReturn(DOUBLE_TYPE);
+        when(type.accept(visitor)).thenReturn(INT_TYPE);
+
+        try {
+            when(scope.get(declRef)).thenReturn(declInfo);
+        } catch (Exception e) {fail();}
+
+        Type actual = visitor.visitIteration(iteration);
+
+        assertEquals(DOUBLE_TYPE, actual);
+    }
+
+    private static Stream<Arguments> iterationTypes() {
+        return Stream.of(
+                Arguments.arguments(INT_TYPE, INT_TYPE),
+                Arguments.arguments(INT_TYPE, SCALAR_TYPE)
+        );
     }
 
     //endregion
