@@ -7,6 +7,7 @@ import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Type;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,8 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.lang.reflect.Field;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -33,15 +36,127 @@ import static org.mockito.Mockito.when;
 
 
 public class CodeGenTests {
+    //region Declarations
+    @Test
+    public void declarationsGeneratedCorrectly() {
+        Template variableDecl1 = generateDefaultLocalDeclaration(Type.TypeEnum.intType, "a");
+        Template variableDecl2 = generateDefaultLocalDeclaration(Type.TypeEnum.boolType, "b");
 
-    //region TypeDecl
+        String expected = String.format("%s%n%s", variableDecl1, variableDecl2);
 
+        var visitor = new CodeGenVisitor();
+
+        var variableDecl1Mock = mockForVisitorResult(UCELParser.VariableDeclContext.class, variableDecl1, visitor);
+        var variableDecl2Mock = mockForVisitorResult(UCELParser.VariableDeclContext.class, variableDecl2, visitor);
+
+        var declarations = new ArrayList<ParseTree>();
+        declarations.add(variableDecl1Mock);
+        declarations.add(variableDecl2Mock);
+
+        var node = mock(UCELParser.DeclarationsContext.class);
+        node.children = declarations;
+
+        var actual = visitor.visitDeclarations(node).toString();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
+    //region fieldDecl
+    @Test
+    public void fieldDeclSingle() {
+        Template type = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        Template arrayDeclID = generateDefaultExprTemplate("a");
+        String expected = String.format("%s %s;", type, arrayDeclID);
+
+        var visitor = new CodeGenVisitor();
+
+        var arrayDeclIDContext = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclID, visitor);
+        List<UCELParser.ArrayDeclIDContext> arrayDeclIDContexts = new ArrayList<>();
+        arrayDeclIDContexts.add(arrayDeclIDContext);
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, type, visitor);
+
+        var node = mock(UCELParser.FieldDeclContext.class);
+
+        when(node.type()).thenReturn(typeMock);
+        when(node.arrayDeclID()).thenReturn(arrayDeclIDContexts);
+
+        var actual = visitor.visitFieldDecl(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void fieldDeclMultiple() {
+        Template arrayDeclID1 = generateDefaultExprTemplate("a");
+        Template arrayDeclID2 = generateDefaultExprTemplate("b");
+        Template template = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        String expected = String.format("%s %s, %s;", template, arrayDeclID1, arrayDeclID2);
+
+        var visitor = new CodeGenVisitor();
+
+        var arrayDeclIDContext1 = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclID1, visitor);
+        var arrayDeclIDContext2 = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclID2, visitor);
+
+        List<UCELParser.ArrayDeclIDContext> arrayDeclIDContexts = new ArrayList<>();
+        arrayDeclIDContexts.add(arrayDeclIDContext1);
+        arrayDeclIDContexts.add(arrayDeclIDContext2);
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, template, visitor);
+
+        var node = mock(UCELParser.FieldDeclContext.class);
+
+        when(node.type()).thenReturn(typeMock);
+        when(node.arrayDeclID()).thenReturn(arrayDeclIDContexts);
+
+        var actual = visitor.visitFieldDecl(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region literal
+
+    @Test
+    public void literalExpr() {
+        Template literal = generateDefaultLiteralTemplate(Type.TypeEnum.boolType);
+        String expected = literal.toString();
+
+        var visitor = new CodeGenVisitor();
+
+        var literalMock = mockForVisitorResult(UCELParser.LiteralContext.class, literal, visitor);
+        var ctx = mock(UCELParser.LiteralExprContext.class);
+
+        when(ctx.literal()).thenReturn(literalMock);
+
+        var actual = visitor.visitLiteralExpr(ctx).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void literal() {
+        String expected = generateDefaultLiteralTemplate(Type.TypeEnum.intType).toString();
+
+        var visitor = new CodeGenVisitor();
+
+        var terminalNode = mock(TerminalNode.class);
+
+        var node = mock(UCELParser.LiteralContext.class);
+        when(node.NAT()).thenReturn(terminalNode);
+        when(node.getText()).thenReturn(expected);
+        var actual = visitor.visitLiteral(node).toString();
+
+        assertEquals(expected, actual);
+    }
 
     //endregion
 
     //region arrayDeclID
     @Test
-    public void ArrayDeclIDNoArray() {
+    public void arrayDeclIDNoArray() {
         String expected = "var1";
 
 //        Template arrayDeclIDTemplate = mock(Template.class);
@@ -58,7 +173,7 @@ public class CodeGenTests {
     }
 
     @Test
-    public void ArrayDeclIDWithArray() {
+    public void arrayDeclIDWithArray() {
         String expected = "var1[5][5][5]";
 
         Template arrayDecl = new ManualTemplate("[5]");
@@ -86,7 +201,7 @@ public class CodeGenTests {
     //region boolean
     @ParameterizedTest
     @ValueSource(strings = {"true", "false"})
-    void BooleanGeneratedCorrectly(String expected) {
+    void booleanGeneratedCorrectly(String expected) {
         var ctx = mock(UCELParser.BoolContext.class);
         when(ctx.getText()).thenReturn(expected);
 
@@ -97,10 +212,57 @@ public class CodeGenTests {
     }
     //endregion
 
+    //region Unary
+    @ParameterizedTest
+    @ValueSource(strings = {"+", "-", "not ", "!"})
+    void unaryGeneratedCorrectly(String expected) {
+        var node = mock(UCELParser.UnaryContext.class);
+        when(node.getText()).thenReturn(expected);
+
+        var visitor = new CodeGenVisitor();
+        var actual = visitor.visitUnary(node).toString();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
+    //region Arguments (and ArgumentsImd)
+//    @Test
+//    void argumentsNoExpressionsGeneratedCorrectly() {
+//        var expected = "";
+//        var visitor = new CodeGenVisitor();
+//
+//        var node = mock(UCELParser.ArgumentsContext.class);
+//        var actual = visitor.visitArguments(node).toString();
+//
+//        assertEquals(expected, actual);
+//    }
+//    @Test
+//    void argumentsOneExpressionsGeneratedCorrectly() {
+//
+//    }
+//    @Test
+//    void argumentsManyExpressionsGeneratedCorrectly() {
+//
+//    }
+//
+//    @Test
+//    void argumentsImdExpressionGeneratedCorrectly() {
+//
+//    }
+//
+//    @Test
+//    void argumentsImdRefIDGeneratedCorrectly() {
+//
+//    }
+
+    //endregion
+
+
     //region TypeDecl
 
     @Test
-    public void TypeDeclOneIDGeneratedCorrectly() {
+    public void typeDeclOneIDGeneratedCorrectly() {
         String expected = "typedef int list[10];";
         Scope scopeMock = mock(Scope.class);
         DeclarationReference declarationReferenceMock = mock(DeclarationReference.class);
@@ -207,7 +369,7 @@ public class CodeGenTests {
     //region prefix
     @ParameterizedTest
     @ValueSource(strings = {"urgent", "beta", "meta", "const"})
-    void PrefixGeneratedCorrectly(String expected) {
+    void prefixGeneratedCorrectly(String expected) {
         var visitor = new CodeGenVisitor();
 
         var node = mock(UCELParser.PrefixContext.class);
@@ -222,7 +384,7 @@ public class CodeGenTests {
     //region initialiser
 
     @Test
-    void InitialiserExpressionGeneratedCorrectly() {
+    void initialiserExpressionGeneratedCorrectly() {
         Template expr = generateDefaultExprTemplate(Type.TypeEnum.intType);
 
         var visitor = new CodeGenVisitor();
@@ -238,7 +400,7 @@ public class CodeGenTests {
     }
 
     @Test
-    void InitialiserNoExpr() {
+    void initialiserNoExpr() {
         String expected = "{}";
         var visitor = new CodeGenVisitor();
 
@@ -250,7 +412,7 @@ public class CodeGenTests {
     }
 
     @Test
-    void InitialiserGeneratedCorrectly() {
+    void initialiserGeneratedCorrectly() {
         Template expr = generateDefaultExprTemplate(Type.TypeEnum.intType);
         String expected = String.format("{%s, %s}", expr, expr);
 
@@ -274,7 +436,7 @@ public class CodeGenTests {
     //region TypeID
 
     @Test
-    void TypeIDIDGeneratedCorrectly() {
+    void typeIDIDGeneratedCorrectly() {
         String variableID = "var1";
         DeclarationInfo variable = mock(DeclarationInfo.class);
         DeclarationReference ref = mock(DeclarationReference.class);
@@ -298,7 +460,7 @@ public class CodeGenTests {
     }
 
     @Test
-    void TypeIDTypeGeneratedCorrectly() {
+    void typeIDTypeGeneratedCorrectly() {
         String expected = generateDefaultTypeTemplate(Type.TypeEnum.doubleType).toString();
 
         var visitor = new CodeGenVisitor();
@@ -313,7 +475,7 @@ public class CodeGenTests {
 
 
     @Test
-    void TypeIDIntGeneratedCorrectly() {
+    void typeIDIntGeneratedCorrectly() {
         Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
         String expected = String.format("int[%s,%s]", exprTemp, exprTemp);
 
@@ -331,7 +493,7 @@ public class CodeGenTests {
    }
 
     @Test
-    void TypeIDIntNoLeftExprGeneratedCorrectly() {
+    void typeIDIntNoLeftExprGeneratedCorrectly() {
         Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
         String expected = String.format("int[,%s]", exprTemp);
 
@@ -347,7 +509,7 @@ public class CodeGenTests {
         assertEquals(expected, actual);
     }
     @Test
-    void TypeIDIntNoRightExprGeneratedCorrectly() {
+    void typeIDIntNoRightExprGeneratedCorrectly() {
         Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
         String expected = String.format("int[%s,]", exprTemp);
 
@@ -364,7 +526,7 @@ public class CodeGenTests {
     }
 
     @Test
-    void TypeIDScalarGeneratedCorrectly() {
+    void typeIDScalarGeneratedCorrectly() {
         Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
         Template scalarTemp = generateDefaultTypeTemplate(Type.TypeEnum.scalarType);
         String expected = String.format("%s[%s]", scalarTemp, exprTemp);
@@ -382,10 +544,10 @@ public class CodeGenTests {
     }
 
     @Test
-    void TypeIDStructGeneratedCorrectly() {
+    void typeIDStructGeneratedCorrectly() {
         Template fieldDecl1Temp = new ManualTemplate("int a;");
         Template fieldDecl2Temp = new ManualTemplate("int b;");
-        String expected = String.format("struct {\n%s\n%s\n}",
+        String expected = String.format("struct {%n%s%n%s%n}",
                 fieldDecl1Temp,
                 fieldDecl2Temp);
 
@@ -409,7 +571,7 @@ public class CodeGenTests {
     //endregion
     //region Type
     @Test
-    void TypeWithPrefixGeneratedCorrectly() {
+    void typeWithPrefixGeneratedCorrectly() {
         Template prefixTemplate = new ManualTemplate("urgent");
         Template typeIDTemplate = new ManualTemplate("int[0,10]");
         String expected = "urgent int[0,10]";
@@ -429,7 +591,7 @@ public class CodeGenTests {
     }
 
     @Test
-    void TypeNoPrefixGeneratedCorrectly() {
+    void typeNoPrefixGeneratedCorrectly() {
         Template typeIDTemplate = new ManualTemplate("int[0,10]");
         String expected = "int[0,10]";
 
@@ -448,7 +610,7 @@ public class CodeGenTests {
 
     //region variableDecl
     @Test
-    void variableDeclSingleVarWithType() {
+    void tariableDeclSingleVarWithType() {
         Template typeTemp = new ManualTemplate("int[0,10]");
         Template variableIdTemp = new ManualTemplate("goimer = 5");
         String expected = "int[0,10] goimer = 5;";
@@ -470,7 +632,7 @@ public class CodeGenTests {
     }
 
     @Test
-    void variableDeclMultipleVarWithType() {
+    void tariableDeclMultipleVarWithType() {
         Template typeTemp = new ManualTemplate("int[0,10]");
         Template variableIdTemp = new ManualTemplate("goimer = 5");
         // Not valid but should not matter for these tests
@@ -725,21 +887,25 @@ public class CodeGenTests {
 
     //region Assignment
 
-    @ParameterizedTest(name = "{index} => Assignment expression {0} = {1}")
+    @ParameterizedTest(name = "{index} => Assignment expression {0} {2} {1}")
     @MethodSource("assignments")
-    void assignmentGeneratedCorrectly(String left, String right) {
+    void assignmentGeneratedCorrectly(String left, String right, String op) {
         Template leftExpr = new ManualTemplate(left);
         Template rightExpr = new ManualTemplate(right);
-        String expected = String.format("%s = %s", leftExpr, rightExpr);
+        Template opTemp = new ManualTemplate(op);
+        String expected = String.format("%s %s %s", leftExpr, opTemp, rightExpr);
 
         var visitor = new CodeGenVisitor();
 
         var node = mock(UCELParser.AssignExprContext.class);
         var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, leftExpr, visitor);
         var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, rightExpr, visitor);
+        var assign = mock(UCELParser.AssignContext.class);
 
         when(node.expression(0)).thenReturn(expr1);
         when(node.expression(1)).thenReturn(expr2);
+        when(assign.getText()).thenReturn(opTemp.toString());
+        when(node.assign()).thenReturn(assign);
 
         var actual = visitor.visitAssignExpr(node).toString();
 
@@ -750,12 +916,12 @@ public class CodeGenTests {
 
         ArrayList<Arguments> args = new ArrayList<Arguments>();
 
-        args.add(Arguments.arguments("var1", "1 + 2"));
-        args.add(Arguments.arguments("var1", "true"));
-        args.add(Arguments.arguments("var1", "!var2"));
-        args.add(Arguments.arguments("var1", "1.02 - 5.2"));
-        args.add(Arguments.arguments("var1", "false"));
-        args.add(Arguments.arguments("var1", "goimer"));
+        args.add(Arguments.arguments("var1", "1 + 2", "="));
+        args.add(Arguments.arguments("var1", "true", "&="));
+        args.add(Arguments.arguments("var1", "!var2", "|="));
+        args.add(Arguments.arguments("var1", "1.02 - 5.2", "="));
+        args.add(Arguments.arguments("var1", "false", "="));
+        args.add(Arguments.arguments("var1", "goimer", "&="));
 
         return args.stream();
     }
@@ -1833,6 +1999,10 @@ public class CodeGenTests {
         CodeGenVisitor visitor = new CodeGenVisitor();
 
         var node = mock(UCELParser.BlockContext.class);
+        var scopeMock = mock(Scope.class);
+
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1850,8 +2020,12 @@ public class CodeGenTests {
         var localDecls = new ArrayList<UCELParser.LocalDeclarationContext>()
             {{ add(mockForVisitorResult(UCELParser.LocalDeclarationContext.class, localDeclTemplate, visitor)); }};
         var node = mock(UCELParser.BlockContext.class);
+        var scopeMock = mock(Scope.class);
 
         when(node.localDeclaration()).thenReturn(localDecls);
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
+
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1869,8 +2043,11 @@ public class CodeGenTests {
         var statements = new ArrayList<UCELParser.StatementContext>()
         {{ add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplate, visitor)); }};
         var node = mock(UCELParser.BlockContext.class);
+        var scopeMock = mock(Scope.class);
 
         when(node.statement()).thenReturn(statements);
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1890,10 +2067,12 @@ public class CodeGenTests {
         var statements = new ArrayList<UCELParser.StatementContext>()
             {{ add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplate, visitor)); }};
         var node = mock(UCELParser.BlockContext.class);
-
+        var scopeMock = mock(Scope.class);
 
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
+        when(scopeMock.getParent()).thenReturn(scopeMock);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1923,10 +2102,12 @@ public class CodeGenTests {
         var statements = new ArrayList<UCELParser.StatementContext>()
         {{ add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplates.get(0), visitor)); }};
         var node = mock(UCELParser.BlockContext.class);
-
+        var scopeMock = mock(Scope.class);
 
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1958,9 +2139,12 @@ public class CodeGenTests {
             add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplates.get(1), visitor));
         }};
         var node = mock(UCELParser.BlockContext.class);
+        var scopeMock = mock(Scope.class);
 
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1993,9 +2177,12 @@ public class CodeGenTests {
             add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplates.get(1), visitor));
         }};
         var node = mock(UCELParser.BlockContext.class);
+        var scopeMock = mock(Scope.class);
 
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -2024,7 +2211,7 @@ public class CodeGenTests {
     @Test
     void statementAssignmentGeneratedCorrectly() {
         var assignResult = generateDefaultAssignmentTemplate(Type.TypeEnum.intType);
-        var expected = assignResult + ";\n";
+        var expected = String.format("%s;%n", assignResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2041,7 +2228,7 @@ public class CodeGenTests {
     @Test
     void statementExpressionGeneratedCorrectly() {
         var exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
-        var expected = exprResult + ";\n";
+        var expected = String.format("%s;%n", exprResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2057,7 +2244,7 @@ public class CodeGenTests {
 
     @Test
     void statementEmptyExpressionGeneratedCorrectly() {
-        var expected = ";\n";
+        var expected = String.format(";%n");
 
         CodeGenVisitor visitor = new CodeGenVisitor();
         var node = mock(UCELParser.StatementContext.class);
@@ -2070,7 +2257,7 @@ public class CodeGenTests {
     @Test
     void statementForLoopGeneratedCorrectly() {
         var forloopResult = generateDefaultForLoopTemplate();
-        var expected = forloopResult + "\n";
+        var expected = String.format("%s%n", forloopResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2087,7 +2274,7 @@ public class CodeGenTests {
     @Test
     void statementIterationGeneratedCorrectly() {
         var iterationResult = generateDefaultIterationTemplate();
-        var expected = iterationResult + "\n";
+        var expected = String.format("%s%n", iterationResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2104,7 +2291,7 @@ public class CodeGenTests {
     @Test
     void statementWhileLoopGeneratedCorrectly() {
         var whileResult = generateDefaultWhileLoopTemplate();
-        var expected = whileResult + "\n";
+        var expected = String.format("%s%n", whileResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2121,7 +2308,7 @@ public class CodeGenTests {
     @Test
     void statementDoWhileGeneratedCorrectly() {
         var doWhileResult = generateDefaultDoWhileLoopTemplate();
-        var expected = doWhileResult + "\n";
+        var expected = String.format("%s%n", doWhileResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2138,7 +2325,7 @@ public class CodeGenTests {
     @Test
     void statementIfStatementGeneratedCorrectly() {
         var ifResult = generateDefaultIfStatementTemplate();
-        var expected = ifResult + "\n";
+        var expected = String.format("%s%n", ifResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2155,7 +2342,7 @@ public class CodeGenTests {
     @Test
     void statementReturnStatementGeneratedCorrectly() {
         var returnResult = generateDefaultReturnStatementTemplate();
-        var expected = returnResult + "\n";
+        var expected = String.format("%s%n", returnResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2198,16 +2385,16 @@ public class CodeGenTests {
         return new ManualTemplate("forall (abc:int[0,4]) true");
     }
     private Template generateDefaultStatementTemplate() {
-        return new ManualTemplate("{\n}");
+        return new ManualTemplate(String.format("{%n}"));
     }
     private Template generateDefaultStatementTemplate(String localDecls, String statements, boolean withNewline) {
-        return new ManualTemplate(String.format("{\n%s%s%s}", localDecls, withNewline ? "\n" :"", statements));
+        return new ManualTemplate(String.format("{%n%s%s%s}", localDecls, withNewline ? String.format("%n") : "", statements));
     }
     private Template generateDefaultStatementTemplate(List<Template> localDecls, List<Template> statements, boolean withNewline) {
         var builder = new StringBuilder();
-        builder.append("{\n");
+        builder.append(String.format("{%n"));
         for (var decl : localDecls) {
-            builder.append(String.format("%s\n", decl));
+            builder.append(String.format("%s%n", decl));
         }
         for (var st : statements) {
             builder.append(String.format("%s", st));
@@ -2218,22 +2405,22 @@ public class CodeGenTests {
     }
 
     private Template generateDefaultNonBlockStatementTemplate() {
-        return new ManualTemplate("a = a;\n");
+        return new ManualTemplate(String.format("a = a;%n"));
     }
     private Template generateDefaultForLoopTemplate() {
-        return new ManualTemplate("for (i = 0;i < 10;i++) {\n}");
+        return new ManualTemplate(String.format("for (i = 0;i < 10;i++) {%n}"));
     }
     private Template generateDefaultIterationTemplate() {
-        return new ManualTemplate("for (i:int) {\n}");
+        return new ManualTemplate(String.format("for (i:int) {%n}"));
     }
     private Template generateDefaultWhileLoopTemplate() {
-        return new ManualTemplate("while (true) {\n}");
+        return new ManualTemplate(String.format("while (true) {%n}"));
     }
     private Template generateDefaultDoWhileLoopTemplate() {
-        return new ManualTemplate("do {\n} while (true)");
+        return new ManualTemplate(String.format("do {%n} while (true)"));
     }
     private Template generateDefaultIfStatementTemplate() {
-        return new ManualTemplate("if (true) {\n}");
+        return new ManualTemplate(String.format("if (true) {%n}"));
     }
     private Template generateDefaultReturnStatementTemplate() {
         return new ManualTemplate("return 1;");
@@ -2272,6 +2459,17 @@ public class CodeGenTests {
             case charType -> new ManualTemplate("c = 'a'");
             case stringType -> new ManualTemplate("s = \"abc\"");
             default -> new ManualTemplate("");
+        };
+    }
+
+    private Template generateDefaultLiteralTemplate(Type.TypeEnum type) {
+        return switch (type) {
+            case intType -> new ManualTemplate("0");
+            case boolType -> new ManualTemplate("true");
+            case doubleType -> new ManualTemplate("0.0");
+            case charType -> new ManualTemplate("'a'");
+            case stringType -> new ManualTemplate("\"abc\"");
+            default -> throw new IllegalArgumentException("Invalid type");
         };
     }
 

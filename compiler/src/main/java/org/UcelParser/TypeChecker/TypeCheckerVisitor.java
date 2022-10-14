@@ -475,7 +475,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     @Override
     public Type visitStatement(UCELParser.StatementContext ctx) {
-        return super.visitStatement(ctx);
+        return visit(ctx.children.get(0));
     }
 
     @Override

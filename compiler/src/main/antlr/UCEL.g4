@@ -39,7 +39,7 @@ parameters : ( parameter (COMMA parameter)* )?;
 parameter  : type? REF? ('&')? ID? arrayDecl*;
 
 declarations  : (variableDecl | typeDecl | function | chanPriority | component | interface_decl)*;
-variableDecl  : type? variableID (COMMA variableID)* END;
+variableDecl  : type variableID (COMMA variableID)* END;
 
 variableID locals [DeclarationReference reference]
               : ID arrayDecl* ('=' initialiser)?;
@@ -125,7 +125,9 @@ verification locals [Scope scope, DeclarationReference reference] : op=('forall'
 
 assignment  : <assoc=right> expression assign expression #AssignExpr;
 
-arguments  : ((expression | REF ID) ( COMMA (expression | REF ID))*)?;
+arguments  : ((expression | REF ID) (COMMA (expression | REF ID))*)?;
+
+argumentsImd locals [DeclarationReference reference] : (expression | REF ID);
 
 assign     : '=' | ':=' | '+=' | '-=' | '*=' | '/=' | '%='
            | '|=' | '&=' | '^=' | '<<=' | '>>=';

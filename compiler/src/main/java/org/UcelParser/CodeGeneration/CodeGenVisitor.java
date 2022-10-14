@@ -4,6 +4,7 @@ import org.UcelParser.CodeGeneration.templates.*;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.DeclarationInfo;
+import org.UcelParser.Util.Logging.Logger;
 import org.UcelParser.Util.Scope;
 import org.UcelParser.CodeGeneration.templates.ManualTemplate;
 import org.UcelParser.CodeGeneration.templates.Template;
@@ -13,19 +14,39 @@ import java.util.List;
 
 public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     private Scope currentScope;
+    private final Logger logger;
 
     public CodeGenVisitor() {
-
+        this.logger = new Logger();
     }
 
     public CodeGenVisitor(Scope currentScope) {
         this.currentScope = currentScope;
+        this.logger = new Logger();
+    }
+
+    public CodeGenVisitor(Logger logger) {
+        this.logger = logger;
     }
 
 
+    //region Declarations
 
-    //region ArrayDeclID
+    @Override
+    public Template visitDeclarations(UCELParser.DeclarationsContext ctx) {
+        List<Template> declarations = new ArrayList<>();
 
+        for (var declarationContext : ctx.children) {
+            declarations.add(visit(declarationContext));
+        }
+
+        return new DeclarationsTemplate(declarations);
+    }
+
+
+    //endregion
+
+    //region arrayDecl
     @Override
     public Template visitArrayDeclID(UCELParser.ArrayDeclIDContext ctx) {
         List<Template> arrayDecls = new ArrayList<>();
@@ -37,11 +58,50 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         return new ArrayDeclIDTemplate(ctx.ID().getText(), arrayDecls);
     }
 
+    //endregion
+
+    //region FieldDecl
+
+    @Override
+    public Template visitFieldDecl(UCELParser.FieldDeclContext ctx) {
+        Template type = visit(ctx.type());
+        List<Template> arrayDeclIDs = new ArrayList<>();
+
+        for (var arrayDeclID : ctx.arrayDeclID()) {
+            arrayDeclIDs.add(visit(arrayDeclID));
+        }
+
+        return new FieldDeclTemplate(type, arrayDeclIDs);
+    }
+
+    //endregion
+
+    //region literal
+
+
+
+    @Override
+    public Template visitLiteralExpr(UCELParser.LiteralExprContext ctx) {
+        return visit(ctx.literal());
+    }
+
+
+    //endregion
 
     //region boolean
 
+    // TODO: This is probably not needed
     @Override
     public Template visitBool(UCELParser.BoolContext ctx) {
+        return new ManualTemplate(ctx.getText());
+    }
+
+    //endregion
+
+    //region Unary
+
+    @Override
+    public Template visitUnary(UCELParser.UnaryContext ctx) {
         return new ManualTemplate(ctx.getText());
     }
 
@@ -530,6 +590,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitBlock(UCELParser.BlockContext ctx) {
+        enterScope(ctx.scope);
         List<Template> localDecls = new ArrayList<>();
         List<Template> statements = new ArrayList<>();
 
@@ -541,6 +602,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
             statements.add(visit(stmnt));
         }
 
+        exitScope();
         return new BlockTemplate(localDecls, statements);
     }
 
@@ -583,7 +645,18 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitAssignExpr(UCELParser.AssignExprContext ctx) {
         var left = visit(ctx.expression(0));
         var right = visit(ctx.expression(1));
+        var op = new ManualTemplate(ctx.assign().getText());
 
-        return new AssignmentTemplate(left, right);
+        return new AssignmentTemplate(left, op, right);
     }
+
+    //region Helper functions
+    private void enterScope(Scope scope) {
+        currentScope = scope;
+    }
+
+    private void exitScope() {
+        this.currentScope = this.currentScope.getParent();
+    }
+    //endregion
 }
