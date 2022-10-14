@@ -227,34 +227,70 @@ public class CodeGenTests {
     //endregion
 
     //region Arguments (and ArgumentsImd)
-//    @Test
-//    void argumentsNoExpressionsGeneratedCorrectly() {
-//        var expected = "";
-//        var visitor = new CodeGenVisitor();
-//
-//        var node = mock(UCELParser.ArgumentsContext.class);
-//        var actual = visitor.visitArguments(node).toString();
-//
-//        assertEquals(expected, actual);
-//    }
-//    @Test
-//    void argumentsOneExpressionsGeneratedCorrectly() {
-//
-//    }
-//    @Test
-//    void argumentsManyExpressionsGeneratedCorrectly() {
-//
-//    }
-//
-//    @Test
-//    void argumentsImdExpressionGeneratedCorrectly() {
-//
-//    }
-//
-//    @Test
-//    void argumentsImdRefIDGeneratedCorrectly() {
-//
-//    }
+    @Test
+    void argumentsNoExpressionsGeneratedCorrectly() {
+        var expected = "";
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.ArgumentsContext.class);
+        var actual = visitor.visitArguments(node).toString();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void argumentsOneExpressionsGeneratedCorrectly() {
+        var exprTemplate = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        var expected = exprTemplate.toString();
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.ArgumentsContext.class);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+        var exprList = new ArrayList<UCELParser.ExpressionContext>() {{ add(exprNode); }};
+
+        when(node.expression(0)).thenReturn(exprNode);
+        when(node.expression()).thenReturn(exprList);
+
+        var actual = visitor.visitArguments(node).toString();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void argumentsManyExpressionsGeneratedCorrectly() {
+        var expr1Template = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        var expr2Template = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        var expr3Template = generateDefaultExprTemplate(Type.TypeEnum.doubleType);
+        var expected = String.format("%s, %s, %s", expr1Template, expr2Template, expr3Template);
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.ArgumentsContext.class);
+        var expr1Node = mockForVisitorResult(UCELParser.ExpressionContext.class, expr1Template, visitor);
+        var expr2Node = mockForVisitorResult(UCELParser.ExpressionContext.class, expr2Template, visitor);
+        var expr3Node = mockForVisitorResult(UCELParser.ExpressionContext.class, expr3Template, visitor);
+        var exprList = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1Node); add(expr2Node); add(expr3Node); }};
+
+        when(node.expression()).thenReturn(exprList);
+
+        var actual = visitor.visitArguments(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void argumentsIgnoresREFIDGeneratedCorrectly() {
+        var expected = "";
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.ArgumentsContext.class);
+
+        when(node.ID()).thenThrow(new RuntimeException());
+        when(node.REF()).thenThrow(new RuntimeException());
+        when(node.ID(0)).thenThrow(new RuntimeException());
+        when(node.REF(0)).thenThrow(new RuntimeException());
+
+        var actual = visitor.visitArguments(node).toString();
+
+        assertEquals(expected, actual);
+    }
 
     //endregion
 
