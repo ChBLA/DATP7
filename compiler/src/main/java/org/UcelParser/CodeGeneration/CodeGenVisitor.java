@@ -30,6 +30,28 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
 
+    //region Instantiation
+
+    @Override
+    public Template visitInstantiation(UCELParser.InstantiationContext ctx) {
+        boolean useParenthesis = ctx.LEFTPAR().size() > 1;
+        var paramTemplate = ctx.parameters() != null ? visit(ctx.parameters()) : new ManualTemplate("");
+        var argTemplate = ctx.arguments() != null ? visit(ctx.arguments()) : new ManualTemplate("");
+
+        var ID1 = "";
+        var ID2 = "";
+        try {
+            ID1 = currentScope.get(ctx.references.get(0)).getIdentifier();
+            ID2 = currentScope.get(ctx.references.get(1)).getIdentifier();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return new InstantiationTemplate(ID1, ID2, paramTemplate, argTemplate, useParenthesis);
+    }
+
+    //endregion
+
     //region Declarations
 
     @Override

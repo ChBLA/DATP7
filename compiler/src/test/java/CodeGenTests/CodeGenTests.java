@@ -36,6 +36,232 @@ import static org.mockito.Mockito.when;
 
 
 public class CodeGenTests {
+
+
+    //region Instantiation
+    @Test
+    void instantiationNoParenNoParameterNoArgumentsGeneratedCorrectly() {
+        String id1Name = "a";
+        String id2Name = "b";
+        String expected = String.format("%s = %s();", id1Name, id2Name);
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference ref1Mock = mock(DeclarationReference.class);
+        DeclarationReference ref2Mock = mock(DeclarationReference.class);
+
+        DeclarationInfo info1Mock = mock(DeclarationInfo.class);
+        DeclarationInfo info2Mock = mock(DeclarationInfo.class);
+
+        when(info1Mock.getIdentifier()).thenReturn(id1Name);
+        when(info2Mock.getIdentifier()).thenReturn(id2Name);
+
+        try {
+            when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
+            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.InstantiationContext.class);
+        node.references = declarationReferences;
+
+        String actual = visitor.visitInstantiation(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void instantiationParenNoParameterNoArgumentsGeneratedCorrectly() {
+        String id1Name = "a";
+        String id2Name = "b";
+        String expected = String.format("%s() = %s();", id1Name, id2Name);
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference ref1Mock = mock(DeclarationReference.class);
+        DeclarationReference ref2Mock = mock(DeclarationReference.class);
+
+        DeclarationInfo info1Mock = mock(DeclarationInfo.class);
+        DeclarationInfo info2Mock = mock(DeclarationInfo.class);
+
+        when(info1Mock.getIdentifier()).thenReturn(id1Name);
+        when(info2Mock.getIdentifier()).thenReturn(id2Name);
+
+        try {
+            when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
+            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.InstantiationContext.class);
+        var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
+        node.references = declarationReferences;
+        when(node.LEFTPAR()).thenReturn(parMocks);
+
+        String actual = visitor.visitInstantiation(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void instantiationParenParameterNoArgumentsGeneratedCorrectly() {
+        String id1Name = "a";
+        String id2Name = "b";
+        var paramTemplate = generateDefaultParametersTemplate("int", "c");
+        String expected = String.format("%s(%s) = %s();", id1Name, paramTemplate, id2Name);
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference ref1Mock = mock(DeclarationReference.class);
+        DeclarationReference ref2Mock = mock(DeclarationReference.class);
+
+        DeclarationInfo info1Mock = mock(DeclarationInfo.class);
+        DeclarationInfo info2Mock = mock(DeclarationInfo.class);
+
+        when(info1Mock.getIdentifier()).thenReturn(id1Name);
+        when(info2Mock.getIdentifier()).thenReturn(id2Name);
+
+        try {
+            when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
+            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.InstantiationContext.class);
+        var paramMock = mockForVisitorResult(UCELParser.ParametersContext.class, paramTemplate, visitor);
+        var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
+        node.references = declarationReferences;
+        when(node.LEFTPAR()).thenReturn(parMocks);
+        when(node.parameters()).thenReturn(paramMock);
+
+        String actual = visitor.visitInstantiation(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void instantiationNoParenNoParameterArgumentsGeneratedCorrectly() {
+        String id1Name = "a";
+        String id2Name = "b";
+        var argTemplate = generateDefaultArgumentsTemplate(Type.TypeEnum.intType);
+        String expected = String.format("%s = %s(%s);", id1Name, id2Name, argTemplate);
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference ref1Mock = mock(DeclarationReference.class);
+        DeclarationReference ref2Mock = mock(DeclarationReference.class);
+
+        DeclarationInfo info1Mock = mock(DeclarationInfo.class);
+        DeclarationInfo info2Mock = mock(DeclarationInfo.class);
+
+        when(info1Mock.getIdentifier()).thenReturn(id1Name);
+        when(info2Mock.getIdentifier()).thenReturn(id2Name);
+
+        try {
+            when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
+            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.InstantiationContext.class);
+        var argMock = mockForVisitorResult(UCELParser.ArgumentsContext.class, argTemplate, visitor);
+        node.references = declarationReferences;
+        when(node.arguments()).thenReturn(argMock);
+
+        String actual = visitor.visitInstantiation(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void instantiationParenNoParameterArgumentsGeneratedCorrectly() {
+        String id1Name = "a";
+        String id2Name = "b";
+        var argTemplate = generateDefaultArgumentsTemplate(Type.TypeEnum.intType);
+        String expected = String.format("%s() = %s(%s);", id1Name, id2Name, argTemplate);
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference ref1Mock = mock(DeclarationReference.class);
+        DeclarationReference ref2Mock = mock(DeclarationReference.class);
+
+        DeclarationInfo info1Mock = mock(DeclarationInfo.class);
+        DeclarationInfo info2Mock = mock(DeclarationInfo.class);
+
+        when(info1Mock.getIdentifier()).thenReturn(id1Name);
+        when(info2Mock.getIdentifier()).thenReturn(id2Name);
+
+        try {
+            when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
+            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.InstantiationContext.class);
+        var argMock = mockForVisitorResult(UCELParser.ArgumentsContext.class, argTemplate, visitor);
+        var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
+        node.references = declarationReferences;
+        when(node.LEFTPAR()).thenReturn(parMocks);
+        when(node.arguments()).thenReturn(argMock);
+
+        String actual = visitor.visitInstantiation(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void instantiationParenParameterArgumentsGeneratedCorrectly() {
+        String id1Name = "a";
+        String id2Name = "b";
+        var paramTemplate = generateDefaultParametersTemplate("int", "c");
+        var argTemplate = generateDefaultArgumentsTemplate(Type.TypeEnum.intType);
+        String expected = String.format("%s(%s) = %s(%s);", id1Name, paramTemplate, id2Name, argTemplate);
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference ref1Mock = mock(DeclarationReference.class);
+        DeclarationReference ref2Mock = mock(DeclarationReference.class);
+
+        DeclarationInfo info1Mock = mock(DeclarationInfo.class);
+        DeclarationInfo info2Mock = mock(DeclarationInfo.class);
+
+        when(info1Mock.getIdentifier()).thenReturn(id1Name);
+        when(info2Mock.getIdentifier()).thenReturn(id2Name);
+
+        try {
+            when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
+            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.InstantiationContext.class);
+        var paramMock = mockForVisitorResult(UCELParser.ParametersContext.class, paramTemplate, visitor);
+        var argMock = mockForVisitorResult(UCELParser.ArgumentsContext.class, argTemplate, visitor);
+        var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
+        node.references = declarationReferences;
+        when(node.LEFTPAR()).thenReturn(parMocks);
+        when(node.parameters()).thenReturn(paramMock);
+        when(node.arguments()).thenReturn(argMock);
+
+        String actual = visitor.visitInstantiation(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
     //region Declarations
     @Test
     public void declarationsGeneratedCorrectly() {
