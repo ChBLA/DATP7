@@ -22,4 +22,5 @@ include 'compiler'
 include 'plugin'
 findProject(':plugin')?.name = 'Plugin'
 include 'Plugin'
+include 'UppaalInterface'
 
