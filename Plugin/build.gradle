@@ -21,6 +21,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 
     implementation fileTree(UPPAAL_HOME) { include '**/*.jar' }
+    implementation findProject(':UppaalInterface')
 }
 
 task installPlugin(type: Copy) {
