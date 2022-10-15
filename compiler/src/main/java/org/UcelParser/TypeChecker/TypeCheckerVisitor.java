@@ -396,8 +396,16 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         for(UCELParser.VariableIDContext varID : ctx.variableID()) {
             Type varIDType = visit(varID);
-            if(declaredType != null && !varIDType.equals(VOID_TYPE) && !varIDType.equalsOrIsArrayOf(declaredType)) {
-                if(declaredType.equals(DOUBLE_TYPE) &&
+            if(declaredType != null && !varIDType.equalsOrIsArrayOf(declaredType)) {
+                if(varIDType.equals(VOID_TYPE)) {
+                    try {
+                        DeclarationInfo declInfo = currentScope.get(varID.reference);
+                        declInfo.setType(declaredType);
+                    } catch (Exception e) {
+                        logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+                        errorFound = true;
+                    }
+                } else  if(declaredType.equals(DOUBLE_TYPE) &&
                     varIDType.equals(INT_TYPE)) {
 
                     try {

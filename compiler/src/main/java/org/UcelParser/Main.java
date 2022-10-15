@@ -19,10 +19,12 @@ public class Main {
     public static void main(String[] args) {
         //UCELBaseListener a = new UCELBaseListener();
 
-        String input = "{ \n " +
+        String input = "{\n" +
+                        "int i; \n" +
+                        "for (i = 0; i < 10; i++) { \n " +
                           "bool b = true; \n " +
                           "bool a = true > 12 && true || b;\n" +
-                       "}";
+                       "}}";
         new Main(input);
     }
 
