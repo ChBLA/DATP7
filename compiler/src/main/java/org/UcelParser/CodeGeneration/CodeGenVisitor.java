@@ -30,6 +30,28 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
 
+    //region Instantiation
+
+    @Override
+    public Template visitInstantiation(UCELParser.InstantiationContext ctx) {
+        boolean useParenthesis = ctx.LEFTPAR().size() > 1;
+        var paramTemplate = ctx.parameters() != null ? visit(ctx.parameters()) : new ManualTemplate("");
+        var argTemplate = ctx.arguments() != null ? visit(ctx.arguments()) : new ManualTemplate("");
+
+        var ID1 = "";
+        var ID2 = "";
+        try {
+            ID1 = currentScope.get(ctx.references.get(0)).getIdentifier();
+            ID2 = currentScope.get(ctx.references.get(1)).getIdentifier();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return new InstantiationTemplate(ID1, ID2, paramTemplate, argTemplate, useParenthesis);
+    }
+
+    //endregion
+
     //region Declarations
 
     @Override
@@ -103,6 +125,20 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     @Override
     public Template visitUnary(UCELParser.UnaryContext ctx) {
         return new ManualTemplate(ctx.getText());
+    }
+
+    //endregion
+
+    //region Arguments
+
+    @Override
+    public Template visitArguments(UCELParser.ArgumentsContext ctx) {
+        List<Template> exprTemplates = new ArrayList<>();
+        for (var expr : ctx.expression()) {
+            exprTemplates.add(visit(expr));
+        }
+
+        return new ArgumentsTemplate(exprTemplates);
     }
 
     //endregion
@@ -234,6 +270,15 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         }
 
        return result;
+    }
+
+    //endregion
+
+    //region Local Declaration
+
+    @Override
+    public Template visitLocalDeclaration(UCELParser.LocalDeclarationContext ctx) {
+        return ctx.typeDecl() != null ? visit(ctx.typeDecl()) : (ctx.variableDecl() != null ? visit(ctx.variableDecl()) : new ManualTemplate(""));
     }
 
     //endregion
