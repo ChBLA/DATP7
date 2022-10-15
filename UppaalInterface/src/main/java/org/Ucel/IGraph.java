@@ -4,11 +4,13 @@ import java.util.List;
 
 public interface IGraph {
 
-    public List<Location> GetLocations();
-    public List<Edge> GetEdges();
+    public List<ILocation> GetLocations();
+    public List<IEdge> GetEdges();
 
-    public interface Location {
+    public interface ILocation {
         public String GetId();
+        public int GetPosX();
+        public int GetPosY();
         public String GetName();
         public String GetInvariant();
         public String GetRateOfExponential();
@@ -21,7 +23,7 @@ public interface IGraph {
         public String GetTestCodeOnExit();
     }
 
-    public interface Edge {
+    public interface IEdge {
         public String GetId();
         public String GetLocationIdStart();
         public String GetLocationIdEnd();
