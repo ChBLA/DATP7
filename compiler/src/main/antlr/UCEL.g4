@@ -31,7 +31,8 @@ elif : ELSE IF;
 interface_decl : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;
 interfaceVarDecl : type arrayDeclID (COMMA type arrayDeclID)*;
 
-instantiation : ID ( LEFTPAR parameters? RIGHTPAR )? '=' ID LEFTPAR arguments? RIGHTPAR END;
+instantiation locals [List<DeclarationReference> references]
+    : ID ( LEFTPAR parameters? RIGHTPAR )? '=' ID LEFTPAR arguments? RIGHTPAR END;
 progressDecl  : PROGRESS LEFTCURLYBRACE ( expression? END )* RIGHTCURLYBRACE;
 
 
@@ -126,8 +127,6 @@ verification locals [Scope scope, DeclarationReference reference] : op=('forall'
 assignment  : <assoc=right> expression assign expression #AssignExpr;
 
 arguments  : ((expression | REF ID) (COMMA (expression | REF ID))*)?;
-
-argumentsImd locals [DeclarationReference reference] : (expression | REF ID);
 
 assign     : '=' | ':=' | '+=' | '-=' | '*=' | '/=' | '%='
            | '|=' | '&=' | '^=' | '<<=' | '>>=';
