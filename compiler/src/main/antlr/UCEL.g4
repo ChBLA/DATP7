@@ -91,8 +91,9 @@ ifstatement     : IF LEFTPAR expression RIGHTPAR statement ( ELSE statement )?;
 returnstatement : RETURN expression? END;
 
 chanPriority : 'chan' 'priority' (chanExpr | 'default') ((COMMA | '<') (chanExpr | 'default'))* END;
-chanExpr : ID
-           | chanExpr LEFTBRACKET expression RIGHTBRACKET;
+chanExpr locals [DeclarationReference reference]
+            : ID
+            | chanExpr LEFTBRACKET expression RIGHTBRACKET;
 
 expression locals [DeclarationReference reference]
             :  literal                                          #LiteralExpr

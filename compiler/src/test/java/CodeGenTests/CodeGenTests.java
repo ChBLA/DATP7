@@ -428,6 +428,54 @@ public class CodeGenTests {
 
     //endregion
 
+    //region Channel expression
+    @Test
+    void chanExprIDGeneratedCorrectly() {
+        String expected = "a";
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference declarationReferenceMock = mock(DeclarationReference.class);
+        DeclarationInfo declarationInfoMock = mock(DeclarationInfo.class);
+
+        when(declarationInfoMock.getIdentifier()).thenReturn("a");
+
+        try {
+            when(scopeMock.get(declarationReferenceMock)).thenReturn(declarationInfoMock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.ChanExprContext.class);
+        node.reference = declarationReferenceMock;
+
+        String actual = visitor.visitChanExpr(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void chanExprIDWithBracketsGeneratedCorrectly() {
+        var chanTemplate = generateDefaultChanExprTemplate("a");
+        var exprTemplate = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        String expected = String.format("%s[%s]", chanTemplate, exprTemplate);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.ChanExprContext.class);
+        var chanNode = mockForVisitorResult(UCELParser.ChanExprContext.class, chanTemplate, visitor);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+
+        when(node.chanExpr()).thenReturn(chanNode);
+        when(node.expression()).thenReturn(exprNode);
+
+        String actual = visitor.visitChanExpr(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
     //region Declarations
     @Test
     public void declarationsGeneratedCorrectly() {
@@ -2896,6 +2944,10 @@ public class CodeGenTests {
             case scalarType -> new ManualTemplate("scalar");
             default -> new ManualTemplate("");
         };
+    }
+
+    private Template generateDefaultChanExprTemplate(String id) {
+        return new ManualTemplate(String.format("%s", id));
     }
 
     private Template generateDefaultTypeDeclTemplate(String id, String size) {

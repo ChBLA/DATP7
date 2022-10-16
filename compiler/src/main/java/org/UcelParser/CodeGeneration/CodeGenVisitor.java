@@ -266,7 +266,6 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         }
 
         return ctx.REF() != null ? new ManualTemplate("") : new ParameterTemplate(typeTemplate, ampString, idString, arrayTemplates);
-
     }
 
     @Override
@@ -278,6 +277,25 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         }
 
         return new ParametersTemplate(parameterTemplates);
+    }
+
+    //endregion
+
+    //region Channel expressions
+
+    @Override
+    public Template visitChanExpr(UCELParser.ChanExprContext ctx) {
+        if (ctx.chanExpr() == null) {
+            try {
+                return new ManualTemplate(currentScope.get(ctx.reference).getIdentifier());
+            } catch (Exception e) {
+                throw new RuntimeException(e.getMessage());
+            }
+        }
+        var chanExpr = visit(ctx.chanExpr());
+        var expr = visit(ctx.expression());
+
+        return new ChanExprTemplate(chanExpr, expr);
     }
 
     //endregion
