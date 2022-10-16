@@ -252,6 +252,35 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     //endregion
 
+    //region Parameters
+
+    @Override
+    public Template visitParameter(UCELParser.ParameterContext ctx) {
+        var typeTemplate = ctx.type() != null ? visit(ctx.type()) : new ManualTemplate("");
+        var ampString = ctx.BITAND() != null ? ctx.BITAND().getText() : "";
+        var idString = ctx.ID() != null ? ctx.ID().getText() : "";
+        var arrayTemplates = new ArrayList<Template>();
+
+        for (var arrayDecl : ctx.arrayDecl()) {
+            arrayTemplates.add(visit(arrayDecl));
+        }
+
+        return ctx.REF() != null ? new ManualTemplate("") : new ParameterTemplate(typeTemplate, ampString, idString, arrayTemplates);
+
+    }
+
+    @Override
+    public Template visitParameters(UCELParser.ParametersContext ctx) {
+        List<Template> parameterTemplates = new ArrayList<>();
+
+        for (var param : ctx.parameter()) {
+            parameterTemplates.add(visit(param));
+        }
+
+        return new ParametersTemplate(parameterTemplates);
+    }
+
+    //endregion
 
     //region Type
 

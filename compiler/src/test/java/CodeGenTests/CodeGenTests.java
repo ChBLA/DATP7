@@ -262,6 +262,172 @@ public class CodeGenTests {
 
     //endregion
 
+    //region parameters
+    @Test
+    void parametersNoParameterGeneratedCorrectly() {
+        String expected = "";
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.ParametersContext.class);
+
+        var actual = visitor.visitParameters(node).toString();
+        assertEquals(expected, actual);
+    }
+    @Test
+    void parametersOneParameterGeneratedCorrectly() {
+        var paramTemplate = generateDefaultParametersTemplate("int", "a");
+        var expected = paramTemplate.toString();
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.ParametersContext.class);
+        var paramNodes = new ArrayList<UCELParser.ParameterContext>()
+            {{add(mockForVisitorResult(UCELParser.ParameterContext.class, paramTemplate, visitor));}};
+
+        when(node.parameter()).thenReturn(paramNodes);
+
+        var actual = visitor.visitParameters(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void parametersMultipleParameterGeneratedCorrectly() {
+        var param1Template = generateDefaultParametersTemplate("int", "a");
+        var param2Template = generateDefaultParametersTemplate("bool", "b");
+        var expected = String.format("%s, %s", param1Template, param2Template);
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.ParametersContext.class);
+        var paramNodes = new ArrayList<UCELParser.ParameterContext>()
+        {{
+            add(mockForVisitorResult(UCELParser.ParameterContext.class, param1Template, visitor));
+            add(mockForVisitorResult(UCELParser.ParameterContext.class, param2Template, visitor));
+        }};
+
+        when(node.parameter()).thenReturn(paramNodes);
+
+        var actual = visitor.visitParameters(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    //type? REF? ('&')? ID? arrayDecl*
+    @Test
+    void parameterReferenceIDGeneratedCorrectly() {
+        var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var id = "a";
+        var expected = "";
+
+        var visitor = new CodeGenVisitor();
+        var idNode = mock(TerminalNode.class);
+        var refNode = mock(TerminalNode.class);
+
+        var node = mock(UCELParser.ParameterContext.class);
+        var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
+        when(idNode.getText()).thenReturn(id);
+        when(refNode.getText()).thenReturn("ref");
+        when(node.ID()).thenReturn(idNode);
+        when(node.REF()).thenReturn(refNode);
+        when(node.type()).thenReturn(typeNode);
+
+        var actual = visitor.visitParameter(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void parameterNormalIDGeneratedCorrectly() {
+        var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var id = "a";
+        var expected = String.format("%s %s", typeTemplate, id);
+
+        var visitor = new CodeGenVisitor();
+        var idNode = mock(TerminalNode.class);
+
+        var node = mock(UCELParser.ParameterContext.class);
+        var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
+        when(idNode.getText()).thenReturn(id);
+        when(node.ID()).thenReturn(idNode);
+        when(node.type()).thenReturn(typeNode);
+
+        var actual = visitor.visitParameter(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void parameterIDWithOneArrayDeclGeneratedCorrectly() {
+        var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var arrayDeclTemplate = generateDefaultArrayDeclTemplate();
+        var id = "a";
+        var expected = String.format("%s %s%s", typeTemplate, id, arrayDeclTemplate);
+
+        var visitor = new CodeGenVisitor();
+        var idNode = mock(TerminalNode.class);
+
+        var node = mock(UCELParser.ParameterContext.class);
+        var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
+        var arrayNode = new ArrayList<UCELParser.ArrayDeclContext>()
+            {{add(mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDeclTemplate, visitor));}};
+
+        when(idNode.getText()).thenReturn(id);
+        when(node.ID()).thenReturn(idNode);
+        when(node.arrayDecl()).thenReturn(arrayNode);
+        when(node.type()).thenReturn(typeNode);
+
+        var actual = visitor.visitParameter(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void parameterIDWithMultipleArrayDeclGeneratedCorrectly() {
+        var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var arrayDeclTemplate = generateDefaultArrayDeclTemplate();
+        var id = "a";
+        var expected = String.format("%s %s%s%s", typeTemplate, id, arrayDeclTemplate, arrayDeclTemplate);
+
+        var visitor = new CodeGenVisitor();
+        var idNode = mock(TerminalNode.class);
+
+        var node = mock(UCELParser.ParameterContext.class);
+        var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
+        var arrayNode = new ArrayList<UCELParser.ArrayDeclContext>()
+        {{
+            add(mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDeclTemplate, visitor));
+            add(mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDeclTemplate, visitor));
+        }};
+
+        when(idNode.getText()).thenReturn(id);
+        when(node.ID()).thenReturn(idNode);
+        when(node.arrayDecl()).thenReturn(arrayNode);
+        when(node.type()).thenReturn(typeNode);
+
+        var actual = visitor.visitParameter(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void parameterIDAmpersandGeneratedCorrectly() {
+        var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var id = "a";
+        var ampersand = "&";
+        var expected = String.format("%s%s %s", typeTemplate, ampersand, id);
+
+        var visitor = new CodeGenVisitor();
+        var idNode = mock(TerminalNode.class);
+        var ampNode = mock(TerminalNode.class);
+
+        var node = mock(UCELParser.ParameterContext.class);
+        var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
+
+        when(idNode.getText()).thenReturn(id);
+        when(ampNode.getText()).thenReturn(ampersand);
+        when(node.ID()).thenReturn(idNode);
+        when(node.BITAND()).thenReturn(ampNode);
+        when(node.type()).thenReturn(typeNode);
+
+        var actual = visitor.visitParameter(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
     //region Declarations
     @Test
     public void declarationsGeneratedCorrectly() {
@@ -2742,6 +2908,10 @@ public class CodeGenTests {
 
     private Template generateDefaultParametersTemplate(String type, String id) {
         return new ManualTemplate(String.format("%s %s", type, id));
+    }
+
+    private Template generateDefaultArrayDeclTemplate() {
+        return new ManualTemplate("[]");
     }
 
     private Template generateDefaultArgumentsTemplate(Type.TypeEnum type) {
