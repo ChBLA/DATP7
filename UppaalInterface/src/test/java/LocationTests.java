@@ -1,5 +1,4 @@
-import org.Ucel.Edge;
-import org.Ucel.IGraph;
+import org.Ucel.ILocation;
 import org.Ucel.Location;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -11,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class LocationTests {
     @Test
     public void ctor() {
-        IGraph.ILocation location = new Location();
+        ILocation location = new Location();
 
         assertNotNull(location.GetId());
         assertNotNull(location.GetPosX());

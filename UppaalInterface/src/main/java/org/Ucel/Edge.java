@@ -1,6 +1,6 @@
 package org.Ucel;
 
-public class Edge implements IGraph.IEdge {
+public class Edge implements IEdge {
     private String id = "";
 
     @Override

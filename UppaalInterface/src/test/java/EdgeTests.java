@@ -1,5 +1,5 @@
 import org.Ucel.Edge;
-import org.Ucel.IGraph;
+import org.Ucel.IEdge;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class EdgeTests {
     @Test
     public void ctor() {
-        IGraph.IEdge edge = new Edge();
+        IEdge edge = new Edge();
 
         assertNotNull(edge.GetId());
         assertNotNull(edge.GetLocationIdStart());

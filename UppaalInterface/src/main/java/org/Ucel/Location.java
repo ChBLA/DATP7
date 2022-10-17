@@ -1,6 +1,6 @@
 package org.Ucel;
 
-public class Location implements IGraph.ILocation {
+public class Location implements ILocation {
     private String id = "";
 
     @Override
