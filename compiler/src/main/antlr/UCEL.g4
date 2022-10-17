@@ -6,6 +6,7 @@ grammar UCEL;
     import org.UcelParser.Util.Scope;
     import org.UcelParser.Util.DeclarationReference;
     import org.UcelParser.Util.DeclarationInfo;
+    import org.UcelParser.Util.FuncCallOccurrence;
 }
 
 start locals [Scope scope]
@@ -38,7 +39,8 @@ progressDecl  : PROGRESS LEFTCURLYBRACE ( expression? END )* RIGHTCURLYBRACE;
 
 
 parameters : ( parameter (COMMA parameter)* )?;
-parameter  : type? REF? (BITAND)? ID? arrayDecl*;
+parameter  locals [DeclarationReference reference]
+              : type? REF? (BITAND)? ID? arrayDecl*;
 
 declarations  : (variableDecl | typeDecl | function | chanPriority | component | interface_decl)*;
 variableDecl  : type variableID (COMMA variableID)* END;
@@ -68,7 +70,7 @@ fieldDecl     : type arrayDeclID (COMMA arrayDeclID)* END;
 arrayDecl     : LEFTBRACKET expression? RIGHTBRACKET
               | LEFTBRACKET type RIGHTBRACKET;
 
-function locals [Scope scope, List<DeclarationInfo[]> occurences]
+function locals [Scope scope, List<FuncCallOccurrence> occurrences]
     : type? ID? LEFTPAR parameters? RIGHTPAR block;
 block locals [Scope scope]
     : LEFTCURLYBRACE localDeclaration* statement* RIGHTCURLYBRACE;
