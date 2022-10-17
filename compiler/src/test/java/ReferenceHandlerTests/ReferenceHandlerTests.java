@@ -4,12 +4,14 @@ import org.UcelParser.ReferenceHandler.ReferenceVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.DeclarationReference;
+import org.UcelParser.Util.FuncCallOccurrence;
 import org.UcelParser.Util.Scope;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.awt.*;
 import java.sql.Ref;
 import java.util.ArrayList;
 
@@ -640,6 +642,146 @@ public class ReferenceHandlerTests {
         assertFalse(actual);
     }
 
-    //end region
+    //endregion
+
+    //region Function
+
+    @Test
+    void functionVisitsType() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        String funcIdentifier = "f";
+        UCELParser.FunctionContext node = mock(UCELParser.FunctionContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.type()).thenReturn(type);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(funcIdentifier);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.block()).thenReturn(block);
+
+        when(type.accept(visitor)).thenReturn(true);
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(block.accept(visitor)).thenReturn(true);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(funcIdentifier, false)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail(); }
+
+        visitor.visitFunction(node);
+
+        verify(type, times(1)).accept(visitor);
+    }
+
+    @Test
+    void functionVisitsParameters() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        String funcIdentifier = "f";
+        UCELParser.FunctionContext node = mock(UCELParser.FunctionContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.type()).thenReturn(type);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(funcIdentifier);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.block()).thenReturn(block);
+
+        when(type.accept(visitor)).thenReturn(true);
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(block.accept(visitor)).thenReturn(true);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(funcIdentifier, false)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail(); }
+
+        visitor.visitFunction(node);
+
+        verify(parameters, times(1)).accept(visitor);
+    }
+
+    @Test
+    void functionVisitsBlock() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        String funcIdentifier = "f";
+        UCELParser.FunctionContext node = mock(UCELParser.FunctionContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.type()).thenReturn(type);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(funcIdentifier);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.block()).thenReturn(block);
+
+        when(type.accept(visitor)).thenReturn(true);
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(block.accept(visitor)).thenReturn(true);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(funcIdentifier, false)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail(); }
+
+        visitor.visitFunction(node);
+
+        verify(block, times(1)).accept(visitor);
+    }
+
+    @Test
+    void functionSetsOccurrences() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        String funcIdentifier = "f";
+        UCELParser.FunctionContext node = mock(UCELParser.FunctionContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.type()).thenReturn(type);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(funcIdentifier);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.block()).thenReturn(block);
+
+        when(type.accept(visitor)).thenReturn(true);
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(block.accept(visitor)).thenReturn(true);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(funcIdentifier, false)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail(); }
+
+        visitor.visitFunction(node);
+
+        assertTrue(node.occurrences != null && node.occurrences instanceof ArrayList);
+    }
+
+    //endregion
 
 }
