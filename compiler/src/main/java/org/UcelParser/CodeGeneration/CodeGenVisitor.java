@@ -4,6 +4,7 @@ import org.UcelParser.CodeGeneration.templates.*;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.DeclarationInfo;
+import org.UcelParser.Util.DeclarationReference;
 import org.UcelParser.Util.Logging.Logger;
 import org.UcelParser.Util.Scope;
 import org.UcelParser.CodeGeneration.templates.ManualTemplate;
@@ -11,6 +12,7 @@ import org.UcelParser.CodeGeneration.templates.Template;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     private Scope currentScope;
@@ -29,6 +31,47 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.logger = logger;
     }
 
+
+    //region Function
+
+    @Override
+    public Template visitFunction(UCELParser.FunctionContext ctx) {
+        enterScope(ctx.scope);
+
+        List<Template> functionTemplates = new ArrayList<>();
+
+        var type = visit(ctx.type());
+
+        var refParams = ctx.parameters().parameter()
+                .stream()
+                .filter(p -> p.REF() != null)
+                .collect(Collectors.toList());
+
+        for (int i = 0; i < ctx.occurrences.size(); i++) {
+            var funcCallRefParams = ctx.occurrences.get(i).getRefParams();
+
+            for (int k = 0; k < funcCallRefParams.length; k++) {
+                var ref = refParams.get(k).reference;
+                currentScope.replaceDeclarationInfoForRef(ref, funcCallRefParams[k]);
+            }
+
+            var parameters = visit(ctx.parameters());
+            String nameOfCall = null;
+            try {
+                nameOfCall = currentScope.get(ctx.occurrences.get(i).getFuncCallContext().reference).getIdentifier();
+            } catch (Exception e) {
+                throw new RuntimeException("error: could not find occurrence");
+            }
+            var body = visit(ctx.block());
+
+            functionTemplates.add(new FunctionTemplate(type, nameOfCall, parameters, body));
+        }
+
+        exitScope();
+        return new FunctionsTemplate(functionTemplates);
+    }
+
+    //endregion
 
     //region Instantiation
 
