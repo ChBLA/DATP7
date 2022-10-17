@@ -70,7 +70,7 @@ fieldDecl     : type arrayDeclID (COMMA arrayDeclID)* END;
 arrayDecl     : LEFTBRACKET expression? RIGHTBRACKET
               | LEFTBRACKET type RIGHTBRACKET;
 
-function locals [Scope scope, List<FuncCallOccurrence> occurrences]
+function locals [Scope scope, List<FuncCallOccurrence> occurrences, DeclarationReference reference]
     : type? ID? LEFTPAR parameters? RIGHTPAR block;
 block locals [Scope scope]
     : LEFTCURLYBRACE localDeclaration* statement* RIGHTCURLYBRACE;
