@@ -37,6 +37,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private static final Type BOOL_TYPE = new Type(Type.TypeEnum.boolType);
     private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
     private static final Type STRING_TYPE = new Type(Type.TypeEnum.stringType);
+    private static final Type CLOCK_TYPE = new Type(Type.TypeEnum.clockType);
     private static final Type ERROR_TYPE = new Type(Type.TypeEnum.errorType);
     private static final Type INT_ARRAY_TYPE = new Type(Type.TypeEnum.intType, 1);
     private static final Type DOUBLE_ARRAY_TYPE = new Type(Type.TypeEnum.doubleType, 1);
@@ -569,6 +570,14 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return ERROR_TYPE;
 
         return arrayType;
+    }
+
+    @Override
+    public Type visitMarkExpr(UCELParser.MarkExprContext ctx) {
+        Type type = visit(ctx.expression());
+
+        if(type.equals(CLOCK_TYPE)) return CLOCK_TYPE;
+        else return ERROR_TYPE;
     }
 
     @Override

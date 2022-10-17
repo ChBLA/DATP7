@@ -1977,6 +1977,35 @@ public class TypeCheckerTests  {
     //endregion
 
     //region MarkExpr
+
+    @Test
+    void markExprReturnsClock() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+
+        UCELParser.MarkExprContext node = mock(UCELParser.MarkExprContext.class);
+        UCELParser.ExpressionContext expr = mock(UCELParser.MarkExprContext.class);
+        when(node.expression()).thenReturn(expr);
+        when(expr.accept(visitor)).thenReturn(CLOCK_TYPE);
+
+        Type actual = visitor.visitMarkExpr(node);
+
+        assertEquals(CLOCK_TYPE, actual);
+    }
+
+    @Test
+    void markExprReturnsError() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+
+        UCELParser.MarkExprContext node = mock(UCELParser.MarkExprContext.class);
+        UCELParser.ExpressionContext expr = mock(UCELParser.MarkExprContext.class);
+        when(node.expression()).thenReturn(expr);
+        when(expr.accept(visitor)).thenReturn(INT_TYPE);
+
+        Type actual = visitor.visitMarkExpr(node);
+
+        assertEquals(ERROR_TYPE, actual);
+    }
+
     //endregion
 
     //region Paren
