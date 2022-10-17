@@ -9,6 +9,7 @@ import org.UcelParser.Util.Scope;
 import org.UcelParser.CodeGeneration.templates.ManualTemplate;
 import org.UcelParser.CodeGeneration.templates.Template;
 
+import javax.swing.text.DefaultCaret;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,8 +42,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         var ID1 = "";
         var ID2 = "";
         try {
-            ID1 = currentScope.get(ctx.references.get(0)).getIdentifier();
-            ID2 = currentScope.get(ctx.references.get(1)).getIdentifier();
+            ID1 = currentScope.get(ctx.references.get(0)).generateName();
+            ID2 = currentScope.get(ctx.references.get(1)).generateName();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -156,7 +157,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
             Template arrayDeclID = visit(ctx.arrayDeclID(i));
 
             try {
-                String identifier = currentScope.get(ctx.references.get(i)).getIdentifier();
+                String identifier = currentScope.get(ctx.references.get(i)).generateName();
                 arrayDeclID = arrayDeclID.replaceValue("ID", identifier);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -208,7 +209,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitTypeIDID(UCELParser.TypeIDIDContext ctx) {
         ManualTemplate result;
         try {
-            result = new ManualTemplate(currentScope.get(ctx.reference).getIdentifier());
+            result = new ManualTemplate(currentScope.get(ctx.reference).generateName());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -258,7 +259,16 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitParameter(UCELParser.ParameterContext ctx) {
         var typeTemplate = ctx.type() != null ? visit(ctx.type()) : new ManualTemplate("");
         var ampString = ctx.BITAND() != null ? ctx.BITAND().getText() : "";
-        var idString = ctx.ID() != null ? ctx.ID().getText() : "";
+        DeclarationInfo info = null;
+        try {
+            if (ctx.reference != null)
+                info = currentScope.get(ctx.reference);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        var idString = info != null ? info.generateName() : "";
+
         var arrayTemplates = new ArrayList<Template>();
 
         for (var arrayDecl : ctx.arrayDecl()) {
@@ -289,7 +299,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitChanExpr(UCELParser.ChanExprContext ctx) {
         if (ctx.chanExpr() == null) {
             try {
-                return new ManualTemplate(currentScope.get(ctx.reference).getIdentifier());
+                return new ManualTemplate(currentScope.get(ctx.reference).generateName());
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage());
             }
@@ -373,10 +383,10 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
         if (ctx.initialiser() != null) {
             Template initialiserResult = visit(ctx.initialiser());
-            result = new VariableIDTemplate(declarationInfo.getIdentifier(), arrayDecals, initialiserResult);
+            result = new VariableIDTemplate(declarationInfo.generateName(), arrayDecals, initialiserResult);
         }
         else {
-            result = new VariableIDTemplate(declarationInfo.getIdentifier(), arrayDecals);
+            result = new VariableIDTemplate(declarationInfo.generateName(), arrayDecals);
         }
 
         return result;
@@ -410,7 +420,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     @Override
     public Template visitIdExpr(UCELParser.IdExprContext ctx) {
         try {
-            return new ManualTemplate(currentScope.get(ctx.reference).getIdentifier());
+            return new ManualTemplate(currentScope.get(ctx.reference).generateName());
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -585,7 +595,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitVerification(UCELParser.VerificationContext ctx) {
         String id = "";
         try {
-            id = currentScope.get(ctx.reference).getIdentifier();
+            id = currentScope.get(ctx.reference).generateName();
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -663,7 +673,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         var typeResult = ctx.type() != null ? visit(ctx.type()) : new ManualTemplate("");
         var stmntResult = visit(ctx.statement());
 
-        return new IterationTemplate(new ManualTemplate(declarationInfo != null ? declarationInfo.getIdentifier() : ""), typeResult, stmntResult);
+        return new IterationTemplate(new ManualTemplate(declarationInfo != null ? declarationInfo.generateName() : ""), typeResult, stmntResult);
     }
 
 

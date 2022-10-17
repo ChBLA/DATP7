@@ -86,7 +86,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             valid = valid && visit(arrayDecl);
         }
 
-        ctx.reference = currentScope.add(new DeclarationInfo(identifier));
+        ctx.reference = currentScope.add(new DeclarationInfo(identifier, ctx));
         if(ctx.initialiser() != null)
             valid = valid && visit(ctx.initialiser());
 
@@ -103,7 +103,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
                 logger.log(new ErrorLog(ctx, "Variable '" + identifier + "' already exists in scope"));
                 return false;
             }
-            DeclarationReference declRef = currentScope.add(new DeclarationInfo(identifier));
+            DeclarationReference declRef = currentScope.add(new DeclarationInfo(identifier, ctx));
             ctx.reference = declRef;
         } catch (Exception e) {
             logger.log(new ErrorLog(ctx, "Compiler Error" + e.getMessage()));

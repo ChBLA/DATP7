@@ -51,8 +51,8 @@ public class CodeGenTests {
         DeclarationInfo info1Mock = mock(DeclarationInfo.class);
         DeclarationInfo info2Mock = mock(DeclarationInfo.class);
 
-        when(info1Mock.getIdentifier()).thenReturn(id1Name);
-        when(info2Mock.getIdentifier()).thenReturn(id2Name);
+        when(info1Mock.generateName()).thenReturn(id1Name);
+        when(info2Mock.generateName()).thenReturn(id2Name);
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
@@ -84,8 +84,8 @@ public class CodeGenTests {
         DeclarationInfo info1Mock = mock(DeclarationInfo.class);
         DeclarationInfo info2Mock = mock(DeclarationInfo.class);
 
-        when(info1Mock.getIdentifier()).thenReturn(id1Name);
-        when(info2Mock.getIdentifier()).thenReturn(id2Name);
+        when(info1Mock.generateName()).thenReturn(id1Name);
+        when(info2Mock.generateName()).thenReturn(id2Name);
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
@@ -120,8 +120,8 @@ public class CodeGenTests {
         DeclarationInfo info1Mock = mock(DeclarationInfo.class);
         DeclarationInfo info2Mock = mock(DeclarationInfo.class);
 
-        when(info1Mock.getIdentifier()).thenReturn(id1Name);
-        when(info2Mock.getIdentifier()).thenReturn(id2Name);
+        when(info1Mock.generateName()).thenReturn(id1Name);
+        when(info2Mock.generateName()).thenReturn(id2Name);
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
@@ -158,8 +158,8 @@ public class CodeGenTests {
         DeclarationInfo info1Mock = mock(DeclarationInfo.class);
         DeclarationInfo info2Mock = mock(DeclarationInfo.class);
 
-        when(info1Mock.getIdentifier()).thenReturn(id1Name);
-        when(info2Mock.getIdentifier()).thenReturn(id2Name);
+        when(info1Mock.generateName()).thenReturn(id1Name);
+        when(info2Mock.generateName()).thenReturn(id2Name);
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
@@ -194,8 +194,8 @@ public class CodeGenTests {
         DeclarationInfo info1Mock = mock(DeclarationInfo.class);
         DeclarationInfo info2Mock = mock(DeclarationInfo.class);
 
-        when(info1Mock.getIdentifier()).thenReturn(id1Name);
-        when(info2Mock.getIdentifier()).thenReturn(id2Name);
+        when(info1Mock.generateName()).thenReturn(id1Name);
+        when(info2Mock.generateName()).thenReturn(id2Name);
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
@@ -233,8 +233,8 @@ public class CodeGenTests {
         DeclarationInfo info1Mock = mock(DeclarationInfo.class);
         DeclarationInfo info2Mock = mock(DeclarationInfo.class);
 
-        when(info1Mock.getIdentifier()).thenReturn(id1Name);
-        when(info2Mock.getIdentifier()).thenReturn(id2Name);
+        when(info1Mock.generateName()).thenReturn(id1Name);
+        when(info2Mock.generateName()).thenReturn(id2Name);
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
@@ -309,22 +309,32 @@ public class CodeGenTests {
         assertEquals(expected, actual);
     }
 
-    //type? REF? ('&')? ID? arrayDecl*
     @Test
     void parameterReferenceIDGeneratedCorrectly() {
         var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
         var id = "a";
         var expected = "";
+        var variable = mock(DeclarationInfo.class);
+        var ref = mock(DeclarationReference.class);
 
-        var visitor = new CodeGenVisitor();
-        var idNode = mock(TerminalNode.class);
+        when(variable.generateName()).thenReturn(id);
+
+        var scopeMock = mock(Scope.class);
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
         var refNode = mock(TerminalNode.class);
 
         var node = mock(UCELParser.ParameterContext.class);
         var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
-        when(idNode.getText()).thenReturn(id);
+        node.reference = ref;
         when(refNode.getText()).thenReturn("ref");
-        when(node.ID()).thenReturn(idNode);
         when(node.REF()).thenReturn(refNode);
         when(node.type()).thenReturn(typeNode);
 
@@ -337,14 +347,24 @@ public class CodeGenTests {
         var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
         var id = "a";
         var expected = String.format("%s %s", typeTemplate, id);
+        var variable = mock(DeclarationInfo.class);
+        var ref = mock(DeclarationReference.class);
 
-        var visitor = new CodeGenVisitor();
-        var idNode = mock(TerminalNode.class);
+        when(variable.generateName()).thenReturn(id);
+
+        var scopeMock = mock(Scope.class);
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.ParameterContext.class);
         var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
-        when(idNode.getText()).thenReturn(id);
-        when(node.ID()).thenReturn(idNode);
+        node.reference = ref;
         when(node.type()).thenReturn(typeNode);
 
         var actual = visitor.visitParameter(node).toString();
@@ -357,17 +377,27 @@ public class CodeGenTests {
         var arrayDeclTemplate = generateDefaultArrayDeclTemplate();
         var id = "a";
         var expected = String.format("%s %s%s", typeTemplate, id, arrayDeclTemplate);
+        var variable = mock(DeclarationInfo.class);
+        var ref = mock(DeclarationReference.class);
 
-        var visitor = new CodeGenVisitor();
-        var idNode = mock(TerminalNode.class);
+        when(variable.generateName()).thenReturn(id);
+
+        var scopeMock = mock(Scope.class);
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.ParameterContext.class);
         var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
         var arrayNode = new ArrayList<UCELParser.ArrayDeclContext>()
             {{add(mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDeclTemplate, visitor));}};
+        node.reference = ref;
 
-        when(idNode.getText()).thenReturn(id);
-        when(node.ID()).thenReturn(idNode);
         when(node.arrayDecl()).thenReturn(arrayNode);
         when(node.type()).thenReturn(typeNode);
 
@@ -381,9 +411,20 @@ public class CodeGenTests {
         var arrayDeclTemplate = generateDefaultArrayDeclTemplate();
         var id = "a";
         var expected = String.format("%s %s%s%s", typeTemplate, id, arrayDeclTemplate, arrayDeclTemplate);
+        var variable = mock(DeclarationInfo.class);
+        var ref = mock(DeclarationReference.class);
 
-        var visitor = new CodeGenVisitor();
-        var idNode = mock(TerminalNode.class);
+        when(variable.generateName()).thenReturn(id);
+
+        var scopeMock = mock(Scope.class);
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.ParameterContext.class);
         var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
@@ -392,9 +433,8 @@ public class CodeGenTests {
             add(mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDeclTemplate, visitor));
             add(mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDeclTemplate, visitor));
         }};
+        node.reference = ref;
 
-        when(idNode.getText()).thenReturn(id);
-        when(node.ID()).thenReturn(idNode);
         when(node.arrayDecl()).thenReturn(arrayNode);
         when(node.type()).thenReturn(typeNode);
 
@@ -408,17 +448,28 @@ public class CodeGenTests {
         var id = "a";
         var ampersand = "&";
         var expected = String.format("%s%s %s", typeTemplate, ampersand, id);
+        var variable = mock(DeclarationInfo.class);
+        var ref = mock(DeclarationReference.class);
 
-        var visitor = new CodeGenVisitor();
-        var idNode = mock(TerminalNode.class);
+        when(variable.generateName()).thenReturn(id);
+
+        var scopeMock = mock(Scope.class);
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
         var ampNode = mock(TerminalNode.class);
 
         var node = mock(UCELParser.ParameterContext.class);
         var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
 
-        when(idNode.getText()).thenReturn(id);
+        node.reference = ref;
+
         when(ampNode.getText()).thenReturn(ampersand);
-        when(node.ID()).thenReturn(idNode);
         when(node.BITAND()).thenReturn(ampNode);
         when(node.type()).thenReturn(typeNode);
 
@@ -436,7 +487,7 @@ public class CodeGenTests {
         DeclarationReference declarationReferenceMock = mock(DeclarationReference.class);
         DeclarationInfo declarationInfoMock = mock(DeclarationInfo.class);
 
-        when(declarationInfoMock.getIdentifier()).thenReturn("a");
+        when(declarationInfoMock.generateName()).thenReturn("a");
 
         try {
             when(scopeMock.get(declarationReferenceMock)).thenReturn(declarationInfoMock);
@@ -780,7 +831,7 @@ public class CodeGenTests {
         List<DeclarationReference> declarationReferences = new ArrayList<>();
         declarationReferences.add(declarationReferenceMock);
 
-        when(declarationInfoMock.getIdentifier()).thenReturn("list");
+        when(declarationInfoMock.generateName()).thenReturn("list");
 
         try {
             when(scopeMock.get(declarationReferenceMock)).thenReturn(declarationInfoMock);
@@ -830,8 +881,8 @@ public class CodeGenTests {
         declarationReferences.add(declarationReferenceMock2);
 
 
-        when(declarationInfoMock1.getIdentifier()).thenReturn("list");
-        when(declarationInfoMock2.getIdentifier()).thenReturn("betterInt");
+        when(declarationInfoMock1.generateName()).thenReturn("list");
+        when(declarationInfoMock2.generateName()).thenReturn("betterInt");
 
         try {
             when(scopeMock.get(declarationReferenceMock1)).thenReturn(declarationInfoMock1);
@@ -956,7 +1007,7 @@ public class CodeGenTests {
         var node = mock(UCELParser.TypeIDIDContext.class);
         node.reference = ref;
 
-        when(variable.getIdentifier()).thenReturn(variableID);
+        when(variable.generateName()).thenReturn(variableID);
         try {
             when(scopeMock.get(ref)).thenReturn(variable);
         } catch (Exception e) {
@@ -1214,8 +1265,10 @@ public class CodeGenTests {
         Template arrayDecl = new ManualTemplate("[10]");
         String expected = "var1[10]";
         String variableID = "var1";
-        DeclarationInfo variable = new DeclarationInfo(variableID, new Type(Type.TypeEnum.intType, 10));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(variableID);
 
         Scope scopeMock = mock(Scope.class);
         var visitor = new CodeGenVisitor(scopeMock);
@@ -1244,8 +1297,10 @@ public class CodeGenTests {
         Template initTemplate = new ManualTemplate("5");
         String expected = "var1 = 5";
         String variableID = "var1";
-        DeclarationInfo variable = new DeclarationInfo(variableID, new Type(Type.TypeEnum.intType));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(variableID);
 
         Scope scopeMock = mock(Scope.class);
         var visitor = new CodeGenVisitor(scopeMock);
@@ -1273,8 +1328,10 @@ public class CodeGenTests {
         String expected = "var1[10][5]";
         String variableID = "var1";
         // TODO: set correct array type for declarationinfo maybe
-        DeclarationInfo variable = new DeclarationInfo(variableID, new Type(Type.TypeEnum.intType));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(variableID);
 
         Scope scopeMock = mock(Scope.class);
         var visitor = new CodeGenVisitor(scopeMock);
@@ -1309,8 +1366,10 @@ public class CodeGenTests {
         String expected = "var1[][] = {{1,2,3}, {1,2,3,4}}";
         String variableID = "var1";
         // TODO: set correct array type for declarationinfo maybe
-        DeclarationInfo variable = new DeclarationInfo(variableID, new Type(Type.TypeEnum.intType));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(variableID);
 
         Scope scopeMock = mock(Scope.class);
         var visitor = new CodeGenVisitor(scopeMock);
@@ -1445,8 +1504,10 @@ public class CodeGenTests {
     @ParameterizedTest(name = "{index} => ID look-up in expression for ID = \"{0}\"")
     @ValueSource(strings = {"a", "awd901", "Ada"})
     void idExprGeneratedCorrectly(String name) {
-        DeclarationInfo variable = new DeclarationInfo(name, new Type(Type.TypeEnum.intType));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(name);
 
         var scopeMock = mock(Scope.class);
 
@@ -2018,10 +2079,13 @@ public class CodeGenTests {
         var name = "abc";
         var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
         var exprTemplate = generateDefaultExprTemplate(Type.TypeEnum.boolType);
-        DeclarationInfo variable = new DeclarationInfo(name, new Type(Type.TypeEnum.intType));
-        DeclarationReference ref = new DeclarationReference(0, 1);
         var expected = String.format("%s (%s:%s) %s", op, name, typeTemplate, exprTemplate);
         var opToken = mock(CommonToken.class);
+
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(name);
 
         var scopeMock = mock(Scope.class);
 
@@ -2338,8 +2402,10 @@ public class CodeGenTests {
         var stmntResult = generateDefaultStatementTemplate();
         var expected = String.format("for (%s:%s) %s", idResult, typeResult, stmntResult);
 
-        DeclarationInfo variable = new DeclarationInfo(idResult.toString(), new Type(Type.TypeEnum.intType, 1));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+        
+        when(variable.generateName()).thenReturn(idResult.toString());
 
         var scopeMock = mock(Scope.class);
 
@@ -2372,8 +2438,10 @@ public class CodeGenTests {
         var stmntResult = generateDefaultStatementTemplate();
         var expected = String.format("for (%s:%s) %s", idResult, typeResult, stmntResult);
 
-        DeclarationInfo variable = new DeclarationInfo(idResult.toString(), new Type(Type.TypeEnum.intType, 1));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(idResult.toString());
 
         var scopeMock = mock(Scope.class);
 
@@ -2405,8 +2473,10 @@ public class CodeGenTests {
         var stmntResult = generateDefaultStatementTemplate();
         var expected = String.format("for (%s:%s) %s", idResult, typeResult, stmntResult);
 
-        DeclarationInfo variable = new DeclarationInfo(idResult.toString(), new Type(Type.TypeEnum.intType, 1));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(idResult.toString());
 
         var scopeMock = mock(Scope.class);
 
@@ -2438,8 +2508,10 @@ public class CodeGenTests {
         var stmntResult = generateDefaultStatementTemplate();
         var expected = String.format("for (%s:%s) %s", idResult, typeResult, stmntResult);
 
-        DeclarationInfo variable = new DeclarationInfo(idResult.toString(), new Type(Type.TypeEnum.intType, 1));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(idResult.toString());
 
         var scopeMock = mock(Scope.class);
 
