@@ -7,6 +7,8 @@ import java.util.List;
 
 public class Scope {
 
+    private static final UniquePrefixGenerator upg = new UniquePrefixGenerator();
+    private final String prefix;
     private Scope parent;
     private ArrayList<DeclarationInfo> declarationInfos;
     private boolean isComponent;
@@ -15,15 +17,18 @@ public class Scope {
         this.parent = parent;
         this.declarationInfos = new ArrayList<>();
         this.isComponent = isComponent;
+        this.prefix = upg.getNewPrefix();
     }
 
     public Scope(Scope parent, boolean isComponent, ArrayList<DeclarationInfo> variables) {
         this.parent = parent;
         this.declarationInfos = variables;
         this.isComponent = isComponent;
+        this.prefix = upg.getNewPrefix();
     }
 
     public DeclarationReference add(DeclarationInfo v) {
+        v.setScope(this);
         declarationInfos.add(v);
         return new DeclarationReference(0, declarationInfos.size() - 1);
     }
@@ -71,6 +76,10 @@ public class Scope {
         } else {
             return declarationInfos.get(tableReference.getDeclarationId());
         }
+    }
+
+    public String getPrefix() {
+        return this.prefix;
     }
 
     public List<DeclarationInfo> replaceDeclarationInfoForRef(DeclarationReference reference, DeclarationInfo newInfo) {

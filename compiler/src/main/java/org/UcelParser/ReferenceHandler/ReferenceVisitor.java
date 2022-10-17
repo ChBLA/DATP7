@@ -86,7 +86,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             valid = valid && visit(arrayDecl);
         }
 
-        ctx.reference = currentScope.add(new DeclarationInfo(identifier));
+        ctx.reference = currentScope.add(new DeclarationInfo(identifier, ctx));
         if(ctx.initialiser() != null)
             valid = valid && visit(ctx.initialiser());
 
@@ -103,7 +103,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
                 logger.log(new ErrorLog(ctx, "Variable '" + identifier + "' already exists in scope"));
                 return false;
             }
-            DeclarationReference declRef = currentScope.add(new DeclarationInfo(identifier));
+            DeclarationReference declRef = currentScope.add(new DeclarationInfo(identifier, ctx));
             ctx.reference = declRef;
         } catch (Exception e) {
             logger.log(new ErrorLog(ctx, "Compiler Error" + e.getMessage()));
@@ -129,6 +129,51 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         exitScope();
 
         return success;
+    }
+
+    @Override
+    public Boolean visitIncrementPost(UCELParser.IncrementPostContext ctx) {
+        return handleIncrementDecrement(ctx);
+    }
+
+    @Override
+    public Boolean visitIncrementPre(UCELParser.IncrementPreContext ctx) {
+        return handleIncrementDecrement(ctx);
+    }
+
+    @Override
+    public Boolean visitDecrementPost(UCELParser.DecrementPostContext ctx) {
+        return handleIncrementDecrement(ctx);
+    }
+
+    @Override
+    public Boolean visitDecrementPre(UCELParser.DecrementPreContext ctx) {
+        return handleIncrementDecrement(ctx);
+    }
+
+    private Boolean handleIncrementDecrement(UCELParser.ExpressionContext ctx) {
+        UCELParser.ExpressionContext expr = ctx.getRuleContext(UCELParser.ExpressionContext.class, 0);
+        if(expr instanceof UCELParser.IdExprContext ||
+                expr instanceof UCELParser.StructAccessContext) {
+            return visit(expr);
+        } else {
+            logger.log(new ErrorLog(ctx, "Operator only valid for a reference expressions, " +
+                    "such as a variable or a struct field"));
+            return false;
+        }
+    }
+
+    @Override
+    public Boolean visitAssignExpr(UCELParser.AssignExprContext ctx) {
+        UCELParser.ExpressionContext expr = ctx.expression(0);
+        if(expr instanceof UCELParser.IdExprContext ||
+                expr instanceof UCELParser.StructAccessContext) {
+            return visit(expr);
+        } else {
+            logger.log(new ErrorLog(ctx, "Left side of an assignment requires a reference expressions, " +
+                    "such as a variable or a struct field"));
+            return false;
+        }
     }
 
     private void enterScope() {

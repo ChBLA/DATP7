@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.sql.Ref;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -422,5 +423,223 @@ public class ReferenceHandlerTests {
     }
 
     //endregion
+
+    //region increment/decrement
+
+    @Test
+    void incrementPostAcceptIDExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.IncrementPostContext node = mock(UCELParser.IncrementPostContext.class);
+        UCELParser.IdExprContext id = mock(UCELParser.IdExprContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitIncrementPost(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void incrementPreAcceptIDExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.IncrementPreContext node = mock(UCELParser.IncrementPreContext.class);
+        UCELParser.IdExprContext id = mock(UCELParser.IdExprContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitIncrementPre(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void decrementPostAcceptIDExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.DecrementPostContext node = mock(UCELParser.DecrementPostContext.class);
+        UCELParser.IdExprContext id = mock(UCELParser.IdExprContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitDecrementPost(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void decrementPreAcceptExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.DecrementPreContext node = mock(UCELParser.DecrementPreContext.class);
+        UCELParser.IdExprContext id = mock(UCELParser.IdExprContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitDecrementPre(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void incrementPostAcceptStructExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.IncrementPostContext node = mock(UCELParser.IncrementPostContext.class);
+        UCELParser.StructAccessContext id = mock(UCELParser.StructAccessContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitIncrementPost(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void incrementPreAcceptStructExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.IncrementPreContext node = mock(UCELParser.IncrementPreContext.class);
+        UCELParser.StructAccessContext id = mock(UCELParser.StructAccessContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitIncrementPre(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void decrementPostAcceptStructExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.DecrementPostContext node = mock(UCELParser.DecrementPostContext.class);
+        UCELParser.StructAccessContext id = mock(UCELParser.StructAccessContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitDecrementPost(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void decrementPreAcceptStructExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.DecrementPreContext node = mock(UCELParser.DecrementPreContext.class);
+        UCELParser.StructAccessContext id = mock(UCELParser.StructAccessContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitDecrementPre(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void incrementPostInvalidExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.IncrementPostContext node = mock(UCELParser.IncrementPostContext.class);
+        UCELParser.AddSubContext id = mock(UCELParser.AddSubContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitIncrementPost(node);
+
+        assertFalse(actual);
+    }
+
+    @Test
+    void incrementPreInvalidExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.IncrementPreContext node = mock(UCELParser.IncrementPreContext.class);
+        UCELParser.AddSubContext id = mock(UCELParser.AddSubContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitIncrementPre(node);
+
+        assertFalse(actual);
+    }
+
+    @Test
+    void decrementPostInvalidExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.DecrementPostContext node = mock(UCELParser.DecrementPostContext.class);
+        UCELParser.AddSubContext id = mock(UCELParser.AddSubContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitDecrementPost(node);
+
+        assertFalse(actual);
+    }
+
+    @Test
+    void decrementPreInvalidExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.DecrementPreContext node = mock(UCELParser.DecrementPreContext.class);
+        UCELParser.AddSubContext id = mock(UCELParser.AddSubContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitDecrementPre(node);
+
+        assertFalse(actual);
+    }
+
+    //endregion
+
+    //region assignment
+    @Test
+    void assignmentAcceptIDExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.AssignExprContext node = mock(UCELParser.AssignExprContext.class);
+        UCELParser.IdExprContext id = mock(UCELParser.IdExprContext.class);
+        when(node.expression(0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitAssignExpr(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void assignmentPostAcceptStructExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.AssignExprContext node = mock(UCELParser.AssignExprContext.class);
+        UCELParser.StructAccessContext id = mock(UCELParser.StructAccessContext.class);
+        when(node.expression(0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitAssignExpr(node);
+
+        assertTrue(actual);
+    }
+
+
+    @Test
+    void assignmentInvalidExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.AssignExprContext node = mock(UCELParser.AssignExprContext.class);
+        UCELParser.AddSubContext id = mock(UCELParser.AddSubContext.class);
+        when(node.expression(0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitAssignExpr(node);
+
+        assertFalse(actual);
+    }
+
+    //end region
 
 }
