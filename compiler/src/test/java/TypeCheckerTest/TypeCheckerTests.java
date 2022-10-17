@@ -2948,6 +2948,15 @@ public class TypeCheckerTests  {
     //endregion
 
     //region VerificationExpr
+
+    @Test
+    void verificationExprBooleanCorrectTyped() {
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        //Verification has been postponed
+    }
+
     //endregion
 
     //endregion
