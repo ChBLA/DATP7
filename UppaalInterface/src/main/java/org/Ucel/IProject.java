@@ -3,7 +3,7 @@ package org.Ucel;
 import java.util.List;
 
 public interface IProject {
-    public String GetDeclaration();
-    public List<ITemplate> GetTemplates();
-    public String GetSystemDeclarations();
+    public String getDeclaration();
+    public List<ITemplate> getTemplates();
+    public String getSystemDeclarations();
 }

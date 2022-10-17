@@ -10,37 +10,37 @@ public class Project implements IProject {
     }
 
     public Project(String declaration, String systemDeclarations) {
-        SetDeclaration(declaration);
+        setDeclaration(declaration);
         templates = new ArrayList<ITemplate>();
-        SetSystemDeclarations(systemDeclarations);
+        setSystemDeclarations(systemDeclarations);
     }
 
     private String declaration;
 
     @Override
-    public String GetDeclaration() {
+    public String getDeclaration() {
         return declaration;
     }
 
-    public void SetDeclaration(String value) {
+    public void setDeclaration(String value) {
         declaration = value;
     }
 
     private ArrayList<ITemplate> templates;
 
     @Override
-    public List<ITemplate> GetTemplates() {
+    public List<ITemplate> getTemplates() {
         return templates;
     }
 
     private String systemDeclarations;
 
     @Override
-    public String GetSystemDeclarations() {
+    public String getSystemDeclarations() {
         return systemDeclarations;
     }
 
-    public void SetSystemDeclarations(String value) {
+    public void setSystemDeclarations(String value) {
         systemDeclarations = value;
     }
 }
