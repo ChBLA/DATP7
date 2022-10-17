@@ -48,24 +48,36 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                 .filter(p -> p.REF() != null)
                 .collect(Collectors.toList());
 
-        for (int i = 0; i < ctx.occurrences.size(); i++) {
-            var funcCallRefParams = ctx.occurrences.get(i).getRefParams();
+        if (ctx.occurrences != null && !ctx.occurrences.isEmpty()) {
+            for (int i = 0; i < ctx.occurrences.size(); i++) {
+                var funcCallRefParams = ctx.occurrences.get(i).getRefParams();
 
-            for (int k = 0; k < funcCallRefParams.length; k++) {
-                var ref = refParams.get(k).reference;
-                currentScope.replaceDeclarationInfoForRef(ref, funcCallRefParams[k]);
+                for (int k = 0; k < funcCallRefParams.length; k++) {
+                    var ref = refParams.get(k).reference;
+                    currentScope.replaceDeclarationInfoForRef(ref, funcCallRefParams[k]);
+                }
+
+                var parameters = visit(ctx.parameters());
+                String nameOfCall = null;
+                try {
+                    nameOfCall = currentScope.get(ctx.occurrences.get(i).getFuncCallContext().reference).getIdentifier();
+                } catch (Exception e) {
+                    throw new RuntimeException("error: could not find occurrence");
+                }
+                var body = visit(ctx.block());
+
+                functionTemplates.add(new FunctionTemplate(type, nameOfCall, parameters, body));
             }
-
-            var parameters = visit(ctx.parameters());
-            String nameOfCall = null;
+        } else {
+            String ID = null;
             try {
-                nameOfCall = currentScope.get(ctx.occurrences.get(i).getFuncCallContext().reference).getIdentifier();
+                ID = currentScope.get(ctx.reference).getIdentifier();
             } catch (Exception e) {
-                throw new RuntimeException("error: could not find occurrence");
+                throw new RuntimeException("error: could not find function name");
             }
+            var params = visit(ctx.parameters());
             var body = visit(ctx.block());
-
-            functionTemplates.add(new FunctionTemplate(type, nameOfCall, parameters, body));
+            functionTemplates.add(new FunctionTemplate(type, ID, params, body));
         }
 
         exitScope();

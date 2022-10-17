@@ -1,10 +1,7 @@
 package CodeGenTests;
 
 import org.UcelParser.CodeGeneration.templates.ManualTemplate;
-import org.UcelParser.Util.DeclarationInfo;
-import org.UcelParser.Util.DeclarationReference;
-import org.UcelParser.Util.Scope;
-import org.UcelParser.Util.Type;
+import org.UcelParser.Util.*;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -37,6 +34,156 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region Function
+
+    @Test
+    void functionNoParams() {
+        Template type = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        Template ID = new ManualTemplate("functionName");
+        Template block = new ManualTemplate("{%n}");
+        Template parameters = new ManualTemplate("");
+
+        String expected = String.format("%s %s(%s)%n%s", type, ID, parameters, block);
+
+        Scope scopeMock = mock(Scope.class);
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.FunctionContext.class);
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, type, visitor);
+        var blockMock = mockForVisitorResult(UCELParser.BlockContext.class, block, visitor);
+        var parametersMock = mockForVisitorResult(UCELParser.ParametersContext.class, parameters, visitor);
+
+        var referenceMock = mock(DeclarationReference.class);
+        var infoMock = mock(DeclarationInfo.class);
+
+        node.reference = referenceMock;
+        node.scope = scopeMock;
+        try {
+            when(scopeMock.get(node.reference)).thenReturn(infoMock);
+        } catch (Exception e) {
+            fail("cannot mock scope.get");
+        }
+
+        when(infoMock.getIdentifier()).thenReturn(ID.toString());
+        when(node.type()).thenReturn(typeMock);
+        when(node.block()).thenReturn(blockMock);
+        when(node.parameters()).thenReturn(parametersMock);
+
+        var actual = visitor.visitFunction(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void functionNoRefs() {
+        Template type = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        Template ID = new ManualTemplate("functionName");
+        Template block = new ManualTemplate("{%n}");
+        Template parameters = new ManualTemplate("int a");
+
+        String expected = String.format("%s %s(%s)%n%s", type, ID, parameters, block);
+
+        Scope scopeMock = mock(Scope.class);
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.FunctionContext.class);
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, type, visitor);
+        var blockMock = mockForVisitorResult(UCELParser.BlockContext.class, block, visitor);
+        var parametersMock = mockForVisitorResult(UCELParser.ParametersContext.class, parameters, visitor);
+
+        var referenceMock = mock(DeclarationReference.class);
+        var infoMock = mock(DeclarationInfo.class);
+
+        node.reference = referenceMock;
+        node.scope = scopeMock;
+        try {
+            when(scopeMock.get(node.reference)).thenReturn(infoMock);
+        } catch (Exception e) {
+            fail("cannot mock scope.get");
+        }
+
+        when(infoMock.getIdentifier()).thenReturn(ID.toString());
+        when(node.type()).thenReturn(typeMock);
+        when(node.block()).thenReturn(blockMock);
+        when(node.parameters()).thenReturn(parametersMock);
+
+        var actual = visitor.visitFunction(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void functionTwoRefs() {
+        Template type = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        Template block = new ManualTemplate(String.format("{%n}"));
+        Template parameters = new ManualTemplate("");
+
+        String expected = String.format("int functionName1()%n{%n}%n%nint functionName2()%n{%n}");
+
+        Scope scopeMock = mock(Scope.class);
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.FunctionContext.class);
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, type, visitor);
+        var blockMock = mockForVisitorResult(UCELParser.BlockContext.class, block, visitor);
+        when(node.type()).thenReturn(typeMock);
+        when(node.block()).thenReturn(blockMock);
+
+        var parameter = mock(UCELParser.ParameterContext.class);
+        var REFNodeMock = mock(TerminalNode.class);
+        parameter.reference = mock(DeclarationReference.class);
+        when(parameter.REF()).thenReturn(REFNodeMock);
+
+        var parametersMock = mockForVisitorResult(UCELParser.ParametersContext.class, parameters, visitor);
+        var parametersList = new ArrayList<UCELParser.ParameterContext>();
+        parametersList.add(parameter);
+        parametersList.add(parameter);
+        when(parametersMock.parameter()).thenReturn(parametersList);
+        when(node.parameters()).thenReturn(parametersMock);
+
+        var refParamInfoMock = mock(DeclarationInfo.class);
+
+        DeclarationInfo[] declarationInfos = {refParamInfoMock, refParamInfoMock};
+
+        var FuncCallCtxMock1 = mock(UCELParser.FuncCallContext.class);
+        FuncCallCtxMock1.reference = mock(DeclarationReference.class);
+        var FuncCallInfoMock1 = mock(DeclarationInfo.class);
+        try {
+            when(scopeMock.get(FuncCallCtxMock1.reference)).thenReturn(FuncCallInfoMock1);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        when(FuncCallInfoMock1.getIdentifier()).thenReturn("functionName1");
+
+        var FuncCallCtxMock2 = mock(UCELParser.FuncCallContext.class);
+        FuncCallCtxMock2.reference = mock(DeclarationReference.class);
+        var FuncCallInfoMock2 = mock(DeclarationInfo.class);
+        try {
+            when(scopeMock.get(FuncCallCtxMock2.reference)).thenReturn(FuncCallInfoMock2);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        when(FuncCallInfoMock2.getIdentifier()).thenReturn("functionName2");
+
+        var occurrenceMock1 = mock(FuncCallOccurrence.class);
+        when(occurrenceMock1.getFuncCallContext()).thenReturn(FuncCallCtxMock1);
+        when(occurrenceMock1.getRefParams()).thenReturn(declarationInfos);
+
+        var occurrenceMock2 = mock(FuncCallOccurrence.class);
+        when(occurrenceMock2.getFuncCallContext()).thenReturn(FuncCallCtxMock2);
+        when(occurrenceMock2.getRefParams()).thenReturn(declarationInfos);
+
+        var occurrencesList = new ArrayList<FuncCallOccurrence>();
+        occurrencesList.add(occurrenceMock1);
+        occurrencesList.add(occurrenceMock2);
+
+        node.occurrences = occurrencesList;
+        node.scope = scopeMock;
+
+        var actual = visitor.visitFunction(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    //endregion
 
     //region Instantiation
     @Test

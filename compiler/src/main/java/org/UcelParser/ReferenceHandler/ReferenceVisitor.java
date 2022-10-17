@@ -5,6 +5,8 @@ import org.UcelParser.Util.*;
 import org.UcelParser.Util.Logging.*;
 
 import java.util.stream.Collectors;
+import java.util.ArrayList;
+
 
 public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     private Scope currentScope;
@@ -23,6 +25,40 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     @Override
     protected Boolean aggregateResult(Boolean aggregate, Boolean nextResult) {
         return (nextResult == null || nextResult) && (aggregate == null || aggregate);
+    }
+
+    @Override
+    public Boolean visitFunction(UCELParser.FunctionContext ctx) {
+
+        try {
+            if(!currentScope.isUnique(ctx.ID().getText(), false)) {
+                return false;
+            }
+            DeclarationReference declRef = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
+            ctx.reference = declRef;
+
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+        }
+
+        if(!visit(ctx.type())) {
+            return false;
+        }
+
+        if(!visit(ctx.parameters())) {
+            return false;
+        }
+
+        enterScope();
+        ctx.scope = currentScope;
+
+        if(!visit(ctx.block())) {
+            return false;
+        }
+
+        ctx.occurrences = new ArrayList<>();
+        exitScope();
+        return true;
     }
 
     @Override
