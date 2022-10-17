@@ -37,7 +37,7 @@ progressDecl  : PROGRESS LEFTCURLYBRACE ( expression? END )* RIGHTCURLYBRACE;
 
 
 parameters : ( parameter (COMMA parameter)* )?;
-parameter  : type? REF? ('&')? ID? arrayDecl*;
+parameter  : type? REF? (BITAND)? ID? arrayDecl*;
 
 declarations  : (variableDecl | typeDecl | function | chanPriority | component | interface_decl)*;
 variableDecl  : type variableID (COMMA variableID)* END;
@@ -91,8 +91,9 @@ ifstatement     : IF LEFTPAR expression RIGHTPAR statement ( ELSE statement )?;
 returnstatement : RETURN expression? END;
 
 chanPriority : 'chan' 'priority' (chanExpr | 'default') ((COMMA | '<') (chanExpr | 'default'))* END;
-chanExpr : ID
-           | chanExpr LEFTBRACKET expression RIGHTBRACKET;
+chanExpr locals [DeclarationReference reference]
+            : ID
+            | chanExpr LEFTBRACKET expression RIGHTBRACKET;
 
 expression locals [DeclarationReference reference]
             :  literal                                          #LiteralExpr
