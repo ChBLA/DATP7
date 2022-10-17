@@ -1,17 +1,15 @@
 package org.Ucel;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Project implements IProject {
 
-    public Project () {
+    public Project() {
         this("", "");
     }
 
     public Project(String declaration, String systemDeclarations) {
         setDeclaration(declaration);
-        templates = new ArrayList<ITemplate>();
         setSystemDeclarations(systemDeclarations);
     }
 
@@ -26,11 +24,19 @@ public class Project implements IProject {
         declaration = value;
     }
 
-    private ArrayList<ITemplate> templates;
+    private Dictionary<String, ITemplate> templates = new Hashtable<>();
 
     @Override
     public List<ITemplate> getTemplates() {
-        return templates;
+        return Collections.list(templates.elements());
+    }
+
+    public void putTemplate(Template template) {
+        templates.put(template.getName(), template);
+    }
+
+    public ITemplate getTemplate(String name) {
+        return templates.get(name);
     }
 
     private String systemDeclarations;
