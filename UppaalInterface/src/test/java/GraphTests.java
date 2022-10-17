@@ -20,7 +20,7 @@ public class GraphTests {
         String id = "sfdkls";
         ILocation loc = makeLocation(id);
 
-        graph.addLocation(loc);
+        graph.putLocation(loc);
 
         assertEquals(loc, graph.getLocation(id));
     }
@@ -35,15 +35,15 @@ public class GraphTests {
         ILocation start = makeLocation(startId);
         ILocation end = makeLocation(endId);
 
-        graph.addLocation(start);
-        graph.addLocation(end);
+        graph.putLocation(start);
+        graph.putLocation(end);
 
         Edge edge = new Edge();
         edge.setId(edgeId);
         edge.setLocationIdStart(startId);
         edge.setLocationIdEnd(endId);
 
-        graph.addEdge(edge);
+        graph.putEdge(edge);
 
         assertEquals(edge, graph.getEdge(edgeId));
     }
@@ -64,7 +64,7 @@ public class GraphTests {
 
             @Override
             public void execute() throws Throwable {
-                graph.addEdge(edge);
+                graph.putEdge(edge);
             }
         });
     }

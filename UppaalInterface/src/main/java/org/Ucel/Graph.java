@@ -13,7 +13,7 @@ public class Graph implements IGraph {
         return Collections.list(locations.elements());
     }
 
-    public void addLocation(ILocation location) {
+    public void putLocation(ILocation location) {
         locations.put(location.getId(), location);
     }
 
@@ -33,7 +33,7 @@ public class Graph implements IGraph {
     }
 
 
-    public void addEdge(IEdge edge) throws KeyNotFoundException {
+    public void putEdge(IEdge edge) throws KeyNotFoundException {
         String startId = edge.getLocationIdStart();
         String endId = edge.getLocationIdStart();
 
