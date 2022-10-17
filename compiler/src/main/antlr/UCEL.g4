@@ -5,6 +5,7 @@ grammar UCEL;
 
     import org.UcelParser.Util.Scope;
     import org.UcelParser.Util.DeclarationReference;
+    import org.UcelParser.Util.DeclarationInfo;
 }
 
 start locals [Scope scope]
@@ -67,7 +68,7 @@ fieldDecl     : type arrayDeclID (COMMA arrayDeclID)* END;
 arrayDecl     : LEFTBRACKET expression? RIGHTBRACKET
               | LEFTBRACKET type RIGHTBRACKET;
 
-function locals [Scope scope]
+function locals [Scope scope, List<DeclarationInfo[]> occurences]
     : type? ID? LEFTPAR parameters? RIGHTPAR block;
 block locals [Scope scope]
     : LEFTCURLYBRACE localDeclaration* statement* RIGHTCURLYBRACE;

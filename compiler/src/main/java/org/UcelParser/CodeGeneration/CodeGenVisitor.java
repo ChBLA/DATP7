@@ -273,7 +273,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         List<Template> parameterTemplates = new ArrayList<>();
 
         for (var param : ctx.parameter()) {
-            parameterTemplates.add(visit(param));
+            var paramTemplate = visit(param);
+            if (!(paramTemplate.toString().equals("")))
+                parameterTemplates.add(paramTemplate);
         }
 
         return new ParametersTemplate(parameterTemplates);
