@@ -1,102 +1,102 @@
 package org.Ucel;
 
-public class Edge implements IGraph.IEdge {
+public class Edge implements IEdge {
     private String id = "";
 
     @Override
-    public String GetId() {
+    public String getId() {
         return id;
     }
 
-    public void SetId(String value) {
+    public void setId(String value) {
         id = value;
     }
 
     private String locationIdStart = "";
 
     @Override
-    public String GetLocationIdStart() {
+    public String getLocationIdStart() {
         return locationIdStart;
     }
 
-    public void SetLocationIdStart(String value) {
+    public void setLocationIdStart(String value) {
         locationIdStart = value;
     }
 
     private String locationIdEnd = "";
 
     @Override
-    public String GetLocationIdEnd() {
+    public String getLocationIdEnd() {
         return locationIdEnd;
     }
 
-    public void SetLocationIdEnd(String value) {
+    public void setLocationIdEnd(String value) {
         locationIdEnd = value;
     }
 
     private String select = "";
 
     @Override
-    public String GetSelect() {
+    public String getSelect() {
         return select;
     }
 
-    public void SetSelect(String value) {
+    public void setSelect(String value) {
         select = value;
     }
 
     private String guard = "";
 
     @Override
-    public String GetGuard() {
+    public String getGuard() {
         return guard;
     }
 
-    public void SetGuard(String value) {
+    public void setGuard(String value) {
         guard = value;
     }
 
     private String sync = "";
 
     @Override
-    public String GetSync() {
+    public String getSync() {
         return sync;
     }
 
-    public void SetSync(String value) {
+    public void setSync(String value) {
         sync = value;
     }
 
     private String update = "";
 
     @Override
-    public String GetUpdate() {
+    public String getUpdate() {
         return update;
     }
 
-    public void SetUpdate(String value) {
+    public void setUpdate(String value) {
         update = value;
     }
 
     private String comment = "";
 
     @Override
-    public String GetComment() {
+    public String getComment() {
         return comment;
     }
 
-    public void SetComment(String value) {
+    public void setComment(String value) {
         comment = value;
     }
 
     private String testCode = "";
 
     @Override
-    public String GetTestCode() {
+    public String getTestCode() {
         return testCode;
     }
 
-    public void SetTestCode(String value) {
+    public void setTestCode(String value) {
         testCode = value;
     }
 }
