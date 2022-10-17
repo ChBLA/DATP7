@@ -81,6 +81,8 @@ public class ReferenceHandlerTests {
         verify(argumentsContext, times(1)).accept(visitor);
     }
 
+    @Test
+    void funcCallExprWithRefs() {
         String correctFunctionName = "cfn";
         String refArg1Name = "a";
         String refArg2Name = "b";
