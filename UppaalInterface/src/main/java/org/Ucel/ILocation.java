@@ -1,27 +1,27 @@
 package org.Ucel;
 
 public interface ILocation {
-    public String GetId();
+    public String getId();
 
-    public int GetPosX();
+    public int getPosX();
 
-    public int GetPosY();
+    public int getPosY();
 
-    public String GetName();
+    public String getName();
 
-    public String GetInvariant();
+    public String getInvariant();
 
-    public String GetRateOfExponential();
+    public String getRateOfExponential();
 
-    public boolean GetInitial();
+    public boolean getInitial();
 
-    public boolean GetUrgent();
+    public boolean getUrgent();
 
-    public boolean GetCommitted();
+    public boolean getCommitted();
 
-    public String GetComments();
+    public String getComments();
 
-    public String GetTestCodeOnEnter();
+    public String getTestCodeOnEnter();
 
-    public String GetTestCodeOnExit();
+    public String getTestCodeOnExit();
 }

@@ -12,15 +12,15 @@ public class EdgeTests {
     public void ctor() {
         IEdge edge = new Edge();
 
-        assertNotNull(edge.GetId());
-        assertNotNull(edge.GetLocationIdStart());
-        assertNotNull(edge.GetLocationIdEnd());
-        assertNotNull(edge.GetSelect());
-        assertNotNull(edge.GetGuard());
-        assertNotNull(edge.GetSync());
-        assertNotNull(edge.GetUpdate());
-        assertNotNull(edge.GetComment());
-        assertNotNull(edge.GetTestCode());
+        assertNotNull(edge.getId());
+        assertNotNull(edge.getLocationIdStart());
+        assertNotNull(edge.getLocationIdEnd());
+        assertNotNull(edge.getSelect());
+        assertNotNull(edge.getGuard());
+        assertNotNull(edge.getSync());
+        assertNotNull(edge.getUpdate());
+        assertNotNull(edge.getComment());
+        assertNotNull(edge.getTestCode());
     }
 
     @ParameterizedTest
@@ -28,8 +28,8 @@ public class EdgeTests {
     public void Id(String value) {
         Edge edge = new Edge();
 
-        edge.SetId(value);
-        assertEquals(value, edge.GetId());
+        edge.setId(value);
+        assertEquals(value, edge.getId());
     }
 
     @ParameterizedTest
@@ -37,8 +37,8 @@ public class EdgeTests {
     public void LocationIdStart(String value) {
         Edge edge = new Edge();
 
-        edge.SetLocationIdStart(value);
-        assertEquals(value, edge.GetLocationIdStart());
+        edge.setLocationIdStart(value);
+        assertEquals(value, edge.getLocationIdStart());
     }
 
     @ParameterizedTest
@@ -46,8 +46,8 @@ public class EdgeTests {
     public void LocationIdEnd(String value) {
         Edge edge = new Edge();
 
-        edge.SetLocationIdEnd(value);
-        assertEquals(value, edge.GetLocationIdEnd());
+        edge.setLocationIdEnd(value);
+        assertEquals(value, edge.getLocationIdEnd());
     }
 
     @ParameterizedTest
@@ -55,8 +55,8 @@ public class EdgeTests {
     public void Guard(String value) {
         Edge edge = new Edge();
 
-        edge.SetGuard(value);
-        assertEquals(value, edge.GetGuard());
+        edge.setGuard(value);
+        assertEquals(value, edge.getGuard());
     }
 
     @ParameterizedTest
@@ -64,8 +64,8 @@ public class EdgeTests {
     public void Sync(String value) {
         Edge edge = new Edge();
 
-        edge.SetSync(value);
-        assertEquals(value, edge.GetSync());
+        edge.setSync(value);
+        assertEquals(value, edge.getSync());
     }
 
     @ParameterizedTest
@@ -73,8 +73,8 @@ public class EdgeTests {
     public void Update(String value) {
         Edge edge = new Edge();
 
-        edge.SetUpdate(value);
-        assertEquals(value, edge.GetUpdate());
+        edge.setUpdate(value);
+        assertEquals(value, edge.getUpdate());
     }
 
     @ParameterizedTest
@@ -82,8 +82,8 @@ public class EdgeTests {
     public void Comment(String value) {
         Edge edge = new Edge();
 
-        edge.SetComment(value);
-        assertEquals(value, edge.GetComment());
+        edge.setComment(value);
+        assertEquals(value, edge.getComment());
     }
 
     @ParameterizedTest
@@ -91,8 +91,8 @@ public class EdgeTests {
     public void TestCode(String value) {
         Edge edge = new Edge();
 
-        edge.SetTestCode(value);
-        assertEquals(value, edge.GetTestCode());
+        edge.setTestCode(value);
+        assertEquals(value, edge.getTestCode());
     }
 
 }

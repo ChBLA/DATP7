@@ -2,22 +2,22 @@ package org.Ucel;
 
 public class Template implements ITemplate {
     @Override
-    public String GetName() {
+    public String getName() {
         return null;
     }
 
     @Override
-    public String GetParameters() {
+    public String getParameters() {
         return null;
     }
 
     @Override
-    public IGraph GetGraph() {
+    public IGraph getGraph() {
         return null;
     }
 
     @Override
-    public String GetDeclarations() {
+    public String getDeclarations() {
         return null;
     }
 }

@@ -12,115 +12,115 @@ public class LocationTests {
     public void ctor() {
         ILocation location = new Location();
 
-        assertNotNull(location.GetId());
-        assertNotNull(location.GetPosX());
-        assertNotNull(location.GetPosY());
-        assertNotNull(location.GetName());
-        assertNotNull(location.GetInvariant());
-        assertNotNull(location.GetRateOfExponential());
-        assertNotNull(location.GetInitial());
-        assertNotNull(location.GetUrgent());
-        assertNotNull(location.GetCommitted());
+        assertNotNull(location.getId());
+        assertNotNull(location.getPosX());
+        assertNotNull(location.getPosY());
+        assertNotNull(location.getName());
+        assertNotNull(location.getInvariant());
+        assertNotNull(location.getRateOfExponential());
+        assertNotNull(location.getInitial());
+        assertNotNull(location.getUrgent());
+        assertNotNull(location.getCommitted());
 
-        assertNotNull(location.GetComments());
-        assertNotNull(location.GetTestCodeOnEnter());
-        assertNotNull(location.GetTestCodeOnExit());
+        assertNotNull(location.getComments());
+        assertNotNull(location.getTestCodeOnEnter());
+        assertNotNull(location.getTestCodeOnExit());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"glkdgklfjd", "lkjdgjlkdf"})
     public void Id(String value) {
         Location location = new Location();
-        location.SetId(value);
-        assertEquals(value, location.GetId());
+        location.setId(value);
+        assertEquals(value, location.getId());
     }
 
     @ParameterizedTest
     @ValueSource(ints = {34, 745})
     public void PosX(int value) {
         Location location = new Location();
-        location.SetPosX(value);
-        assertEquals(value, location.GetPosX());
+        location.setPosX(value);
+        assertEquals(value, location.getPosX());
     }
 
     @ParameterizedTest
     @ValueSource(ints = {34, 745})
     public void PosY(int value) {
         Location location = new Location();
-        location.SetPosY(value);
-        assertEquals(value, location.GetPosY());
+        location.setPosY(value);
+        assertEquals(value, location.getPosY());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"glkdgklfjd", "lkjdgjlkdf"})
     public void Name(String value) {
         Location location = new Location();
-        location.SetName(value);
-        assertEquals(value, location.GetName());
+        location.setName(value);
+        assertEquals(value, location.getName());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"glkdgklfjd", "lkjdgjlkdf"})
     public void Invariant(String value) {
         Location location = new Location();
-        location.SetInvariant(value);
-        assertEquals(value, location.GetInvariant());
+        location.setInvariant(value);
+        assertEquals(value, location.getInvariant());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"glkdgklfjd", "lkjdgjlkdf"})
     public void RateOfExponential(String value) {
         Location location = new Location();
-        location.SetRateOfExponential(value);
-        assertEquals(value, location.GetRateOfExponential());
+        location.setRateOfExponential(value);
+        assertEquals(value, location.getRateOfExponential());
     }
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     public void Initial(boolean value) {
         Location location = new Location();
-        location.SetInitial(value);
-        assertEquals(value, location.GetInitial());
+        location.setInitial(value);
+        assertEquals(value, location.getInitial());
     }
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     public void Urgent(boolean value) {
         Location location = new Location();
-        location.SetUrgent(value);
-        assertEquals(value, location.GetUrgent());
+        location.setUrgent(value);
+        assertEquals(value, location.getUrgent());
     }
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     public void Committed(boolean value) {
         Location location = new Location();
-        location.SetCommitted(value);
-        assertEquals(value, location.GetCommitted());
+        location.setCommitted(value);
+        assertEquals(value, location.getCommitted());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"glkdgklfjd", "lkjdgjlkdf"})
     public void Comments(String value) {
         Location location = new Location();
-        location.SetComments(value);
-        assertEquals(value, location.GetComments());
+        location.setComments(value);
+        assertEquals(value, location.getComments());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"glkdgklfjd", "lkjdgjlkdf"})
     public void TestCodeOnEnter(String value) {
         Location location = new Location();
-        location.SetTestCodeOnEnter(value);
-        assertEquals(value, location.GetTestCodeOnEnter());
+        location.setTestCodeOnEnter(value);
+        assertEquals(value, location.getTestCodeOnEnter());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"glkdgklfjd", "lkjdgjlkdf"})
     public void TestCodeOnExit(String value) {
         Location location = new Location();
-        location.SetTestCodeOnExit(value);
-        assertEquals(value, location.GetTestCodeOnExit());
+        location.setTestCodeOnExit(value);
+        assertEquals(value, location.getTestCodeOnExit());
     }
 
 }

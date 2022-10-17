@@ -2,8 +2,6 @@ import org.Ucel.*;
 import org.Ucel.Exceptions.KeyNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -12,8 +10,8 @@ public class GraphTests {
     public void ctor() {
         IGraph graph = new Graph();
 
-        assertNotNull(graph.GetLocations());
-        assertNotNull(graph.GetEdges());
+        assertNotNull(graph.getLocations());
+        assertNotNull(graph.getEdges());
     }
 
     @Test
@@ -22,9 +20,9 @@ public class GraphTests {
         String id = "sfdkls";
         ILocation loc = makeLocation(id);
 
-        graph.AddLocation(loc);
+        graph.addLocation(loc);
 
-        assertEquals(loc, graph.GetLocation(id));
+        assertEquals(loc, graph.getLocation(id));
     }
 
     @Test
@@ -37,19 +35,18 @@ public class GraphTests {
         ILocation start = makeLocation(startId);
         ILocation end = makeLocation(endId);
 
-        graph.AddLocation(start);
-        graph.AddLocation(end);
+        graph.addLocation(start);
+        graph.addLocation(end);
 
         Edge edge = new Edge();
-        edge.SetId(edgeId);
-        edge.SetLocationIdStart(startId);
-        edge.SetLocationIdEnd(endId);
+        edge.setId(edgeId);
+        edge.setLocationIdStart(startId);
+        edge.setLocationIdEnd(endId);
 
-        graph.AddEdge(edge);
+        graph.addEdge(edge);
 
-        assertEquals(edge, graph.GetEdge(edgeId));
+        assertEquals(edge, graph.getEdge(edgeId));
     }
-
 
     @Test
     public void AddEdgeFail() {
@@ -59,22 +56,22 @@ public class GraphTests {
         String edgeId = "dsfgdf";
 
         Edge edge = new Edge();
-        edge.SetId(edgeId);
-        edge.SetLocationIdStart(startId);
-        edge.SetLocationIdEnd(endId);
+        edge.setId(edgeId);
+        edge.setLocationIdStart(startId);
+        edge.setLocationIdEnd(endId);
 
         assertThrows(KeyNotFoundException.class, new Executable() {
 
             @Override
             public void execute() throws Throwable {
-                graph.AddEdge(edge);
+                graph.addEdge(edge);
             }
         });
     }
 
     private ILocation makeLocation(String id) {
         Location loc = new Location();
-        loc.SetId(id);
+        loc.setId(id);
 
         return loc;
     }

@@ -3,7 +3,7 @@ package org.Ucel;
 import java.util.List;
 
 public interface IGraph {
-    public List<ILocation> GetLocations();
+    public List<ILocation> getLocations();
 
-    public List<IEdge> GetEdges();
+    public List<IEdge> getEdges();
 }

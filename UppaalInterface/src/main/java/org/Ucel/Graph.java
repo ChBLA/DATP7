@@ -9,39 +9,39 @@ public class Graph implements IGraph {
     private Hashtable<String, ILocation> locations = new Hashtable<>();
 
     @Override
-    public List<ILocation> GetLocations() {
+    public List<ILocation> getLocations() {
         return Collections.list(locations.elements());
     }
 
-    public void AddLocation(ILocation location) {
-        locations.put(location.GetId(), location);
+    public void addLocation(ILocation location) {
+        locations.put(location.getId(), location);
     }
 
-    public ILocation GetLocation(String id) {
+    public ILocation getLocation(String id) {
         return locations.get(id);
     }
 
     private Hashtable<String, IEdge> edges = new Hashtable<>();
 
     @Override
-    public List<IEdge> GetEdges() {
+    public List<IEdge> getEdges() {
         return Collections.list(edges.elements());
     }
 
-    public IEdge GetEdge(String id) {
+    public IEdge getEdge(String id) {
         return edges.get(id);
     }
 
 
-    public void AddEdge(IEdge edge) throws KeyNotFoundException {
-        String startId = edge.GetLocationIdStart();
-        String endId = edge.GetLocationIdStart();
+    public void addEdge(IEdge edge) throws KeyNotFoundException {
+        String startId = edge.getLocationIdStart();
+        String endId = edge.getLocationIdStart();
 
         if (!locations.containsKey(startId))
             throw new KeyNotFoundException(String.format("No start location found for ID: %s", startId));
         if (!locations.containsKey(endId))
             throw new KeyNotFoundException(String.format("No end location found for ID: %s", endId));
 
-        edges.put(edge.GetId(), edge);
+        edges.put(edge.getId(), edge);
     }
 }

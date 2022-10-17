@@ -1,21 +1,21 @@
 package org.Ucel;
 
 public interface IEdge {
-    public String GetId();
+    public String getId();
 
-    public String GetLocationIdStart();
+    public String getLocationIdStart();
 
-    public String GetLocationIdEnd();
+    public String getLocationIdEnd();
 
-    public String GetSelect();
+    public String getSelect();
 
-    public String GetGuard();
+    public String getGuard();
 
-    public String GetSync();
+    public String getSync();
 
-    public String GetUpdate();
+    public String getUpdate();
 
-    public String GetComment();
+    public String getComment();
 
-    public String GetTestCode();
+    public String getTestCode();
 }
