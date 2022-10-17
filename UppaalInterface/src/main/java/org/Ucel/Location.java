@@ -1,135 +1,135 @@
 package org.Ucel;
 
-public class Location implements IGraph.ILocation {
+public class Location implements ILocation {
     private String id = "";
 
     @Override
-    public String GetId() {
+    public String getId() {
         return id;
     }
 
-    public void SetId(String value) {
+    public void setId(String value) {
         id = value;
     }
 
     private int posX = 0;
 
     @Override
-    public int GetPosX() {
+    public int getPosX() {
         return posX;
     }
 
-    public void SetPosX(int value) {
+    public void setPosX(int value) {
         posX = value;
     }
 
     private int posY = 0;
 
     @Override
-    public int GetPosY() {
+    public int getPosY() {
         return posY;
     }
 
-    public void SetPosY(int value) {
+    public void setPosY(int value) {
         posY = value;
     }
 
     private String name = "";
 
     @Override
-    public String GetName() {
+    public String getName() {
         return name;
     }
 
-    public void SetName(String value) {
+    public void setName(String value) {
         name = value;
     }
 
     private String invariant = "";
 
     @Override
-    public String GetInvariant() {
+    public String getInvariant() {
         return invariant;
     }
 
-    public void SetInvariant(String value) {
+    public void setInvariant(String value) {
         invariant = value;
     }
 
     private String rateOfExponential = "";
 
     @Override
-    public String GetRateOfExponential() {
+    public String getRateOfExponential() {
         return rateOfExponential;
     }
 
-    public void SetRateOfExponential(String value) {
+    public void setRateOfExponential(String value) {
         rateOfExponential = value;
     }
 
     private boolean initial = false;
 
     @Override
-    public boolean GetInitial() {
+    public boolean getInitial() {
         return initial;
     }
 
-    public void SetInitial(boolean value) {
+    public void setInitial(boolean value) {
         initial = value;
     }
 
     private boolean urgent = false;
 
     @Override
-    public boolean GetUrgent() {
+    public boolean getUrgent() {
         return urgent;
     }
 
-    public void SetUrgent(boolean value) {
+    public void setUrgent(boolean value) {
         urgent = value;
     }
 
     private boolean committed = false;
 
     @Override
-    public boolean GetCommitted() {
+    public boolean getCommitted() {
         return committed;
     }
 
-    public void SetCommitted(boolean value) {
+    public void setCommitted(boolean value) {
         committed = value;
     }
 
     private String comments = "";
 
     @Override
-    public String GetComments() {
+    public String getComments() {
         return comments;
     }
 
-    public void SetComments(String value) {
+    public void setComments(String value) {
         comments = value;
     }
 
     private String testCodeOnEnter = "";
 
     @Override
-    public String GetTestCodeOnEnter() {
+    public String getTestCodeOnEnter() {
         return testCodeOnEnter;
     }
 
-    public void SetTestCodeOnEnter(String value) {
+    public void setTestCodeOnEnter(String value) {
         testCodeOnEnter = value;
     }
 
     private String testCodeOnExit = "";
 
     @Override
-    public String GetTestCodeOnExit() {
+    public String getTestCodeOnExit() {
         return testCodeOnExit;
     }
 
-    public void SetTestCodeOnExit(String value) {
+    public void setTestCodeOnExit(String value) {
         testCodeOnExit = value;
     }
 }

@@ -1,46 +1,52 @@
 package org.Ucel;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Project implements IProject {
 
-    public Project () {
+    public Project() {
         this("", "");
     }
 
     public Project(String declaration, String systemDeclarations) {
-        SetDeclaration(declaration);
-        templates = new ArrayList<ITemplate>();
-        SetSystemDeclarations(systemDeclarations);
+        setDeclaration(declaration);
+        setSystemDeclarations(systemDeclarations);
     }
 
     private String declaration;
 
     @Override
-    public String GetDeclaration() {
+    public String getDeclaration() {
         return declaration;
     }
 
-    public void SetDeclaration(String value) {
+    public void setDeclaration(String value) {
         declaration = value;
     }
 
-    private ArrayList<ITemplate> templates;
+    private Dictionary<String, ITemplate> templates = new Hashtable<>();
 
     @Override
-    public List<ITemplate> GetTemplates() {
-        return templates;
+    public List<ITemplate> getTemplates() {
+        return Collections.list(templates.elements());
+    }
+
+    public void putTemplate(Template template) {
+        templates.put(template.getName(), template);
+    }
+
+    public ITemplate getTemplate(String name) {
+        return templates.get(name);
     }
 
     private String systemDeclarations;
 
     @Override
-    public String GetSystemDeclarations() {
+    public String getSystemDeclarations() {
         return systemDeclarations;
     }
 
-    public void SetSystemDeclarations(String value) {
+    public void setSystemDeclarations(String value) {
         systemDeclarations = value;
     }
 }

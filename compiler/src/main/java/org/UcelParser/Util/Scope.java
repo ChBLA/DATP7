@@ -1,6 +1,9 @@
 package org.UcelParser.Util;
 
+import org.antlr.v4.codegen.model.decl.Decl;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class Scope {
 
@@ -77,5 +80,14 @@ public class Scope {
 
     public String getPrefix() {
         return this.prefix;
+    }
+
+    public List<DeclarationInfo> replaceDeclarationInfoForRef(DeclarationReference reference, DeclarationInfo newInfo) {
+        try {
+            declarationInfos.set(declarationInfos.indexOf(this.get(reference)), newInfo);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return declarationInfos;
     }
 }
