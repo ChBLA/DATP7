@@ -40,7 +40,7 @@ public class CodeGenTests {
     void functionNoParams() {
         Template type = generateDefaultTypeTemplate(Type.TypeEnum.intType);
         Template ID = new ManualTemplate("functionName");
-        Template block = new ManualTemplate("{%n}");
+        Template block = new ManualTemplate(String.format("{%n}"));
         Template parameters = new ManualTemplate("");
 
         String expected = String.format("%s %s(%s)%n%s", type, ID, parameters, block);
@@ -77,7 +77,7 @@ public class CodeGenTests {
     void functionNoRefs() {
         Template type = generateDefaultTypeTemplate(Type.TypeEnum.intType);
         Template ID = new ManualTemplate("functionName");
-        Template block = new ManualTemplate("{%n}");
+        Template block = new ManualTemplate(String.format("{%n}"));
         Template parameters = new ManualTemplate("int a");
 
         String expected = String.format("%s %s(%s)%n%s", type, ID, parameters, block);
@@ -110,6 +110,7 @@ public class CodeGenTests {
         assertEquals(expected, actual);
     }
 
+    //Does this work...???
     @Test
     void functionTwoRefs() {
         Template type = generateDefaultTypeTemplate(Type.TypeEnum.intType);

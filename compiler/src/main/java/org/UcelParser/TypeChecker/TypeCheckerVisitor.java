@@ -90,6 +90,29 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public DeclarationInfo currentFunction = null;
 
     @Override
+    public Type visitTypeDecl(UCELParser.TypeDeclContext ctx) {
+        Type type = visit(ctx.type());
+
+        assert ctx.references.size() == ctx.arrayDeclID().size();
+        for (int i = 0; i < ctx.references.size(); i++) {
+
+            Type declType = visit(ctx.arrayDeclID(i));
+
+            if (declType == ERROR_TYPE) {
+                logger.log(new ErrorLog(ctx.arrayDeclID(i), "type error: declaration has type error"));
+            }
+
+            try {
+                getCurrentScope().get(ctx.references.get(i)).setType(declType);
+            } catch (Exception e) {
+                logger.log(new ErrorLog(ctx.arrayDeclID(i), "reference error: unable to get reference of variable"));
+            }
+        }
+
+        return type;
+    }
+
+    @Override
     public Type visitFunction(UCELParser.FunctionContext ctx) {
         try {
             var funcRef = currentScope.find(ctx.ID().getText(), false);

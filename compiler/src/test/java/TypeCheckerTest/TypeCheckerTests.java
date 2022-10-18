@@ -5,6 +5,7 @@ import org.UcelParser.TypeChecker.TypeCheckerVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.DeclarationReference;
+import org.UcelParser.Util.Logging.Logger;
 import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Type;
 
@@ -48,10 +49,83 @@ public class TypeCheckerTests  {
     private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
 
+    //region TypeDecl
+    @Test
+    void typeDeclSetsType() {
+        Type expected = INT_TYPE;
+        Scope scope = mock(Scope.class);
+        DeclarationReference declRefMock = mock(DeclarationReference.class);
+        DeclarationInfo declInfoMock = new DeclarationInfo();
+
+        try {
+            when(scope.get(declRefMock)).thenReturn(declInfoMock);
+        } catch (Exception e) {
+            fail("failed to mock scope");
+        }
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+        var ctx = mock(UCELParser.TypeDeclContext.class);
+        var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, expected, visitor);
+        var arrayDeclID = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, expected, visitor);
+
+        List<UCELParser.ArrayDeclIDContext> arrayDeclIDContextList = new ArrayList<>();
+        arrayDeclIDContextList.add(arrayDeclID);
+
+
+        when(ctx.arrayDeclID()).thenReturn(arrayDeclIDContextList);
+        when(ctx.arrayDeclID(0)).thenReturn(arrayDeclIDContextList.get(0));
+        when(ctx.type()).thenReturn(typeNode);
+
+        List<DeclarationReference> references = new ArrayList<>();
+        references.add(declRefMock);
+        ctx.references = references;
+
+        Type actual = visitor.visitTypeDecl(ctx);
+
+        assertEquals(expected, actual);
+        assertEquals(expected, declInfoMock.getType());
+    }
+
+//    @Test
+//    void typeDeclReportsTypeError() {
+//        Scope scope = mock(Scope.class);
+//        DeclarationReference declRefMock = mock(DeclarationReference.class);
+//        DeclarationInfo declInfoMock = new DeclarationInfo();
+//        Logger logger = new Logger();
+//
+//        try {
+//            when(scope.get(declRefMock)).thenReturn(declInfoMock);
+//        } catch (Exception e) {
+//            fail("failed to mock scope");
+//        }
+//
+//        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+//        var ctx = mock(UCELParser.TypeDeclContext.class);
+//        var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, INT_TYPE, visitor);
+//        var arrayDeclID = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, ERROR_TYPE, visitor);
+//
+//        List<UCELParser.ArrayDeclIDContext> arrayDeclIDContextList = new ArrayList<>();
+//        arrayDeclIDContextList.add(arrayDeclID);
+//
+//        when(ctx.arrayDeclID()).thenReturn(arrayDeclIDContextList);
+//        when(ctx.arrayDeclID(0)).thenReturn(arrayDeclIDContextList.get(0));
+//        when(ctx.type()).thenReturn(typeNode);
+//
+//        List<DeclarationReference> references = new ArrayList<>();
+//        references.add(declRefMock);
+//        ctx.references = references;
+//
+//        Type actual = visitor.visitTypeDecl(ctx);
+//
+//        assertEquals(INT_TYPE, actual);
+//        assertEquals(ERROR_TYPE, declInfoMock.getType());
+//    }
+    //endregion
+
     //region Assignment
 
     @Test
-    public void AssigntmentReturnsVoid() {
+    void assigntmentReturnsVoid() {
         TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor();
 
         var node = new UCELParser.AssignContext(null, 0);
