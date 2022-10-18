@@ -29,9 +29,10 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     @Override
     public Boolean visitFunction(UCELParser.FunctionContext ctx) {
-
+        String funcName = ctx.ID().getText();
         try {
-            if(!currentScope.isUnique(ctx.ID().getText(), false)) {
+            if(!currentScope.isUnique(funcName, false)) {
+                logger.log(new ErrorLog(ctx, "Function name '" + funcName + "' is already declared"));
                 return false;
             }
             DeclarationReference declRef = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
@@ -41,11 +42,8 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
         }
 
-        if(!visit(ctx.type())) {
-            return false;
-        }
-
-        if(!visit(ctx.parameters())) {
+        if(!visit(ctx.type()) || !visit(ctx.parameters())) {
+            //No logging, passing through
             return false;
         }
 
@@ -53,6 +51,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         ctx.scope = currentScope;
 
         if(!visit(ctx.block())) {
+            //No logging, passing through
             return false;
         }
 
