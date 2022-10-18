@@ -61,6 +61,30 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     }
 
     @Override
+    public Boolean visitParameter(UCELParser.ParameterContext ctx) {
+        String parameterName = ctx.ID().getText();
+
+        if(!visit(ctx.type())) return false;
+
+        for(UCELParser.ArrayDeclContext arrayDecl : ctx.arrayDecl()) {
+            if(!visit(arrayDecl)) return false;
+        }
+
+        try {
+            if(!currentScope.isUnique(parameterName, true)) {
+                logger.log(new ErrorLog(ctx, "Parameter name '" + parameterName + "' is not unique in scope"));
+            }
+
+            ctx.reference = currentScope.add(new DeclarationInfo(parameterName));
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
     public Boolean visitIdExpr(UCELParser.IdExprContext ctx) {
         String identifier = ctx.ID().getText();
 

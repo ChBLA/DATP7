@@ -21,6 +21,32 @@ import static org.mockito.Mockito.*;
 
 public class ReferenceHandlerTests {
 
+    //region parameters
+    void parameterAddIdToScope() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String parameterName = "a";
+
+        UCELParser.ParameterContext node = mock(UCELParser.ParameterContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(parameterName);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(parameterName, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail();}
+
+
+        verify(scope, times(1)).add(any());
+    }
+
+
+    //endregion
+
     //region FuncCall
     @Test
     void funcCallExpressionSuccesfulLookup() {
