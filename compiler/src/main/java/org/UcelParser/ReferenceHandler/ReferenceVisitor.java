@@ -4,7 +4,9 @@ import org.UcelParser.UCELParser_Generated.*;
 import org.UcelParser.Util.*;
 import org.UcelParser.Util.Logging.*;
 
+import java.util.stream.Collectors;
 import java.util.ArrayList;
+
 
 public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     private Scope currentScope;
@@ -27,9 +29,10 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     @Override
     public Boolean visitFunction(UCELParser.FunctionContext ctx) {
-
+        String funcName = ctx.ID().getText();
         try {
-            if(!currentScope.isUnique(ctx.ID().getText(), false)) {
+            if(!currentScope.isUnique(funcName, false)) {
+                logger.log(new ErrorLog(ctx, "Function name '" + funcName + "' is already declared"));
                 return false;
             }
             DeclarationReference declRef = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
@@ -39,11 +42,8 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
         }
 
-        if(!visit(ctx.type())) {
-            return false;
-        }
-
-        if(!visit(ctx.parameters())) {
+        if(!visit(ctx.type()) || !visit(ctx.parameters())) {
+            //No logging, passing through
             return false;
         }
 
@@ -51,11 +51,36 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         ctx.scope = currentScope;
 
         if(!visit(ctx.block())) {
+            //No logging, passing through
             return false;
         }
 
         ctx.occurrences = new ArrayList<>();
         exitScope();
+        return true;
+    }
+
+    @Override
+    public Boolean visitParameter(UCELParser.ParameterContext ctx) {
+        String parameterName = ctx.ID().getText();
+
+        if(!visit(ctx.type())) return false;
+
+        for(UCELParser.ArrayDeclContext arrayDecl : ctx.arrayDecl()) {
+            if(!visit(arrayDecl)) return false;
+        }
+
+        try {
+            if(!currentScope.isUnique(parameterName, true)) {
+                logger.log(new ErrorLog(ctx, "Parameter name '" + parameterName + "' is not unique in scope"));
+            }
+
+            ctx.reference = currentScope.add(new DeclarationInfo(parameterName));
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            return false;
+        }
+
         return true;
     }
 
@@ -81,17 +106,54 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         String identifier = ctx.ID().getText();
 
         DeclarationReference tableReference = null;
+        DeclarationInfo funcInfo = null;
+
+        var refArgs = ctx.arguments().ID();
+        DeclarationInfo[] references = new DeclarationInfo[refArgs.size()];
 
         try {
             tableReference = currentScope.find(identifier, true);
+            funcInfo = currentScope.get(tableReference);
+
+            for (int i = 0; i < refArgs.size(); i++) {
+                references[i] = currentScope.get(currentScope.find(refArgs.get(i).getText(), true));
+            }
+
         } catch (Exception e) {
             logger.log(new ErrorLog(ctx,"Function '" + identifier + "' has not been declared in scope"));
             return false;
         }
 
-        ctx.reference = tableReference;
+        if (refArgs.size() > 0) {
+            var func = (UCELParser.FunctionContext) funcInfo.getNode();
+            var occurrence = new FuncCallOccurrence(ctx, references);
+            func.occurrences.add(occurrence);
+            DeclarationReference newFuncReference = null;
+            try {
+                var builder = new StringBuilder(funcInfo.getIdentifier());
+                for (int i = 0; i < references.length; i++) {
+                    builder.append(String.format("_%s", references[i].getIdentifier()));
+                }
+
+                newFuncReference = currentScope.getScope(tableReference).add(new DeclarationInfo(builder.toString(), funcInfo.getType(), funcInfo.getNode()));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            ctx.reference = newFuncReference;
+        } else {
+            ctx.reference = tableReference;
+        }
         visit(ctx.arguments());
         return true;
+    }
+
+    @Override
+    public Boolean visitArguments(UCELParser.ArgumentsContext ctx) {
+        var res = true;
+        for (var expr : ctx.expression())
+            res = visit(expr) && res;
+
+        return res;
     }
 
     @Override

@@ -78,6 +78,17 @@ public class Scope {
         }
     }
 
+    public Scope getScope(DeclarationReference tableReference) throws Exception {
+        if (tableReference.getRelativeScope() > 0) {
+            if (parent == null) {
+                throw new Exception("Scope has no parent");
+            }
+            return parent.getScope(tableReference.moveOutOfScope());
+        } else {
+            return this;
+        }
+    }
+
     public String getPrefix() {
         return this.prefix;
     }

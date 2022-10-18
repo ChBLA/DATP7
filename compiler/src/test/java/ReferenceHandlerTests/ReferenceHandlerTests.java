@@ -21,6 +21,32 @@ import static org.mockito.Mockito.*;
 
 public class ReferenceHandlerTests {
 
+    //region parameters
+    void parameterAddIdToScope() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String parameterName = "a";
+
+        UCELParser.ParameterContext node = mock(UCELParser.ParameterContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(parameterName);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(parameterName, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail();}
+
+
+        verify(scope, times(1)).add(any());
+    }
+
+
+    //endregion
+
     //region FuncCall
     @Test
     void funcCallExpressionSuccesfulLookup() {
@@ -80,6 +106,131 @@ public class ReferenceHandlerTests {
         visitor.visitFuncCall(funcCallContext);
 
         verify(argumentsContext, times(1)).accept(visitor);
+    }
+
+    @Test
+    void funcCallExprWithRefs() {
+        String correctFunctionName = "cfn";
+        String refArg1Name = "a";
+        String refArg2Name = "b";
+        var expectedFuncName = String.format("%s_%s_%s", correctFunctionName, refArg1Name, refArg2Name);
+
+        var funcNodeMock = mock(UCELParser.FunctionContext.class);
+        funcNodeMock.occurrences = new ArrayList<FuncCallOccurrence>();
+
+        ArrayList<DeclarationInfo> lvl1Variables = new ArrayList<>();
+        lvl1Variables.add(new DeclarationInfo(correctFunctionName, funcNodeMock));
+
+        ArrayList<DeclarationInfo> lvl0Variables = new ArrayList<>();
+        lvl0Variables.add(new DeclarationInfo(refArg1Name));
+        lvl0Variables.add(new DeclarationInfo(refArg2Name));
+
+        Scope lvl1Scope = new Scope(null, false, lvl1Variables);
+        Scope lvl0Scope = new Scope(lvl1Scope, false, lvl0Variables);
+        ReferenceVisitor visitor = new ReferenceVisitor(lvl0Scope);
+
+        UCELParser.FuncCallContext funcCallContext = mock(UCELParser.FuncCallContext.class);
+        UCELParser.ArgumentsContext argumentsContext = mock(UCELParser.ArgumentsContext.class);
+
+        var ref1Mock = mock(TerminalNode.class);
+        var ref2Mock = mock(TerminalNode.class);
+
+        when(ref1Mock.getText()).thenReturn("a");
+        when(ref2Mock.getText()).thenReturn("b");
+        var refArgs = new ArrayList<TerminalNode>()
+        {{
+            add(ref1Mock);
+            add(ref2Mock);
+        }};
+
+        TerminalNode idNode = mock(TerminalNode.class);
+        when(argumentsContext.ID()).thenReturn(refArgs);
+        when(idNode.getText()).thenReturn(correctFunctionName);
+        when(funcCallContext.ID()).thenReturn(idNode);
+        when(funcCallContext.arguments()).thenReturn(argumentsContext);
+
+        visitor.visitFuncCall(funcCallContext);
+
+        String actualNewFuncName = "";
+        try {
+            actualNewFuncName = lvl1Scope.get(funcCallContext.reference).getIdentifier();
+        } catch (Exception e) {
+            fail();
+        }
+
+        assertEquals(1, funcNodeMock.occurrences.size());
+        assertEquals(refArg1Name, funcNodeMock.occurrences.get(0).getRefParams()[0].getIdentifier());
+        assertEquals(refArg2Name, funcNodeMock.occurrences.get(0).getRefParams()[1].getIdentifier());
+        assertEquals(expectedFuncName, actualNewFuncName);
+    }
+
+    //endregion
+
+    //region Arguments
+    @Test
+    void argumentsWithNoExpressionsDoesNothing() {
+        var scopeMock = mock(Scope.class);
+        try {
+            when(scopeMock.get(any(DeclarationReference.class))).thenThrow(new RuntimeException());
+            when(scopeMock.find(any(String.class), anyBoolean())).thenThrow(new RuntimeException());
+        } catch (Exception e) {
+            fail();
+        }
+
+        ReferenceVisitor visitor = new ReferenceVisitor(scopeMock);
+        var node = mock(UCELParser.ArgumentsContext.class);
+
+        assertDoesNotThrow(() -> visitor.visitArguments(node));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void argumentsOneValidExpression(Boolean expected) {
+        var scopeMock = mock(Scope.class);
+        try {
+            when(scopeMock.get(any(DeclarationReference.class))).thenThrow(new RuntimeException());
+            when(scopeMock.find(any(String.class), anyBoolean())).thenThrow(new RuntimeException());
+        } catch (Exception e) {
+            fail();
+        }
+
+        ReferenceVisitor visitor = new ReferenceVisitor(scopeMock);
+
+        var node = mock(UCELParser.ArgumentsContext.class);
+        var exprMock = mock(UCELParser.ExpressionContext.class);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(exprMock); }};
+        when(exprMock.accept(visitor)).thenReturn(expected);
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitArguments(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void argumentsMultipleExpressions(Boolean expected) {
+        var scopeMock = mock(Scope.class);
+        try {
+            when(scopeMock.get(any(DeclarationReference.class))).thenThrow(new RuntimeException());
+            when(scopeMock.find(any(String.class), anyBoolean())).thenThrow(new RuntimeException());
+        } catch (Exception e) {
+            fail();
+        }
+
+        ReferenceVisitor visitor = new ReferenceVisitor(scopeMock);
+
+        var node = mock(UCELParser.ArgumentsContext.class);
+        var expr1Mock = mock(UCELParser.ExpressionContext.class);
+        var expr2Mock = mock(UCELParser.ExpressionContext.class);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1Mock); add(expr2Mock); }};
+        when(expr1Mock.accept(visitor)).thenReturn(expected);
+        when(expr2Mock.accept(visitor)).thenReturn(true);
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitArguments(node);
+
+        assertEquals(expected, actual);
     }
 
     //endregion

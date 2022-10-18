@@ -40,7 +40,7 @@ progressDecl  : PROGRESS LEFTCURLYBRACE ( expression? END )* RIGHTCURLYBRACE;
 
 parameters : ( parameter (COMMA parameter)* )?;
 parameter  locals [DeclarationReference reference]
-              : type? REF? (BITAND)? ID? arrayDecl*;
+              : type REF? (BITAND)? ID arrayDecl*;
 
 declarations  : (variableDecl | typeDecl | function | chanPriority | component | interface_decl)*;
 variableDecl  : type variableID (COMMA variableID)* END;
