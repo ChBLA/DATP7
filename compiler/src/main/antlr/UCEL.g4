@@ -40,7 +40,7 @@ progressDecl  : PROGRESS LEFTCURLYBRACE ( expression? END )* RIGHTCURLYBRACE;
 
 parameters : ( parameter (COMMA parameter)* )?;
 parameter  locals [DeclarationReference reference]
-              : type? REF? (BITAND)? ID? arrayDecl*;
+              : type REF? (BITAND)? ID arrayDecl*;
 
 declarations  : (variableDecl | typeDecl | function | chanPriority | component | interface_decl)*;
 variableDecl  : type variableID (COMMA variableID)* END;
@@ -70,7 +70,7 @@ fieldDecl     : type arrayDeclID (COMMA arrayDeclID)* END;
 arrayDecl     : LEFTBRACKET expression? RIGHTBRACKET
               | LEFTBRACKET type RIGHTBRACKET;
 
-function locals [Scope scope, List<FuncCallOccurrence> occurrences]
+function locals [Scope scope, List<FuncCallOccurrence> occurrences, DeclarationReference reference]
     : type? ID? LEFTPAR parameters? RIGHTPAR block;
 block locals [Scope scope]
     : LEFTCURLYBRACE localDeclaration* statement* RIGHTCURLYBRACE;
