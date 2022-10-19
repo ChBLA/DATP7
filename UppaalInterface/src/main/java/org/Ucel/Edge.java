@@ -1,7 +1,34 @@
 package org.Ucel;
 
 public class Edge implements IEdge {
-    private String id = "";
+
+    public Edge() {
+        this( "", "", "", "", "", "", "", "", "");
+    }
+
+    public Edge(
+            String id,
+            String locationIdStart,
+            String locationIdEnd,
+            String select,
+            String guard,
+            String sync,
+            String update,
+            String comment,
+            String testCode
+    ) {
+        setId(id);
+        setLocationIdStart(locationIdStart);
+        setLocationIdEnd(locationIdEnd);
+        setSelect(select);
+        setGuard(guard);
+        setSync(sync);
+        setUpdate(update);
+        setComment(comment);
+        setTestCode(testCode);
+    }
+
+    private String id;
 
     @Override
     public String getId() {
@@ -12,7 +39,7 @@ public class Edge implements IEdge {
         id = value;
     }
 
-    private String locationIdStart = "";
+    private String locationIdStart;
 
     @Override
     public String getLocationIdStart() {
@@ -23,7 +50,7 @@ public class Edge implements IEdge {
         locationIdStart = value;
     }
 
-    private String locationIdEnd = "";
+    private String locationIdEnd;
 
     @Override
     public String getLocationIdEnd() {
@@ -34,7 +61,7 @@ public class Edge implements IEdge {
         locationIdEnd = value;
     }
 
-    private String select = "";
+    private String select;
 
     @Override
     public String getSelect() {
@@ -45,7 +72,7 @@ public class Edge implements IEdge {
         select = value;
     }
 
-    private String guard = "";
+    private String guard;
 
     @Override
     public String getGuard() {
@@ -56,7 +83,7 @@ public class Edge implements IEdge {
         guard = value;
     }
 
-    private String sync = "";
+    private String sync;
 
     @Override
     public String getSync() {
@@ -67,7 +94,7 @@ public class Edge implements IEdge {
         sync = value;
     }
 
-    private String update = "";
+    private String update;
 
     @Override
     public String getUpdate() {
@@ -78,7 +105,7 @@ public class Edge implements IEdge {
         update = value;
     }
 
-    private String comment = "";
+    private String comment;
 
     @Override
     public String getComment() {
@@ -89,7 +116,7 @@ public class Edge implements IEdge {
         comment = value;
     }
 
-    private String testCode = "";
+    private String testCode;
 
     @Override
     public String getTestCode() {
