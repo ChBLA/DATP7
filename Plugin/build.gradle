@@ -61,7 +61,7 @@ task buildFatjar(type: Jar) {
 task installPlugin(type: Copy) {
     dependsOn(buildFatjar)
 
-    from 'build/libs/UCEL-0.1.jar'
+    from "build/libs/UCEL-${version}.jar"
     into "$UPPAAL_HOME/plugins"
     rename { 'UCEL.jar' }
 }
