@@ -22,6 +22,30 @@ public class EdgeTests {
         assertNotNull(edge.getComment());
         assertNotNull(edge.getTestCode());
     }
+    @Test
+    public void ctorParameterized() {
+        String id = "asd";
+        String locationIdStart = "gdf";
+        String locationIdEnd = "adgf";
+        String select = "jhsgf";
+        String guard = "jkhsgn";
+        String sync = "<segczfb";
+        String update = "jkgd";
+        String comment = "kdgh";
+        String testCode = "<aser";
+
+        IEdge edge = new Edge(id, locationIdStart, locationIdEnd, select, guard, sync, update, comment, testCode);
+
+        assertEquals(id, edge.getId());
+        assertEquals(locationIdStart, edge.getLocationIdStart());
+        assertEquals(locationIdEnd, edge.getLocationIdEnd());
+        assertEquals(select, edge.getSelect());
+        assertEquals(guard, edge.getGuard());
+        assertEquals(sync, edge.getSync());
+        assertEquals(update, edge.getUpdate());
+        assertEquals(comment, edge.getComment());
+        assertEquals(testCode, edge.getTestCode());
+    }
 
     @ParameterizedTest
     @ValueSource(strings = {"sdfgsfdghhsf", "hsdfghfdg"})
