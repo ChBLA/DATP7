@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+}
+
+task singleJar(type: Jar) {
+    baseName = 'ucelFat'
+//    from {
+//        project('compiler')
+//        //project('Plugin')
+//    }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+//task customFatJar(type: Jar) {
+//    manifest {
+//        attributes 'Main-Class': 'org.UcelPlugin.UcelPlugin'
+//        attributes 'Uppaal-Plugin': 'org.UcelPlugin.UcelPlugin'
+//    }
+//
+//    baseName = 'FatUcel'
+//    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+//    from {
+//        zipTree(":Plugin");
+//        zipTree("compiler");
+//
+//    }
+////    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+//    with jar
+//}

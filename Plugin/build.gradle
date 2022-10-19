@@ -20,14 +20,48 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 
-    implementation fileTree(UPPAAL_HOME) { include '**/*.jar' }
+    implementation fileTree(UPPAAL_HOME) { include '*.jar' }
+    implementation fileTree(UPPAAL_HOME) { include 'lib/*.jar' }
     implementation findProject(':UppaalInterface')
 }
 
-task installPlugin(type: Copy) {
+task buildFatjar(type: Jar) {
     dependsOn(build)
 
-    from 'build/libs/Plugin-0.1.jar'
+    manifest {
+        attributes 'Uppaal-Plugin': 'org.UcelPlugin.UcelPlugin'
+    }
+
+    baseName = 'UCEL'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath
+                .filter { f ->
+                    def fPath = file(f.path)
+                    def upPath = file("$UPPAAL_HOME/$f.name")
+                    def upLibPath = file("$UPPAAL_HOME/lib/$f.name")
+
+                    if (fPath == upPath)
+                        return false
+                    if (fPath == upLibPath)
+                        return false;
+
+                    return true
+                }
+                .sort { it.name }
+                .collect { file ->
+                    logger.info("Including file: ${file.name}")
+                    file.isDirectory() ? file : zipTree(file)
+                }
+    }
+
+    with jar
+}
+
+task installPlugin(type: Copy) {
+    dependsOn(buildFatjar)
+
+    from "build/libs/UCEL-${version}.jar"
     into "$UPPAAL_HOME/plugins"
     rename { 'UCEL.jar' }
 }
