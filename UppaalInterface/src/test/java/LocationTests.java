@@ -27,6 +27,37 @@ public class LocationTests {
         assertNotNull(location.getTestCodeOnExit());
     }
 
+    @Test
+    public void ctorParameterized() {
+        String id = "dplokjf";
+        int posX = 53;
+        int posY = 23;
+        String name = "sldfkj";
+        String invariant = "podfgop";
+        String rateOfExponential = "kldfgkl";
+        boolean initial = true;
+        boolean urgent = true;
+        boolean committed = false;
+        String comments = "jdghj";
+        String testCodeOnEnter = "mjhzd";
+        String testCodeOnExit = "zdfg";
+
+        ILocation location = new Location(id, posX, posY, name, invariant, rateOfExponential, initial, urgent, committed, comments, testCodeOnEnter, testCodeOnExit);
+
+        assertEquals(id, location.getId());
+        assertEquals(posX, location.getPosX());
+        assertEquals(posY, location.getPosY());
+        assertEquals(name, location.getName());
+        assertEquals(invariant, location.getInvariant());
+        assertEquals(rateOfExponential, location.getRateOfExponential());
+        assertEquals(initial, location.getInitial());
+        assertEquals(urgent, location.getUrgent());
+        assertEquals(committed, location.getCommitted());
+        assertEquals(comments, location.getComments());
+        assertEquals(testCodeOnEnter, location.getTestCodeOnEnter());
+        assertEquals(testCodeOnExit, location.getTestCodeOnExit());
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"glkdgklfjd", "lkjdgjlkdf"})
     public void Id(String value) {
