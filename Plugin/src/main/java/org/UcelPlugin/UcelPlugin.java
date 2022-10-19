@@ -19,9 +19,9 @@ public class UcelPlugin implements Plugin {
         this.uppaalManager = new UppaalManager(registry);
 
         try {
-            Document document = new PrototypeDocument().load(new URL("demo/train-gate.xml"));
-            DocumentParser documentParser = new DocumentParser();
-            Project project = documentParser.parseDocument(document);
+            Document document = new PrototypeDocument().load(new URL("file", null, "demo/train-gate.xml"));
+            DocumentParser documentParser = new DocumentParser(document);
+            Project project = documentParser.parseDocument();
         }
         catch (IOException e) {
             System.err.println("Model not found");
