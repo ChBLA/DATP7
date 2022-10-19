@@ -2694,14 +2694,14 @@ public class CodeGenTests {
         var exprResult = generateDefaultExprTemplate(type);
         var expected = String.format("return %s;", exprResult);
 
-        var node = mock(UCELParser.ReturnstatementContext.class);
+        var node = mock(UCELParser.ReturnStatementContext.class);
         CodeGenVisitor visitor = new CodeGenVisitor();
 
         var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
 
         when(node.expression()).thenReturn(exprMock);
 
-        String actual = visitor.visitReturnstatement(node).toString();
+        String actual = visitor.visitReturnStatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -2710,10 +2710,10 @@ public class CodeGenTests {
     void returnStatementEmptyExprGeneratedCorrectly() {
         var expected = "return;";
 
-        var node = mock(UCELParser.ReturnstatementContext.class);
+        var node = mock(UCELParser.ReturnStatementContext.class);
         CodeGenVisitor visitor = new CodeGenVisitor();
 
-        String actual = visitor.visitReturnstatement(node).toString();
+        String actual = visitor.visitReturnStatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -3075,10 +3075,10 @@ public class CodeGenTests {
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
-        var returnMock = mockForVisitorResult(UCELParser.ReturnstatementContext.class, returnResult, visitor);
+        var returnMock = mockForVisitorResult(UCELParser.ReturnStatementContext.class, returnResult, visitor);
         var node = mock(UCELParser.StatementContext.class);
 
-        when(node.returnstatement()).thenReturn(returnMock);
+        when(node.returnStatement()).thenReturn(returnMock);
 
         var actual = visitor.visitStatement(node).toString();
 

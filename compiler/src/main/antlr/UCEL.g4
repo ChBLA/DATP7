@@ -83,7 +83,7 @@ statement       : block
                 | whileLoop
                 | dowhile
                 | ifstatement
-                | returnstatement;
+                | returnStatement;
 
 forLoop	        : FOR LEFTPAR assignment? END expression END expression? RIGHTPAR statement;
 iteration locals [DeclarationReference reference]
@@ -91,7 +91,7 @@ iteration locals [DeclarationReference reference]
 whileLoop       : WHILE LEFTPAR expression RIGHTPAR statement;
 dowhile         : DO statement WHILE LEFTPAR expression RIGHTPAR END;
 ifstatement     : IF LEFTPAR expression RIGHTPAR statement ( ELSE statement )?;
-returnstatement : RETURN expression? END;
+returnStatement : RETURN expression? END;
 
 chanPriority : 'chan' 'priority' (chanExpr | 'default') ((COMMA | '<') (chanExpr | 'default'))* END;
 chanExpr locals [DeclarationReference reference]
