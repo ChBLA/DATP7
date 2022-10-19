@@ -64,15 +64,18 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     public Boolean visitParameter(UCELParser.ParameterContext ctx) {
         String parameterName = ctx.ID().getText();
 
+        //No logging, passing through
         if(!visit(ctx.type())) return false;
 
         for(UCELParser.ArrayDeclContext arrayDecl : ctx.arrayDecl()) {
             if(!visit(arrayDecl)) return false;
+            //No logging, passing through
         }
 
         try {
             if(!currentScope.isUnique(parameterName, true)) {
                 logger.log(new ErrorLog(ctx, "Parameter name '" + parameterName + "' is not unique in scope"));
+                return false;
             }
 
             ctx.reference = currentScope.add(new DeclarationInfo(parameterName));
@@ -80,6 +83,54 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
             return false;
         }
+
+        return true;
+    }
+
+    @Override
+    public Boolean visitTypeIDID(UCELParser.TypeIDIDContext ctx) {
+        String typeID = ctx.ID().getText();
+
+        try {
+            ctx.reference = currentScope.find(typeID, false);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public Boolean visitTypeDecl(UCELParser.TypeDeclContext ctx) {
+
+        //No logging, passing through
+        if(!visit(ctx.type())) return false;
+
+        ArrayList<DeclarationReference> references = new ArrayList<>();
+
+        for(UCELParser.ArrayDeclIDContext arrayDeclID : ctx.arrayDeclID()) {
+            String identifier = arrayDeclID.ID().getText();
+
+            for (UCELParser.ArrayDeclContext arrayDecl : arrayDeclID.arrayDecl()) {
+                if (!visit(arrayDecl)) return false;
+                //No logging, passing through
+            }
+
+            try {
+                if(!currentScope.isUnique(identifier, false)) {
+                    logger.log(new ErrorLog(ctx, "Parameter name '" + identifier + "' is not unique in scope"));
+                    return false;
+                }
+
+                references.add(currentScope.add(new DeclarationInfo(identifier)));
+            } catch (Exception e) {
+                logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+                return false;
+            }
+        }
+
+        ctx.references = references;
 
         return true;
     }
@@ -252,7 +303,8 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     private Boolean handleIncrementDecrement(UCELParser.ExpressionContext ctx) {
         UCELParser.ExpressionContext expr = ctx.getRuleContext(UCELParser.ExpressionContext.class, 0);
         if(expr instanceof UCELParser.IdExprContext ||
-                expr instanceof UCELParser.StructAccessContext) {
+                expr instanceof UCELParser.StructAccessContext ||
+                expr instanceof UCELParser.ArrayIndexContext) {
             return visit(expr);
         } else {
             logger.log(new ErrorLog(ctx, "Operator only valid for a reference expressions, " +
@@ -265,8 +317,9 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     public Boolean visitAssignExpr(UCELParser.AssignExprContext ctx) {
         UCELParser.ExpressionContext expr = ctx.expression(0);
         if(expr instanceof UCELParser.IdExprContext ||
-                expr instanceof UCELParser.StructAccessContext) {
-            return visit(expr);
+                expr instanceof UCELParser.StructAccessContext ||
+                expr instanceof UCELParser.ArrayIndexContext) {
+            return visit(expr) && visit(ctx.expression(1));
         } else {
             logger.log(new ErrorLog(ctx, "Left side of an assignment requires a reference expressions, " +
                     "such as a variable or a struct field"));
