@@ -737,7 +737,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     //region Return-statement
 
     @Override
-    public Template visitReturnstatement(UCELParser.ReturnstatementContext ctx) {
+    public Template visitReturnStatement(UCELParser.ReturnStatementContext ctx) {
         var expr = ctx.expression() != null ? visit(ctx.expression()) : null;
 
         return expr != null ? new ReturnStatementTemplate(expr) : new ReturnStatementTemplate();
@@ -789,8 +789,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
             result = visit(ctx.dowhile());
         } else if (ctx.ifstatement() != null) {
             result = visit(ctx.ifstatement());
-        } else if (ctx.returnstatement() != null) {
-            result = visit(ctx.returnstatement());
+        } else if (ctx.returnStatement() != null) {
+            result = visit(ctx.returnStatement());
         }
 
         return new ManualTemplate(result + "\n");

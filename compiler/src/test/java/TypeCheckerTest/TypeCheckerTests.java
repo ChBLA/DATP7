@@ -234,14 +234,20 @@ public class TypeCheckerTests  {
 
     //endregion
 
+    //region Function
+
+
+    //endregion
+
+    //region statements
 
     //region returnstatement
     @Test
     void returnVoidOnNoExpression() {
         var visitor = new TypeCheckerVisitor();
-        var node = mock(UCELParser.ReturnstatementContext.class);
+        var node = mock(UCELParser.ReturnStatementContext.class);
         when(node.expression()).thenReturn(null);
-        var result = visitor.visitReturnstatement(node);
+        var result = visitor.visitReturnStatement(node);
         assertEquals(VOID_TYPE, result);
     }
 
@@ -251,11 +257,11 @@ public class TypeCheckerTests  {
         var funcDecl = new DeclarationInfo("fib", INT_TYPE);
         scope.add(funcDecl);
         var visitor = new TypeCheckerVisitor(scope);
-        var node = mock(UCELParser.ReturnstatementContext.class);
+        var node = mock(UCELParser.ReturnStatementContext.class);
         var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
         when(node.expression()).thenReturn(expr);
         visitor.currentFunction = funcDecl;
-        var result = visitor.visitReturnstatement(node);
+        var result = visitor.visitReturnStatement(node);
         assertEquals(INT_TYPE, result);
     }
 
@@ -822,6 +828,8 @@ public class TypeCheckerTests  {
 
         assertEquals(ERROR_TYPE, result);
     }
+
+    //endregion
 
     //endregion
 

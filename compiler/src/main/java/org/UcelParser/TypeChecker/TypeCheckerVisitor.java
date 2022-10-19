@@ -127,8 +127,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
     }
 
+    //region Statements
+
     @Override
-    public Type visitReturnstatement(UCELParser.ReturnstatementContext ctx) {
+    public Type visitReturnStatement(UCELParser.ReturnStatementContext ctx) {
         var expression = ctx.expression();
         if (expression != null) {
             var expressionType = visit(expression);
@@ -142,7 +144,6 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return VOID_TYPE;
         }
     }
-
 
     @Override
     public Type visitWhileLoop(UCELParser.WhileLoopContext ctx) {
@@ -230,6 +231,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
         return visit(ctx.statement(0));
     }
+
+    //endregion
 
     @Override
     public Type visitType(UCELParser.TypeContext ctx) {
