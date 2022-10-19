@@ -16,14 +16,14 @@ public class UcelPlugin implements Plugin {
         workspaces[0] = new UcelEditorWorkspace();
         this.uppaalManager = new UppaalManager(registry);
 
-        try {
-//            Document document = ModelDemo.loadModel("demo/train-gate.xml");
-//            DocumentParser documentParser = new DocumentParser();
-//            Project project = documentParser.parseDocument(document);
-        }
-        catch (IOException e) {
-            System.err.println("Model not found");
-        }
+//        try {
+////            Document document = ModelDemo.loadModel("demo/train-gate.xml");
+////            DocumentParser documentParser = new DocumentParser();
+////            Project project = documentParser.parseDocument(document);
+//        }
+//        catch (IOException e) {
+//            System.err.println("Model not found");
+//        }
     }
 
     /**
