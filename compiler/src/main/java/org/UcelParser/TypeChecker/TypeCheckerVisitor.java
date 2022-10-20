@@ -50,6 +50,38 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
     private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
 
+    //region Start
+
+    @Override
+    public Type visitStart(UCELParser.StartContext ctx) {
+        var declType = visit(ctx.declarations());
+        if (declType.equals(ERROR_TYPE))
+            return ERROR_TYPE;
+        else if (!declType.equals(VOID_TYPE)) {
+            //log error
+            return ERROR_TYPE;
+        }
+
+        boolean correct = true;
+
+        for (var stmnt : ctx.statement()) {
+            var stmntType = visit(stmnt);
+            if (!stmntType.equals(VOID_TYPE)) {
+                correct = false;
+                if (stmntType.equals(ERROR_TYPE))
+                    logger.log(new ErrorLog(ctx,"Compiler error during type checking"));
+            }
+        }
+
+        var sysType = visit(ctx.system());
+        if (!sysType.equals(VOID_TYPE) && !sysType.equals(ERROR_TYPE))
+            logger.log(new ErrorLog(ctx, "Compiler error during type checking"));
+        return sysType.equals(VOID_TYPE) && correct ? VOID_TYPE : ERROR_TYPE;
+    }
+
+
+    //endregion
+
     @Override
     public Type visitAssignExpr(UCELParser.AssignExprContext ctx) {
         Type leftType = visit(ctx.expression(0));
