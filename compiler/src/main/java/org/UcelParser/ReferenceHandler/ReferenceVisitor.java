@@ -28,6 +28,42 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     }
 
     @Override
+    public Boolean visitStart(UCELParser.StartContext ctx) {
+        boolean success = true;
+        enterScope();
+
+        if (visit(ctx.declarations())) {
+            for (var stmnt : ctx.statement()) {
+                if (!visit(stmnt)) {
+                    success = false;
+                    break;
+                }
+            }
+            if (success)
+                success = visit(ctx.system());
+        } else {
+            success = false;
+        }
+
+        exitScope();
+        return success;
+    }
+
+    @Override
+    public Boolean visitSystem(UCELParser.SystemContext ctx) {
+        boolean success = true;
+
+        for (var expr : ctx.expression()) {
+            if (!visit(expr)) {
+                success = false;
+                break;
+            }
+        }
+
+        return success;
+    }
+
+    @Override
     public Boolean visitFunction(UCELParser.FunctionContext ctx) {
         String funcName = ctx.ID().getText();
         try {
