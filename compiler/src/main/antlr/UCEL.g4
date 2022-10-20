@@ -11,7 +11,7 @@ grammar UCEL;
 
 start locals [Scope scope]
     : declarations statement* link_stmnt* system;
-system : SYSTEM ID ((COMMA | '<') ID)* END;
+system : SYSTEM expression ((COMMA | '<') expression)* END;
 
 component locals [Scope scope]
     : COMP ID LEFTPAR parameters? RIGHTPAR LEFTCURLYBRACE comp_body RIGHTCURLYBRACE;
