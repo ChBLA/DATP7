@@ -1,8 +1,6 @@
 package org.Ucel;
 
 public interface ILocation {
-    public String getId();
-
     public int getPosX();
 
     public int getPosY();

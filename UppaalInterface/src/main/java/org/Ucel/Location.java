@@ -2,11 +2,10 @@ package org.Ucel;
 
 public class Location implements ILocation {
     public Location() {
-        this("", 0, 0, "", "", "", false, false, false, "", "", "");
+        this(0, 0, "", "", "", false, false, false, "", "", "");
     }
 
-    public Location(String id, int posX, int posY, String name, String invariant, String rateOfExponential, boolean initial, boolean urgent, boolean committed, String comments,  String testCodeOnEnter, String testCodeOnExit) {
-        setId(id);
+    public Location(int posX, int posY, String name, String invariant, String rateOfExponential, boolean initial, boolean urgent, boolean committed, String comments, String testCodeOnEnter, String testCodeOnExit) {
         setPosX(posX);
         setPosY(posY);
         setName(name);
@@ -18,17 +17,6 @@ public class Location implements ILocation {
         setComments(comments);
         setTestCodeOnEnter(testCodeOnEnter);
         setTestCodeOnExit(testCodeOnExit);
-    }
-
-    private String id;
-
-    @Override
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String value) {
-        id = value;
     }
 
     private int posX;

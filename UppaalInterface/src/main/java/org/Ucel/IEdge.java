@@ -1,11 +1,9 @@
 package org.Ucel;
 
 public interface IEdge {
-    public String getId();
+    public ILocation getLocationStart();
 
-    public String getLocationIdStart();
-
-    public String getLocationIdEnd();
+    public ILocation getLocationEnd();
 
     public String getSelect();
 

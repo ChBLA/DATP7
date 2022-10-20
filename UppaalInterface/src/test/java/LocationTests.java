@@ -12,7 +12,6 @@ public class LocationTests {
     public void ctor() {
         ILocation location = new Location();
 
-        assertNotNull(location.getId());
         assertNotNull(location.getPosX());
         assertNotNull(location.getPosY());
         assertNotNull(location.getName());
@@ -29,7 +28,6 @@ public class LocationTests {
 
     @Test
     public void ctorParameterized() {
-        String id = "dplokjf";
         int posX = 53;
         int posY = 23;
         String name = "sldfkj";
@@ -42,9 +40,8 @@ public class LocationTests {
         String testCodeOnEnter = "mjhzd";
         String testCodeOnExit = "zdfg";
 
-        ILocation location = new Location(id, posX, posY, name, invariant, rateOfExponential, initial, urgent, committed, comments, testCodeOnEnter, testCodeOnExit);
+        ILocation location = new Location(posX, posY, name, invariant, rateOfExponential, initial, urgent, committed, comments, testCodeOnEnter, testCodeOnExit);
 
-        assertEquals(id, location.getId());
         assertEquals(posX, location.getPosX());
         assertEquals(posY, location.getPosY());
         assertEquals(name, location.getName());
@@ -56,14 +53,6 @@ public class LocationTests {
         assertEquals(comments, location.getComments());
         assertEquals(testCodeOnEnter, location.getTestCodeOnEnter());
         assertEquals(testCodeOnExit, location.getTestCodeOnExit());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"glkdgklfjd", "lkjdgjlkdf"})
-    public void Id(String value) {
-        Location location = new Location();
-        location.setId(value);
-        assertEquals(value, location.getId());
     }
 
     @ParameterizedTest

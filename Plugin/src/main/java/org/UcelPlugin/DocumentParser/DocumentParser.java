@@ -1,4 +1,4 @@
-package org.UcelPlugin;
+package org.UcelPlugin.DocumentParser;
 
 import com.uppaal.model.core2.*;
 import org.UcelPlugin.Models.SharedInterface.Graph;
@@ -48,41 +48,13 @@ public class DocumentParser {
 
     private Template parseTemplate(AbstractTemplate uppaalTemplate) {
         Template interfaceTemplate = new Template();
+        GraphParser graphParser = new GraphParser();
+
         interfaceTemplate.setName(uppaalTemplate.getPropertyValue("name"));
         interfaceTemplate.setParameters(uppaalTemplate.getPropertyValue("parameter"));
-        interfaceTemplate.setGraph(parseGraph(uppaalTemplate));
+        interfaceTemplate.setGraph(graphParser.parseGraph(uppaalTemplate));
         interfaceTemplate.setDeclarations(uppaalTemplate.getPropertyValue("declaration"));
 
         return interfaceTemplate;
     }
-
-    private Graph parseGraph(AbstractTemplate uppaalTemplate) {
-        Graph newGraph = new Graph();
-
-        visitGraph(uppaalTemplate.first, newGraph);
-
-        return newGraph;
-    }
-
-    private void visitGraph(Node node, Graph newGraph) {
-        if(node instanceof Location)
-            visitGraph((Location)node, newGraph);
-        else if(node instanceof Edge)
-            visitGraph((Edge)node, newGraph);
-        else
-            System.err.println("Unhandled node type in visitGraph");
-    }
-
-    private void visitGraph(Location node, Graph newGraph) {
-        var newLocation = new org.UcelPlugin.Models.SharedInterface.Location();
-
-        newGraph.putLocation(newLocation);
-    }
-
-    private void visitGraph(Edge node, Graph newGraph) {
-        var newEdge = new org.UcelPlugin.Models.SharedInterface.Edge();
-
-        newGraph.putEdge(newEdge);
-    }
-
 }
