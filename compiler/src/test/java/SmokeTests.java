@@ -14,8 +14,8 @@ public class SmokeTests {
 
     @ParameterizedTest(name = "{index} => Running compiler on {0} expecting no errors")
     @MethodSource("compilerInput")
-    public void mainDoesNotThrowError(String input) {
-        assertDoesNotThrow(() -> new Main(input));
+    public void compilerDoesNotThrowError(String input) {
+        assertDoesNotThrow(() -> new org.UcelParser.Compiler(input));
     }
 
     private static Stream<Arguments> compilerInput() {
