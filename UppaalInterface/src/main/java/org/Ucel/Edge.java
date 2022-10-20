@@ -3,13 +3,12 @@ package org.Ucel;
 public class Edge implements IEdge {
 
     public Edge() {
-        this( "", "", "", "", "", "", "", "", "");
+        this(null, null, "", "", "", "", "", "");
     }
 
     public Edge(
-            String id,
-            String locationIdStart,
-            String locationIdEnd,
+            ILocation locationStart,
+            ILocation locationEnd,
             String select,
             String guard,
             String sync,
@@ -17,9 +16,8 @@ public class Edge implements IEdge {
             String comment,
             String testCode
     ) {
-        setId(id);
-        setLocationIdStart(locationIdStart);
-        setLocationIdEnd(locationIdEnd);
+        setLocationStart(locationStart);
+        setLocationEnd(locationEnd);
         setSelect(select);
         setGuard(guard);
         setSync(sync);
@@ -28,37 +26,26 @@ public class Edge implements IEdge {
         setTestCode(testCode);
     }
 
-    private String id;
+    private ILocation locationStart;
 
     @Override
-    public String getId() {
-        return id;
+    public ILocation getLocationStart() {
+        return locationStart;
     }
 
-    public void setId(String value) {
-        id = value;
+    public void setLocationStart(ILocation value) {
+        locationStart = value;
     }
 
-    private String locationIdStart;
+    private ILocation locationEnd;
 
     @Override
-    public String getLocationIdStart() {
-        return locationIdStart;
+    public ILocation getLocationEnd() {
+        return locationEnd;
     }
 
-    public void setLocationIdStart(String value) {
-        locationIdStart = value;
-    }
-
-    private String locationIdEnd;
-
-    @Override
-    public String getLocationIdEnd() {
-        return locationIdEnd;
-    }
-
-    public void setLocationIdEnd(String value) {
-        locationIdEnd = value;
+    public void setLocationEnd(ILocation value) {
+        locationEnd = value;
     }
 
     private String select;

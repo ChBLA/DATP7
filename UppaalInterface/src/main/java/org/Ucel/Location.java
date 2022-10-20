@@ -1,18 +1,25 @@
 package org.Ucel;
 
 public class Location implements ILocation {
-    private String id = "";
-
-    @Override
-    public String getId() {
-        return id;
+    public Location() {
+        this(0, 0, "", "", "", false, false, false, "", "", "");
     }
 
-    public void setId(String value) {
-        id = value;
+    public Location(int posX, int posY, String name, String invariant, String rateOfExponential, boolean initial, boolean urgent, boolean committed, String comments, String testCodeOnEnter, String testCodeOnExit) {
+        setPosX(posX);
+        setPosY(posY);
+        setName(name);
+        setInvariant(invariant);
+        setRateOfExponential(rateOfExponential);
+        setInitial(initial);
+        setUrgent(urgent);
+        setCommitted(committed);
+        setComments(comments);
+        setTestCodeOnEnter(testCodeOnEnter);
+        setTestCodeOnExit(testCodeOnExit);
     }
 
-    private int posX = 0;
+    private int posX;
 
     @Override
     public int getPosX() {
@@ -23,7 +30,7 @@ public class Location implements ILocation {
         posX = value;
     }
 
-    private int posY = 0;
+    private int posY;
 
     @Override
     public int getPosY() {
@@ -34,7 +41,7 @@ public class Location implements ILocation {
         posY = value;
     }
 
-    private String name = "";
+    private String name;
 
     @Override
     public String getName() {
@@ -45,7 +52,7 @@ public class Location implements ILocation {
         name = value;
     }
 
-    private String invariant = "";
+    private String invariant;
 
     @Override
     public String getInvariant() {
@@ -56,7 +63,7 @@ public class Location implements ILocation {
         invariant = value;
     }
 
-    private String rateOfExponential = "";
+    private String rateOfExponential;
 
     @Override
     public String getRateOfExponential() {
@@ -67,7 +74,7 @@ public class Location implements ILocation {
         rateOfExponential = value;
     }
 
-    private boolean initial = false;
+    private boolean initial;
 
     @Override
     public boolean getInitial() {
@@ -78,7 +85,7 @@ public class Location implements ILocation {
         initial = value;
     }
 
-    private boolean urgent = false;
+    private boolean urgent;
 
     @Override
     public boolean getUrgent() {
@@ -89,7 +96,7 @@ public class Location implements ILocation {
         urgent = value;
     }
 
-    private boolean committed = false;
+    private boolean committed;
 
     @Override
     public boolean getCommitted() {
@@ -100,7 +107,7 @@ public class Location implements ILocation {
         committed = value;
     }
 
-    private String comments = "";
+    private String comments;
 
     @Override
     public String getComments() {
@@ -111,7 +118,7 @@ public class Location implements ILocation {
         comments = value;
     }
 
-    private String testCodeOnEnter = "";
+    private String testCodeOnEnter;
 
     @Override
     public String getTestCodeOnEnter() {
@@ -122,7 +129,7 @@ public class Location implements ILocation {
         testCodeOnEnter = value;
     }
 
-    private String testCodeOnExit = "";
+    private String testCodeOnExit;
 
     @Override
     public String getTestCodeOnExit() {

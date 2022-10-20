@@ -12,7 +12,6 @@ public class LocationTests {
     public void ctor() {
         ILocation location = new Location();
 
-        assertNotNull(location.getId());
         assertNotNull(location.getPosX());
         assertNotNull(location.getPosY());
         assertNotNull(location.getName());
@@ -27,12 +26,33 @@ public class LocationTests {
         assertNotNull(location.getTestCodeOnExit());
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"glkdgklfjd", "lkjdgjlkdf"})
-    public void Id(String value) {
-        Location location = new Location();
-        location.setId(value);
-        assertEquals(value, location.getId());
+    @Test
+    public void ctorParameterized() {
+        int posX = 53;
+        int posY = 23;
+        String name = "sldfkj";
+        String invariant = "podfgop";
+        String rateOfExponential = "kldfgkl";
+        boolean initial = true;
+        boolean urgent = true;
+        boolean committed = false;
+        String comments = "jdghj";
+        String testCodeOnEnter = "mjhzd";
+        String testCodeOnExit = "zdfg";
+
+        ILocation location = new Location(posX, posY, name, invariant, rateOfExponential, initial, urgent, committed, comments, testCodeOnEnter, testCodeOnExit);
+
+        assertEquals(posX, location.getPosX());
+        assertEquals(posY, location.getPosY());
+        assertEquals(name, location.getName());
+        assertEquals(invariant, location.getInvariant());
+        assertEquals(rateOfExponential, location.getRateOfExponential());
+        assertEquals(initial, location.getInitial());
+        assertEquals(urgent, location.getUrgent());
+        assertEquals(committed, location.getCommitted());
+        assertEquals(comments, location.getComments());
+        assertEquals(testCodeOnEnter, location.getTestCodeOnEnter());
+        assertEquals(testCodeOnExit, location.getTestCodeOnExit());
     }
 
     @ParameterizedTest
