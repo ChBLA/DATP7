@@ -152,16 +152,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
     //endregion
 
-    @Override
-    public Type visitArrayDecl(UCELParser.ArrayDeclContext ctx) {
-        if (ctx.expression() != null) {
-            var elementType = visit(ctx.expression());
-            return new Type(elementType.getEvaluationType(), 1);
-        } else {
-            var elementType = visit(ctx.type());
-            return new Type(elementType.getEvaluationType(), 1);
-        }
-    }
+
 
     //region Parameters
     @Override
