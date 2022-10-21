@@ -52,6 +52,21 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     //endregion
 
+    //region System
+
+    @Override
+    public Template visitSystem(UCELParser.SystemContext ctx) {
+        var exprs = new ArrayList<Template>();
+
+        for (var expr : ctx.expression()) {
+            exprs.add(visit(expr));
+        }
+
+        return new SystemTemplate(exprs);
+    }
+
+    //endregion
+
     //region Function
 
     @Override

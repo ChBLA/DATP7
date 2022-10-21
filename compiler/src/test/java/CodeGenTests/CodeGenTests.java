@@ -110,6 +110,48 @@ public class CodeGenTests {
 
     //endregion
 
+    //region System
+    @Test
+    void systemOneExpressionGeneratedCorrectly() {
+        var exprTemplate = generateDefaultExprTemplate("B");
+        var expected = String.format("system %s;", exprTemplate);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.SystemContext.class);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(exprNode); }};
+
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void systemMultipleExpressionsGeneratedCorrectly() {
+        var expr1Template = generateDefaultExprTemplate("B");
+        var expr2Template = generateDefaultExprTemplate("C");
+        var expected = String.format("system %s, %s;", expr1Template, expr2Template);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1Node = mockForVisitorResult(UCELParser.ExpressionContext.class, expr1Template, visitor);
+        var expr2Node = mockForVisitorResult(UCELParser.ExpressionContext.class, expr2Template, visitor);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1Node); add(expr2Node); }};
+
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+
+    //endregion
+
     //region Function
 
     @Test
@@ -3185,7 +3227,7 @@ public class CodeGenTests {
     }
 
     private Template generateDefaultSystemTemplate(String id) {
-        return new ManualTemplate(String.format("system %s", id));
+        return new ManualTemplate(String.format("system %s;", id));
     }
 
     private Template generateEmptyExprTemplate() {
