@@ -182,11 +182,20 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         var expression = ctx.expression();
         if (expression != null) {
             var expressionType = visit(expression);
-            if (currentFunction != null && expressionType == currentFunction.getType()) {
-                return expressionType;
-            } else {
+            if (currentFunction == null || currentFunction.getType().getEvaluationType() == null) {
+                logger.log(new ErrorLog(ctx, "Return statement only valid within function"));
+                return ERROR_TYPE;
+            }
+            Type funcType = currentFunction.getType();
+            if(funcType.getEvaluationType() != Type.TypeEnum.functionType ||
+                funcType.getParameters() == null || funcType.getParameters().length < 1) {
+                logger.log(new ErrorLog(ctx, "Compiler Error: Invalid type for function"));
+                return ERROR_TYPE;
+            } else if(!expressionType.equals(funcType.getParameters()[0])) {
                 logger.log(new ErrorLog(ctx, "Expression in return is of the wrong type"));
                 return ERROR_TYPE;
+            } else {
+                return expressionType;
             }
         } else {
             return VOID_TYPE;

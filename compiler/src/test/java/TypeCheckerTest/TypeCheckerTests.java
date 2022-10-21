@@ -519,7 +519,7 @@ public class TypeCheckerTests  {
     @Test
     void returnIntOnIntExpressionInIntFunction() {
         var scope = new Scope(null, false);
-        var funcDecl = new DeclarationInfo("fib", INT_TYPE);
+        var funcDecl = new DeclarationInfo("fib", new Type(Type.TypeEnum.functionType, new Type[]{INT_TYPE}));
         scope.add(funcDecl);
         var visitor = new TypeCheckerVisitor(scope);
         var node = mock(UCELParser.ReturnStatementContext.class);
