@@ -124,6 +124,42 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     }
 
     @Override
+    public Boolean visitInstantiation(UCELParser.InstantiationContext ctx) {
+        String instantiationIdentifier = ctx.ID().get(0).getText();
+        String constructorIdentifier = ctx.ID().get(1).getText();
+
+        try {
+            if(!currentScope.isUnique(instantiationIdentifier, true)) {
+                logger.log(new ErrorLog(ctx, "Instantiation name " + instantiationIdentifier + " is not unique" ));
+                return false;
+            }
+            ctx.instantiatedReference = currentScope.add(new DeclarationInfo(instantiationIdentifier));
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            return false;
+        }
+
+        enterScope();
+        ctx.scope = currentScope;
+
+        try {
+            ctx.constructorReference = currentScope.find(constructorIdentifier, false);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            exitScope();
+            return false;
+        }
+
+        if(!visit(ctx.parameters()) || !visit(ctx.arguments())) {
+            exitScope();
+            return false;
+        }
+
+        exitScope();
+        return true;
+    }
+
+    @Override
     public Boolean visitTypeIDID(UCELParser.TypeIDIDContext ctx) {
         String typeID = ctx.ID().getText();
 
