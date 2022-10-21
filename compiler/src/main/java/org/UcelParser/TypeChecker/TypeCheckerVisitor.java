@@ -32,6 +32,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             this.logger = logger;
         }
 
+    //region Type constants
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
     private static final Type DOUBLE_TYPE = new Type(Type.TypeEnum.doubleType);
     private static final Type BOOL_TYPE = new Type(Type.TypeEnum.boolType);
@@ -47,35 +48,109 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private static final Type VOID_TYPE = new Type(Type.TypeEnum.voidType);
     private static final Type CHAN_TYPE = new Type(Type.TypeEnum.chanType);
     private static final Type STRUCT_TYPE = new Type(Type.TypeEnum.structType);
+    private static final Type PROCESS_TYPE = new Type(Type.TypeEnum.processType);
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
     private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
     public DeclarationInfo currentFunction = null;
 
 
-    @Override
-    public Type visitAssignExpr(UCELParser.AssignExprContext ctx) {
-        Type leftType = visit(ctx.expression(0));
-        Type rightType = visit(ctx.expression(1));
+    //region Start
 
-        if (leftType.getEvaluationType() == Type.TypeEnum.errorType ||
-                rightType.getEvaluationType() == Type.TypeEnum.errorType ||
-                leftType.getEvaluationType() == Type.TypeEnum.chanType ||
-                rightType.getEvaluationType() == Type.TypeEnum.chanType ||
-                leftType.getEvaluationType() == Type.TypeEnum.voidType ||
-                rightType.getEvaluationType() == Type.TypeEnum.voidType ||
-                leftType.getEvaluationType() == Type.TypeEnum.invalidType ||
-                rightType.getEvaluationType() == Type.TypeEnum.invalidType) {
-            logger.log(new ErrorLog(ctx, "Type error: cannot assign " + rightType + " to " + leftType));
+    @Override
+    public Type visitStart(UCELParser.StartContext ctx) {
+        var declType = visit(ctx.declarations());
+        if (declType.equals(ERROR_TYPE)) {
+            //No logging, passing through
+            return ERROR_TYPE;
+        } else if (!declType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx.declarations(), "Compiler Error, unexpected type of declarations: " + declType));
             return ERROR_TYPE;
         }
 
-        if (leftType.equals(rightType)) {
+        boolean correct = true;
+
+        for (var stmnt : ctx.statement()) {
+            var stmntType = visit(stmnt);
+            if (!stmntType.equals(VOID_TYPE)) {
+                correct = false;
+                if (stmntType.equals(ERROR_TYPE))
+                    logger.log(new ErrorLog(ctx,"Compiler error during type checking"));
+            }
+        }
+
+        var sysType = visit(ctx.system());
+        if (!sysType.equals(VOID_TYPE) && !sysType.equals(ERROR_TYPE))
+            logger.log(new ErrorLog(ctx, "Compiler error during type checking"));
+        return sysType.equals(VOID_TYPE) && correct ? VOID_TYPE : ERROR_TYPE;
+    }
+
+
+    //endregion
+
+    //region System
+
+    @Override
+    public Type visitSystem(UCELParser.SystemContext ctx) {
+        boolean success = true;
+
+        for (var expr : ctx.expression()) {
+            var exprRes = visit(expr);
+            if (!exprRes.equals(PROCESS_TYPE)) {
+                success = false;
+                if (!expr.equals(ERROR_TYPE))
+                    logger.log(new ErrorLog(ctx, "Expression in system must be of type process"));
+            }
+        }
+
+        return success ? VOID_TYPE : ERROR_TYPE;
+    }
+
+
+    //endregion
+    
+    //region function
+    @Override
+    public Type visitFunction(UCELParser.FunctionContext ctx) {
+        Type type = visit(ctx.type());
+        Type parameterType = visit(ctx.parameters());
+
+
+        if(type.equals(ERROR_TYPE) || parameterType.equals(ERROR_TYPE)) {
+            //No logging, passing through
+            return ERROR_TYPE;
+        }
+
+        DeclarationInfo declInfo = null;
+
+        try {
+            declInfo = currentScope.get(ctx.reference);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler error: " + e.getMessage()));
+            return ERROR_TYPE;
+        }
+
+        Type[] types = new Type[parameterType.getParameters().length + 1];
+
+        types[0] = type;
+        for(int i = 1; i < types.length; i++) {
+            types[i] = parameterType.getParameters()[i - 1];
+        }
+
+        declInfo.setType(new Type(Type.TypeEnum.functionType, types));
+
+        currentFunction = declInfo;
+
+        Type blockType = visit(ctx.block());
+
+        if(blockType.equals(type)){
             return VOID_TYPE;
         } else {
-            logger.log(new ErrorLog(ctx, "Type error: cannot assign " + rightType + " to " + leftType));
+            //No logging, should be noticed by return statement
             return ERROR_TYPE;
         }
+
     }
+    //endregion
 
     @Override
     public Type visitArrayDecl(UCELParser.ArrayDeclContext ctx) {
@@ -88,6 +163,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
     }
 
+    //region Parameters
     @Override
     public Type visitParameters(UCELParser.ParametersContext ctx) {
         List<Type> parameterTypes = new ArrayList<>();
@@ -101,6 +177,9 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         return new Type(Type.TypeEnum.voidType, parameterTypesArray);
     }
 
+    //endregion
+
+    //region Parameter
     @Override
     public Type visitParameter(UCELParser.ParameterContext ctx) {
         var type = visit(ctx.type());
@@ -115,57 +194,75 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         return parameterType;
     }
-
-    @Override
-    public Type visitTypeDecl(UCELParser.TypeDeclContext ctx) {
-        Type type = visit(ctx.type());
-
-        assert ctx.references.size() == ctx.arrayDeclID().size();
-        for (int i = 0; i < ctx.references.size(); i++) {
-
-            Type declType = visit(ctx.arrayDeclID(i));
-
-            if (declType == ERROR_TYPE) {
-                logger.log(new ErrorLog(ctx.arrayDeclID(i), "type error: declaration has type error"));
-            }
-
-            try {
-                getCurrentScope().get(ctx.references.get(i)).setType(declType);
-            } catch (Exception e) {
-                logger.log(new ErrorLog(ctx.arrayDeclID(i), "reference error: unable to get reference of variable"));
-            }
-        }
-
-        return type;
-    }
-
-    @Override
-    public Type visitFunction(UCELParser.FunctionContext ctx) {
-        try {
-            var funcRef = currentScope.find(ctx.ID().getText(), false);
-            var funcInfo = currentScope.get(funcRef);
-            currentFunction = funcInfo;
-            visit(ctx.parameters());
-            visit(ctx.block());
-            return funcInfo.getType();
-        } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "ID is not in scope, and function type information unavailable"));
-            return ERROR_TYPE;
-        }
-    }
+    //endregion
 
     //region Statements
+    @Override
+    public Type visitBlock(UCELParser.BlockContext ctx) {
+
+        Type commonType = null;
+        enterScope(ctx.scope);
+
+        for(UCELParser.LocalDeclarationContext ldc : ctx.localDeclaration()) {
+            Type declType = visit(ldc);
+            if(declType.equals(ERROR_TYPE))
+                commonType = declType;
+        }
+
+        if(commonType != null && commonType.equals(ERROR_TYPE)) {
+            //No logging just passing the error up
+            exitScope();
+            return ERROR_TYPE;
+        } else {
+            commonType = null;
+        }
+
+        boolean hasFoundError = false;
+        boolean hasFoundType = false;
+
+        for(UCELParser.StatementContext sc : ctx.statement()) {
+            Type statementType = visit(sc);
+            if (hasFoundType) {
+                exitScope();
+                logger.log(new ErrorLog(sc, "Unreachable code"));
+                return ERROR_TYPE;
+            }
+            if(!(hasFoundError)) {
+                if(statementType.equals(ERROR_TYPE)) {
+                    hasFoundError = true;
+                } else if(!statementType.equals(VOID_TYPE)) {
+                    hasFoundType = true;
+                    commonType = statementType;
+                }
+            }
+        }
+
+        exitScope();
+
+        if(hasFoundError) return ERROR_TYPE;
+        else if(commonType == null) return VOID_TYPE;
+        else return commonType;
+    }
 
     @Override
     public Type visitReturnStatement(UCELParser.ReturnStatementContext ctx) {
         var expression = ctx.expression();
         if (expression != null) {
             var expressionType = visit(expression);
-            if (currentFunction != null && expressionType == currentFunction.getType()) {
-                return expressionType;
-            } else {
+            if (currentFunction == null || currentFunction.getType().getEvaluationType() == null) {
+                logger.log(new ErrorLog(ctx, "Return statement only valid within function"));
+                return ERROR_TYPE;
+            }
+            Type funcType = currentFunction.getType();
+            if(funcType.getEvaluationType() != Type.TypeEnum.functionType ||
+                funcType.getParameters() == null || funcType.getParameters().length < 1) {
+                logger.log(new ErrorLog(ctx, "Compiler Error: Invalid type for function"));
+                return ERROR_TYPE;
+            } else if(!expressionType.equals(funcType.getParameters()[0])) {
                 logger.log(new ErrorLog(ctx, "Expression in return is of the wrong type"));
                 return ERROR_TYPE;
+            } else {
+                return expressionType;
             }
         } else {
             return VOID_TYPE;
@@ -221,7 +318,6 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         return visit(ctx.statement());
     }
 
-
     @Override
     public Type visitIteration(UCELParser.IterationContext ctx) {
         Type type = visit(ctx.type());
@@ -234,6 +330,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         try {
             currentScope.get(ctx.reference).setType(INT_TYPE);
         } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: reference not set"));
             return ERROR_TYPE;
         }
 
@@ -251,15 +348,18 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
 
         if (ctx.statement(1) != null) {
-            if (visit(ctx.statement(1)).equals(ERROR_TYPE))
+            if (visit(ctx.statement(1)).equals(ERROR_TYPE)) {
+                //No logging passing through
                 return ERROR_TYPE;
-            else if (visit(ctx.statement(1)).equals(VOID_TYPE))
+            } else if (visit(ctx.statement(1)).equals(VOID_TYPE))
                 return VOID_TYPE;
         }
         return visit(ctx.statement(0));
     }
 
     //endregion
+
+    //region Type
 
     @Override
     public Type visitType(UCELParser.TypeContext ctx) {
@@ -384,51 +484,50 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         return new Type(Type.TypeEnum.structType, fieldNames, fieldTypes);
     }
 
+    //endregion
+
+    //region Declarations
+
     @Override
-    public Type visitBlock(UCELParser.BlockContext ctx) {
+    public Type visitLocalDeclaration(UCELParser.LocalDeclarationContext ctx) {
+        Type t = null;
+        if(ctx.typeDecl() != null) t = visit(ctx.typeDecl());
+        if(ctx.variableDecl() != null) t = visit(ctx.variableDecl());
+        return t == null ? ERROR_TYPE : t;
+    }
 
-        Type commonType = null;
-        enterScope(ctx.scope);
+    @Override
+    public Type visitTypeDecl(UCELParser.TypeDeclContext ctx) {
+        Type type = visit(ctx.type());
 
-        for(UCELParser.LocalDeclarationContext ldc : ctx.localDeclaration()) {
-            Type declType = visit(ldc);
-            if(declType.equals(ERROR_TYPE))
-                commonType = declType;
+        assert ctx.references.size() == ctx.arrayDeclID().size();
+        for (int i = 0; i < ctx.references.size(); i++) {
+
+            Type declType = visit(ctx.arrayDeclID(i));
+
+            if (declType == ERROR_TYPE) {
+                logger.log(new ErrorLog(ctx.arrayDeclID(i), "type error: declaration has type error"));
+            }
+
+            try {
+                getCurrentScope().get(ctx.references.get(i)).setType(declType);
+            } catch (Exception e) {
+                logger.log(new ErrorLog(ctx.arrayDeclID(i), "reference error: unable to get reference of variable"));
+            }
         }
 
-        if(commonType != null && commonType.equals(ERROR_TYPE)) {
-            //No logging just passing the error up
-            exitScope();
-            return ERROR_TYPE;
+        return type;
+    }
+
+    @Override
+    public Type visitArrayDecl(UCELParser.ArrayDeclContext ctx) {
+        if (ctx.expression() != null) {
+            var elementType = visit(ctx.expression());
+            return new Type(elementType.getEvaluationType(), 1);
         } else {
-            commonType = null;
+            var elementType = visit(ctx.type());
+            return new Type(elementType.getEvaluationType(), 1);
         }
-
-        boolean hasFoundError = false;
-        boolean hasFoundType = false;
-
-        for(UCELParser.StatementContext sc : ctx.statement()) {
-            Type statementType = visit(sc);
-            if (hasFoundType) {
-                exitScope();
-                logger.log(new ErrorLog(sc, "Unreachable code"));
-                return ERROR_TYPE;
-            }
-            if(!(hasFoundError)) {
-                if(statementType.equals(ERROR_TYPE)) {
-                    hasFoundError = true;
-                } else if(!statementType.equals(VOID_TYPE)) {
-                    hasFoundType = true;
-                    commonType = statementType;
-                }
-            }
-        }
-
-        exitScope();
-
-        if(hasFoundError) return ERROR_TYPE;
-        else if(commonType == null) return VOID_TYPE;
-        else return commonType;
     }
 
     /**
@@ -562,16 +661,44 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         else return VOID_TYPE;
     }
 
+    //endregion
+
+    //region Expressions
+    @Override
+    public Type visitAssignExpr(UCELParser.AssignExprContext ctx) {
+        Type leftType = visit(ctx.expression(0));
+        Type rightType = visit(ctx.expression(1));
+
+        if (leftType.getEvaluationType() == Type.TypeEnum.errorType ||
+                rightType.getEvaluationType() == Type.TypeEnum.errorType ||
+                leftType.getEvaluationType() == Type.TypeEnum.chanType ||
+                rightType.getEvaluationType() == Type.TypeEnum.chanType ||
+                leftType.getEvaluationType() == Type.TypeEnum.voidType ||
+                rightType.getEvaluationType() == Type.TypeEnum.voidType ||
+                leftType.getEvaluationType() == Type.TypeEnum.invalidType ||
+                rightType.getEvaluationType() == Type.TypeEnum.invalidType) {
+            logger.log(new ErrorLog(ctx, "Type error: cannot assign " + rightType + " to " + leftType));
+            return ERROR_TYPE;
+        }
+
+        if (leftType.equals(rightType)) {
+            return VOID_TYPE;
+        } else {
+            logger.log(new ErrorLog(ctx, "Type error: cannot assign " + rightType + " to " + leftType));
+            return ERROR_TYPE;
+        }
+    }
+
     @Override
     public Type visitIdExpr(UCELParser.IdExprContext ctx) {
         try {
             var variable = currentScope.get(ctx.reference);
             return variable.getType();
         } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error, invalid reference"));
             return ERROR_TYPE;
         }
     }
-
 
     @Override
     public Type visitParen(UCELParser.ParenContext ctx) {
@@ -617,10 +744,13 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type arrayIndex = visit(ctx.expression(1));
 
         if (!isArray(arrayType)) {
+            logger.log(new ErrorLog(ctx.expression(0), "Expected an array type but found " + arrayType));
             return ERROR_TYPE;
         }
-        if (!(arrayIndex.getEvaluationType() == Type.TypeEnum.intType))
+        if (!(arrayIndex.getEvaluationType() == Type.TypeEnum.intType)) {
+            logger.log(new ErrorLog(ctx, arrayIndex + " cannot be used as array index, only an integer can"));
             return ERROR_TYPE;
+        }
 
         return arrayType;
     }
@@ -630,7 +760,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type type = visit(ctx.expression());
 
         if(type.equals(CLOCK_TYPE)) return CLOCK_TYPE;
-        else return ERROR_TYPE;
+        else {
+            logger.log(new ErrorLog(ctx.expression(), "Expected " + CLOCK_TYPE + " but found " + type));
+            return ERROR_TYPE;
+        }
     }
 
     @Override
@@ -779,26 +912,26 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         // Compare input parameter types
         Type[] declParams = funcType.getParameters();
-        String[] declNames = funcType.getParameterNames();
         Type[] argsParams = argsType.getParameters();
 
-        if(declParams.length != argsParams.length) {
+        if(declParams.length != argsParams.length + 1) {
             logger.log(new ErrorLog(ctx.arguments(), String.format("Function expected {0} arguments, but got {1}", declParams.length, argsParams.length)));
             return ERROR_TYPE;
         }
 
         boolean argsMismatch = false;
-        for (int i=0; i<declParams.length; i++) {
-            if(!declParams[i].equals(argsParams[i])) {
-                //Todo: Fix fancy logging (I think it's actually just the tests failing because of too tight mocking)
-                //logger.log(new ErrorLog(getArgumentsContexts(ctx.arguments())[i], String.format("Parameter {0} expected argument of type {1}, but got {2}", declNames[i], declParams[i], argsParams[i])));
+        for (int i = 0; i < argsParams.length; i++) {
+            if(!declParams[i + 1].equals(argsParams[i])) {
                 argsMismatch = true;
             }
         }
-        if(argsMismatch)
-            return ERROR_TYPE;
 
-        return funcType;
+        if(argsMismatch) {
+            logger.log(new ErrorLog(ctx, "Type " + argsParams + " given to a function "+ funcType));
+            return ERROR_TYPE;
+        }
+
+        return declParams[0];
     }
     //endregion
 
@@ -952,9 +1085,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type.TypeEnum leftEnum = left.getEvaluationType();
         Type.TypeEnum rightEnum = right.getEvaluationType();
 
-        if (leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType)
+        if (leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType) {
+            //No logging, passing through
             return ERROR_TYPE;
-        else if (leftEnum != Type.TypeEnum.boolType || rightEnum != Type.TypeEnum.boolType) {
+        } else if (leftEnum != Type.TypeEnum.boolType || rightEnum != Type.TypeEnum.boolType) {
             logger.log(new ErrorLog(ctx, leftEnum + " and " + rightEnum + " are unsupported for logical operator"));
             return ERROR_TYPE;
         } else if (isArray(left) || isArray(right)) {
@@ -988,6 +1122,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         // Type Coercion
         return intDoubleBinaryOp(ctx, leftValType, rightValType);
     }
+
+    //endregion
 
     //endregion
 

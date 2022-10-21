@@ -27,12 +27,88 @@ import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.stringtemplate.v4.ST;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
+import static org.mockito.Mockito.*;
 
 
 public class CodeGenTests {
+
+    //region Start
+    @Test
+    void startDeclarationSystemGeneratedCorrectly() {
+        var declTemplate = generateDefaultDeclarationTemplate("a", "1");
+        var sysTemplate = generateDefaultSystemTemplate("B");
+
+        var expected = String.format("%s%s", declTemplate, sysTemplate);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
+        var sysNode = mockForVisitorResult(UCELParser.SystemContext.class, sysTemplate, visitor);
+
+        when(node.declarations()).thenReturn(declNode);
+        when(node.system()).thenReturn(sysNode);
+
+        var actual = visitor.visitStart(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void startOneStatementGeneratedCorrectly() {
+        var declTemplate = generateDefaultDeclarationTemplate("a", "1");
+        var stmnt1Template = generateDefaultStatementTemplate();
+        var sysTemplate = generateDefaultSystemTemplate("B");
+
+        var expected = String.format("%s%s%n%s", declTemplate, stmnt1Template,  sysTemplate);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
+        var stmnt1Node = mockForVisitorResult(UCELParser.StatementContext.class, stmnt1Template, visitor);
+        var sysNode = mockForVisitorResult(UCELParser.SystemContext.class, sysTemplate, visitor);
+
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1Node); }};
+
+        when(node.declarations()).thenReturn(declNode);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(sysNode);
+
+        var actual = visitor.visitStart(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void startMultipleStatementsGeneratedCorrectly() {
+        var declTemplate = generateDefaultDeclarationTemplate("a", "1");
+        var stmnt1Template = generateDefaultStatementTemplate();
+        var stmnt2Template = generateDefaultStatementTemplate();
+        var sysTemplate = generateDefaultSystemTemplate("B");
+
+        var expected = String.format("%s%s%n%s%n%s", declTemplate, stmnt1Template, stmnt2Template, sysTemplate);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
+        var stmnt1Node = mockForVisitorResult(UCELParser.StatementContext.class, stmnt1Template, visitor);
+        var stmnt2Node = mockForVisitorResult(UCELParser.StatementContext.class, stmnt2Template, visitor);
+        var sysNode = mockForVisitorResult(UCELParser.SystemContext.class, sysTemplate, visitor);
+
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1Node); add(stmnt2Node); }};
+
+        when(node.declarations()).thenReturn(declNode);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(sysNode);
+
+        var actual = visitor.visitStart(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
 
     //region Function
 
@@ -208,12 +284,12 @@ public class CodeGenTests {
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
-        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
 
         var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.InstantiationContext.class);
-        node.references = declarationReferences;
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
 
         String actual = visitor.visitInstantiation(node).toString();
 
@@ -241,13 +317,13 @@ public class CodeGenTests {
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
-        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
 
         var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.InstantiationContext.class);
         var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
-        node.references = declarationReferences;
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
         when(node.LEFTPAR()).thenReturn(parMocks);
 
         String actual = visitor.visitInstantiation(node).toString();
@@ -277,14 +353,13 @@ public class CodeGenTests {
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
-        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
-
         var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.InstantiationContext.class);
         var paramMock = mockForVisitorResult(UCELParser.ParametersContext.class, paramTemplate, visitor);
         var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
-        node.references = declarationReferences;
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
         when(node.LEFTPAR()).thenReturn(parMocks);
         when(node.parameters()).thenReturn(paramMock);
 
@@ -315,13 +390,12 @@ public class CodeGenTests {
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
-        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
-
         var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.InstantiationContext.class);
         var argMock = mockForVisitorResult(UCELParser.ArgumentsContext.class, argTemplate, visitor);
-        node.references = declarationReferences;
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
         when(node.arguments()).thenReturn(argMock);
 
         String actual = visitor.visitInstantiation(node).toString();
@@ -351,14 +425,14 @@ public class CodeGenTests {
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
-        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
 
         var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.InstantiationContext.class);
         var argMock = mockForVisitorResult(UCELParser.ArgumentsContext.class, argTemplate, visitor);
         var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
-        node.references = declarationReferences;
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
         when(node.LEFTPAR()).thenReturn(parMocks);
         when(node.arguments()).thenReturn(argMock);
 
@@ -390,15 +464,14 @@ public class CodeGenTests {
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
-        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
-
         var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.InstantiationContext.class);
         var paramMock = mockForVisitorResult(UCELParser.ParametersContext.class, paramTemplate, visitor);
         var argMock = mockForVisitorResult(UCELParser.ArgumentsContext.class, argTemplate, visitor);
         var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
-        node.references = declarationReferences;
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
         when(node.LEFTPAR()).thenReturn(parMocks);
         when(node.parameters()).thenReturn(paramMock);
         when(node.arguments()).thenReturn(argMock);
@@ -856,7 +929,7 @@ public class CodeGenTests {
     @ValueSource(strings = {"+", "-", "not ", "!"})
     void unaryGeneratedCorrectly(String expected) {
         var node = mock(UCELParser.UnaryContext.class);
-        when(node.getText()).thenReturn(expected);
+        when(node.getText()).thenReturn(expected.replace(" ", ""));
 
         var visitor = new CodeGenVisitor();
         var actual = visitor.visitUnary(node).toString();
@@ -3105,6 +3178,14 @@ public class CodeGenTests {
             case stringType -> new ManualTemplate("\"abc\"");
             default -> new ManualTemplate("");
         };
+    }
+
+    private Template generateDefaultDeclarationTemplate(String id, String expr) {
+        return new ManualTemplate(String.format("%s\n", generateDefaultVariableDeclTemplate(id, expr)));
+    }
+
+    private Template generateDefaultSystemTemplate(String id) {
+        return new ManualTemplate(String.format("system %s", id));
     }
 
     private Template generateEmptyExprTemplate() {

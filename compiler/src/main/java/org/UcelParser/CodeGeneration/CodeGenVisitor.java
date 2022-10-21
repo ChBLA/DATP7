@@ -33,6 +33,25 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
 
+    //region Start
+
+    @Override
+    public Template visitStart(UCELParser.StartContext ctx) {
+        var declTemplate = visit(ctx.declarations());
+        var stmnts = new ArrayList<Template>();
+
+        for (var stmnt : ctx.statement()) {
+            stmnts.add(visit(stmnt));
+        }
+
+        var sysTemplate = visit(ctx.system());
+
+        return new StartTemplate(declTemplate, stmnts, sysTemplate);
+    }
+
+
+    //endregion
+
     //region Function
 
     @Override
@@ -97,8 +116,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         var ID1 = "";
         var ID2 = "";
         try {
-            ID1 = currentScope.get(ctx.references.get(0)).generateName();
-            ID2 = currentScope.get(ctx.references.get(1)).generateName();
+            ID1 = currentScope.get(ctx.instantiatedReference).generateName();
+            ID2 = currentScope.get(ctx.constructorReference).generateName();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -180,7 +199,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitUnary(UCELParser.UnaryContext ctx) {
-        return new ManualTemplate(ctx.getText());
+        return new ManualTemplate(ctx.getText() + (!ctx.getText().equals("not") ? "" : " "));
     }
 
     //endregion
