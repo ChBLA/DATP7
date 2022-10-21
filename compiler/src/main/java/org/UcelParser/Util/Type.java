@@ -18,7 +18,8 @@ public class Type {
         structType,
         processType,
         voidType,
-        errorType, invalidType;
+        errorType, invalidType,
+        functionType,
     }
 
     private TypeEnum evaluationType;
@@ -128,7 +129,25 @@ public class Type {
 
     @Override
     public String toString() {
-        return "Type: " + (prefix != TypePrefixEnum.noPrefix ? prefix : "") + " " + evaluationType.toString();
+        StringBuilder s = new StringBuilder((prefix != TypePrefixEnum.noPrefix ? prefix  + " " : "") + evaluationType.toString());
+        if(evaluationType == TypeEnum.structType) {
+            s.append("{ ");
+            if(parameters != null) {
+                for (Type t : parameters)
+                    s.append(t);
+             } else s.append("_");
+            s.append(s +" }");
+        } else if (evaluationType == TypeEnum.functionType) {
+            s.append( ": (");
+            if(parameters != null) {
+                for (int i = 1; i < parameters.length; i++)
+                    s.append((i > 1 ? ", " : "") + parameters[i]);
+                s.append(") -> " + parameters[0]);
+            } else {
+                s.append("_) -> _");
+            }
+        }
+        return "[]".repeat(arrayDimensions);
     }
 
 }
