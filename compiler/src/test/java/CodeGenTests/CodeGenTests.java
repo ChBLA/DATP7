@@ -208,12 +208,12 @@ public class CodeGenTests {
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
-        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
 
         var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.InstantiationContext.class);
-        node.references = declarationReferences;
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
 
         String actual = visitor.visitInstantiation(node).toString();
 
@@ -241,13 +241,13 @@ public class CodeGenTests {
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
-        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
 
         var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.InstantiationContext.class);
         var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
-        node.references = declarationReferences;
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
         when(node.LEFTPAR()).thenReturn(parMocks);
 
         String actual = visitor.visitInstantiation(node).toString();
@@ -277,14 +277,13 @@ public class CodeGenTests {
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
-        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
-
         var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.InstantiationContext.class);
         var paramMock = mockForVisitorResult(UCELParser.ParametersContext.class, paramTemplate, visitor);
         var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
-        node.references = declarationReferences;
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
         when(node.LEFTPAR()).thenReturn(parMocks);
         when(node.parameters()).thenReturn(paramMock);
 
@@ -315,13 +314,12 @@ public class CodeGenTests {
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
-        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
-
         var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.InstantiationContext.class);
         var argMock = mockForVisitorResult(UCELParser.ArgumentsContext.class, argTemplate, visitor);
-        node.references = declarationReferences;
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
         when(node.arguments()).thenReturn(argMock);
 
         String actual = visitor.visitInstantiation(node).toString();
@@ -351,14 +349,14 @@ public class CodeGenTests {
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
-        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
 
         var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.InstantiationContext.class);
         var argMock = mockForVisitorResult(UCELParser.ArgumentsContext.class, argTemplate, visitor);
         var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
-        node.references = declarationReferences;
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
         when(node.LEFTPAR()).thenReturn(parMocks);
         when(node.arguments()).thenReturn(argMock);
 
@@ -390,15 +388,14 @@ public class CodeGenTests {
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
-        List<DeclarationReference> declarationReferences = new ArrayList<>() {{ add(ref1Mock); add(ref2Mock); }};
-
         var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.InstantiationContext.class);
         var paramMock = mockForVisitorResult(UCELParser.ParametersContext.class, paramTemplate, visitor);
         var argMock = mockForVisitorResult(UCELParser.ArgumentsContext.class, argTemplate, visitor);
         var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
-        node.references = declarationReferences;
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
         when(node.LEFTPAR()).thenReturn(parMocks);
         when(node.parameters()).thenReturn(paramMock);
         when(node.arguments()).thenReturn(argMock);

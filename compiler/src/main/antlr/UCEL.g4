@@ -33,7 +33,7 @@ elif : ELSE IF;
 interface_decl : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;
 interfaceVarDecl : type arrayDeclID (COMMA type arrayDeclID)*;
 
-instantiation locals [List<DeclarationReference> references]
+instantiation locals [Scope scope, DeclarationReference instantiatedReference, DeclarationReference constructorReference]
     : ID ( LEFTPAR parameters? RIGHTPAR )? '=' ID LEFTPAR arguments? RIGHTPAR END;
 progressDecl  : PROGRESS LEFTCURLYBRACE ( expression? END )* RIGHTCURLYBRACE;
 

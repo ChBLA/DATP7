@@ -97,8 +97,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         var ID1 = "";
         var ID2 = "";
         try {
-            ID1 = currentScope.get(ctx.references.get(0)).generateName();
-            ID2 = currentScope.get(ctx.references.get(1)).generateName();
+            ID1 = currentScope.get(ctx.instantiatedReference).generateName();
+            ID2 = currentScope.get(ctx.constructorReference).generateName();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
