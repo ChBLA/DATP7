@@ -856,7 +856,7 @@ public class CodeGenTests {
     @ValueSource(strings = {"+", "-", "not ", "!"})
     void unaryGeneratedCorrectly(String expected) {
         var node = mock(UCELParser.UnaryContext.class);
-        when(node.getText()).thenReturn(expected);
+        when(node.getText()).thenReturn(expected.replace(" ", ""));
 
         var visitor = new CodeGenVisitor();
         var actual = visitor.visitUnary(node).toString();
