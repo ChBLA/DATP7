@@ -180,7 +180,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitUnary(UCELParser.UnaryContext ctx) {
-        return new ManualTemplate(ctx.getText());
+        return new ManualTemplate(ctx.getText() + (!ctx.getText().equals("not") ? "" : " "));
     }
 
     //endregion
