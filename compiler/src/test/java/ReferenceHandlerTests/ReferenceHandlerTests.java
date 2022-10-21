@@ -6,6 +6,7 @@ import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.DeclarationReference;
 import org.UcelParser.Util.FuncCallOccurrence;
 import org.UcelParser.Util.Scope;
+import org.antlr.v4.codegen.model.decl.Decl;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -227,6 +228,210 @@ public class ReferenceHandlerTests {
         verify(expr2, times(1)).accept(visitor);
         assertTrue(actual);
     }
+    //endregion
+
+    //region instantiation
+
+    @Test
+    void instantiationSetsInstantiationRef() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String instantiationIdentifier = "f", constructorIdentifier = "c";
+
+        UCELParser.InstantiationContext node = mock(UCELParser.InstantiationContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.ArgumentsContext arguments = mock(UCELParser.ArgumentsContext.class);
+        TerminalNode instantiationID = mock(TerminalNode.class);
+        TerminalNode constructorID = mock(TerminalNode.class);
+        ArrayList<TerminalNode> ids = new ArrayList<>();
+        ids.add(instantiationID);
+        ids.add(constructorID);
+
+        when(node.ID()).thenReturn(ids);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.arguments()).thenReturn(arguments);
+        when(instantiationID.getText()).thenReturn(instantiationIdentifier);
+        when(constructorID.getText()).thenReturn(constructorIdentifier);
+
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(arguments.accept(visitor)).thenReturn(true);
+
+        DeclarationReference instantiationReference = new DeclarationReference(0,0);
+        DeclarationReference constructorReference = new DeclarationReference(0,0);
+
+        try{
+            when(scope.isUnique(instantiationIdentifier, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(instantiationReference);
+            when(scope.find(constructorIdentifier, false)).thenReturn(constructorReference);
+        } catch (Exception e) {
+            fail();
+        }
+
+        visitor.visitInstantiation(node);
+
+        assertEquals(instantiationReference, node.instantiatedReference);
+    }
+
+    @Test
+    void instantiationSetsConstructorRef() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String instantiationIdentifier = "f", constructorIdentifier = "c";
+
+        UCELParser.InstantiationContext node = mock(UCELParser.InstantiationContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.ArgumentsContext arguments = mock(UCELParser.ArgumentsContext.class);
+        TerminalNode instantiationID = mock(TerminalNode.class);
+        TerminalNode constructorID = mock(TerminalNode.class);
+        ArrayList<TerminalNode> ids = new ArrayList<>();
+        ids.add(instantiationID);
+        ids.add(constructorID);
+
+        when(node.ID()).thenReturn(ids);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.arguments()).thenReturn(arguments);
+        when(instantiationID.getText()).thenReturn(instantiationIdentifier);
+        when(constructorID.getText()).thenReturn(constructorIdentifier);
+
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(arguments.accept(visitor)).thenReturn(true);
+
+        DeclarationReference instantiationReference = new DeclarationReference(0,0);
+        DeclarationReference constructorReference = new DeclarationReference(0,0);
+
+        try{
+            when(scope.isUnique(instantiationIdentifier, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(instantiationReference);
+            when(scope.find(constructorIdentifier, false)).thenReturn(constructorReference);
+        } catch (Exception e) {
+            fail();
+        }
+
+        visitor.visitInstantiation(node);
+
+        assertEquals(constructorReference, node.constructorReference);
+    }
+
+    @Test
+    void instantiationSetsScope() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String instantiationIdentifier = "f", constructorIdentifier = "c";
+
+        UCELParser.InstantiationContext node = mock(UCELParser.InstantiationContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.ArgumentsContext arguments = mock(UCELParser.ArgumentsContext.class);
+        TerminalNode instantiationID = mock(TerminalNode.class);
+        TerminalNode constructorID = mock(TerminalNode.class);
+        ArrayList<TerminalNode> ids = new ArrayList<>();
+        ids.add(instantiationID);
+        ids.add(constructorID);
+
+        when(node.ID()).thenReturn(ids);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.arguments()).thenReturn(arguments);
+        when(instantiationID.getText()).thenReturn(instantiationIdentifier);
+        when(constructorID.getText()).thenReturn(constructorIdentifier);
+
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(arguments.accept(visitor)).thenReturn(true);
+
+        DeclarationReference instantiationReference = new DeclarationReference(0,0);
+        DeclarationReference constructorReference = new DeclarationReference(0,0);
+
+        try{
+            when(scope.isUnique(instantiationIdentifier, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(instantiationReference);
+            when(scope.find(constructorIdentifier, false)).thenReturn(constructorReference);
+        } catch (Exception e) {
+            fail();
+        }
+
+        visitor.visitInstantiation(node);
+
+        assertTrue(node.scope instanceof Scope);
+    }
+
+    @Test
+    void instantiationVisitsParameters() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String instantiationIdentifier = "f", constructorIdentifier = "c";
+
+        UCELParser.InstantiationContext node = mock(UCELParser.InstantiationContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.ArgumentsContext arguments = mock(UCELParser.ArgumentsContext.class);
+        TerminalNode instantiationID = mock(TerminalNode.class);
+        TerminalNode constructorID = mock(TerminalNode.class);
+        ArrayList<TerminalNode> ids = new ArrayList<>();
+        ids.add(instantiationID);
+        ids.add(constructorID);
+
+        when(node.ID()).thenReturn(ids);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.arguments()).thenReturn(arguments);
+        when(instantiationID.getText()).thenReturn(instantiationIdentifier);
+        when(constructorID.getText()).thenReturn(constructorIdentifier);
+
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(arguments.accept(visitor)).thenReturn(true);
+
+        DeclarationReference instantiationReference = new DeclarationReference(0,0);
+        DeclarationReference constructorReference = new DeclarationReference(0,0);
+
+        try{
+            when(scope.isUnique(instantiationIdentifier, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(instantiationReference);
+            when(scope.find(constructorIdentifier, false)).thenReturn(constructorReference);
+        } catch (Exception e) {
+            fail();
+        }
+
+        visitor.visitInstantiation(node);
+
+        verify(parameters, times(1)).accept(visitor);
+    }
+
+    @Test
+    void instantiationVisitsArgiments() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String instantiationIdentifier = "f", constructorIdentifier = "c";
+
+        UCELParser.InstantiationContext node = mock(UCELParser.InstantiationContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.ArgumentsContext arguments = mock(UCELParser.ArgumentsContext.class);
+        TerminalNode instantiationID = mock(TerminalNode.class);
+        TerminalNode constructorID = mock(TerminalNode.class);
+        ArrayList<TerminalNode> ids = new ArrayList<>();
+        ids.add(instantiationID);
+        ids.add(constructorID);
+
+        when(node.ID()).thenReturn(ids);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.arguments()).thenReturn(arguments);
+        when(instantiationID.getText()).thenReturn(instantiationIdentifier);
+        when(constructorID.getText()).thenReturn(constructorIdentifier);
+
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(arguments.accept(visitor)).thenReturn(true);
+
+        DeclarationReference instantiationReference = new DeclarationReference(0,0);
+        DeclarationReference constructorReference = new DeclarationReference(0,0);
+
+        try{
+            when(scope.isUnique(instantiationIdentifier, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(instantiationReference);
+            when(scope.find(constructorIdentifier, false)).thenReturn(constructorReference);
+        } catch (Exception e) {
+            fail();
+        }
+
+        visitor.visitInstantiation(node);
+
+        verify(arguments, times(1)).accept(visitor);
+    }
+
     //endregion
 
     //region parameters
