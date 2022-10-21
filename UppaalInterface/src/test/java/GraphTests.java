@@ -17,63 +17,48 @@ public class GraphTests {
     @Test
     public void AddGetLocation() {
         Graph graph = new Graph();
-        String id = "sfdkls";
-        ILocation loc = makeLocation(id);
 
-        graph.putLocation(loc);
+        ILocation loc = new Location();
 
-        assertEquals(loc, graph.getLocation(id));
+        graph.addLocation(loc);
+
+        assertEquals(loc, graph.getLocations().get(0));
     }
 
     @Test
     public void AddGetEdgeSuccess() {
         Graph graph = new Graph();
-        String startId = "slkjsgdf";
-        String endId = "lkfhgkl";
-        String edgeId = "dsfgdf";
 
-        ILocation start = makeLocation(startId);
-        ILocation end = makeLocation(endId);
+        ILocation start = new Location();
+        ILocation end = new Location();
 
-        graph.putLocation(start);
-        graph.putLocation(end);
+        graph.addLocation(start);
+        graph.addLocation(end);
 
         Edge edge = new Edge();
-        edge.setId(edgeId);
-        edge.setLocationIdStart(startId);
-        edge.setLocationIdEnd(endId);
+        edge.setLocationStart(start);
+        edge.setLocationEnd(end);
 
-        graph.putEdge(edge);
+        graph.AddEdge(edge);
 
-        assertEquals(edge, graph.getEdge(edgeId));
+        assertEquals(edge, graph.getEdges().get(0));
     }
 
     @Test
     public void AddEdgeFail() {
         Graph graph = new Graph();
-        String startId = "slkjsgdf";
-        String endId = "lkfhgkl";
-        String edgeId = "dsfgdf";
 
         Edge edge = new Edge();
-        edge.setId(edgeId);
-        edge.setLocationIdStart(startId);
-        edge.setLocationIdEnd(endId);
+        edge.setLocationStart(new Location());
+        edge.setLocationEnd(new Location());
 
-        assertThrows(KeyNotFoundException.class, new Executable() {
+        assertThrows(IllegalArgumentException.class, new Executable() {
 
             @Override
             public void execute() throws Throwable {
-                graph.putEdge(edge);
+                graph.AddEdge(edge);
             }
         });
-    }
-
-    private ILocation makeLocation(String id) {
-        Location loc = new Location();
-        loc.setId(id);
-
-        return loc;
     }
 }
 

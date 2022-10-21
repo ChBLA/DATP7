@@ -49,6 +49,161 @@ public class TypeCheckerTests  {
     private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
 
+    //region Start
+    @ParameterizedTest
+    @MethodSource("systemFaultyTypes")
+    void startDeclarationsReturnsErrorRestAreNotVisited(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mockForVisitorResult(UCELParser.DeclarationsContext.class, type, visitor);
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+        var system = mockForVisitorResult(UCELParser.SystemContext.class, VOID_TYPE, visitor);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt); }};
+
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(system);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt, never()).accept(visitor);
+        verify(system, never()).accept(visitor);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("systemFaultyTypes")
+    void startFirstStatementFailsRestAreVisited(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
+        var stmnt1 = mockForVisitorResult(UCELParser.StatementContext.class, type, visitor);
+        var stmnt2 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+        var system = mockForVisitorResult(UCELParser.SystemContext.class, VOID_TYPE, visitor);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(system);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt1, times(1)).accept(visitor);
+        verify(stmnt2, times(1)).accept(visitor);
+        verify(system, times(1)).accept(visitor);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("systemFaultyTypes")
+    void startSecondStatementFailsRestAreVisited(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
+        var stmnt1 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+        var stmnt2 = mockForVisitorResult(UCELParser.StatementContext.class, type, visitor);
+        var system = mockForVisitorResult(UCELParser.SystemContext.class, VOID_TYPE, visitor);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(system);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt1, times(1)).accept(visitor);
+        verify(stmnt2, times(1)).accept(visitor);
+        verify(system, times(1)).accept(visitor);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("systemFaultyTypes")
+    void startSystemFails(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
+        var stmnt1 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+        var stmnt2 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+        var system = mockForVisitorResult(UCELParser.SystemContext.class, type, visitor);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(system);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt1, times(1)).accept(visitor);
+        verify(stmnt2, times(1)).accept(visitor);
+        verify(system, times(1)).accept(visitor);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void systemAllSucceed() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
+        var stmnt1 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+        var stmnt2 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+        var system = mockForVisitorResult(UCELParser.SystemContext.class, VOID_TYPE, visitor);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(system);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt1, times(1)).accept(visitor);
+        verify(stmnt2, times(1)).accept(visitor);
+        verify(system, times(1)).accept(visitor);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> systemFaultyTypes() {
+        var args = new ArrayList<Arguments>();
+
+        for (var type : Type.TypeEnum.values()) {
+            if (type != Type.TypeEnum.voidType)
+                args.add(Arguments.of(new Type(type)));
+        }
+
+        return args.stream();
+    }
+
+    //endregion
+
+    //region System
+
+    //endregion
+
     //region TypeDecl
     @Test
     void typeDeclSetsType() {

@@ -1,5 +1,7 @@
 import org.Ucel.Edge;
 import org.Ucel.IEdge;
+import org.Ucel.ILocation;
+import org.Ucel.Location;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -12,9 +14,6 @@ public class EdgeTests {
     public void ctor() {
         IEdge edge = new Edge();
 
-        assertNotNull(edge.getId());
-        assertNotNull(edge.getLocationIdStart());
-        assertNotNull(edge.getLocationIdEnd());
         assertNotNull(edge.getSelect());
         assertNotNull(edge.getGuard());
         assertNotNull(edge.getSync());
@@ -22,11 +21,11 @@ public class EdgeTests {
         assertNotNull(edge.getComment());
         assertNotNull(edge.getTestCode());
     }
+
     @Test
     public void ctorParameterized() {
-        String id = "asd";
-        String locationIdStart = "gdf";
-        String locationIdEnd = "adgf";
+        ILocation locationStart = new Location();
+        ILocation locationEnd = new Location();
         String select = "jhsgf";
         String guard = "jkhsgn";
         String sync = "<segczfb";
@@ -34,11 +33,10 @@ public class EdgeTests {
         String comment = "kdgh";
         String testCode = "<aser";
 
-        IEdge edge = new Edge(id, locationIdStart, locationIdEnd, select, guard, sync, update, comment, testCode);
+        IEdge edge = new Edge(locationStart, locationEnd, select, guard, sync, update, comment, testCode);
 
-        assertEquals(id, edge.getId());
-        assertEquals(locationIdStart, edge.getLocationIdStart());
-        assertEquals(locationIdEnd, edge.getLocationIdEnd());
+        assertEquals(locationStart, edge.getLocationStart());
+        assertEquals(locationEnd, edge.getLocationEnd());
         assertEquals(select, edge.getSelect());
         assertEquals(guard, edge.getGuard());
         assertEquals(sync, edge.getSync());
@@ -47,31 +45,24 @@ public class EdgeTests {
         assertEquals(testCode, edge.getTestCode());
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"sdfgsfdghhsf", "hsdfghfdg"})
-    public void Id(String value) {
+    @Test
+    public void LocationStart() {
         Edge edge = new Edge();
 
-        edge.setId(value);
-        assertEquals(value, edge.getId());
+        ILocation value = new Location();
+
+        edge.setLocationStart(value);
+        assertEquals(value, edge.getLocationStart());
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"sdfgsfdghhsf", "hsdfghfdg"})
-    public void LocationIdStart(String value) {
+    @Test
+    public void LocationEnd() {
         Edge edge = new Edge();
 
-        edge.setLocationIdStart(value);
-        assertEquals(value, edge.getLocationIdStart());
-    }
+        ILocation value = new Location();
 
-    @ParameterizedTest
-    @ValueSource(strings = {"sdfgsfdghhsf", "hsdfghfdg"})
-    public void LocationIdEnd(String value) {
-        Edge edge = new Edge();
-
-        edge.setLocationIdEnd(value);
-        assertEquals(value, edge.getLocationIdEnd());
+        edge.setLocationEnd(value);
+        assertEquals(value, edge.getLocationEnd());
     }
 
     @ParameterizedTest

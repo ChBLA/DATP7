@@ -22,6 +22,213 @@ import static org.mockito.Mockito.*;
 
 public class ReferenceHandlerTests {
 
+    //region start
+    @Test
+    void startVisitsDeclarationsAndSystem() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mock(UCELParser.DeclarationsContext.class);
+        var systemNode = mock(UCELParser.SystemContext.class);
+
+        when(decls.accept(visitor)).thenReturn(true);
+        when(systemNode.accept(visitor)).thenReturn(true);
+        when(node.declarations()).thenReturn(decls);
+        when(node.system()).thenReturn(systemNode);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(systemNode, times(1)).accept(visitor);
+        assertTrue(actual);
+    }
+
+    @Test
+    void startVisitsDeclarationsButThenStops() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mock(UCELParser.DeclarationsContext.class);
+        var systemNode = mock(UCELParser.SystemContext.class);
+        var stmnt = mock(UCELParser.StatementContext.class);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt); }};
+
+        when(decls.accept(visitor)).thenReturn(false);
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(systemNode);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt, never()).accept(visitor);
+        verify(systemNode, never()).accept(visitor);
+        assertFalse(actual);
+    }
+
+    @Test
+    void startVisitsOneStatementButThenStops() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mock(UCELParser.DeclarationsContext.class);
+        var systemNode = mock(UCELParser.SystemContext.class);
+        var stmnt1 = mock(UCELParser.StatementContext.class);
+        var stmnt2 = mock(UCELParser.StatementContext.class);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+
+        when(decls.accept(visitor)).thenReturn(true);
+        when(stmnt1.accept(visitor)).thenReturn(false);
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(systemNode);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt1, times(1)).accept(visitor);
+        verify(stmnt2, never()).accept(visitor);
+        verify(systemNode, never()).accept(visitor);
+        assertFalse(actual);
+    }
+
+    @Test
+    void startVisitsAllStatementButSystemFails() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mock(UCELParser.DeclarationsContext.class);
+        var systemNode = mock(UCELParser.SystemContext.class);
+        var stmnt1 = mock(UCELParser.StatementContext.class);
+        var stmnt2 = mock(UCELParser.StatementContext.class);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+
+        when(decls.accept(visitor)).thenReturn(true);
+        when(stmnt1.accept(visitor)).thenReturn(true);
+        when(stmnt2.accept(visitor)).thenReturn(true);
+        when(systemNode.accept(visitor)).thenReturn(false);
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(systemNode);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt1, times(1)).accept(visitor);
+        verify(stmnt2, times(1)).accept(visitor);
+        verify(systemNode, times(1)).accept(visitor);
+        assertFalse(actual);
+    }
+
+    void startVisitsAllAndSucceeds() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mock(UCELParser.DeclarationsContext.class);
+        var systemNode = mock(UCELParser.SystemContext.class);
+        var stmnt1 = mock(UCELParser.StatementContext.class);
+        var stmnt2 = mock(UCELParser.StatementContext.class);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+
+        when(decls.accept(visitor)).thenReturn(true);
+        when(stmnt1.accept(visitor)).thenReturn(true);
+        when(stmnt2.accept(visitor)).thenReturn(true);
+        when(systemNode.accept(visitor)).thenReturn(true);
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(systemNode);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt1, times(1)).accept(visitor);
+        verify(stmnt2, never()).accept(visitor);
+        verify(systemNode, never()).accept(visitor);
+        assertTrue(actual);
+    }
+    //endregion
+
+    //region system
+    @Test
+    void systemFirstExprSucceeds() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr = mock(UCELParser.ExpressionContext.class);
+
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr); }};
+
+        when(expr.accept(visitor)).thenReturn(true);
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        verify(expr, times(1)).accept(visitor);
+        assertTrue(actual);
+    }
+    @Test
+    void systemFirstExprFailsSecondNotVisited() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1 = mock(UCELParser.ExpressionContext.class);
+        var expr2 = mock(UCELParser.ExpressionContext.class);
+
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1); add(expr2); }};
+
+        when(expr1.accept(visitor)).thenReturn(false);
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        verify(expr1, times(1)).accept(visitor);
+        verify(expr2, never()).accept(visitor);
+        assertFalse(actual);
+    }
+
+    @Test
+    void systemSecondExprFails() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1 = mock(UCELParser.ExpressionContext.class);
+        var expr2 = mock(UCELParser.ExpressionContext.class);
+
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1); add(expr2); }};
+
+        when(expr1.accept(visitor)).thenReturn(true);
+        when(expr2.accept(visitor)).thenReturn(false);
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        verify(expr1, times(1)).accept(visitor);
+        verify(expr2, times(1)).accept(visitor);
+        assertFalse(actual);
+    }
+
+    @Test
+    void systemAllExprsSucceed() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1 = mock(UCELParser.ExpressionContext.class);
+        var expr2 = mock(UCELParser.ExpressionContext.class);
+
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1); add(expr2); }};
+
+        when(expr1.accept(visitor)).thenReturn(true);
+        when(expr2.accept(visitor)).thenReturn(true);
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        verify(expr1, times(1)).accept(visitor);
+        verify(expr2, times(1)).accept(visitor);
+        assertTrue(actual);
+    }
+    //endregion
+
     //region parameters
 
     @Test
