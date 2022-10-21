@@ -277,6 +277,38 @@ public class TypeCheckerTests  {
 //    }
     //endregion
 
+    //region LocalDecl
+
+    @Test
+    void localDeclarationVisitsVariableDecl() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+
+        UCELParser.LocalDeclarationContext node = mock(UCELParser.LocalDeclarationContext.class);
+        UCELParser.VariableDeclContext varDecl = mock(UCELParser.VariableDeclContext.class);
+        when(node.variableDecl()).thenReturn(varDecl);
+        when(varDecl.accept(visitor)).thenReturn(VOID_TYPE);
+
+        visitor.visitLocalDeclaration(node);
+
+        verify(varDecl, times(1)).accept(visitor);
+    }
+
+    @Test
+    void localDeclarationVisitsTypeDecl() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+
+        UCELParser.LocalDeclarationContext node = mock(UCELParser.LocalDeclarationContext.class);
+        UCELParser.TypeDeclContext typeDecl = mock(UCELParser.TypeDeclContext.class);
+        when(node.typeDecl()).thenReturn(typeDecl);
+        when(typeDecl.accept(visitor)).thenReturn(VOID_TYPE);
+
+        visitor.visitLocalDeclaration(node);
+
+        verify(typeDecl, times(1)).accept(visitor);
+    }
+
+    //endregion
+
     //region Assignment
 
     @Test

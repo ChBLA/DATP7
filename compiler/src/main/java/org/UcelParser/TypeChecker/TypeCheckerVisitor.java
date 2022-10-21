@@ -56,10 +56,11 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitStart(UCELParser.StartContext ctx) {
         var declType = visit(ctx.declarations());
-        if (declType.equals(ERROR_TYPE))
+        if (declType.equals(ERROR_TYPE)) {
+            //No logging, passing through
             return ERROR_TYPE;
-        else if (!declType.equals(VOID_TYPE)) {
-            //log error
+        } else if (!declType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx.declarations(), "Compiler Error, unexpected type of declarations: " + declType));
             return ERROR_TYPE;
         }
 
@@ -120,6 +121,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if(blockType.equals(type)){
             return VOID_TYPE;
         } else {
+            //No logging, should be noticed by return statement
             return ERROR_TYPE;
         }
 
@@ -263,6 +265,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         try {
             currentScope.get(ctx.reference).setType(INT_TYPE);
         } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: reference not set"));
             return ERROR_TYPE;
         }
 
@@ -280,9 +283,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
 
         if (ctx.statement(1) != null) {
-            if (visit(ctx.statement(1)).equals(ERROR_TYPE))
+            if (visit(ctx.statement(1)).equals(ERROR_TYPE)) {
+                //No logging passing through
                 return ERROR_TYPE;
-            else if (visit(ctx.statement(1)).equals(VOID_TYPE))
+            } else if (visit(ctx.statement(1)).equals(VOID_TYPE))
                 return VOID_TYPE;
         }
         return visit(ctx.statement(0));
@@ -418,6 +422,14 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //endregion
 
     //region Declarations
+
+    @Override
+    public Type visitLocalDeclaration(UCELParser.LocalDeclarationContext ctx) {
+        Type t = null;
+        if(ctx.typeDecl() != null) t = visit(ctx.typeDecl());
+        if(ctx.variableDecl() != null) t = visit(ctx.variableDecl());
+        return t == null ? ERROR_TYPE : t;
+    }
 
     @Override
     public Type visitTypeDecl(UCELParser.TypeDeclContext ctx) {
@@ -618,6 +630,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             var variable = currentScope.get(ctx.reference);
             return variable.getType();
         } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error, invalid reference"));
             return ERROR_TYPE;
         }
     }
@@ -666,10 +679,13 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type arrayIndex = visit(ctx.expression(1));
 
         if (!isArray(arrayType)) {
+            logger.log(new ErrorLog(ctx.expression(0), "Expected an array type but found " + arrayType));
             return ERROR_TYPE;
         }
-        if (!(arrayIndex.getEvaluationType() == Type.TypeEnum.intType))
+        if (!(arrayIndex.getEvaluationType() == Type.TypeEnum.intType)) {
+            logger.log(new ErrorLog(ctx, arrayIndex + " cannot be used as array index, only an integer can"));
             return ERROR_TYPE;
+        }
 
         return arrayType;
     }
@@ -679,7 +695,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type type = visit(ctx.expression());
 
         if(type.equals(CLOCK_TYPE)) return CLOCK_TYPE;
-        else return ERROR_TYPE;
+        else {
+            logger.log(new ErrorLog(ctx.expression(), "Expected " + CLOCK_TYPE + " but found " + type));
+            return ERROR_TYPE;
+        }
     }
 
     @Override
@@ -1001,9 +1020,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type.TypeEnum leftEnum = left.getEvaluationType();
         Type.TypeEnum rightEnum = right.getEvaluationType();
 
-        if (leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType)
+        if (leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType) {
+            //No logging, passing through
             return ERROR_TYPE;
-        else if (leftEnum != Type.TypeEnum.boolType || rightEnum != Type.TypeEnum.boolType) {
+        } else if (leftEnum != Type.TypeEnum.boolType || rightEnum != Type.TypeEnum.boolType) {
             logger.log(new ErrorLog(ctx, leftEnum + " and " + rightEnum + " are unsupported for logical operator"));
             return ERROR_TYPE;
         } else if (isArray(left) || isArray(right)) {
