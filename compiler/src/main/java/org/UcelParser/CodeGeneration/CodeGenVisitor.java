@@ -33,6 +33,25 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
 
+    //region Start
+
+    @Override
+    public Template visitStart(UCELParser.StartContext ctx) {
+        var declTemplate = visit(ctx.declarations());
+        var stmnts = new ArrayList<Template>();
+
+        for (var stmnt : ctx.statement()) {
+            stmnts.add(visit(stmnt));
+        }
+
+        var sysTemplate = visit(ctx.system());
+
+        return new StartTemplate(declTemplate, stmnts, sysTemplate);
+    }
+
+
+    //endregion
+
     //region Function
 
     @Override

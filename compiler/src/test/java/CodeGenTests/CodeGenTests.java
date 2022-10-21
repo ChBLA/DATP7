@@ -27,12 +27,88 @@ import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.stringtemplate.v4.ST;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
+import static org.mockito.Mockito.*;
 
 
 public class CodeGenTests {
+
+    //region Start
+    @Test
+    void startDeclarationSystemGeneratedCorrectly() {
+        var declTemplate = generateDefaultDeclarationTemplate("a", "1");
+        var sysTemplate = generateDefaultSystemTemplate("B");
+
+        var expected = String.format("%s%s", declTemplate, sysTemplate);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
+        var sysNode = mockForVisitorResult(UCELParser.SystemContext.class, sysTemplate, visitor);
+
+        when(node.declarations()).thenReturn(declNode);
+        when(node.system()).thenReturn(sysNode);
+
+        var actual = visitor.visitStart(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void startOneStatementGeneratedCorrectly() {
+        var declTemplate = generateDefaultDeclarationTemplate("a", "1");
+        var stmnt1Template = generateDefaultStatementTemplate();
+        var sysTemplate = generateDefaultSystemTemplate("B");
+
+        var expected = String.format("%s%s%n%s", declTemplate, stmnt1Template,  sysTemplate);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
+        var stmnt1Node = mockForVisitorResult(UCELParser.StatementContext.class, stmnt1Template, visitor);
+        var sysNode = mockForVisitorResult(UCELParser.SystemContext.class, sysTemplate, visitor);
+
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1Node); }};
+
+        when(node.declarations()).thenReturn(declNode);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(sysNode);
+
+        var actual = visitor.visitStart(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void startMultipleStatementsGeneratedCorrectly() {
+        var declTemplate = generateDefaultDeclarationTemplate("a", "1");
+        var stmnt1Template = generateDefaultStatementTemplate();
+        var stmnt2Template = generateDefaultStatementTemplate();
+        var sysTemplate = generateDefaultSystemTemplate("B");
+
+        var expected = String.format("%s%s%n%s%n%s", declTemplate, stmnt1Template, stmnt2Template, sysTemplate);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
+        var stmnt1Node = mockForVisitorResult(UCELParser.StatementContext.class, stmnt1Template, visitor);
+        var stmnt2Node = mockForVisitorResult(UCELParser.StatementContext.class, stmnt2Template, visitor);
+        var sysNode = mockForVisitorResult(UCELParser.SystemContext.class, sysTemplate, visitor);
+
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1Node); add(stmnt2Node); }};
+
+        when(node.declarations()).thenReturn(declNode);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(sysNode);
+
+        var actual = visitor.visitStart(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
 
     //region Function
 
@@ -3105,6 +3181,14 @@ public class CodeGenTests {
             case stringType -> new ManualTemplate("\"abc\"");
             default -> new ManualTemplate("");
         };
+    }
+
+    private Template generateDefaultDeclarationTemplate(String id, String expr) {
+        return new ManualTemplate(String.format("%s\n", generateDefaultVariableDeclTemplate(id, expr)));
+    }
+
+    private Template generateDefaultSystemTemplate(String id) {
+        return new ManualTemplate(String.format("system %s", id));
     }
 
     private Template generateEmptyExprTemplate() {
