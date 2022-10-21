@@ -47,6 +47,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private static final Type VOID_TYPE = new Type(Type.TypeEnum.voidType);
     private static final Type CHAN_TYPE = new Type(Type.TypeEnum.chanType);
     private static final Type STRUCT_TYPE = new Type(Type.TypeEnum.structType);
+    private static final Type PROCESS_TYPE = new Type(Type.TypeEnum.processType);
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
     private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
 
@@ -77,6 +78,27 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if (!sysType.equals(VOID_TYPE) && !sysType.equals(ERROR_TYPE))
             logger.log(new ErrorLog(ctx, "Compiler error during type checking"));
         return sysType.equals(VOID_TYPE) && correct ? VOID_TYPE : ERROR_TYPE;
+    }
+
+
+    //endregion
+
+    //region System
+
+    @Override
+    public Type visitSystem(UCELParser.SystemContext ctx) {
+        boolean success = true;
+
+        for (var expr : ctx.expression()) {
+            var exprRes = visit(expr);
+            if (!exprRes.equals(PROCESS_TYPE)) {
+                success = false;
+                if (!expr.equals(ERROR_TYPE))
+                    logger.log(new ErrorLog(ctx, "Expression in system must be of type process"));
+            }
+        }
+
+        return success ? VOID_TYPE : ERROR_TYPE;
     }
 
 

@@ -39,6 +39,7 @@ public class TypeCheckerTests  {
     private static final Type INVALID_TYPE = new Type(Type.TypeEnum.invalidType);
     private static final Type DOUBLE_TYPE = new Type(Type.TypeEnum.doubleType);
     private static final Type STRUCT_TYPE = new Type(Type.TypeEnum.structType);
+    private static final Type PROCESS_TYPE = new Type(Type.TypeEnum.processType);
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
     private static final Type STRING_TYPE = new Type(Type.TypeEnum.stringType);
     private static final Type ERROR_TYPE = new Type(Type.TypeEnum.errorType);
@@ -51,7 +52,7 @@ public class TypeCheckerTests  {
 
     //region Start
     @ParameterizedTest
-    @MethodSource("systemFaultyTypes")
+    @MethodSource("startFaultyTypes")
     void startDeclarationsReturnsErrorRestAreNotVisited(Type type) {
         var expected = ERROR_TYPE;
 
@@ -77,7 +78,7 @@ public class TypeCheckerTests  {
     }
 
     @ParameterizedTest
-    @MethodSource("systemFaultyTypes")
+    @MethodSource("startFaultyTypes")
     void startFirstStatementFailsRestAreVisited(Type type) {
         var expected = ERROR_TYPE;
 
@@ -105,7 +106,7 @@ public class TypeCheckerTests  {
     }
 
     @ParameterizedTest
-    @MethodSource("systemFaultyTypes")
+    @MethodSource("startFaultyTypes")
     void startSecondStatementFailsRestAreVisited(Type type) {
         var expected = ERROR_TYPE;
 
@@ -133,7 +134,7 @@ public class TypeCheckerTests  {
     }
 
     @ParameterizedTest
-    @MethodSource("systemFaultyTypes")
+    @MethodSource("startFaultyTypes")
     void startSystemFails(Type type) {
         var expected = ERROR_TYPE;
 
@@ -161,7 +162,7 @@ public class TypeCheckerTests  {
     }
 
     @Test
-    void systemAllSucceed() {
+    void startAllSucceed() {
         var expected = VOID_TYPE;
 
         var visitor = new TypeCheckerVisitor();
@@ -187,7 +188,7 @@ public class TypeCheckerTests  {
         assertEquals(expected, actual);
     }
 
-    private static Stream<Arguments> systemFaultyTypes() {
+    private static Stream<Arguments> startFaultyTypes() {
         var args = new ArrayList<Arguments>();
 
         for (var type : Type.TypeEnum.values()) {
@@ -201,7 +202,88 @@ public class TypeCheckerTests  {
     //endregion
 
     //region System
+    @ParameterizedTest
+    @MethodSource("systemFaultyTypes")
+    void systemOneIncorrectExpression(Type type) {
+        var expected = ERROR_TYPE;
 
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1); }};
+
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void systemOneCorrectExpression() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, PROCESS_TYPE, visitor);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1); }};
+
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("systemFaultyTypes")
+    void systemSecondExpressionIncorrect(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, PROCESS_TYPE, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1); add(expr2); }};
+
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void systemAllCorrect() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, PROCESS_TYPE, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, PROCESS_TYPE, visitor);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1); add(expr2); }};
+
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> systemFaultyTypes() {
+        var args = new ArrayList<Arguments>();
+
+        for (var type : Type.TypeEnum.values()) {
+            if (type != Type.TypeEnum.processType)
+                args.add(Arguments.of(new Type(type)));
+        }
+
+        return args.stream();
+    }
     //endregion
 
     //region TypeDecl
