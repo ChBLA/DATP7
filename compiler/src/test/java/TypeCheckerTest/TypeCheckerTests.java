@@ -49,6 +49,68 @@ public class TypeCheckerTests  {
     private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
 
+
+    //region Parameter
+    @Test
+    void typeForParameterSetCorrectlyInScope() {
+        var expected = new Type(Type.TypeEnum.intType, 2);
+        Scope scope = mock(Scope.class);
+        DeclarationReference paramRef = mock(DeclarationReference.class);
+        DeclarationInfo paramInfo = new DeclarationInfo();
+
+        try {
+            when(scope.get(paramRef)).thenReturn(paramInfo);
+        } catch (Exception e) {
+            fail("cannot mock scope.get");
+        }
+
+        var visitor = new TypeCheckerVisitor(scope);
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, INT_TYPE, visitor);
+        var node = mock(UCELParser.ParameterContext.class);
+        node.reference = paramRef;
+
+        List<UCELParser.ArrayDeclContext> arrayDeclList = new ArrayList<>();
+        arrayDeclList.add(mock(UCELParser.ArrayDeclContext.class));
+        arrayDeclList.add(mock(UCELParser.ArrayDeclContext.class));
+
+
+        when(node.type()).thenReturn(typeMock);
+        when(node.arrayDecl()).thenReturn(arrayDeclList);
+
+        Type actual = visitor.visitParameter(node);
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region Parameters
+    @Test
+    void typeForParametersReturnsCorrectSetOfParameters() {
+        Type[] parameterTypes = new Type[]{INT_TYPE, DOUBLE_TYPE, BOOL_TYPE};
+
+        var expected = new Type(Type.TypeEnum.voidType, parameterTypes);
+
+        var visitor = new TypeCheckerVisitor();
+
+        var parameterMockInt = mockForVisitorResult(UCELParser.ParameterContext.class, parameterTypes[0], visitor);
+        var parameterMockDouble = mockForVisitorResult(UCELParser.ParameterContext.class, parameterTypes[1], visitor);
+        var parameterMockBool = mockForVisitorResult(UCELParser.ParameterContext.class, parameterTypes[2], visitor);
+
+        List<UCELParser.ParameterContext> parameterList = new ArrayList<>();
+        parameterList.add(parameterMockInt);
+        parameterList.add(parameterMockDouble);
+        parameterList.add(parameterMockBool);
+
+        var node = mock(UCELParser.ParametersContext.class);
+        when(node.parameter()).thenReturn(parameterList);
+
+        Type actual = visitor.visitParameters(node);
+        assertEquals(expected, actual);
+    }
+
+
+    //endregion
+
     //region TypeDecl
     @Test
     void typeDeclSetsType() {
@@ -86,6 +148,7 @@ public class TypeCheckerTests  {
         assertEquals(expected, declInfoMock.getType());
     }
 
+    //TODO: do it
 //    @Test
 //    void typeDeclReportsTypeError() {
 //        Scope scope = mock(Scope.class);

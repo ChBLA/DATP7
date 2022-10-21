@@ -49,6 +49,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private static final Type STRUCT_TYPE = new Type(Type.TypeEnum.structType);
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
     private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
+    public DeclarationInfo currentFunction = null;
+
 
     @Override
     public Type visitAssignExpr(UCELParser.AssignExprContext ctx) {
@@ -86,8 +88,33 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
     }
 
+    @Override
+    public Type visitParameters(UCELParser.ParametersContext ctx) {
+        List<Type> parameterTypes = new ArrayList<>();
 
-    public DeclarationInfo currentFunction = null;
+        ctx.parameter()
+                .forEach(parameter -> parameterTypes.add(visit(parameter)));
+
+        Type[] parameterTypesArray = {};
+        parameterTypes.toArray(parameterTypesArray);
+
+        return new Type(Type.TypeEnum.voidType, parameterTypesArray);
+    }
+
+    @Override
+    public Type visitParameter(UCELParser.ParameterContext ctx) {
+        var type = visit(ctx.type());
+        Type parameterType = new Type(type.getEvaluationType(), ctx.arrayDecl().size());
+
+        try {
+            getCurrentScope().get(ctx.reference).setType(parameterType);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "scope error: could not find symbol " + ctx.getText()));
+            return ERROR_TYPE;
+        }
+
+        return parameterType;
+    }
 
     @Override
     public Type visitTypeDecl(UCELParser.TypeDeclContext ctx) {
