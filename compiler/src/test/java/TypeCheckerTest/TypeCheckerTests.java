@@ -5,6 +5,7 @@ import org.UcelParser.TypeChecker.TypeCheckerVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.DeclarationReference;
+import org.UcelParser.Util.Logging.Logger;
 import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Type;
 
@@ -18,11 +19,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import javax.lang.model.element.TypeElement;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,6 +39,7 @@ public class TypeCheckerTests  {
     private static final Type INVALID_TYPE = new Type(Type.TypeEnum.invalidType);
     private static final Type DOUBLE_TYPE = new Type(Type.TypeEnum.doubleType);
     private static final Type STRUCT_TYPE = new Type(Type.TypeEnum.structType);
+    private static final Type PROCESS_TYPE = new Type(Type.TypeEnum.processType);
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
     private static final Type STRING_TYPE = new Type(Type.TypeEnum.stringType);
     private static final Type ERROR_TYPE = new Type(Type.TypeEnum.errorType);
@@ -50,10 +50,419 @@ public class TypeCheckerTests  {
     private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
 
+
+    //region Parameter
+    @Test
+    void typeForParameterSetCorrectlyInScope() {
+        var expected = new Type(Type.TypeEnum.intType, 2);
+        Scope scope = mock(Scope.class);
+        DeclarationReference paramRef = mock(DeclarationReference.class);
+        DeclarationInfo paramInfo = new DeclarationInfo();
+
+        try {
+            when(scope.get(paramRef)).thenReturn(paramInfo);
+        } catch (Exception e) {
+            fail("cannot mock scope.get");
+        }
+
+        var visitor = new TypeCheckerVisitor(scope);
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, INT_TYPE, visitor);
+        var node = mock(UCELParser.ParameterContext.class);
+        node.reference = paramRef;
+
+        List<UCELParser.ArrayDeclContext> arrayDeclList = new ArrayList<>();
+        arrayDeclList.add(mock(UCELParser.ArrayDeclContext.class));
+        arrayDeclList.add(mock(UCELParser.ArrayDeclContext.class));
+
+
+        when(node.type()).thenReturn(typeMock);
+        when(node.arrayDecl()).thenReturn(arrayDeclList);
+
+        Type actual = visitor.visitParameter(node);
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region Parameters
+    @Test
+    void typeForParametersReturnsCorrectSetOfParameters() {
+        Type[] parameterTypes = new Type[]{INT_TYPE, DOUBLE_TYPE, BOOL_TYPE};
+
+        var expected = new Type(Type.TypeEnum.voidType, parameterTypes);
+
+        var visitor = new TypeCheckerVisitor();
+
+        var parameterMockInt = mockForVisitorResult(UCELParser.ParameterContext.class, parameterTypes[0], visitor);
+        var parameterMockDouble = mockForVisitorResult(UCELParser.ParameterContext.class, parameterTypes[1], visitor);
+        var parameterMockBool = mockForVisitorResult(UCELParser.ParameterContext.class, parameterTypes[2], visitor);
+
+        List<UCELParser.ParameterContext> parameterList = new ArrayList<>();
+        parameterList.add(parameterMockInt);
+        parameterList.add(parameterMockDouble);
+        parameterList.add(parameterMockBool);
+
+        var node = mock(UCELParser.ParametersContext.class);
+        when(node.parameter()).thenReturn(parameterList);
+
+        Type actual = visitor.visitParameters(node);
+        assertEquals(expected, actual);
+    }
+    //endregion
+
+    //region Start
+    @ParameterizedTest
+    @MethodSource("startFaultyTypes")
+    void startDeclarationsReturnsErrorRestAreNotVisited(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mockForVisitorResult(UCELParser.DeclarationsContext.class, type, visitor);
+        var stmnt = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+        var system = mockForVisitorResult(UCELParser.SystemContext.class, VOID_TYPE, visitor);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt); }};
+
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(system);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt, never()).accept(visitor);
+        verify(system, never()).accept(visitor);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("startFaultyTypes")
+    void startFirstStatementFailsRestAreVisited(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
+        var stmnt1 = mockForVisitorResult(UCELParser.StatementContext.class, type, visitor);
+        var stmnt2 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+        var system = mockForVisitorResult(UCELParser.SystemContext.class, VOID_TYPE, visitor);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(system);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt1, times(1)).accept(visitor);
+        verify(stmnt2, times(1)).accept(visitor);
+        verify(system, times(1)).accept(visitor);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("startFaultyTypes")
+    void startSecondStatementFailsRestAreVisited(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
+        var stmnt1 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+        var stmnt2 = mockForVisitorResult(UCELParser.StatementContext.class, type, visitor);
+        var system = mockForVisitorResult(UCELParser.SystemContext.class, VOID_TYPE, visitor);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(system);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt1, times(1)).accept(visitor);
+        verify(stmnt2, times(1)).accept(visitor);
+        verify(system, times(1)).accept(visitor);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("startFaultyTypes")
+    void startSystemFails(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
+        var stmnt1 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+        var stmnt2 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+        var system = mockForVisitorResult(UCELParser.SystemContext.class, type, visitor);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(system);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt1, times(1)).accept(visitor);
+        verify(stmnt2, times(1)).accept(visitor);
+        verify(system, times(1)).accept(visitor);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void startAllSucceed() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
+        var stmnt1 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+        var stmnt2 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+        var system = mockForVisitorResult(UCELParser.SystemContext.class, VOID_TYPE, visitor);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(system);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt1, times(1)).accept(visitor);
+        verify(stmnt2, times(1)).accept(visitor);
+        verify(system, times(1)).accept(visitor);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> startFaultyTypes() {
+        var args = new ArrayList<Arguments>();
+
+        for (var type : Type.TypeEnum.values()) {
+            if (type != Type.TypeEnum.voidType)
+                args.add(Arguments.of(new Type(type)));
+        }
+
+        return args.stream();
+    }
+
+    //endregion
+
+    //region System
+    @ParameterizedTest
+    @MethodSource("systemFaultyTypes")
+    void systemOneIncorrectExpression(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1); }};
+
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void systemOneCorrectExpression() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, PROCESS_TYPE, visitor);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1); }};
+
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("systemFaultyTypes")
+    void systemSecondExpressionIncorrect(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, PROCESS_TYPE, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1); add(expr2); }};
+
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void systemAllCorrect() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, PROCESS_TYPE, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, PROCESS_TYPE, visitor);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1); add(expr2); }};
+
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> systemFaultyTypes() {
+        var args = new ArrayList<Arguments>();
+
+        for (var type : Type.TypeEnum.values()) {
+            if (type != Type.TypeEnum.processType)
+                args.add(Arguments.of(new Type(type)));
+        }
+
+        return args.stream();
+    }
+
+
+    //endregion
+
+    //region instantiation
+
+
+    //endregion
+
+    //region TypeDecl
+    @Test
+    void typeDeclSetsType() {
+        Type expected = INT_TYPE;
+        Scope scope = mock(Scope.class);
+        DeclarationReference declRefMock = mock(DeclarationReference.class);
+        DeclarationInfo declInfoMock = new DeclarationInfo();
+
+        try {
+            when(scope.get(declRefMock)).thenReturn(declInfoMock);
+        } catch (Exception e) {
+            fail("failed to mock scope");
+        }
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+        var ctx = mock(UCELParser.TypeDeclContext.class);
+        var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, expected, visitor);
+        var arrayDeclID = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, expected, visitor);
+
+        List<UCELParser.ArrayDeclIDContext> arrayDeclIDContextList = new ArrayList<>();
+        arrayDeclIDContextList.add(arrayDeclID);
+
+
+        when(ctx.arrayDeclID()).thenReturn(arrayDeclIDContextList);
+        when(ctx.arrayDeclID(0)).thenReturn(arrayDeclIDContextList.get(0));
+        when(ctx.type()).thenReturn(typeNode);
+
+        List<DeclarationReference> references = new ArrayList<>();
+        references.add(declRefMock);
+        ctx.references = references;
+
+        Type actual = visitor.visitTypeDecl(ctx);
+
+        assertEquals(expected, actual);
+        assertEquals(expected, declInfoMock.getType());
+    }
+
+    //TODO: do it
+//    @Test
+//    void typeDeclReportsTypeError() {
+//        Scope scope = mock(Scope.class);
+//        DeclarationReference declRefMock = mock(DeclarationReference.class);
+//        DeclarationInfo declInfoMock = new DeclarationInfo();
+//        Logger logger = new Logger();
+//
+//        try {
+//            when(scope.get(declRefMock)).thenReturn(declInfoMock);
+//        } catch (Exception e) {
+//            fail("failed to mock scope");
+//        }
+//
+//        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+//        var ctx = mock(UCELParser.TypeDeclContext.class);
+//        var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, INT_TYPE, visitor);
+//        var arrayDeclID = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, ERROR_TYPE, visitor);
+//
+//        List<UCELParser.ArrayDeclIDContext> arrayDeclIDContextList = new ArrayList<>();
+//        arrayDeclIDContextList.add(arrayDeclID);
+//
+//        when(ctx.arrayDeclID()).thenReturn(arrayDeclIDContextList);
+//        when(ctx.arrayDeclID(0)).thenReturn(arrayDeclIDContextList.get(0));
+//        when(ctx.type()).thenReturn(typeNode);
+//
+//        List<DeclarationReference> references = new ArrayList<>();
+//        references.add(declRefMock);
+//        ctx.references = references;
+//
+//        Type actual = visitor.visitTypeDecl(ctx);
+//
+//        assertEquals(INT_TYPE, actual);
+//        assertEquals(ERROR_TYPE, declInfoMock.getType());
+//    }
+    //endregion
+
+    //region LocalDecl
+
+    @Test
+    void localDeclarationVisitsVariableDecl() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+
+        UCELParser.LocalDeclarationContext node = mock(UCELParser.LocalDeclarationContext.class);
+        UCELParser.VariableDeclContext varDecl = mock(UCELParser.VariableDeclContext.class);
+        when(node.variableDecl()).thenReturn(varDecl);
+        when(varDecl.accept(visitor)).thenReturn(VOID_TYPE);
+
+        visitor.visitLocalDeclaration(node);
+
+        verify(varDecl, times(1)).accept(visitor);
+    }
+
+    @Test
+    void localDeclarationVisitsTypeDecl() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+
+        UCELParser.LocalDeclarationContext node = mock(UCELParser.LocalDeclarationContext.class);
+        UCELParser.TypeDeclContext typeDecl = mock(UCELParser.TypeDeclContext.class);
+        when(node.typeDecl()).thenReturn(typeDecl);
+        when(typeDecl.accept(visitor)).thenReturn(VOID_TYPE);
+
+        visitor.visitLocalDeclaration(node);
+
+        verify(typeDecl, times(1)).accept(visitor);
+    }
+
+    //endregion
+
     //region Assignment
 
     @Test
-    public void assignmentReturnsVoid() {
+    void assigntmentReturnsVoid() {
         TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor();
 
         var node = new UCELParser.AssignContext(null, 0);
@@ -162,28 +571,144 @@ public class TypeCheckerTests  {
 
     //endregion
 
+    //region Function
+
+    @Test
+    void functionSetType() {
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+        String funcName = "f";
+
+        UCELParser.FunctionContext node         = mock(UCELParser.FunctionContext.class);
+        UCELParser.TypeContext type             = mock(UCELParser.TypeContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.BlockContext block           = mock(UCELParser.BlockContext.class);
+        TerminalNode id                         = mock(TerminalNode.class);
+
+        Type[] parameterTypes = new Type[] {STRING_TYPE, BOOL_TYPE};
+
+        when(node.type()).thenReturn(type);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.block()).thenReturn(block);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(funcName);
+
+        when(type.accept(visitor)).thenReturn(INT_TYPE);
+        when(parameters.accept(visitor)).thenReturn(new Type(Type.TypeEnum.functionType, parameterTypes));
+        when(block.accept(visitor)).thenReturn(INT_TYPE);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+        DeclarationInfo declInfo = new DeclarationInfo(funcName);
+        node.reference = declRef;
+
+        try{
+            when(scope.get(declRef)).thenReturn(declInfo);
+        } catch (Exception e) {fail();}
+
+        visitor.visitFunction(node);
+
+        assertEquals(new Type(Type.TypeEnum.functionType, new Type[]{INT_TYPE, STRING_TYPE, BOOL_TYPE}), declInfo.getType());
+    }
+
+    @Test
+    void functionVisitParameter() {
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+        String funcName = "f";
+
+        UCELParser.FunctionContext node         = mock(UCELParser.FunctionContext.class);
+        UCELParser.TypeContext type             = mock(UCELParser.TypeContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.BlockContext block           = mock(UCELParser.BlockContext.class);
+        TerminalNode id                         = mock(TerminalNode.class);
+
+        Type[] parameterTypes = new Type[] {STRING_TYPE, BOOL_TYPE};
+
+        when(node.type()).thenReturn(type);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.block()).thenReturn(block);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(funcName);
+
+        when(type.accept(visitor)).thenReturn(INT_TYPE);
+        when(parameters.accept(visitor)).thenReturn(new Type(Type.TypeEnum.functionType, parameterTypes));
+        when(block.accept(visitor)).thenReturn(INT_TYPE);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+        DeclarationInfo declInfo = new DeclarationInfo(funcName);
+        node.reference = declRef;
+
+        try{
+            when(scope.get(declRef)).thenReturn(declInfo);
+        } catch (Exception e) {fail();}
+
+        visitor.visitFunction(node);
+
+        verify(parameters, times(1)).accept(visitor);
+    }
+
+    @Test
+    void functionVisitBlock() {
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+        String funcName = "f";
+
+        UCELParser.FunctionContext node         = mock(UCELParser.FunctionContext.class);
+        UCELParser.TypeContext type             = mock(UCELParser.TypeContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.BlockContext block           = mock(UCELParser.BlockContext.class);
+        TerminalNode id                         = mock(TerminalNode.class);
+
+        Type[] parameterTypes = new Type[] {STRING_TYPE, BOOL_TYPE};
+
+        when(node.type()).thenReturn(type);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.block()).thenReturn(block);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(funcName);
+
+        when(type.accept(visitor)).thenReturn(INT_TYPE);
+        when(parameters.accept(visitor)).thenReturn(new Type(Type.TypeEnum.functionType, parameterTypes));
+        when(block.accept(visitor)).thenReturn(INT_TYPE);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+        DeclarationInfo declInfo = new DeclarationInfo(funcName);
+        node.reference = declRef;
+
+        try{
+            when(scope.get(declRef)).thenReturn(declInfo);
+        } catch (Exception e) {fail();}
+
+        visitor.visitFunction(node);
+
+        verify(block, times(1)).accept(visitor);
+    }
+
+    //endregion
+
+    //region statements
 
     //region returnstatement
     @Test
     void returnVoidOnNoExpression() {
         var visitor = new TypeCheckerVisitor();
-        var node = mock(UCELParser.ReturnstatementContext.class);
+        var node = mock(UCELParser.ReturnStatementContext.class);
         when(node.expression()).thenReturn(null);
-        var result = visitor.visitReturnstatement(node);
+        var result = visitor.visitReturnStatement(node);
         assertEquals(VOID_TYPE, result);
     }
 
     @Test
     void returnIntOnIntExpressionInIntFunction() {
         var scope = new Scope(null, false);
-        var funcDecl = new DeclarationInfo("fib", INT_TYPE);
+        var funcDecl = new DeclarationInfo("fib", new Type(Type.TypeEnum.functionType, new Type[]{INT_TYPE}));
         scope.add(funcDecl);
         var visitor = new TypeCheckerVisitor(scope);
-        var node = mock(UCELParser.ReturnstatementContext.class);
+        var node = mock(UCELParser.ReturnStatementContext.class);
         var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
         when(node.expression()).thenReturn(expr);
         visitor.currentFunction = funcDecl;
-        var result = visitor.visitReturnstatement(node);
+        var result = visitor.visitReturnStatement(node);
         assertEquals(INT_TYPE, result);
     }
 
@@ -363,6 +888,76 @@ public class TypeCheckerTests  {
         Type result = visitor.visitForLoop(node);
 
         assertEquals(CHAR_TYPE, result);
+    }
+
+    //endregion
+
+    //region iteration
+
+    @ParameterizedTest(name = "{index} => iterates over {0} + from {1}")
+    @MethodSource("iterationTypes")
+    void iterationTypeOfIDSet(Type idType, Type collectionType) {
+
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.IterationContext iteration = mock(UCELParser.IterationContext.class);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+        iteration.reference = declRef;
+
+        DeclarationInfo declInfo = new DeclarationInfo("a");
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        UCELParser.StatementContext statement = mock(UCELParser.StatementContext.class);
+
+        when(iteration.type()).thenReturn(type);
+        when(iteration.statement()).thenReturn(statement);
+
+        when(statement.accept(visitor)).thenReturn(VOID_TYPE);
+        when(type.accept(visitor)).thenReturn(collectionType);
+
+        try {
+            when(scope.get(declRef)).thenReturn(declInfo);
+        } catch (Exception e) {fail();}
+
+        visitor.visitIteration(iteration);
+
+        assertEquals(idType, declInfo.getType());
+    }
+
+    @Test
+    void iterationReturnTypeOfStatement() {
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.IterationContext iteration = mock(UCELParser.IterationContext.class);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+        iteration.reference = declRef;
+
+        DeclarationInfo declInfo = new DeclarationInfo("a");
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        UCELParser.StatementContext statement = mock(UCELParser.StatementContext.class);
+
+        when(iteration.type()).thenReturn(type);
+        when(iteration.statement()).thenReturn(statement);
+        when(statement.accept(visitor)).thenReturn(DOUBLE_TYPE);
+        when(type.accept(visitor)).thenReturn(INT_TYPE);
+
+        try {
+            when(scope.get(declRef)).thenReturn(declInfo);
+        } catch (Exception e) {fail();}
+
+        Type actual = visitor.visitIteration(iteration);
+
+        assertEquals(DOUBLE_TYPE, actual);
+    }
+
+    private static Stream<Arguments> iterationTypes() {
+        return Stream.of(
+                Arguments.arguments(INT_TYPE, INT_TYPE),
+                Arguments.arguments(INT_TYPE, SCALAR_TYPE)
+        );
     }
 
     //endregion
@@ -683,6 +1278,8 @@ public class TypeCheckerTests  {
 
     //endregion
 
+    //endregion
+
     //region VariableDecl
 
     @Test
@@ -796,7 +1393,63 @@ public class TypeCheckerTests  {
     }
 
     @Test
-    void variableDeclNoInitialiser() {
+    void variableDeclNoInitialiserSetsType() {
+        Type declType = INT_TYPE;
+        Type varIDType = VOID_TYPE;
+
+        DeclarationInfo info0 = new DeclarationInfo("", declType);
+        DeclarationInfo info1 = new DeclarationInfo("", varIDType);
+        DeclarationInfo info2 = new DeclarationInfo("", declType);
+
+        Scope scope = mock(Scope.class);
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        when(type.accept(visitor)).thenReturn(declType);
+
+        UCELParser.VariableIDContext varID0 = mock(UCELParser.VariableIDContext.class);
+        UCELParser.VariableIDContext varID1 = mock(UCELParser.VariableIDContext.class);
+        UCELParser.VariableIDContext varID2 = mock(UCELParser.VariableIDContext.class);
+
+        DeclarationReference dr0 = new DeclarationReference(0, 0);
+        DeclarationReference dr1 = new DeclarationReference(0, 1);
+        DeclarationReference dr2 = new DeclarationReference(0, 2);
+
+        varID0.reference = dr0;
+        varID1.reference = dr1;
+        varID2.reference = dr2;
+
+        try {
+            when(scope.get(dr0)).thenReturn(info0);
+            when(scope.get(dr1)).thenReturn(info1);
+            when(scope.get(dr2)).thenReturn(info2);
+        } catch (Exception e) {
+            fail();
+        }
+
+        when(varID0.accept(visitor)).thenReturn(declType);
+        when(varID1.accept(visitor)).thenReturn(varIDType);
+        when(varID2.accept(visitor)).thenReturn(declType);
+
+        ArrayList<UCELParser.VariableIDContext> varIDs = new ArrayList<>();
+
+        varIDs.add(varID0);
+        varIDs.add(varID1);
+        varIDs.add(varID2);
+
+        UCELParser.VariableDeclContext varDecl = mock(UCELParser.VariableDeclContext.class);
+        when(varDecl.variableID()).thenReturn(varIDs);
+        when(varDecl.type()).thenReturn(type);
+
+        visitor.visitVariableDecl(varDecl);
+
+        assertEquals(declType, info1.getType());
+    }
+
+
+    @Test
+    void variableDeclNoInitialiserReturnsVoid() {
         Type declType = INT_TYPE;
         Type varIDType = VOID_TYPE;
 
@@ -1853,6 +2506,35 @@ public class TypeCheckerTests  {
     //endregion
 
     //region MarkExpr
+
+    @Test
+    void markExprReturnsClock() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+
+        UCELParser.MarkExprContext node = mock(UCELParser.MarkExprContext.class);
+        UCELParser.ExpressionContext expr = mock(UCELParser.MarkExprContext.class);
+        when(node.expression()).thenReturn(expr);
+        when(expr.accept(visitor)).thenReturn(CLOCK_TYPE);
+
+        Type actual = visitor.visitMarkExpr(node);
+
+        assertEquals(CLOCK_TYPE, actual);
+    }
+
+    @Test
+    void markExprReturnsError() {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(mock(Scope.class));
+
+        UCELParser.MarkExprContext node = mock(UCELParser.MarkExprContext.class);
+        UCELParser.ExpressionContext expr = mock(UCELParser.MarkExprContext.class);
+        when(node.expression()).thenReturn(expr);
+        when(expr.accept(visitor)).thenReturn(INT_TYPE);
+
+        Type actual = visitor.visitMarkExpr(node);
+
+        assertEquals(ERROR_TYPE, actual);
+    }
+
     //endregion
 
     //region Paren
@@ -2034,29 +2716,32 @@ public class TypeCheckerTests  {
     // Test only works if scopes work
     @ParameterizedTest(name = "{index} ({0}) => {3} {2}({4}) -> {3}")
     @MethodSource("expectedFuncCallTypes")
-    void FuncCall(String testName, Scope scope, String name, Type expectedReturnType, Type argsType) {
+    void FuncCall(Type expectedReturnType, Type argsType, Type funcType) {
+        Scope scope = mock(Scope.class);
+
         TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
 
         // FuncContext
-        final UCELParser.FuncCallContext funcCtx = mock(UCELParser.FuncCallContext.class);
+        UCELParser.FuncCallContext funcCtx = mock(UCELParser.FuncCallContext.class);
+        UCELParser.ArgumentsContext argsCtx = mock(UCELParser.ArgumentsContext.class);
+        DeclarationInfo declarationInfo = new DeclarationInfo("f", funcType);
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        funcCtx.reference = declRef;
+        when(funcCtx.arguments()).thenReturn(argsCtx);
+        when(argsCtx.accept(visitor)).thenReturn(argsType);
 
         try {
-            funcCtx.reference = scope.find(name, true);
+            when(scope.get(declRef)).thenReturn(declarationInfo);
+        } catch (Exception e) {
+            fail();
         }
-        catch (Exception e) {
-            funcCtx.reference = null;
-        }
-
-        // Args
-        final UCELParser.ArgumentsContext argsCtx = mockForVisitorResult(UCELParser.ArgumentsContext.class, argsType, visitor);
-        when(funcCtx.arguments()).thenReturn(argsCtx);
 
         // Act
         Type actualReturnType = visitor.visitFuncCall(funcCtx);
 
         // Assert
-        assertNotNull(actualReturnType);
-        assertEquals(expectedReturnType.getEvaluationType(), actualReturnType.getEvaluationType());
+        assertEquals(expectedReturnType, actualReturnType);
     }
     private static Stream<Arguments> expectedFuncCallTypes() {
         ArrayList<Arguments> args = new ArrayList<Arguments>();
@@ -2064,74 +2749,46 @@ public class TypeCheckerTests  {
 
         // Valid types
         args.add(Arguments.arguments(
-                "Valid types",
-                scopeGen("func1", new Type(Type.TypeEnum.intType, new Type[] {})),
-                "func1",
                 INT_TYPE,
-                new Type(Type.TypeEnum.invalidType, new Type[] {})
+                new Type(Type.TypeEnum.functionType, new Type[] {}),
+                new Type(Type.TypeEnum.functionType, new Type[] {INT_TYPE})
+        ));
+        // Valid types
+        args.add(Arguments.arguments(
+                INT_TYPE,
+                new Type(Type.TypeEnum.functionType, new Type[] {STRING_TYPE, CHAN_TYPE}),
+                new Type(Type.TypeEnum.functionType, new Type[] {INT_TYPE, STRING_TYPE, CHAN_TYPE})
         ));
         args.add(Arguments.arguments(
-                "Valid types",
-                scopeGen("func1", new Type(Type.TypeEnum.boolType, new Type[] {STRING_TYPE})),
-                "func1",
-                BOOL_TYPE,
-                new Type(Type.TypeEnum.invalidType, new Type[] {STRING_TYPE})
+                ERROR_TYPE,
+                new Type(Type.TypeEnum.functionType, new Type[] {STRING_TYPE}),
+                new Type(Type.TypeEnum.functionType, new Type[] {VOID_TYPE, BOOL_TYPE})
         ));
 
         // Invalid argument type
         args.add(Arguments.arguments(
-                "Invalid argument type",
-                scopeGen("func1", new Type(Type.TypeEnum.charType, new Type[] {STRING_TYPE})),
-                "func1",
                 ERROR_TYPE,
-                new Type(Type.TypeEnum.invalidType, new Type[] {INT_TYPE})
+                new Type(Type.TypeEnum.functionType, new Type[] {}),
+                new Type(Type.TypeEnum.functionType, new Type[] {VOID_TYPE, BOOL_TYPE})
         ));
 
         // Error input (Typically not possible in declaration)
         args.add(Arguments.arguments(
-                "Error input",
-                scopeGen("func1", new Type(Type.TypeEnum.charType, new Type[] {ERROR_TYPE})),
-                "func1",
                 ERROR_TYPE,
-                new Type(Type.TypeEnum.invalidType, new Type[] {INT_TYPE})
-        ));
-
-        // Missing Argument
-        args.add(Arguments.arguments(
-                "Missing Argument",
-                scopeGen("func1", new Type(Type.TypeEnum.charType, new Type[] {STRING_TYPE})),
-                "func1",
-                ERROR_TYPE,
-                new Type(Type.TypeEnum.invalidType, new Type[] {})
+                new Type(Type.TypeEnum.functionType, new Type[] {ERROR_TYPE}),
+                new Type(Type.TypeEnum.functionType, new Type[] {VOID_TYPE, BOOL_TYPE})
         ));
 
         // Too Many Arguments
         args.add(Arguments.arguments(
-                "Too Many Arguments",
-                scopeGen("func1", new Type(Type.TypeEnum.charType, new Type[] {})),
-                "func1",
                 ERROR_TYPE,
-                new Type(Type.TypeEnum.invalidType, new Type[] {STRING_TYPE})
-        ));
-
-        // Undefined
-        args.add(Arguments.arguments(
-                "Undefined",
-                scopeGen("func1", new Type(Type.TypeEnum.charType, new Type[] {INT_TYPE})),
-                "funcOther",
-                ERROR_TYPE,
-                new Type(Type.TypeEnum.invalidType, new Type[] {INT_TYPE})
+                new Type(Type.TypeEnum.functionType, new Type[] {BOOL_TYPE, BOOL_TYPE}),
+                new Type(Type.TypeEnum.functionType, new Type[] {VOID_TYPE, BOOL_TYPE})
         ));
 
         return args.stream();
     }
-    private static Scope scopeGen(String name, Type type) {
-        Scope scope = new Scope(null, false);
 
-        scope.add(new DeclarationInfo(name, type));
-
-        return scope;
-    }
     //endregion
 
     //region Arguments
@@ -2795,6 +3452,15 @@ public class TypeCheckerTests  {
     //endregion
 
     //region VerificationExpr
+
+    @Test
+    void verificationExprBooleanCorrectTyped() {
+        Scope scope = mock(Scope.class);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        //Verification has been postponed
+    }
+
     //endregion
 
     //endregion

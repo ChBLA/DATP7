@@ -5,11 +5,13 @@ grammar UCEL;
 
     import org.UcelParser.Util.Scope;
     import org.UcelParser.Util.DeclarationReference;
+    import org.UcelParser.Util.DeclarationInfo;
+    import org.UcelParser.Util.FuncCallOccurrence;
 }
 
 start locals [Scope scope]
     : declarations statement* link_stmnt* system;
-system : SYSTEM ID ((COMMA | '<') ID)* END;
+system : SYSTEM expression ((COMMA | '<') expression)* END;
 
 component locals [Scope scope]
     : COMP ID LEFTPAR parameters? RIGHTPAR LEFTCURLYBRACE comp_body RIGHTCURLYBRACE;
@@ -31,15 +33,17 @@ elif : ELSE IF;
 interface_decl : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;
 interfaceVarDecl : type arrayDeclID (COMMA type arrayDeclID)*;
 
-instantiation : ID ( LEFTPAR parameters? RIGHTPAR )? '=' ID LEFTPAR arguments? RIGHTPAR END;
+instantiation locals [Scope scope, DeclarationReference instantiatedReference, DeclarationReference constructorReference]
+    : ID ( LEFTPAR parameters? RIGHTPAR )? '=' ID LEFTPAR arguments? RIGHTPAR END;
 progressDecl  : PROGRESS LEFTCURLYBRACE ( expression? END )* RIGHTCURLYBRACE;
 
 
 parameters : ( parameter (COMMA parameter)* )?;
-parameter  : type? REF? ('&')? ID? arrayDecl*;
+parameter  locals [DeclarationReference reference]
+              : type REF? (BITAND)? ID arrayDecl*;
 
 declarations  : (variableDecl | typeDecl | function | chanPriority | component | interface_decl)*;
-variableDecl  : type? variableID (COMMA variableID)* END;
+variableDecl  : type variableID (COMMA variableID)* END;
 
 variableID locals [DeclarationReference reference]
               : ID arrayDecl* ('=' initialiser)?;
@@ -66,7 +70,7 @@ fieldDecl     : type arrayDeclID (COMMA arrayDeclID)* END;
 arrayDecl     : LEFTBRACKET expression? RIGHTBRACKET
               | LEFTBRACKET type RIGHTBRACKET;
 
-function locals [Scope scope]
+function locals [Scope scope, List<FuncCallOccurrence> occurrences, DeclarationReference reference]
     : type? ID? LEFTPAR parameters? RIGHTPAR block;
 block locals [Scope scope]
     : LEFTCURLYBRACE localDeclaration* statement* RIGHTCURLYBRACE;
@@ -79,19 +83,20 @@ statement       : block
                 | whileLoop
                 | dowhile
                 | ifstatement
-                | returnstatement;
+                | returnStatement;
 
 forLoop	        : FOR LEFTPAR assignment? END expression END expression? RIGHTPAR statement;
 iteration locals [DeclarationReference reference]
-                : FOR LEFTPAR ID? COLON type? RIGHTPAR statement;
+                : FOR LEFTPAR ID? COLON type RIGHTPAR statement;
 whileLoop       : WHILE LEFTPAR expression RIGHTPAR statement;
 dowhile         : DO statement WHILE LEFTPAR expression RIGHTPAR END;
 ifstatement     : IF LEFTPAR expression RIGHTPAR statement ( ELSE statement )?;
-returnstatement : RETURN expression? END;
+returnStatement : RETURN expression? END;
 
 chanPriority : 'chan' 'priority' (chanExpr | 'default') ((COMMA | '<') (chanExpr | 'default'))* END;
-chanExpr : ID
-           | chanExpr LEFTBRACKET expression RIGHTBRACKET;
+chanExpr locals [DeclarationReference reference]
+            : ID
+            | chanExpr LEFTBRACKET expression RIGHTBRACKET;
 
 expression locals [DeclarationReference reference]
             :  literal                                          #LiteralExpr
@@ -125,7 +130,7 @@ verification locals [Scope scope, DeclarationReference reference] : op=('forall'
 
 assignment  : <assoc=right> expression assign expression #AssignExpr;
 
-arguments  : ((expression | REF ID) ( COMMA (expression | REF ID))*)?;
+arguments  : ((expression | REF ID) (COMMA (expression | REF ID))*)?;
 
 assign     : '=' | ':=' | '+=' | '-=' | '*=' | '/=' | '%='
            | '|=' | '&=' | '^=' | '<<=' | '>>=';

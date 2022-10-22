@@ -1,12 +1,10 @@
 package CodeGenTests;
 
 import org.UcelParser.CodeGeneration.templates.ManualTemplate;
-import org.UcelParser.Util.DeclarationInfo;
-import org.UcelParser.Util.DeclarationReference;
-import org.UcelParser.Util.Scope;
-import org.UcelParser.Util.Type;
+import org.UcelParser.Util.*;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.junit.jupiter.api.Test;
@@ -16,6 +14,8 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.lang.reflect.Field;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -24,42 +24,927 @@ import java.util.stream.Stream;
 import org.UcelParser.CodeGeneration.CodeGenVisitor;
 import org.UcelParser.CodeGeneration.templates.Template;
 import org.UcelParser.UCELParser_Generated.UCELParser;
+import org.stringtemplate.v4.ST;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
+import static org.mockito.Mockito.*;
 
 
 public class CodeGenTests {
 
+    //region Start
+    @Test
+    void startDeclarationSystemGeneratedCorrectly() {
+        var declTemplate = generateDefaultDeclarationTemplate("a", "1");
+        var sysTemplate = generateDefaultSystemTemplate("B");
+
+        var expected = String.format("%s%s", declTemplate, sysTemplate);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
+        var sysNode = mockForVisitorResult(UCELParser.SystemContext.class, sysTemplate, visitor);
+
+        when(node.declarations()).thenReturn(declNode);
+        when(node.system()).thenReturn(sysNode);
+
+        var actual = visitor.visitStart(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void startOneStatementGeneratedCorrectly() {
+        var declTemplate = generateDefaultDeclarationTemplate("a", "1");
+        var stmnt1Template = generateDefaultStatementTemplate();
+        var sysTemplate = generateDefaultSystemTemplate("B");
+
+        var expected = String.format("%s%s%n%s", declTemplate, stmnt1Template,  sysTemplate);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
+        var stmnt1Node = mockForVisitorResult(UCELParser.StatementContext.class, stmnt1Template, visitor);
+        var sysNode = mockForVisitorResult(UCELParser.SystemContext.class, sysTemplate, visitor);
+
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1Node); }};
+
+        when(node.declarations()).thenReturn(declNode);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(sysNode);
+
+        var actual = visitor.visitStart(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void startMultipleStatementsGeneratedCorrectly() {
+        var declTemplate = generateDefaultDeclarationTemplate("a", "1");
+        var stmnt1Template = generateDefaultStatementTemplate();
+        var stmnt2Template = generateDefaultStatementTemplate();
+        var sysTemplate = generateDefaultSystemTemplate("B");
+
+        var expected = String.format("%s%s%n%s%n%s", declTemplate, stmnt1Template, stmnt2Template, sysTemplate);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.StartContext.class);
+        var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
+        var stmnt1Node = mockForVisitorResult(UCELParser.StatementContext.class, stmnt1Template, visitor);
+        var stmnt2Node = mockForVisitorResult(UCELParser.StatementContext.class, stmnt2Template, visitor);
+        var sysNode = mockForVisitorResult(UCELParser.SystemContext.class, sysTemplate, visitor);
+
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1Node); add(stmnt2Node); }};
+
+        when(node.declarations()).thenReturn(declNode);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(sysNode);
+
+        var actual = visitor.visitStart(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region System
+    @Test
+    void systemOneExpressionGeneratedCorrectly() {
+        var exprTemplate = generateDefaultExprTemplate("B");
+        var expected = String.format("system %s;", exprTemplate);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.SystemContext.class);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(exprNode); }};
+
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void systemMultipleExpressionsGeneratedCorrectly() {
+        var expr1Template = generateDefaultExprTemplate("B");
+        var expr2Template = generateDefaultExprTemplate("C");
+        var expected = String.format("system %s, %s;", expr1Template, expr2Template);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1Node = mockForVisitorResult(UCELParser.ExpressionContext.class, expr1Template, visitor);
+        var expr2Node = mockForVisitorResult(UCELParser.ExpressionContext.class, expr2Template, visitor);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1Node); add(expr2Node); }};
+
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+
+    //endregion
+
+    //region Function
+
+    @Test
+    void functionNoParams() {
+        Template type = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        Template ID = new ManualTemplate("functionName");
+        Template block = new ManualTemplate(String.format("{%n}"));
+        Template parameters = new ManualTemplate("");
+
+        String expected = String.format("%s %s(%s)%n%s", type, ID, parameters, block);
+
+        Scope scopeMock = mock(Scope.class);
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.FunctionContext.class);
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, type, visitor);
+        var blockMock = mockForVisitorResult(UCELParser.BlockContext.class, block, visitor);
+        var parametersMock = mockForVisitorResult(UCELParser.ParametersContext.class, parameters, visitor);
+
+        var referenceMock = mock(DeclarationReference.class);
+        var infoMock = mock(DeclarationInfo.class);
+
+        node.reference = referenceMock;
+        node.scope = scopeMock;
+        try {
+            when(scopeMock.get(node.reference)).thenReturn(infoMock);
+        } catch (Exception e) {
+            fail("cannot mock scope.get");
+        }
+
+        when(infoMock.getIdentifier()).thenReturn(ID.toString());
+        when(node.type()).thenReturn(typeMock);
+        when(node.block()).thenReturn(blockMock);
+        when(node.parameters()).thenReturn(parametersMock);
+
+        var actual = visitor.visitFunction(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void functionNoRefs() {
+        Template type = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        Template ID = new ManualTemplate("functionName");
+        Template block = new ManualTemplate(String.format("{%n}"));
+        Template parameters = new ManualTemplate("int a");
+
+        String expected = String.format("%s %s(%s)%n%s", type, ID, parameters, block);
+
+        Scope scopeMock = mock(Scope.class);
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.FunctionContext.class);
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, type, visitor);
+        var blockMock = mockForVisitorResult(UCELParser.BlockContext.class, block, visitor);
+        var parametersMock = mockForVisitorResult(UCELParser.ParametersContext.class, parameters, visitor);
+
+        var referenceMock = mock(DeclarationReference.class);
+        var infoMock = mock(DeclarationInfo.class);
+
+        node.reference = referenceMock;
+        node.scope = scopeMock;
+        try {
+            when(scopeMock.get(node.reference)).thenReturn(infoMock);
+        } catch (Exception e) {
+            fail("cannot mock scope.get");
+        }
+
+        when(infoMock.getIdentifier()).thenReturn(ID.toString());
+        when(node.type()).thenReturn(typeMock);
+        when(node.block()).thenReturn(blockMock);
+        when(node.parameters()).thenReturn(parametersMock);
+
+        var actual = visitor.visitFunction(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    //Does this work...???
+    @Test
+    void functionTwoRefs() {
+        Template type = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        Template block = new ManualTemplate(String.format("{%n}"));
+        Template parameters = new ManualTemplate("");
+
+        String expected = String.format("int functionName1()%n{%n}%n%nint functionName2()%n{%n}");
+
+        Scope scopeMock = mock(Scope.class);
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.FunctionContext.class);
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, type, visitor);
+        var blockMock = mockForVisitorResult(UCELParser.BlockContext.class, block, visitor);
+        when(node.type()).thenReturn(typeMock);
+        when(node.block()).thenReturn(blockMock);
+
+        var parameter = mock(UCELParser.ParameterContext.class);
+        var REFNodeMock = mock(TerminalNode.class);
+        parameter.reference = mock(DeclarationReference.class);
+        when(parameter.REF()).thenReturn(REFNodeMock);
+
+        var parametersMock = mockForVisitorResult(UCELParser.ParametersContext.class, parameters, visitor);
+        var parametersList = new ArrayList<UCELParser.ParameterContext>();
+        parametersList.add(parameter);
+        parametersList.add(parameter);
+        when(parametersMock.parameter()).thenReturn(parametersList);
+        when(node.parameters()).thenReturn(parametersMock);
+
+        var refParamInfoMock = mock(DeclarationInfo.class);
+
+        DeclarationInfo[] declarationInfos = {refParamInfoMock, refParamInfoMock};
+
+        var FuncCallCtxMock1 = mock(UCELParser.FuncCallContext.class);
+        FuncCallCtxMock1.reference = mock(DeclarationReference.class);
+        var FuncCallInfoMock1 = mock(DeclarationInfo.class);
+        try {
+            when(scopeMock.get(FuncCallCtxMock1.reference)).thenReturn(FuncCallInfoMock1);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        when(FuncCallInfoMock1.getIdentifier()).thenReturn("functionName1");
+
+        var FuncCallCtxMock2 = mock(UCELParser.FuncCallContext.class);
+        FuncCallCtxMock2.reference = mock(DeclarationReference.class);
+        var FuncCallInfoMock2 = mock(DeclarationInfo.class);
+        try {
+            when(scopeMock.get(FuncCallCtxMock2.reference)).thenReturn(FuncCallInfoMock2);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        when(FuncCallInfoMock2.getIdentifier()).thenReturn("functionName2");
+
+        var occurrenceMock1 = mock(FuncCallOccurrence.class);
+        when(occurrenceMock1.getFuncCallContext()).thenReturn(FuncCallCtxMock1);
+        when(occurrenceMock1.getRefParams()).thenReturn(declarationInfos);
+
+        var occurrenceMock2 = mock(FuncCallOccurrence.class);
+        when(occurrenceMock2.getFuncCallContext()).thenReturn(FuncCallCtxMock2);
+        when(occurrenceMock2.getRefParams()).thenReturn(declarationInfos);
+
+        var occurrencesList = new ArrayList<FuncCallOccurrence>();
+        occurrencesList.add(occurrenceMock1);
+        occurrencesList.add(occurrenceMock2);
+
+        node.occurrences = occurrencesList;
+        node.scope = scopeMock;
+
+        var actual = visitor.visitFunction(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region Instantiation
+    @Test
+    void instantiationNoParenNoParameterNoArgumentsGeneratedCorrectly() {
+        String id1Name = "a";
+        String id2Name = "b";
+        String expected = String.format("%s = %s();", id1Name, id2Name);
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference ref1Mock = mock(DeclarationReference.class);
+        DeclarationReference ref2Mock = mock(DeclarationReference.class);
+
+        DeclarationInfo info1Mock = mock(DeclarationInfo.class);
+        DeclarationInfo info2Mock = mock(DeclarationInfo.class);
+
+        when(info1Mock.generateName()).thenReturn(id1Name);
+        when(info2Mock.generateName()).thenReturn(id2Name);
+
+        try {
+            when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
+            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.InstantiationContext.class);
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
+
+        String actual = visitor.visitInstantiation(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void instantiationParenNoParameterNoArgumentsGeneratedCorrectly() {
+        String id1Name = "a";
+        String id2Name = "b";
+        String expected = String.format("%s() = %s();", id1Name, id2Name);
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference ref1Mock = mock(DeclarationReference.class);
+        DeclarationReference ref2Mock = mock(DeclarationReference.class);
+
+        DeclarationInfo info1Mock = mock(DeclarationInfo.class);
+        DeclarationInfo info2Mock = mock(DeclarationInfo.class);
+
+        when(info1Mock.generateName()).thenReturn(id1Name);
+        when(info2Mock.generateName()).thenReturn(id2Name);
+
+        try {
+            when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
+            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.InstantiationContext.class);
+        var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
+        when(node.LEFTPAR()).thenReturn(parMocks);
+
+        String actual = visitor.visitInstantiation(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void instantiationParenParameterNoArgumentsGeneratedCorrectly() {
+        String id1Name = "a";
+        String id2Name = "b";
+        var paramTemplate = generateDefaultParametersTemplate("int", "c");
+        String expected = String.format("%s(%s) = %s();", id1Name, paramTemplate, id2Name);
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference ref1Mock = mock(DeclarationReference.class);
+        DeclarationReference ref2Mock = mock(DeclarationReference.class);
+
+        DeclarationInfo info1Mock = mock(DeclarationInfo.class);
+        DeclarationInfo info2Mock = mock(DeclarationInfo.class);
+
+        when(info1Mock.generateName()).thenReturn(id1Name);
+        when(info2Mock.generateName()).thenReturn(id2Name);
+
+        try {
+            when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
+            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.InstantiationContext.class);
+        var paramMock = mockForVisitorResult(UCELParser.ParametersContext.class, paramTemplate, visitor);
+        var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
+        when(node.LEFTPAR()).thenReturn(parMocks);
+        when(node.parameters()).thenReturn(paramMock);
+
+        String actual = visitor.visitInstantiation(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void instantiationNoParenNoParameterArgumentsGeneratedCorrectly() {
+        String id1Name = "a";
+        String id2Name = "b";
+        var argTemplate = generateDefaultArgumentsTemplate(Type.TypeEnum.intType);
+        String expected = String.format("%s = %s(%s);", id1Name, id2Name, argTemplate);
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference ref1Mock = mock(DeclarationReference.class);
+        DeclarationReference ref2Mock = mock(DeclarationReference.class);
+
+        DeclarationInfo info1Mock = mock(DeclarationInfo.class);
+        DeclarationInfo info2Mock = mock(DeclarationInfo.class);
+
+        when(info1Mock.generateName()).thenReturn(id1Name);
+        when(info2Mock.generateName()).thenReturn(id2Name);
+
+        try {
+            when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
+            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.InstantiationContext.class);
+        var argMock = mockForVisitorResult(UCELParser.ArgumentsContext.class, argTemplate, visitor);
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
+        when(node.arguments()).thenReturn(argMock);
+
+        String actual = visitor.visitInstantiation(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void instantiationParenNoParameterArgumentsGeneratedCorrectly() {
+        String id1Name = "a";
+        String id2Name = "b";
+        var argTemplate = generateDefaultArgumentsTemplate(Type.TypeEnum.intType);
+        String expected = String.format("%s() = %s(%s);", id1Name, id2Name, argTemplate);
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference ref1Mock = mock(DeclarationReference.class);
+        DeclarationReference ref2Mock = mock(DeclarationReference.class);
+
+        DeclarationInfo info1Mock = mock(DeclarationInfo.class);
+        DeclarationInfo info2Mock = mock(DeclarationInfo.class);
+
+        when(info1Mock.generateName()).thenReturn(id1Name);
+        when(info2Mock.generateName()).thenReturn(id2Name);
+
+        try {
+            when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
+            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.InstantiationContext.class);
+        var argMock = mockForVisitorResult(UCELParser.ArgumentsContext.class, argTemplate, visitor);
+        var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
+        when(node.LEFTPAR()).thenReturn(parMocks);
+        when(node.arguments()).thenReturn(argMock);
+
+        String actual = visitor.visitInstantiation(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void instantiationParenParameterArgumentsGeneratedCorrectly() {
+        String id1Name = "a";
+        String id2Name = "b";
+        var paramTemplate = generateDefaultParametersTemplate("int", "c");
+        var argTemplate = generateDefaultArgumentsTemplate(Type.TypeEnum.intType);
+        String expected = String.format("%s(%s) = %s(%s);", id1Name, paramTemplate, id2Name, argTemplate);
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference ref1Mock = mock(DeclarationReference.class);
+        DeclarationReference ref2Mock = mock(DeclarationReference.class);
+
+        DeclarationInfo info1Mock = mock(DeclarationInfo.class);
+        DeclarationInfo info2Mock = mock(DeclarationInfo.class);
+
+        when(info1Mock.generateName()).thenReturn(id1Name);
+        when(info2Mock.generateName()).thenReturn(id2Name);
+
+        try {
+            when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
+            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.InstantiationContext.class);
+        var paramMock = mockForVisitorResult(UCELParser.ParametersContext.class, paramTemplate, visitor);
+        var argMock = mockForVisitorResult(UCELParser.ArgumentsContext.class, argTemplate, visitor);
+        var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
+        node.instantiatedReference = ref1Mock;
+        node.constructorReference = ref2Mock;
+        when(node.LEFTPAR()).thenReturn(parMocks);
+        when(node.parameters()).thenReturn(paramMock);
+        when(node.arguments()).thenReturn(argMock);
+
+        String actual = visitor.visitInstantiation(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region parameters
+    @Test
+    void parametersNoParameterGeneratedCorrectly() {
+        String expected = "";
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.ParametersContext.class);
+
+        var actual = visitor.visitParameters(node).toString();
+        assertEquals(expected, actual);
+    }
+    @Test
+    void parametersOneParameterGeneratedCorrectly() {
+        var paramTemplate = generateDefaultParametersTemplate("int", "a");
+        var expected = paramTemplate.toString();
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.ParametersContext.class);
+        var paramNodes = new ArrayList<UCELParser.ParameterContext>()
+            {{add(mockForVisitorResult(UCELParser.ParameterContext.class, paramTemplate, visitor));}};
+
+        when(node.parameter()).thenReturn(paramNodes);
+
+        var actual = visitor.visitParameters(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void parametersMultipleParameterGeneratedCorrectly() {
+        var param1Template = generateDefaultParametersTemplate("int", "a");
+        var param2Template = generateDefaultParametersTemplate("bool", "b");
+        var expected = String.format("%s, %s", param1Template, param2Template);
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.ParametersContext.class);
+        var paramNodes = new ArrayList<UCELParser.ParameterContext>()
+        {{
+            add(mockForVisitorResult(UCELParser.ParameterContext.class, param1Template, visitor));
+            add(mockForVisitorResult(UCELParser.ParameterContext.class, param2Template, visitor));
+        }};
+
+        when(node.parameter()).thenReturn(paramNodes);
+
+        var actual = visitor.visitParameters(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void parameterReferenceIDGeneratedCorrectly() {
+        var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var id = "a";
+        var expected = "";
+        var variable = mock(DeclarationInfo.class);
+        var ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(id);
+
+        var scopeMock = mock(Scope.class);
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var refNode = mock(TerminalNode.class);
+
+        var node = mock(UCELParser.ParameterContext.class);
+        var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
+        node.reference = ref;
+        when(refNode.getText()).thenReturn("ref");
+        when(node.REF()).thenReturn(refNode);
+        when(node.type()).thenReturn(typeNode);
+
+        var actual = visitor.visitParameter(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void parameterNormalIDGeneratedCorrectly() {
+        var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var id = "a";
+        var expected = String.format("%s %s", typeTemplate, id);
+        var variable = mock(DeclarationInfo.class);
+        var ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(id);
+
+        var scopeMock = mock(Scope.class);
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.ParameterContext.class);
+        var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
+        node.reference = ref;
+        when(node.type()).thenReturn(typeNode);
+
+        var actual = visitor.visitParameter(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void parameterIDWithOneArrayDeclGeneratedCorrectly() {
+        var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var arrayDeclTemplate = generateDefaultArrayDeclTemplate();
+        var id = "a";
+        var expected = String.format("%s %s%s", typeTemplate, id, arrayDeclTemplate);
+        var variable = mock(DeclarationInfo.class);
+        var ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(id);
+
+        var scopeMock = mock(Scope.class);
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.ParameterContext.class);
+        var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
+        var arrayNode = new ArrayList<UCELParser.ArrayDeclContext>()
+            {{add(mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDeclTemplate, visitor));}};
+        node.reference = ref;
+
+        when(node.arrayDecl()).thenReturn(arrayNode);
+        when(node.type()).thenReturn(typeNode);
+
+        var actual = visitor.visitParameter(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void parameterIDWithMultipleArrayDeclGeneratedCorrectly() {
+        var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var arrayDeclTemplate = generateDefaultArrayDeclTemplate();
+        var id = "a";
+        var expected = String.format("%s %s%s%s", typeTemplate, id, arrayDeclTemplate, arrayDeclTemplate);
+        var variable = mock(DeclarationInfo.class);
+        var ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(id);
+
+        var scopeMock = mock(Scope.class);
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.ParameterContext.class);
+        var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
+        var arrayNode = new ArrayList<UCELParser.ArrayDeclContext>()
+        {{
+            add(mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDeclTemplate, visitor));
+            add(mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDeclTemplate, visitor));
+        }};
+        node.reference = ref;
+
+        when(node.arrayDecl()).thenReturn(arrayNode);
+        when(node.type()).thenReturn(typeNode);
+
+        var actual = visitor.visitParameter(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void parameterIDAmpersandGeneratedCorrectly() {
+        var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        var id = "a";
+        var ampersand = "&";
+        var expected = String.format("%s%s %s", typeTemplate, ampersand, id);
+        var variable = mock(DeclarationInfo.class);
+        var ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(id);
+
+        var scopeMock = mock(Scope.class);
+
+        try {
+            when(scopeMock.get(ref)).thenReturn(variable);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+        var ampNode = mock(TerminalNode.class);
+
+        var node = mock(UCELParser.ParameterContext.class);
+        var typeNode = mockForVisitorResult(UCELParser.TypeContext.class, typeTemplate, visitor);
+
+        node.reference = ref;
+
+        when(ampNode.getText()).thenReturn(ampersand);
+        when(node.BITAND()).thenReturn(ampNode);
+        when(node.type()).thenReturn(typeNode);
+
+        var actual = visitor.visitParameter(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region Channel expression
+    @Test
+    void chanExprIDGeneratedCorrectly() {
+        String expected = "a";
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference declarationReferenceMock = mock(DeclarationReference.class);
+        DeclarationInfo declarationInfoMock = mock(DeclarationInfo.class);
+
+        when(declarationInfoMock.generateName()).thenReturn("a");
+
+        try {
+            when(scopeMock.get(declarationReferenceMock)).thenReturn(declarationInfoMock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.ChanExprContext.class);
+        node.reference = declarationReferenceMock;
+
+        String actual = visitor.visitChanExpr(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void chanExprIDWithBracketsGeneratedCorrectly() {
+        var chanTemplate = generateDefaultChanExprTemplate("a");
+        var exprTemplate = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        String expected = String.format("%s[%s]", chanTemplate, exprTemplate);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.ChanExprContext.class);
+        var chanNode = mockForVisitorResult(UCELParser.ChanExprContext.class, chanTemplate, visitor);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+
+        when(node.chanExpr()).thenReturn(chanNode);
+        when(node.expression()).thenReturn(exprNode);
+
+        String actual = visitor.visitChanExpr(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region Declarations
+    @Test
+    public void declarationsGeneratedCorrectly() {
+        Template variableDecl1 = generateDefaultLocalDeclaration(Type.TypeEnum.intType, "a");
+        Template variableDecl2 = generateDefaultLocalDeclaration(Type.TypeEnum.boolType, "b");
+
+        String expected = String.format("%s%n%s", variableDecl1, variableDecl2);
+
+        var visitor = new CodeGenVisitor();
+
+        var variableDecl1Mock = mockForVisitorResult(UCELParser.VariableDeclContext.class, variableDecl1, visitor);
+        var variableDecl2Mock = mockForVisitorResult(UCELParser.VariableDeclContext.class, variableDecl2, visitor);
+
+        var declarations = new ArrayList<ParseTree>();
+        declarations.add(variableDecl1Mock);
+        declarations.add(variableDecl2Mock);
+
+        var node = mock(UCELParser.DeclarationsContext.class);
+        node.children = declarations;
+
+        var actual = visitor.visitDeclarations(node).toString();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
+    //region fieldDecl
+    @Test
+    public void fieldDeclSingle() {
+        Template type = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        Template arrayDeclID = generateDefaultExprTemplate("a");
+        String expected = String.format("%s %s;", type, arrayDeclID);
+
+        var visitor = new CodeGenVisitor();
+
+        var arrayDeclIDContext = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclID, visitor);
+        List<UCELParser.ArrayDeclIDContext> arrayDeclIDContexts = new ArrayList<>();
+        arrayDeclIDContexts.add(arrayDeclIDContext);
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, type, visitor);
+
+        var node = mock(UCELParser.FieldDeclContext.class);
+
+        when(node.type()).thenReturn(typeMock);
+        when(node.arrayDeclID()).thenReturn(arrayDeclIDContexts);
+
+        var actual = visitor.visitFieldDecl(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void fieldDeclMultiple() {
+        Template arrayDeclID1 = generateDefaultExprTemplate("a");
+        Template arrayDeclID2 = generateDefaultExprTemplate("b");
+        Template template = generateDefaultTypeTemplate(Type.TypeEnum.intType);
+        String expected = String.format("%s %s, %s;", template, arrayDeclID1, arrayDeclID2);
+
+        var visitor = new CodeGenVisitor();
+
+        var arrayDeclIDContext1 = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclID1, visitor);
+        var arrayDeclIDContext2 = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclID2, visitor);
+
+        List<UCELParser.ArrayDeclIDContext> arrayDeclIDContexts = new ArrayList<>();
+        arrayDeclIDContexts.add(arrayDeclIDContext1);
+        arrayDeclIDContexts.add(arrayDeclIDContext2);
+
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, template, visitor);
+
+        var node = mock(UCELParser.FieldDeclContext.class);
+
+        when(node.type()).thenReturn(typeMock);
+        when(node.arrayDeclID()).thenReturn(arrayDeclIDContexts);
+
+        var actual = visitor.visitFieldDecl(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region literal
+
+    @Test
+    public void literalExpr() {
+        Template literal = generateDefaultLiteralTemplate(Type.TypeEnum.boolType);
+        String expected = literal.toString();
+
+        var visitor = new CodeGenVisitor();
+
+        var literalMock = mockForVisitorResult(UCELParser.LiteralContext.class, literal, visitor);
+        var ctx = mock(UCELParser.LiteralExprContext.class);
+
+        when(ctx.literal()).thenReturn(literalMock);
+
+        var actual = visitor.visitLiteralExpr(ctx).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void literal() {
+        String expected = generateDefaultLiteralTemplate(Type.TypeEnum.intType).toString();
+
+        var visitor = new CodeGenVisitor();
+
+        var terminalNode = mock(TerminalNode.class);
+
+        var node = mock(UCELParser.LiteralContext.class);
+        when(node.NAT()).thenReturn(terminalNode);
+        when(node.getText()).thenReturn(expected);
+        var actual = visitor.visitLiteral(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
     //region arrayDeclID
     @Test
-    public void ArrayDeclIDNoArray() {
+    public void arrayDeclIDNoArray() {
         String expected = "var1";
+
+//        Template arrayDeclIDTemplate = mock(Template.class);
+//        arrayDeclIDTemplate.template = new ST("<ID>");
+//        arrayDeclIDTemplate.template.add("ID", expected);
+
         UCELParser.ArrayDeclIDContext node = mock(UCELParser.ArrayDeclIDContext.class);
         TerminalNodeImpl id = new TerminalNodeImpl(new CommonToken(UCELParser.ID, expected));
         when(node.ID()).thenReturn(id);
         CodeGenVisitor visitor = new CodeGenVisitor();
-        String template = visitor.visitArrayDeclID(node).toString();
-        assertEquals(expected, template);
+        String actual = visitor.visitArrayDeclID(node).toString();
+
+        assertEquals(expected, actual);
     }
 
     @Test
-    public void ArrayDeclIDWithArray() {
+    public void arrayDeclIDWithArray() {
+        String expected = "var1[5][5][5]";
+
         Template arrayDecl = new ManualTemplate("[5]");
-        String expected = "var1[5][5]";
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
         UCELParser.ArrayDeclIDContext node = mock(UCELParser.ArrayDeclIDContext.class);
-        var id = new TerminalNodeImpl(new CommonToken(UCELParser.ID, "var1"));
+
         var arrayDeclMock = mockForVisitorResult(UCELParser.ArrayDeclContext.class, arrayDecl, visitor);
         List<UCELParser.ArrayDeclContext> arrayDeclList = new ArrayList<>();
         arrayDeclList.add(arrayDeclMock);
         arrayDeclList.add(arrayDeclMock);
-        when(node.ID()).thenReturn(id);
+        arrayDeclList.add(arrayDeclMock);
         when(node.arrayDecl()).thenReturn(arrayDeclList);
+
+        TerminalNodeImpl id = new TerminalNodeImpl(new CommonToken(UCELParser.ID, "var1"));
+        when(node.ID()).thenReturn(id);
 
         String actual = visitor.visitArrayDeclID(node).toString();
 
@@ -70,7 +955,7 @@ public class CodeGenTests {
     //region boolean
     @ParameterizedTest
     @ValueSource(strings = {"true", "false"})
-    void BooleanGeneratedCorrectly(String expected) {
+    void booleanGeneratedCorrectly(String expected) {
         var ctx = mock(UCELParser.BoolContext.class);
         when(ctx.getText()).thenReturn(expected);
 
@@ -81,24 +966,163 @@ public class CodeGenTests {
     }
     //endregion
 
+    //region Unary
+    @ParameterizedTest
+    @ValueSource(strings = {"+", "-", "not ", "!"})
+    void unaryGeneratedCorrectly(String expected) {
+        var node = mock(UCELParser.UnaryContext.class);
+        when(node.getText()).thenReturn(expected.replace(" ", ""));
+
+        var visitor = new CodeGenVisitor();
+        var actual = visitor.visitUnary(node).toString();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
+    //region Arguments (and ArgumentsImd)
+    @Test
+    void argumentsNoExpressionsGeneratedCorrectly() {
+        var expected = "";
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.ArgumentsContext.class);
+        var actual = visitor.visitArguments(node).toString();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void argumentsOneExpressionsGeneratedCorrectly() {
+        var exprTemplate = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        var expected = exprTemplate.toString();
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.ArgumentsContext.class);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+        var exprList = new ArrayList<UCELParser.ExpressionContext>() {{ add(exprNode); }};
+
+        when(node.expression(0)).thenReturn(exprNode);
+        when(node.expression()).thenReturn(exprList);
+
+        var actual = visitor.visitArguments(node).toString();
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void argumentsManyExpressionsGeneratedCorrectly() {
+        var expr1Template = generateDefaultExprTemplate(Type.TypeEnum.intType);
+        var expr2Template = generateDefaultExprTemplate(Type.TypeEnum.boolType);
+        var expr3Template = generateDefaultExprTemplate(Type.TypeEnum.doubleType);
+        var expected = String.format("%s, %s, %s", expr1Template, expr2Template, expr3Template);
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.ArgumentsContext.class);
+        var expr1Node = mockForVisitorResult(UCELParser.ExpressionContext.class, expr1Template, visitor);
+        var expr2Node = mockForVisitorResult(UCELParser.ExpressionContext.class, expr2Template, visitor);
+        var expr3Node = mockForVisitorResult(UCELParser.ExpressionContext.class, expr3Template, visitor);
+        var exprList = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1Node); add(expr2Node); add(expr3Node); }};
+
+        when(node.expression()).thenReturn(exprList);
+
+        var actual = visitor.visitArguments(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void argumentsIgnoresREFIDGeneratedCorrectly() {
+        var expected = "";
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.ArgumentsContext.class);
+
+        when(node.ID()).thenThrow(new RuntimeException());
+        when(node.REF()).thenThrow(new RuntimeException());
+        when(node.ID(0)).thenThrow(new RuntimeException());
+        when(node.REF(0)).thenThrow(new RuntimeException());
+
+        var actual = visitor.visitArguments(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
+    //region LocalDeclaration
+    @Test
+    void localDeclarationTypeDeclGeneratedCorrectly() {
+        var typeDeclTemplate = generateDefaultTypeDeclTemplate("a", "10");
+        var expected = typeDeclTemplate.toString();
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.LocalDeclarationContext.class);
+        var typeDeclNode = mockForVisitorResult(UCELParser.TypeDeclContext.class, typeDeclTemplate, visitor);
+
+        when(node.typeDecl()).thenReturn(typeDeclNode);
+
+        var actual = visitor.visitLocalDeclaration(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void localDeclarationVariableDeclGeneratedCorrectly() {
+        var varDeclTemplate = generateDefaultVariableDeclTemplate("a", "10");
+        var expected = varDeclTemplate.toString();
+
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.LocalDeclarationContext.class);
+        var typeDeclNode = mockForVisitorResult(UCELParser.VariableDeclContext.class, varDeclTemplate, visitor);
+
+        when(node.variableDecl()).thenReturn(typeDeclNode);
+
+        var actual = visitor.visitLocalDeclaration(node).toString();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
     //region TypeDecl
 
     @Test
-    void typeDeclOneIDCorrectly() {
-        Template arrayDeclIdTemp = new ManualTemplate("number");
-        Template typeTemp = new ManualTemplate("int");
-        String expected = "typedef int number;";
+    public void typeDeclOneIDGeneratedCorrectly() {
+        String expected = "typedef int list[10];";
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference declarationReferenceMock = mock(DeclarationReference.class);
+        DeclarationInfo declarationInfoMock = mock(DeclarationInfo.class);
+
+        List<DeclarationReference> declarationReferences = new ArrayList<>();
+        declarationReferences.add(declarationReferenceMock);
+
+        when(declarationInfoMock.generateName()).thenReturn("list");
+
+        try {
+            when(scopeMock.get(declarationReferenceMock)).thenReturn(declarationInfoMock);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var arrayDeclIDMock = mock(Template.class);
+        var arrayDeclIDContext = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclIDMock, visitor);
+
+        var arrayDeclIDMockModified = mock(Template.class);
+
+        List<UCELParser.ArrayDeclIDContext> arrayDeclIDs = new ArrayList<>();
+        arrayDeclIDs.add(arrayDeclIDContext);
+
+        Template type = new ManualTemplate("int");
+        var typeContext = mockForVisitorResult(UCELParser.TypeContext.class, type, visitor);
 
         var node = mock(UCELParser.TypeDeclContext.class);
-        var visitor = new CodeGenVisitor();
-        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeTemp, visitor);
-        var arrayDeclIDMock = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclIdTemp, visitor);
 
-        List<UCELParser.ArrayDeclIDContext> arrayDeclIDContexts = new ArrayList<>();
-        arrayDeclIDContexts.add(arrayDeclIDMock);
-
-        when(node.arrayDeclID()).thenReturn(arrayDeclIDContexts);
-        when(node.type()).thenReturn(typeMock);
+        when(arrayDeclIDMockModified.toString()).thenReturn("list[10]");
+        when(arrayDeclIDMock.replaceValue("ID", "list")).thenReturn(arrayDeclIDMockModified);
+        when(node.type()).thenReturn(typeContext);
+        when(node.arrayDeclID()).thenReturn(arrayDeclIDs);
+        when(node.arrayDeclID(0)).thenReturn(arrayDeclIDContext);
+        node.references = declarationReferences;
 
         String actual = visitor.visitTypeDecl(node).toString();
 
@@ -107,23 +1131,56 @@ public class CodeGenTests {
 
     @Test
     void typeDeclMultipleIDsCorrectly() {
-        Template arrayDeclIdTemp1 = new ManualTemplate("numberType1");
-        Template arrayDeclIdTemp2 = new ManualTemplate("numberType2");
-        Template typeTemp = new ManualTemplate("int");
-        String expected = "typedef int numberType1, numberType2;";
+        String expected = "typedef int list[10], betterInt;";
+        Scope scopeMock = mock(Scope.class);
+        DeclarationReference declarationReferenceMock1 = mock(DeclarationReference.class);
+        DeclarationInfo declarationInfoMock1 = mock(DeclarationInfo.class);
+
+        DeclarationReference declarationReferenceMock2 = mock(DeclarationReference.class);
+        DeclarationInfo declarationInfoMock2 = mock(DeclarationInfo.class);
+
+        List<DeclarationReference> declarationReferences = new ArrayList<>();
+        declarationReferences.add(declarationReferenceMock1);
+        declarationReferences.add(declarationReferenceMock2);
+
+
+        when(declarationInfoMock1.generateName()).thenReturn("list");
+        when(declarationInfoMock2.generateName()).thenReturn("betterInt");
+
+        try {
+            when(scopeMock.get(declarationReferenceMock1)).thenReturn(declarationInfoMock1);
+            when(scopeMock.get(declarationReferenceMock2)).thenReturn(declarationInfoMock2);
+        } catch (Exception e) {
+            fail("error: can't mock scope");
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var arrayDeclIDMock = mock(Template.class);
+        var arrayDeclIDContext = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclIDMock, visitor);
+
+        var arrayDeclIDMockModified1 = mock(Template.class);
+        var arrayDeclIDMockModified2 = mock(Template.class);
+
+        List<UCELParser.ArrayDeclIDContext> arrayDeclIDs = new ArrayList<>();
+        arrayDeclIDs.add(arrayDeclIDContext);
+        arrayDeclIDs.add(arrayDeclIDContext);
+
+        Template type = new ManualTemplate("int");
+        var typeContext = mockForVisitorResult(UCELParser.TypeContext.class, type, visitor);
 
         var node = mock(UCELParser.TypeDeclContext.class);
-        var visitor = new CodeGenVisitor();
-        var arrayDeclIdTemp1Mock = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclIdTemp1, visitor);
-        var arrayDeclIdTemp2Mock = mockForVisitorResult(UCELParser.ArrayDeclIDContext.class, arrayDeclIdTemp2, visitor);
-        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeTemp, visitor);
 
-        List<UCELParser.ArrayDeclIDContext> arrayDeclIDContexts = new ArrayList<>();
-        arrayDeclIDContexts.add(arrayDeclIdTemp1Mock);
-        arrayDeclIDContexts.add(arrayDeclIdTemp2Mock);
+        when(arrayDeclIDMockModified1.toString()).thenReturn("list[10]");
+        when(arrayDeclIDMockModified2.toString()).thenReturn("betterInt");
+        when(arrayDeclIDMock.replaceValue("ID", "list")).thenReturn(arrayDeclIDMockModified1);
+        when(arrayDeclIDMock.replaceValue("ID", "betterInt")).thenReturn(arrayDeclIDMockModified2);
+        when(node.type()).thenReturn(typeContext);
+        when(node.arrayDeclID()).thenReturn(arrayDeclIDs);
+        when(node.arrayDeclID(0)).thenReturn(arrayDeclIDContext);
+        when(node.arrayDeclID(1)).thenReturn(arrayDeclIDContext);
 
-        when(node.type()).thenReturn(typeMock);
-        when(node.arrayDeclID()).thenReturn(arrayDeclIDContexts);
+        node.references = declarationReferences;
 
         String actual = visitor.visitTypeDecl(node).toString();
 
@@ -135,7 +1192,7 @@ public class CodeGenTests {
     //region prefix
     @ParameterizedTest
     @ValueSource(strings = {"urgent", "beta", "meta", "const"})
-    void PrefixGeneratedCorrectly(String expected) {
+    void prefixGeneratedCorrectly(String expected) {
         var visitor = new CodeGenVisitor();
 
         var node = mock(UCELParser.PrefixContext.class);
@@ -150,7 +1207,7 @@ public class CodeGenTests {
     //region initialiser
 
     @Test
-    void InitialiserExpressionGeneratedCorrectly() {
+    void initialiserExpressionGeneratedCorrectly() {
         Template expr = generateDefaultExprTemplate(Type.TypeEnum.intType);
 
         var visitor = new CodeGenVisitor();
@@ -166,7 +1223,7 @@ public class CodeGenTests {
     }
 
     @Test
-    void InitialiserNoExpr() {
+    void initialiserNoExpr() {
         String expected = "{}";
         var visitor = new CodeGenVisitor();
 
@@ -178,7 +1235,7 @@ public class CodeGenTests {
     }
 
     @Test
-    void InitialiserGeneratedCorrectly() {
+    void initialiserGeneratedCorrectly() {
         Template expr = generateDefaultExprTemplate(Type.TypeEnum.intType);
         String expected = String.format("{%s, %s}", expr, expr);
 
@@ -202,7 +1259,7 @@ public class CodeGenTests {
     //region TypeID
 
     @Test
-    void TypeIDIDGeneratedCorrectly() {
+    void typeIDIDGeneratedCorrectly() {
         String variableID = "var1";
         DeclarationInfo variable = mock(DeclarationInfo.class);
         DeclarationReference ref = mock(DeclarationReference.class);
@@ -213,7 +1270,7 @@ public class CodeGenTests {
         var node = mock(UCELParser.TypeIDIDContext.class);
         node.reference = ref;
 
-        when(variable.getIdentifier()).thenReturn(variableID);
+        when(variable.generateName()).thenReturn(variableID);
         try {
             when(scopeMock.get(ref)).thenReturn(variable);
         } catch (Exception e) {
@@ -226,7 +1283,7 @@ public class CodeGenTests {
     }
 
     @Test
-    void TypeIDTypeGeneratedCorrectly() {
+    void typeIDTypeGeneratedCorrectly() {
         String expected = generateDefaultTypeTemplate(Type.TypeEnum.doubleType).toString();
 
         var visitor = new CodeGenVisitor();
@@ -241,7 +1298,7 @@ public class CodeGenTests {
 
 
     @Test
-    void TypeIDIntGeneratedCorrectly() {
+    void typeIDIntGeneratedCorrectly() {
         Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
         String expected = String.format("int[%s,%s]", exprTemp, exprTemp);
 
@@ -259,7 +1316,7 @@ public class CodeGenTests {
    }
 
     @Test
-    void TypeIDIntNoLeftExprGeneratedCorrectly() {
+    void typeIDIntNoLeftExprGeneratedCorrectly() {
         Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
         String expected = String.format("int[,%s]", exprTemp);
 
@@ -275,7 +1332,7 @@ public class CodeGenTests {
         assertEquals(expected, actual);
     }
     @Test
-    void TypeIDIntNoRightExprGeneratedCorrectly() {
+    void typeIDIntNoRightExprGeneratedCorrectly() {
         Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
         String expected = String.format("int[%s,]", exprTemp);
 
@@ -292,7 +1349,7 @@ public class CodeGenTests {
     }
 
     @Test
-    void TypeIDScalarGeneratedCorrectly() {
+    void typeIDScalarGeneratedCorrectly() {
         Template exprTemp = generateDefaultExprTemplate(Type.TypeEnum.intType);
         Template scalarTemp = generateDefaultTypeTemplate(Type.TypeEnum.scalarType);
         String expected = String.format("%s[%s]", scalarTemp, exprTemp);
@@ -310,10 +1367,10 @@ public class CodeGenTests {
     }
 
     @Test
-    void TypeIDStructGeneratedCorrectly() {
+    void typeIDStructGeneratedCorrectly() {
         Template fieldDecl1Temp = new ManualTemplate("int a;");
         Template fieldDecl2Temp = new ManualTemplate("int b;");
-        String expected = String.format("struct {\n%s\n%s\n}",
+        String expected = String.format("struct {%n%s%n%s%n}",
                 fieldDecl1Temp,
                 fieldDecl2Temp);
 
@@ -337,7 +1394,7 @@ public class CodeGenTests {
     //endregion
     //region Type
     @Test
-    void TypeWithPrefixGeneratedCorrectly() {
+    void typeWithPrefixGeneratedCorrectly() {
         Template prefixTemplate = new ManualTemplate("urgent");
         Template typeIDTemplate = new ManualTemplate("int[0,10]");
         String expected = "urgent int[0,10]";
@@ -357,7 +1414,7 @@ public class CodeGenTests {
     }
 
     @Test
-    void TypeNoPrefixGeneratedCorrectly() {
+    void typeNoPrefixGeneratedCorrectly() {
         Template typeIDTemplate = new ManualTemplate("int[0,10]");
         String expected = "int[0,10]";
 
@@ -376,7 +1433,7 @@ public class CodeGenTests {
 
     //region variableDecl
     @Test
-    void variableDeclSingleVarWithType() {
+    void tariableDeclSingleVarWithType() {
         Template typeTemp = new ManualTemplate("int[0,10]");
         Template variableIdTemp = new ManualTemplate("goimer = 5");
         String expected = "int[0,10] goimer = 5;";
@@ -471,8 +1528,10 @@ public class CodeGenTests {
         Template arrayDecl = new ManualTemplate("[10]");
         String expected = "var1[10]";
         String variableID = "var1";
-        DeclarationInfo variable = new DeclarationInfo(variableID, new Type(Type.TypeEnum.intType, 10));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(variableID);
 
         Scope scopeMock = mock(Scope.class);
         var visitor = new CodeGenVisitor(scopeMock);
@@ -501,8 +1560,10 @@ public class CodeGenTests {
         Template initTemplate = new ManualTemplate("5");
         String expected = "var1 = 5";
         String variableID = "var1";
-        DeclarationInfo variable = new DeclarationInfo(variableID, new Type(Type.TypeEnum.intType));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(variableID);
 
         Scope scopeMock = mock(Scope.class);
         var visitor = new CodeGenVisitor(scopeMock);
@@ -530,8 +1591,10 @@ public class CodeGenTests {
         String expected = "var1[10][5]";
         String variableID = "var1";
         // TODO: set correct array type for declarationinfo maybe
-        DeclarationInfo variable = new DeclarationInfo(variableID, new Type(Type.TypeEnum.intType));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(variableID);
 
         Scope scopeMock = mock(Scope.class);
         var visitor = new CodeGenVisitor(scopeMock);
@@ -566,8 +1629,10 @@ public class CodeGenTests {
         String expected = "var1[][] = {{1,2,3}, {1,2,3,4}}";
         String variableID = "var1";
         // TODO: set correct array type for declarationinfo maybe
-        DeclarationInfo variable = new DeclarationInfo(variableID, new Type(Type.TypeEnum.intType));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(variableID);
 
         Scope scopeMock = mock(Scope.class);
         var visitor = new CodeGenVisitor(scopeMock);
@@ -653,21 +1718,25 @@ public class CodeGenTests {
 
     //region Assignment
 
-    @ParameterizedTest(name = "{index} => Assignment expression {0} = {1}")
+    @ParameterizedTest(name = "{index} => Assignment expression {0} {2} {1}")
     @MethodSource("assignments")
-    void assignmentGeneratedCorrectly(String left, String right) {
+    void assignmentGeneratedCorrectly(String left, String right, String op) {
         Template leftExpr = new ManualTemplate(left);
         Template rightExpr = new ManualTemplate(right);
-        String expected = String.format("%s = %s", leftExpr, rightExpr);
+        Template opTemp = new ManualTemplate(op);
+        String expected = String.format("%s %s %s", leftExpr, opTemp, rightExpr);
 
         var visitor = new CodeGenVisitor();
 
         var node = mock(UCELParser.AssignExprContext.class);
         var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, leftExpr, visitor);
         var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, rightExpr, visitor);
+        var assign = mock(UCELParser.AssignContext.class);
 
         when(node.expression(0)).thenReturn(expr1);
         when(node.expression(1)).thenReturn(expr2);
+        when(assign.getText()).thenReturn(opTemp.toString());
+        when(node.assign()).thenReturn(assign);
 
         var actual = visitor.visitAssignExpr(node).toString();
 
@@ -678,12 +1747,12 @@ public class CodeGenTests {
 
         ArrayList<Arguments> args = new ArrayList<Arguments>();
 
-        args.add(Arguments.arguments("var1", "1 + 2"));
-        args.add(Arguments.arguments("var1", "true"));
-        args.add(Arguments.arguments("var1", "!var2"));
-        args.add(Arguments.arguments("var1", "1.02 - 5.2"));
-        args.add(Arguments.arguments("var1", "false"));
-        args.add(Arguments.arguments("var1", "goimer"));
+        args.add(Arguments.arguments("var1", "1 + 2", "="));
+        args.add(Arguments.arguments("var1", "true", "&="));
+        args.add(Arguments.arguments("var1", "!var2", "|="));
+        args.add(Arguments.arguments("var1", "1.02 - 5.2", "="));
+        args.add(Arguments.arguments("var1", "false", "="));
+        args.add(Arguments.arguments("var1", "goimer", "&="));
 
         return args.stream();
     }
@@ -698,8 +1767,10 @@ public class CodeGenTests {
     @ParameterizedTest(name = "{index} => ID look-up in expression for ID = \"{0}\"")
     @ValueSource(strings = {"a", "awd901", "Ada"})
     void idExprGeneratedCorrectly(String name) {
-        DeclarationInfo variable = new DeclarationInfo(name, new Type(Type.TypeEnum.intType));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(name);
 
         var scopeMock = mock(Scope.class);
 
@@ -1271,10 +2342,13 @@ public class CodeGenTests {
         var name = "abc";
         var typeTemplate = generateDefaultTypeTemplate(Type.TypeEnum.intType);
         var exprTemplate = generateDefaultExprTemplate(Type.TypeEnum.boolType);
-        DeclarationInfo variable = new DeclarationInfo(name, new Type(Type.TypeEnum.intType));
-        DeclarationReference ref = new DeclarationReference(0, 1);
         var expected = String.format("%s (%s:%s) %s", op, name, typeTemplate, exprTemplate);
         var opToken = mock(CommonToken.class);
+
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(name);
 
         var scopeMock = mock(Scope.class);
 
@@ -1591,8 +2665,10 @@ public class CodeGenTests {
         var stmntResult = generateDefaultStatementTemplate();
         var expected = String.format("for (%s:%s) %s", idResult, typeResult, stmntResult);
 
-        DeclarationInfo variable = new DeclarationInfo(idResult.toString(), new Type(Type.TypeEnum.intType, 1));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+        
+        when(variable.generateName()).thenReturn(idResult.toString());
 
         var scopeMock = mock(Scope.class);
 
@@ -1625,8 +2701,10 @@ public class CodeGenTests {
         var stmntResult = generateDefaultStatementTemplate();
         var expected = String.format("for (%s:%s) %s", idResult, typeResult, stmntResult);
 
-        DeclarationInfo variable = new DeclarationInfo(idResult.toString(), new Type(Type.TypeEnum.intType, 1));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(idResult.toString());
 
         var scopeMock = mock(Scope.class);
 
@@ -1658,8 +2736,10 @@ public class CodeGenTests {
         var stmntResult = generateDefaultStatementTemplate();
         var expected = String.format("for (%s:%s) %s", idResult, typeResult, stmntResult);
 
-        DeclarationInfo variable = new DeclarationInfo(idResult.toString(), new Type(Type.TypeEnum.intType, 1));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(idResult.toString());
 
         var scopeMock = mock(Scope.class);
 
@@ -1691,8 +2771,10 @@ public class CodeGenTests {
         var stmntResult = generateDefaultStatementTemplate();
         var expected = String.format("for (%s:%s) %s", idResult, typeResult, stmntResult);
 
-        DeclarationInfo variable = new DeclarationInfo(idResult.toString(), new Type(Type.TypeEnum.intType, 1));
-        DeclarationReference ref = new DeclarationReference(0, 1);
+        DeclarationInfo variable = mock(DeclarationInfo.class);
+        DeclarationReference ref = mock(DeclarationReference.class);
+
+        when(variable.generateName()).thenReturn(idResult.toString());
 
         var scopeMock = mock(Scope.class);
 
@@ -1727,14 +2809,14 @@ public class CodeGenTests {
         var exprResult = generateDefaultExprTemplate(type);
         var expected = String.format("return %s;", exprResult);
 
-        var node = mock(UCELParser.ReturnstatementContext.class);
+        var node = mock(UCELParser.ReturnStatementContext.class);
         CodeGenVisitor visitor = new CodeGenVisitor();
 
         var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprResult, visitor);
 
         when(node.expression()).thenReturn(exprMock);
 
-        String actual = visitor.visitReturnstatement(node).toString();
+        String actual = visitor.visitReturnStatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1743,10 +2825,10 @@ public class CodeGenTests {
     void returnStatementEmptyExprGeneratedCorrectly() {
         var expected = "return;";
 
-        var node = mock(UCELParser.ReturnstatementContext.class);
+        var node = mock(UCELParser.ReturnStatementContext.class);
         CodeGenVisitor visitor = new CodeGenVisitor();
 
-        String actual = visitor.visitReturnstatement(node).toString();
+        String actual = visitor.visitReturnStatement(node).toString();
 
         assertEquals(expected, actual);
     }
@@ -1761,6 +2843,10 @@ public class CodeGenTests {
         CodeGenVisitor visitor = new CodeGenVisitor();
 
         var node = mock(UCELParser.BlockContext.class);
+        var scopeMock = mock(Scope.class);
+
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1778,8 +2864,12 @@ public class CodeGenTests {
         var localDecls = new ArrayList<UCELParser.LocalDeclarationContext>()
             {{ add(mockForVisitorResult(UCELParser.LocalDeclarationContext.class, localDeclTemplate, visitor)); }};
         var node = mock(UCELParser.BlockContext.class);
+        var scopeMock = mock(Scope.class);
 
         when(node.localDeclaration()).thenReturn(localDecls);
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
+
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1797,8 +2887,11 @@ public class CodeGenTests {
         var statements = new ArrayList<UCELParser.StatementContext>()
         {{ add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplate, visitor)); }};
         var node = mock(UCELParser.BlockContext.class);
+        var scopeMock = mock(Scope.class);
 
         when(node.statement()).thenReturn(statements);
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1818,10 +2911,12 @@ public class CodeGenTests {
         var statements = new ArrayList<UCELParser.StatementContext>()
             {{ add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplate, visitor)); }};
         var node = mock(UCELParser.BlockContext.class);
-
+        var scopeMock = mock(Scope.class);
 
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
+        when(scopeMock.getParent()).thenReturn(scopeMock);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1851,10 +2946,12 @@ public class CodeGenTests {
         var statements = new ArrayList<UCELParser.StatementContext>()
         {{ add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplates.get(0), visitor)); }};
         var node = mock(UCELParser.BlockContext.class);
-
+        var scopeMock = mock(Scope.class);
 
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1886,9 +2983,12 @@ public class CodeGenTests {
             add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplates.get(1), visitor));
         }};
         var node = mock(UCELParser.BlockContext.class);
+        var scopeMock = mock(Scope.class);
 
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1921,9 +3021,12 @@ public class CodeGenTests {
             add(mockForVisitorResult(UCELParser.StatementContext.class, statementTemplates.get(1), visitor));
         }};
         var node = mock(UCELParser.BlockContext.class);
+        var scopeMock = mock(Scope.class);
 
         when(node.statement()).thenReturn(statements);
         when(node.localDeclaration()).thenReturn(localDecls);
+        when(scopeMock.getParent()).thenReturn(null);
+        node.scope = scopeMock;
 
         var actual = visitor.visitBlock(node).toString();
 
@@ -1952,7 +3055,7 @@ public class CodeGenTests {
     @Test
     void statementAssignmentGeneratedCorrectly() {
         var assignResult = generateDefaultAssignmentTemplate(Type.TypeEnum.intType);
-        var expected = assignResult + ";\n";
+        var expected = String.format("%s;%n", assignResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1969,7 +3072,7 @@ public class CodeGenTests {
     @Test
     void statementExpressionGeneratedCorrectly() {
         var exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
-        var expected = exprResult + ";\n";
+        var expected = String.format("%s;%n", exprResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -1985,7 +3088,7 @@ public class CodeGenTests {
 
     @Test
     void statementEmptyExpressionGeneratedCorrectly() {
-        var expected = ";\n";
+        var expected = String.format(";%n");
 
         CodeGenVisitor visitor = new CodeGenVisitor();
         var node = mock(UCELParser.StatementContext.class);
@@ -1998,7 +3101,7 @@ public class CodeGenTests {
     @Test
     void statementForLoopGeneratedCorrectly() {
         var forloopResult = generateDefaultForLoopTemplate();
-        var expected = forloopResult + "\n";
+        var expected = String.format("%s%n", forloopResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2015,7 +3118,7 @@ public class CodeGenTests {
     @Test
     void statementIterationGeneratedCorrectly() {
         var iterationResult = generateDefaultIterationTemplate();
-        var expected = iterationResult + "\n";
+        var expected = String.format("%s%n", iterationResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2032,7 +3135,7 @@ public class CodeGenTests {
     @Test
     void statementWhileLoopGeneratedCorrectly() {
         var whileResult = generateDefaultWhileLoopTemplate();
-        var expected = whileResult + "\n";
+        var expected = String.format("%s%n", whileResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2049,7 +3152,7 @@ public class CodeGenTests {
     @Test
     void statementDoWhileGeneratedCorrectly() {
         var doWhileResult = generateDefaultDoWhileLoopTemplate();
-        var expected = doWhileResult + "\n";
+        var expected = String.format("%s%n", doWhileResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2066,7 +3169,7 @@ public class CodeGenTests {
     @Test
     void statementIfStatementGeneratedCorrectly() {
         var ifResult = generateDefaultIfStatementTemplate();
-        var expected = ifResult + "\n";
+        var expected = String.format("%s%n", ifResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
@@ -2083,14 +3186,14 @@ public class CodeGenTests {
     @Test
     void statementReturnStatementGeneratedCorrectly() {
         var returnResult = generateDefaultReturnStatementTemplate();
-        var expected = returnResult + "\n";
+        var expected = String.format("%s%n", returnResult);
 
         CodeGenVisitor visitor = new CodeGenVisitor();
 
-        var returnMock = mockForVisitorResult(UCELParser.ReturnstatementContext.class, returnResult, visitor);
+        var returnMock = mockForVisitorResult(UCELParser.ReturnStatementContext.class, returnResult, visitor);
         var node = mock(UCELParser.StatementContext.class);
 
-        when(node.returnstatement()).thenReturn(returnMock);
+        when(node.returnStatement()).thenReturn(returnMock);
 
         var actual = visitor.visitStatement(node).toString();
 
@@ -2119,6 +3222,14 @@ public class CodeGenTests {
         };
     }
 
+    private Template generateDefaultDeclarationTemplate(String id, String expr) {
+        return new ManualTemplate(String.format("%s\n", generateDefaultVariableDeclTemplate(id, expr)));
+    }
+
+    private Template generateDefaultSystemTemplate(String id) {
+        return new ManualTemplate(String.format("system %s;", id));
+    }
+
     private Template generateEmptyExprTemplate() {
         return new ManualTemplate("");
     }
@@ -2126,16 +3237,16 @@ public class CodeGenTests {
         return new ManualTemplate("forall (abc:int[0,4]) true");
     }
     private Template generateDefaultStatementTemplate() {
-        return new ManualTemplate("{\n}");
+        return new ManualTemplate(String.format("{%n}"));
     }
     private Template generateDefaultStatementTemplate(String localDecls, String statements, boolean withNewline) {
-        return new ManualTemplate(String.format("{\n%s%s%s}", localDecls, withNewline ? "\n" :"", statements));
+        return new ManualTemplate(String.format("{%n%s%s%s}", localDecls, withNewline ? String.format("%n") : "", statements));
     }
     private Template generateDefaultStatementTemplate(List<Template> localDecls, List<Template> statements, boolean withNewline) {
         var builder = new StringBuilder();
-        builder.append("{\n");
+        builder.append(String.format("{%n"));
         for (var decl : localDecls) {
-            builder.append(String.format("%s\n", decl));
+            builder.append(String.format("%s%n", decl));
         }
         for (var st : statements) {
             builder.append(String.format("%s", st));
@@ -2146,22 +3257,22 @@ public class CodeGenTests {
     }
 
     private Template generateDefaultNonBlockStatementTemplate() {
-        return new ManualTemplate("a = a;\n");
+        return new ManualTemplate(String.format("a = a;%n"));
     }
     private Template generateDefaultForLoopTemplate() {
-        return new ManualTemplate("for (i = 0;i < 10;i++) {\n}");
+        return new ManualTemplate(String.format("for (i = 0;i < 10;i++) {%n}"));
     }
     private Template generateDefaultIterationTemplate() {
-        return new ManualTemplate("for (i:int) {\n}");
+        return new ManualTemplate(String.format("for (i:int) {%n}"));
     }
     private Template generateDefaultWhileLoopTemplate() {
-        return new ManualTemplate("while (true) {\n}");
+        return new ManualTemplate(String.format("while (true) {%n}"));
     }
     private Template generateDefaultDoWhileLoopTemplate() {
-        return new ManualTemplate("do {\n} while (true)");
+        return new ManualTemplate(String.format("do {%n} while (true)"));
     }
     private Template generateDefaultIfStatementTemplate() {
-        return new ManualTemplate("if (true) {\n}");
+        return new ManualTemplate(String.format("if (true) {%n}"));
     }
     private Template generateDefaultReturnStatementTemplate() {
         return new ManualTemplate("return 1;");
@@ -2176,6 +3287,30 @@ public class CodeGenTests {
             case scalarType -> new ManualTemplate("scalar");
             default -> new ManualTemplate("");
         };
+    }
+
+    private Template generateDefaultChanExprTemplate(String id) {
+        return new ManualTemplate(String.format("%s", id));
+    }
+
+    private Template generateDefaultTypeDeclTemplate(String id, String size) {
+        return new ManualTemplate(String.format("typedef int %s[%s];", id, size));
+    }
+
+    private Template generateDefaultVariableDeclTemplate(String id, String expr) {
+        return new ManualTemplate(String.format("%s = %s;", id, expr));
+    }
+
+    private Template generateDefaultParametersTemplate(String type, String id) {
+        return new ManualTemplate(String.format("%s %s", type, id));
+    }
+
+    private Template generateDefaultArrayDeclTemplate() {
+        return new ManualTemplate("[]");
+    }
+
+    private Template generateDefaultArgumentsTemplate(Type.TypeEnum type) {
+        return generateDefaultExprTemplate(type);
     }
 
     private Template generateDefaultLocalDeclaration(Type.TypeEnum type, String id) {
@@ -2200,6 +3335,17 @@ public class CodeGenTests {
             case charType -> new ManualTemplate("c = 'a'");
             case stringType -> new ManualTemplate("s = \"abc\"");
             default -> new ManualTemplate("");
+        };
+    }
+
+    private Template generateDefaultLiteralTemplate(Type.TypeEnum type) {
+        return switch (type) {
+            case intType -> new ManualTemplate("0");
+            case boolType -> new ManualTemplate("true");
+            case doubleType -> new ManualTemplate("0.0");
+            case charType -> new ManualTemplate("'a'");
+            case stringType -> new ManualTemplate("\"abc\"");
+            default -> throw new IllegalArgumentException("Invalid type");
         };
     }
 

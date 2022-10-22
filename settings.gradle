@@ -1,25 +1,14 @@
-//include ":parser"
-//
-//include ":src"
-
-//test {
-//    useJUnit {
-//        includeCategories 'src/test'
-//    }
-//}
-
-
 rootProject.name = 'DATP7'
 
-include('src')
-
-//test {
-//    include '**my.package.name/*'
-//}
-include 'src:plugin'
-findProject(':src:plugin')?.name = 'plugin'
 include 'compiler'
-include 'plugin'
-findProject(':plugin')?.name = 'Plugin'
-include 'Plugin'
+include 'UppaalInterface'
+
+def UPPAAL_HOME = System.getenv('UPPAAL_HOME')
+if(UPPAAL_HOME != null) {
+    include 'Plugin'
+}
+else {
+    logger.lifecycle("Could not find enviroment variable `UPPAAL_HOME`, plugin has been omitted from build.\nConsult readme.me for further info.")
+}
+
 

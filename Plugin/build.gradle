@@ -6,55 +6,74 @@ group 'org.UcelPlugin'
 version "0.1"
 
 def UPPAAL_HOME = System.getenv('UPPAAL_HOME')
+if(UPPAAL_HOME == null)
+    throw new Exception("Could not find enviroment variable `UPPAAL_HOME`, plugin has been omitted from build.\nConsult readme.me for further info.")
 
 repositories {
     mavenCentral()
 }
 
-jar.manifest.attributes 'Uppaal-Plugin': 'org.UcelPlugin.PluginDemo'
-
-if(UPPAAL_HOME != null)
-{
-    dependencies {
-        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-
-        implementation fileTree(UPPAAL_HOME) { include '*.jar' }
-    }
+jar.manifest.attributes 'Uppaal-Plugin': 'org.UcelPlugin.UcelPlugin'
 
 
-    task installPlugin(type: Copy) {
-        dependsOn(build)
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 
-        from 'build/libs/Plugin-0.1.jar'
-        into "$UPPAAL_HOME/plugins"
-        rename { 'UCEL.jar' }
-    }
-
-    task runUppaalWithPlugin(type: JavaExec) {
-        dependsOn(installPlugin)
-
-        main = "-jar";
-        args "$UPPAAL_HOME/Uppaal.jar"
-    }
-
-    task runUppaal(type: JavaExec, dependsOn: installPlugin) {
-        args "$UPPAAL_HOME/Uppaal.jar"
-        main "-jar"
-        workingDir "$UPPAAL_HOME/"
-    }
+    implementation fileTree(UPPAAL_HOME) { include '*.jar' }
+    implementation fileTree(UPPAAL_HOME) { include 'lib/*.jar' }
+    implementation findProject(':UppaalInterface')
 }
-else
-{
-    sourceSets {
-        main {
-            java {
-                exclude("**/UcelPlugin/**")
-            }
-        }
+
+task buildFatjar(type: Jar) {
+    dependsOn(build)
+
+    manifest {
+        attributes 'Uppaal-Plugin': 'org.UcelPlugin.UcelPlugin'
     }
-    project.logger.lifecycle("Could not find enviroment variable `UPPAAL_HOME`, plugin has been omitted from build.\nConsult readme.me for further info.")
+
+    baseName = 'UCEL'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath
+                .filter { f ->
+                    def fPath = file(f.path)
+                    def upPath = file("$UPPAAL_HOME/$f.name")
+                    def upLibPath = file("$UPPAAL_HOME/lib/$f.name")
+
+                    if (fPath == upPath)
+                        return false
+                    if (fPath == upLibPath)
+                        return false;
+
+                    return true
+                }
+                .sort { it.name }
+                .collect { file ->
+                    logger.info("Including file: ${file.name}")
+                    file.isDirectory() ? file : zipTree(file)
+                }
+    }
+
+    with jar
 }
+
+task installPlugin(type: Copy) {
+    dependsOn(buildFatjar)
+
+    from "build/libs/UCEL-${version}.jar"
+    into "$UPPAAL_HOME/plugins"
+    rename { 'UCEL.jar' }
+}
+
+task runUppaal(type: JavaExec) {
+    dependsOn(installPlugin)
+
+    args "$UPPAAL_HOME/Uppaal.jar"
+    main "-jar"
+    workingDir "$UPPAAL_HOME/"
+}
+
 
 test {
     useJUnitPlatform()

@@ -4,12 +4,17 @@ import org.UcelParser.ReferenceHandler.ReferenceVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.DeclarationReference;
+import org.UcelParser.Util.FuncCallOccurrence;
 import org.UcelParser.Util.Scope;
+import org.antlr.v4.codegen.model.decl.Decl;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.awt.*;
+import java.sql.Array;
+import java.sql.Ref;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,6 +22,574 @@ import static org.mockito.Mockito.*;
 
 
 public class ReferenceHandlerTests {
+
+    //region start
+    @Test
+    void startVisitsDeclarationsAndSystem() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mock(UCELParser.DeclarationsContext.class);
+        var systemNode = mock(UCELParser.SystemContext.class);
+
+        when(decls.accept(visitor)).thenReturn(true);
+        when(systemNode.accept(visitor)).thenReturn(true);
+        when(node.declarations()).thenReturn(decls);
+        when(node.system()).thenReturn(systemNode);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(systemNode, times(1)).accept(visitor);
+        assertTrue(actual);
+    }
+
+    @Test
+    void startVisitsDeclarationsButThenStops() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mock(UCELParser.DeclarationsContext.class);
+        var systemNode = mock(UCELParser.SystemContext.class);
+        var stmnt = mock(UCELParser.StatementContext.class);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt); }};
+
+        when(decls.accept(visitor)).thenReturn(false);
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(systemNode);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt, never()).accept(visitor);
+        verify(systemNode, never()).accept(visitor);
+        assertFalse(actual);
+    }
+
+    @Test
+    void startVisitsOneStatementButThenStops() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mock(UCELParser.DeclarationsContext.class);
+        var systemNode = mock(UCELParser.SystemContext.class);
+        var stmnt1 = mock(UCELParser.StatementContext.class);
+        var stmnt2 = mock(UCELParser.StatementContext.class);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+
+        when(decls.accept(visitor)).thenReturn(true);
+        when(stmnt1.accept(visitor)).thenReturn(false);
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(systemNode);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt1, times(1)).accept(visitor);
+        verify(stmnt2, never()).accept(visitor);
+        verify(systemNode, never()).accept(visitor);
+        assertFalse(actual);
+    }
+
+    @Test
+    void startVisitsAllStatementButSystemFails() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mock(UCELParser.DeclarationsContext.class);
+        var systemNode = mock(UCELParser.SystemContext.class);
+        var stmnt1 = mock(UCELParser.StatementContext.class);
+        var stmnt2 = mock(UCELParser.StatementContext.class);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+
+        when(decls.accept(visitor)).thenReturn(true);
+        when(stmnt1.accept(visitor)).thenReturn(true);
+        when(stmnt2.accept(visitor)).thenReturn(true);
+        when(systemNode.accept(visitor)).thenReturn(false);
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(systemNode);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt1, times(1)).accept(visitor);
+        verify(stmnt2, times(1)).accept(visitor);
+        verify(systemNode, times(1)).accept(visitor);
+        assertFalse(actual);
+    }
+
+    void startVisitsAllAndSucceeds() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.StartContext.class);
+        var decls = mock(UCELParser.DeclarationsContext.class);
+        var systemNode = mock(UCELParser.SystemContext.class);
+        var stmnt1 = mock(UCELParser.StatementContext.class);
+        var stmnt2 = mock(UCELParser.StatementContext.class);
+        var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+
+        when(decls.accept(visitor)).thenReturn(true);
+        when(stmnt1.accept(visitor)).thenReturn(true);
+        when(stmnt2.accept(visitor)).thenReturn(true);
+        when(systemNode.accept(visitor)).thenReturn(true);
+        when(node.declarations()).thenReturn(decls);
+        when(node.statement()).thenReturn(stmnts);
+        when(node.system()).thenReturn(systemNode);
+
+        var actual = visitor.visitStart(node);
+
+        verify(decls, times(1)).accept(visitor);
+        verify(stmnt1, times(1)).accept(visitor);
+        verify(stmnt2, never()).accept(visitor);
+        verify(systemNode, never()).accept(visitor);
+        assertTrue(actual);
+    }
+    //endregion
+
+    //region system
+    @Test
+    void systemFirstExprSucceeds() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr = mock(UCELParser.ExpressionContext.class);
+
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr); }};
+
+        when(expr.accept(visitor)).thenReturn(true);
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        verify(expr, times(1)).accept(visitor);
+        assertTrue(actual);
+    }
+    @Test
+    void systemFirstExprFailsSecondNotVisited() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1 = mock(UCELParser.ExpressionContext.class);
+        var expr2 = mock(UCELParser.ExpressionContext.class);
+
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1); add(expr2); }};
+
+        when(expr1.accept(visitor)).thenReturn(false);
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        verify(expr1, times(1)).accept(visitor);
+        verify(expr2, never()).accept(visitor);
+        assertFalse(actual);
+    }
+
+    @Test
+    void systemSecondExprFails() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1 = mock(UCELParser.ExpressionContext.class);
+        var expr2 = mock(UCELParser.ExpressionContext.class);
+
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1); add(expr2); }};
+
+        when(expr1.accept(visitor)).thenReturn(true);
+        when(expr2.accept(visitor)).thenReturn(false);
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        verify(expr1, times(1)).accept(visitor);
+        verify(expr2, times(1)).accept(visitor);
+        assertFalse(actual);
+    }
+
+    @Test
+    void systemAllExprsSucceed() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope)null);
+
+        var node = mock(UCELParser.SystemContext.class);
+        var expr1 = mock(UCELParser.ExpressionContext.class);
+        var expr2 = mock(UCELParser.ExpressionContext.class);
+
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1); add(expr2); }};
+
+        when(expr1.accept(visitor)).thenReturn(true);
+        when(expr2.accept(visitor)).thenReturn(true);
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitSystem(node);
+
+        verify(expr1, times(1)).accept(visitor);
+        verify(expr2, times(1)).accept(visitor);
+        assertTrue(actual);
+    }
+    //endregion
+
+    //region instantiation
+
+    @Test
+    void instantiationSetsInstantiationRef() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String instantiationIdentifier = "f", constructorIdentifier = "c";
+
+        UCELParser.InstantiationContext node = mock(UCELParser.InstantiationContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.ArgumentsContext arguments = mock(UCELParser.ArgumentsContext.class);
+        TerminalNode instantiationID = mock(TerminalNode.class);
+        TerminalNode constructorID = mock(TerminalNode.class);
+        ArrayList<TerminalNode> ids = new ArrayList<>();
+        ids.add(instantiationID);
+        ids.add(constructorID);
+
+        when(node.ID()).thenReturn(ids);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.arguments()).thenReturn(arguments);
+        when(instantiationID.getText()).thenReturn(instantiationIdentifier);
+        when(constructorID.getText()).thenReturn(constructorIdentifier);
+
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(arguments.accept(visitor)).thenReturn(true);
+
+        DeclarationReference instantiationReference = new DeclarationReference(0,0);
+        DeclarationReference constructorReference = new DeclarationReference(0,0);
+
+        try{
+            when(scope.isUnique(instantiationIdentifier, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(instantiationReference);
+            when(scope.find(constructorIdentifier, false)).thenReturn(constructorReference);
+        } catch (Exception e) {
+            fail();
+        }
+
+        visitor.visitInstantiation(node);
+
+        assertEquals(instantiationReference, node.instantiatedReference);
+    }
+
+    @Test
+    void instantiationSetsConstructorRef() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String instantiationIdentifier = "f", constructorIdentifier = "c";
+
+        UCELParser.InstantiationContext node = mock(UCELParser.InstantiationContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.ArgumentsContext arguments = mock(UCELParser.ArgumentsContext.class);
+        TerminalNode instantiationID = mock(TerminalNode.class);
+        TerminalNode constructorID = mock(TerminalNode.class);
+        ArrayList<TerminalNode> ids = new ArrayList<>();
+        ids.add(instantiationID);
+        ids.add(constructorID);
+
+        when(node.ID()).thenReturn(ids);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.arguments()).thenReturn(arguments);
+        when(instantiationID.getText()).thenReturn(instantiationIdentifier);
+        when(constructorID.getText()).thenReturn(constructorIdentifier);
+
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(arguments.accept(visitor)).thenReturn(true);
+
+        DeclarationReference instantiationReference = new DeclarationReference(0,0);
+        DeclarationReference constructorReference = new DeclarationReference(0,0);
+
+        try{
+            when(scope.isUnique(instantiationIdentifier, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(instantiationReference);
+            when(scope.find(constructorIdentifier, false)).thenReturn(constructorReference);
+        } catch (Exception e) {
+            fail();
+        }
+
+        visitor.visitInstantiation(node);
+
+        assertEquals(constructorReference, node.constructorReference);
+    }
+
+    @Test
+    void instantiationSetsScope() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String instantiationIdentifier = "f", constructorIdentifier = "c";
+
+        UCELParser.InstantiationContext node = mock(UCELParser.InstantiationContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.ArgumentsContext arguments = mock(UCELParser.ArgumentsContext.class);
+        TerminalNode instantiationID = mock(TerminalNode.class);
+        TerminalNode constructorID = mock(TerminalNode.class);
+        ArrayList<TerminalNode> ids = new ArrayList<>();
+        ids.add(instantiationID);
+        ids.add(constructorID);
+
+        when(node.ID()).thenReturn(ids);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.arguments()).thenReturn(arguments);
+        when(instantiationID.getText()).thenReturn(instantiationIdentifier);
+        when(constructorID.getText()).thenReturn(constructorIdentifier);
+
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(arguments.accept(visitor)).thenReturn(true);
+
+        DeclarationReference instantiationReference = new DeclarationReference(0,0);
+        DeclarationReference constructorReference = new DeclarationReference(0,0);
+
+        try{
+            when(scope.isUnique(instantiationIdentifier, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(instantiationReference);
+            when(scope.find(constructorIdentifier, false)).thenReturn(constructorReference);
+        } catch (Exception e) {
+            fail();
+        }
+
+        visitor.visitInstantiation(node);
+
+        assertTrue(node.scope instanceof Scope);
+    }
+
+    @Test
+    void instantiationVisitsParameters() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String instantiationIdentifier = "f", constructorIdentifier = "c";
+
+        UCELParser.InstantiationContext node = mock(UCELParser.InstantiationContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.ArgumentsContext arguments = mock(UCELParser.ArgumentsContext.class);
+        TerminalNode instantiationID = mock(TerminalNode.class);
+        TerminalNode constructorID = mock(TerminalNode.class);
+        ArrayList<TerminalNode> ids = new ArrayList<>();
+        ids.add(instantiationID);
+        ids.add(constructorID);
+
+        when(node.ID()).thenReturn(ids);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.arguments()).thenReturn(arguments);
+        when(instantiationID.getText()).thenReturn(instantiationIdentifier);
+        when(constructorID.getText()).thenReturn(constructorIdentifier);
+
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(arguments.accept(visitor)).thenReturn(true);
+
+        DeclarationReference instantiationReference = new DeclarationReference(0,0);
+        DeclarationReference constructorReference = new DeclarationReference(0,0);
+
+        try{
+            when(scope.isUnique(instantiationIdentifier, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(instantiationReference);
+            when(scope.find(constructorIdentifier, false)).thenReturn(constructorReference);
+        } catch (Exception e) {
+            fail();
+        }
+
+        visitor.visitInstantiation(node);
+
+        verify(parameters, times(1)).accept(visitor);
+    }
+
+    @Test
+    void instantiationVisitsArgiments() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String instantiationIdentifier = "f", constructorIdentifier = "c";
+
+        UCELParser.InstantiationContext node = mock(UCELParser.InstantiationContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.ArgumentsContext arguments = mock(UCELParser.ArgumentsContext.class);
+        TerminalNode instantiationID = mock(TerminalNode.class);
+        TerminalNode constructorID = mock(TerminalNode.class);
+        ArrayList<TerminalNode> ids = new ArrayList<>();
+        ids.add(instantiationID);
+        ids.add(constructorID);
+
+        when(node.ID()).thenReturn(ids);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.arguments()).thenReturn(arguments);
+        when(instantiationID.getText()).thenReturn(instantiationIdentifier);
+        when(constructorID.getText()).thenReturn(constructorIdentifier);
+
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(arguments.accept(visitor)).thenReturn(true);
+
+        DeclarationReference instantiationReference = new DeclarationReference(0,0);
+        DeclarationReference constructorReference = new DeclarationReference(0,0);
+
+        try{
+            when(scope.isUnique(instantiationIdentifier, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(instantiationReference);
+            when(scope.find(constructorIdentifier, false)).thenReturn(constructorReference);
+        } catch (Exception e) {
+            fail();
+        }
+
+        visitor.visitInstantiation(node);
+
+        verify(arguments, times(1)).accept(visitor);
+    }
+
+    //endregion
+
+    //region parameters
+
+    @Test
+    void parameterAddIdToScope() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String parameterName = "a";
+
+        UCELParser.ParameterContext node = mock(UCELParser.ParameterContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.type()).thenReturn(type);
+        when(type.accept(visitor)).thenReturn(true);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(parameterName);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(parameterName, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail();}
+
+        visitor.visitParameter(node);
+
+        verify(scope, times(1)).add(any());
+    }
+
+    @Test
+    void parameterAddSetReference() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String parameterName = "a";
+
+        UCELParser.ParameterContext node = mock(UCELParser.ParameterContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.type()).thenReturn(type);
+        when(type.accept(visitor)).thenReturn(true);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(parameterName);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(parameterName, true)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail();}
+
+        visitor.visitParameter(node);
+
+        assertEquals(declRef, node.reference);
+    }
+
+    //endregion
+
+    //region TypeDecl aka typedef
+
+    @Test
+    void visitTypeDeclAddIdToScope() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String identifierName = "a";
+
+        UCELParser.TypeDeclContext node = mock(UCELParser.TypeDeclContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+
+        when(node.type()).thenReturn(type);
+        when(type.accept(visitor)).thenReturn(true);
+
+        TerminalNode id = mock(TerminalNode.class);
+        UCELParser.ArrayDeclIDContext arrayDeclID = mock(UCELParser.ArrayDeclIDContext.class);
+        ArrayList<UCELParser.ArrayDeclIDContext> arrayDeclIDList = new ArrayList<>();
+        arrayDeclIDList.add(arrayDeclID);
+
+        when(node.arrayDeclID()).thenReturn(arrayDeclIDList);
+        when(arrayDeclID.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(identifierName);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(identifierName, false)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail();}
+
+        visitor.visitTypeDecl(node);
+
+        verify(scope, times(1)).add(any());
+    }
+
+    @Test
+    void visitTypeDeclSetReference() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String identifierName = "a";
+
+        UCELParser.TypeDeclContext node = mock(UCELParser.TypeDeclContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+
+        when(node.type()).thenReturn(type);
+        when(type.accept(visitor)).thenReturn(true);
+
+        TerminalNode id = mock(TerminalNode.class);
+        UCELParser.ArrayDeclIDContext arrayDeclID = mock(UCELParser.ArrayDeclIDContext.class);
+        ArrayList<UCELParser.ArrayDeclIDContext> arrayDeclIDList = new ArrayList<>();
+        arrayDeclIDList.add(arrayDeclID);
+
+        when(node.arrayDeclID()).thenReturn(arrayDeclIDList);
+        when(arrayDeclID.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(identifierName);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(identifierName, false)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail();}
+
+        visitor.visitTypeDecl(node);
+
+        assertEquals(declRef, node.references.get(0));
+
+    }
+
+    //endregion
+
+    //region TypeIDID
+
+    @Test
+    void typeIDIDAddSetReference() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        String typeID = "a";
+
+        UCELParser.TypeIDIDContext node = mock(UCELParser.TypeIDIDContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(typeID);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.find(typeID, false)).thenReturn(declRef);
+        } catch (Exception e) {fail();}
+
+        visitor.visitTypeIDID(node);
+
+        assertEquals(declRef, node.reference);
+    }
+
+
+    //endregion
 
     //region FuncCall
     @Test
@@ -77,6 +650,131 @@ public class ReferenceHandlerTests {
         visitor.visitFuncCall(funcCallContext);
 
         verify(argumentsContext, times(1)).accept(visitor);
+    }
+
+    @Test
+    void funcCallExprWithRefs() {
+        String correctFunctionName = "cfn";
+        String refArg1Name = "a";
+        String refArg2Name = "b";
+        var expectedFuncName = String.format("%s_%s_%s", correctFunctionName, refArg1Name, refArg2Name);
+
+        var funcNodeMock = mock(UCELParser.FunctionContext.class);
+        funcNodeMock.occurrences = new ArrayList<FuncCallOccurrence>();
+
+        ArrayList<DeclarationInfo> lvl1Variables = new ArrayList<>();
+        lvl1Variables.add(new DeclarationInfo(correctFunctionName, funcNodeMock));
+
+        ArrayList<DeclarationInfo> lvl0Variables = new ArrayList<>();
+        lvl0Variables.add(new DeclarationInfo(refArg1Name));
+        lvl0Variables.add(new DeclarationInfo(refArg2Name));
+
+        Scope lvl1Scope = new Scope(null, false, lvl1Variables);
+        Scope lvl0Scope = new Scope(lvl1Scope, false, lvl0Variables);
+        ReferenceVisitor visitor = new ReferenceVisitor(lvl0Scope);
+
+        UCELParser.FuncCallContext funcCallContext = mock(UCELParser.FuncCallContext.class);
+        UCELParser.ArgumentsContext argumentsContext = mock(UCELParser.ArgumentsContext.class);
+
+        var ref1Mock = mock(TerminalNode.class);
+        var ref2Mock = mock(TerminalNode.class);
+
+        when(ref1Mock.getText()).thenReturn("a");
+        when(ref2Mock.getText()).thenReturn("b");
+        var refArgs = new ArrayList<TerminalNode>()
+        {{
+            add(ref1Mock);
+            add(ref2Mock);
+        }};
+
+        TerminalNode idNode = mock(TerminalNode.class);
+        when(argumentsContext.ID()).thenReturn(refArgs);
+        when(idNode.getText()).thenReturn(correctFunctionName);
+        when(funcCallContext.ID()).thenReturn(idNode);
+        when(funcCallContext.arguments()).thenReturn(argumentsContext);
+
+        visitor.visitFuncCall(funcCallContext);
+
+        String actualNewFuncName = "";
+        try {
+            actualNewFuncName = lvl1Scope.get(funcCallContext.reference).getIdentifier();
+        } catch (Exception e) {
+            fail();
+        }
+
+        assertEquals(1, funcNodeMock.occurrences.size());
+        assertEquals(refArg1Name, funcNodeMock.occurrences.get(0).getRefParams()[0].getIdentifier());
+        assertEquals(refArg2Name, funcNodeMock.occurrences.get(0).getRefParams()[1].getIdentifier());
+        assertEquals(expectedFuncName, actualNewFuncName);
+    }
+
+    //endregion
+
+    //region Arguments
+    @Test
+    void argumentsWithNoExpressionsDoesNothing() {
+        var scopeMock = mock(Scope.class);
+        try {
+            when(scopeMock.get(any(DeclarationReference.class))).thenThrow(new RuntimeException());
+            when(scopeMock.find(any(String.class), anyBoolean())).thenThrow(new RuntimeException());
+        } catch (Exception e) {
+            fail();
+        }
+
+        ReferenceVisitor visitor = new ReferenceVisitor(scopeMock);
+        var node = mock(UCELParser.ArgumentsContext.class);
+
+        assertDoesNotThrow(() -> visitor.visitArguments(node));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void argumentsOneValidExpression(Boolean expected) {
+        var scopeMock = mock(Scope.class);
+        try {
+            when(scopeMock.get(any(DeclarationReference.class))).thenThrow(new RuntimeException());
+            when(scopeMock.find(any(String.class), anyBoolean())).thenThrow(new RuntimeException());
+        } catch (Exception e) {
+            fail();
+        }
+
+        ReferenceVisitor visitor = new ReferenceVisitor(scopeMock);
+
+        var node = mock(UCELParser.ArgumentsContext.class);
+        var exprMock = mock(UCELParser.ExpressionContext.class);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(exprMock); }};
+        when(exprMock.accept(visitor)).thenReturn(expected);
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitArguments(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void argumentsMultipleExpressions(Boolean expected) {
+        var scopeMock = mock(Scope.class);
+        try {
+            when(scopeMock.get(any(DeclarationReference.class))).thenThrow(new RuntimeException());
+            when(scopeMock.find(any(String.class), anyBoolean())).thenThrow(new RuntimeException());
+        } catch (Exception e) {
+            fail();
+        }
+
+        ReferenceVisitor visitor = new ReferenceVisitor(scopeMock);
+
+        var node = mock(UCELParser.ArgumentsContext.class);
+        var expr1Mock = mock(UCELParser.ExpressionContext.class);
+        var expr2Mock = mock(UCELParser.ExpressionContext.class);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1Mock); add(expr2Mock); }};
+        when(expr1Mock.accept(visitor)).thenReturn(expected);
+        when(expr2Mock.accept(visitor)).thenReturn(true);
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitArguments(node);
+
+        assertEquals(expected, actual);
     }
 
     //endregion
@@ -419,6 +1117,370 @@ public class ReferenceHandlerTests {
         referenceVisitor.visitIteration(node);
 
         verify(statement, times(1)).accept(referenceVisitor);
+    }
+
+    //endregion
+
+    //region increment/decrement
+
+    @Test
+    void incrementPostAcceptIDExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.IncrementPostContext node = mock(UCELParser.IncrementPostContext.class);
+        UCELParser.IdExprContext id = mock(UCELParser.IdExprContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitIncrementPost(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void incrementPreAcceptIDExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.IncrementPreContext node = mock(UCELParser.IncrementPreContext.class);
+        UCELParser.IdExprContext id = mock(UCELParser.IdExprContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitIncrementPre(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void decrementPostAcceptIDExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.DecrementPostContext node = mock(UCELParser.DecrementPostContext.class);
+        UCELParser.IdExprContext id = mock(UCELParser.IdExprContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitDecrementPost(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void decrementPreAcceptExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.DecrementPreContext node = mock(UCELParser.DecrementPreContext.class);
+        UCELParser.IdExprContext id = mock(UCELParser.IdExprContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitDecrementPre(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void incrementPostAcceptStructExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.IncrementPostContext node = mock(UCELParser.IncrementPostContext.class);
+        UCELParser.StructAccessContext id = mock(UCELParser.StructAccessContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitIncrementPost(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void incrementPreAcceptStructExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.IncrementPreContext node = mock(UCELParser.IncrementPreContext.class);
+        UCELParser.StructAccessContext id = mock(UCELParser.StructAccessContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitIncrementPre(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void decrementPostAcceptStructExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.DecrementPostContext node = mock(UCELParser.DecrementPostContext.class);
+        UCELParser.StructAccessContext id = mock(UCELParser.StructAccessContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitDecrementPost(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void decrementPreAcceptStructExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.DecrementPreContext node = mock(UCELParser.DecrementPreContext.class);
+        UCELParser.StructAccessContext id = mock(UCELParser.StructAccessContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitDecrementPre(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void incrementPostInvalidExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.IncrementPostContext node = mock(UCELParser.IncrementPostContext.class);
+        UCELParser.AddSubContext id = mock(UCELParser.AddSubContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitIncrementPost(node);
+
+        assertFalse(actual);
+    }
+
+    @Test
+    void incrementPreInvalidExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.IncrementPreContext node = mock(UCELParser.IncrementPreContext.class);
+        UCELParser.AddSubContext id = mock(UCELParser.AddSubContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitIncrementPre(node);
+
+        assertFalse(actual);
+    }
+
+    @Test
+    void decrementPostInvalidExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.DecrementPostContext node = mock(UCELParser.DecrementPostContext.class);
+        UCELParser.AddSubContext id = mock(UCELParser.AddSubContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitDecrementPost(node);
+
+        assertFalse(actual);
+    }
+
+    @Test
+    void decrementPreInvalidExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.DecrementPreContext node = mock(UCELParser.DecrementPreContext.class);
+        UCELParser.AddSubContext id = mock(UCELParser.AddSubContext.class);
+        when(node.getRuleContext(UCELParser.ExpressionContext.class, 0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitDecrementPre(node);
+
+        assertFalse(actual);
+    }
+
+    //endregion
+
+    //region assignment
+    @Test
+    void assignmentAcceptIDExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.AssignExprContext node = mock(UCELParser.AssignExprContext.class);
+        UCELParser.IdExprContext id = mock(UCELParser.IdExprContext.class);
+        UCELParser.ExpressionContext expr = mock(UCELParser.IdExprContext.class);
+        when(node.expression(0)).thenReturn(id);
+        when(node.expression(1)).thenReturn(expr);
+        when(expr.accept(visitor)).thenReturn(true);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitAssignExpr(node);
+
+        assertTrue(actual);
+    }
+
+    @Test
+    void assignmentPostAcceptStructExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.AssignExprContext node = mock(UCELParser.AssignExprContext.class);
+        UCELParser.StructAccessContext id = mock(UCELParser.StructAccessContext.class);
+        UCELParser.ExpressionContext expr = mock(UCELParser.ExpressionContext.class);
+        when(node.expression(0)).thenReturn(id);
+        when(node.expression(1)).thenReturn(expr);
+        when(expr.accept(visitor)).thenReturn(true);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitAssignExpr(node);
+
+        assertTrue(actual);
+    }
+
+
+    @Test
+    void assignmentInvalidExpr() {
+        ReferenceVisitor visitor = new ReferenceVisitor(mock(Scope.class));
+
+        UCELParser.AssignExprContext node = mock(UCELParser.AssignExprContext.class);
+        UCELParser.AddSubContext id = mock(UCELParser.AddSubContext.class);
+        when(node.expression(0)).thenReturn(id);
+        when(id.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitAssignExpr(node);
+
+        assertFalse(actual);
+    }
+
+    //endregion
+
+    //region Function
+
+    @Test
+    void functionVisitsType() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        String funcIdentifier = "f";
+        UCELParser.FunctionContext node = mock(UCELParser.FunctionContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.type()).thenReturn(type);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(funcIdentifier);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.block()).thenReturn(block);
+
+        when(type.accept(visitor)).thenReturn(true);
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(block.accept(visitor)).thenReturn(true);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(funcIdentifier, false)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail(); }
+
+        visitor.visitFunction(node);
+
+        verify(type, times(1)).accept(visitor);
+    }
+
+    @Test
+    void functionVisitsParameters() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        String funcIdentifier = "f";
+        UCELParser.FunctionContext node = mock(UCELParser.FunctionContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.type()).thenReturn(type);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(funcIdentifier);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.block()).thenReturn(block);
+
+        when(type.accept(visitor)).thenReturn(true);
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(block.accept(visitor)).thenReturn(true);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(funcIdentifier, false)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail(); }
+
+        visitor.visitFunction(node);
+
+        verify(parameters, times(1)).accept(visitor);
+    }
+
+    @Test
+    void functionVisitsBlock() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        String funcIdentifier = "f";
+        UCELParser.FunctionContext node = mock(UCELParser.FunctionContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.type()).thenReturn(type);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(funcIdentifier);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.block()).thenReturn(block);
+
+        when(type.accept(visitor)).thenReturn(true);
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(block.accept(visitor)).thenReturn(true);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(funcIdentifier, false)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail(); }
+
+        visitor.visitFunction(node);
+
+        verify(block, times(1)).accept(visitor);
+    }
+
+    @Test
+    void functionSetsOccurrences() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        String funcIdentifier = "f";
+        UCELParser.FunctionContext node = mock(UCELParser.FunctionContext.class);
+        UCELParser.TypeContext type = mock(UCELParser.TypeContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.BlockContext block = mock(UCELParser.BlockContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.type()).thenReturn(type);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(funcIdentifier);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.block()).thenReturn(block);
+
+        when(type.accept(visitor)).thenReturn(true);
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(block.accept(visitor)).thenReturn(true);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(funcIdentifier, false)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail(); }
+
+        visitor.visitFunction(node);
+
+        assertTrue(node.occurrences != null && node.occurrences instanceof ArrayList);
     }
 
     //endregion
