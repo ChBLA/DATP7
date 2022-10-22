@@ -53,7 +53,7 @@ public class TypeCheckerTests  {
     //region Assignment
 
     @Test
-    public void AssigntmentReturnsVoid() {
+    public void assignmentReturnsVoid() {
         TypeCheckerVisitor typeCheckerVisitor = new TypeCheckerVisitor();
 
         var node = new UCELParser.AssignContext(null, 0);
