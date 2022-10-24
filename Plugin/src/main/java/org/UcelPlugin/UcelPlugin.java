@@ -16,8 +16,8 @@ public class UcelPlugin implements Plugin {
     private UppaalManager uppaalManager;
 
     public UcelPlugin(Registry registry) {
-        workspaces[0] = new UcelEditorWorkspace();
         this.uppaalManager = new UppaalManager(registry);
+        workspaces[0] = new UcelEditorWorkspace(uppaalManager);
 
         try {
             Document document = new PrototypeDocument().load(new URL("file", null, "demo/train-gate.xml"));

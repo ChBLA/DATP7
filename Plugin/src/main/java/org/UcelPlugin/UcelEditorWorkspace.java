@@ -1,19 +1,36 @@
 package org.UcelPlugin;
 
+import com.uppaal.model.core2.Document;
+import com.uppaal.model.core2.PrototypeDocument;
 import com.uppaal.plugin.PluginWorkspace;
+import org.Ucel.IProject;
+import org.UcelPlugin.DocumentParser.DocumentParser;
+import org.UcelPlugin.Models.SharedInterface.Project;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
+import java.net.URL;
 
 public class UcelEditorWorkspace implements PluginWorkspace {
 
-    public UcelEditorWorkspace() {
-
+    public UcelEditorWorkspace(UppaalManager uppaalManager) {
+        this.uppaalManager = uppaalManager;
+        editorUi = new UcelEditorUI(this);
     }
 
-    private UcelEditorUI editorUi = new UcelEditorUI();
+    private UppaalManager uppaalManager;
+
+    private UcelEditorUI editorUi;
     private UcelEditorUI getUi() {
         return editorUi;
+    }
+
+    public void getCurrentProject() {
+        Document document = uppaalManager.getCurrentDocument();
+        DocumentParser documentParser = new DocumentParser(document);
+        Project project = documentParser.parseDocument();
+        System.out.println(project);
     }
 
     @Override
