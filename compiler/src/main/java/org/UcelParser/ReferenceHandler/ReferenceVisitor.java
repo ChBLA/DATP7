@@ -10,14 +10,14 @@ import java.util.ArrayList;
 
 public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     private Scope currentScope;
-    private Logger logger;
+    private ILogger logger;
 
     public ReferenceVisitor(Scope scope) {
         this.currentScope = scope;
         this.logger = new Logger();
     }
 
-    public ReferenceVisitor(Logger logger) {
+    public ReferenceVisitor(ILogger logger) {
         this.currentScope = null;
         this.logger = logger;
     }
@@ -31,7 +31,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     public Boolean visitStart(UCELParser.StartContext ctx) {
         boolean success = true;
         enterScope();
-
+        ctx.scope = currentScope;
         if (visit(ctx.declarations())) {
             for (var stmnt : ctx.statement()) {
                 if (!visit(stmnt)) {
@@ -78,13 +78,13 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
         }
 
+        enterScope();
+        ctx.scope = currentScope;
+
         if(!visit(ctx.type()) || !visit(ctx.parameters())) {
             //No logging, passing through
             return false;
         }
-
-        enterScope();
-        ctx.scope = currentScope;
 
         if(!visit(ctx.block())) {
             //No logging, passing through
@@ -94,6 +94,16 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         ctx.occurrences = new ArrayList<>();
         exitScope();
         return true;
+    }
+
+    @Override
+    public Boolean visitParameters(UCELParser.ParametersContext ctx) {
+        boolean success = true;
+
+        for (var param : ctx.parameter())
+            success = visit(param) && success;
+
+        return success;
     }
 
     @Override
@@ -281,7 +291,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     @Override
     public Boolean visitVariableDecl(UCELParser.VariableDeclContext ctx) {
-        boolean b = true;
+        boolean b = visit(ctx.type());
 
         for(UCELParser.VariableIDContext idCtx : ctx.variableID()) {
             Boolean valid = visit(idCtx);

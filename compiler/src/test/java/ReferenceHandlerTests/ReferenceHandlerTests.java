@@ -854,19 +854,47 @@ public class ReferenceHandlerTests {
 
     @ParameterizedTest
     @ValueSource(ints = {0,1,2})
-    void variableDeclVisitAllVariableIDs(int i) {
+    void variableDeclVisitAllVariableIDsDespiteFaultyDecls(int i) {
         ReferenceVisitor visitor = new ReferenceVisitor(new Scope(null, false));
+        var type = mock(UCELParser.TypeContext.class);
         UCELParser.VariableDeclContext node = mock(UCELParser.VariableDeclContext.class);
         ArrayList<UCELParser.VariableIDContext> varIDs = new ArrayList<>();
         varIDs.add(mock(UCELParser.VariableIDContext.class));
         varIDs.add(mock(UCELParser.VariableIDContext.class));
         varIDs.add(mock(UCELParser.VariableIDContext.class));
 
+        when(type.accept(visitor)).thenReturn(true);
+        when(node.type()).thenReturn(type);
         when(node.variableID()).thenReturn(varIDs);
 
-        visitor.visitVariableDecl(node);
+        var actual = visitor.visitVariableDecl(node);
 
         verify(varIDs.get(i), times(1)).accept(visitor);
+        assertFalse(actual);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0,1,2})
+    void variableDeclVisitAllVariableIDsAllSucceed(int i) {
+        ReferenceVisitor visitor = new ReferenceVisitor(new Scope(null, false));
+        var type = mock(UCELParser.TypeContext.class);
+        UCELParser.VariableDeclContext node = mock(UCELParser.VariableDeclContext.class);
+        var varID1Mock = mock(UCELParser.VariableIDContext.class);
+        var varID2Mock = mock(UCELParser.VariableIDContext.class);
+        var varID3Mock = mock(UCELParser.VariableIDContext.class);
+        ArrayList<UCELParser.VariableIDContext> varIDs = new ArrayList<>() {{ add(varID1Mock); add(varID2Mock); add(varID3Mock); }};
+
+        when(type.accept(visitor)).thenReturn(true);
+        when(varID1Mock.accept(visitor)).thenReturn(true);
+        when(varID2Mock.accept(visitor)).thenReturn(true);
+        when(varID3Mock.accept(visitor)).thenReturn(true);
+        when(node.type()).thenReturn(type);
+        when(node.variableID()).thenReturn(varIDs);
+
+        var actual = visitor.visitVariableDecl(node);
+
+        verify(varIDs.get(i), times(1)).accept(visitor);
+        assertTrue(actual);
     }
 
     //endregion

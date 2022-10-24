@@ -20,12 +20,12 @@ public class SmokeTests {
 
     private static Stream<Arguments> compilerInput() {
         return Stream.of(
-                Arguments.arguments("{bool b = 12 + 7 > 0;}"),
-                Arguments.arguments("{int i = x * y % 12;}"),
-                Arguments.arguments("{bool b = true && !false;}"),
-                Arguments.arguments("{\nint a = 0;\nint i = 0;\nfor (i = 0; i < 10; i++) {\na += i;\n}\n}"),
-                Arguments.arguments("{\nbool b = true;\nwhile (b) {\n b = not b;\n}\n}"),
-                Arguments.arguments("{\nbool b = true;\ndo {\nb = not b;\n} while (b);\n}")
+                Arguments.arguments("int a;\n{bool b = 12 + 7 > 0;}\nsystem;"),
+                Arguments.arguments("int a;\n{int i = x * y % 12;}\nsystem;"),
+                Arguments.arguments("int a;\n{bool b = true && !false;}\nsystem;"),
+                Arguments.arguments("int a;\n{\nint a = 0;\nint i = 0;\nfor (i = 0; i < 10; i++) {\na += i;\n}\n}\nsystem;"),
+                Arguments.arguments("int a;\n{\nbool b = true;\nwhile (b) {\n b = not b;\n}\n}\nsystem;"),
+                Arguments.arguments("int a;\n{\nbool b = true;\ndo {\nb = not b;\n} while (b);\n}\nsystem;")
         );
     }
 
