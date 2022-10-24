@@ -1,5 +1,6 @@
 package org.UcelPlugin;
 
+import com.uppaal.model.core2.Document;
 import com.uppaal.plugin.Registry;
 import com.uppaal.plugin.Repository;
 
@@ -19,6 +20,12 @@ public class UppaalManager {
         this.symbolicTraceRepository = this.registry.getRepository("SymbolicTrace");
         this.systemModelRepository = this.registry.getRepository("SystemModel");
 
+    }
+
+    public Document getCurrentDocument() {
+        Repository reg = registry.getRepository("EditorDocument");
+        Document doc = (Document)reg.get();
+        return doc;
     }
 
 }

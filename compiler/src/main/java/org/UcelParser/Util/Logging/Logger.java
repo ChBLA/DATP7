@@ -13,13 +13,21 @@ public class Logger {
         this("");
         testMode = true;
     }
-
+    
+    public Logger(boolean testMode) {
+        this("");
+        this.testMode = testMode;
+    }
     public Logger(String input) {
         testMode = false;
         logs = new ArrayList<>();
         errorCount = 0;
         warningCount = 0;
         lines = input.split("\n");
+    }
+
+    public void setSource(String source) {
+        lines = source.split("\n");
     }
 
     public void log(Log log) {
