@@ -5,6 +5,7 @@ import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.DeclarationReference;
+import org.UcelParser.Util.Logging.ILogger;
 import org.UcelParser.Util.Logging.Logger;
 import org.UcelParser.Util.Scope;
 import org.UcelParser.CodeGeneration.templates.ManualTemplate;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
 
 public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     private Scope currentScope;
-    private final Logger logger;
+    private final ILogger logger;
 
     public CodeGenVisitor() {
         this.logger = new Logger();
@@ -28,7 +29,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.logger = new Logger();
     }
 
-    public CodeGenVisitor(Logger logger) {
+    public CodeGenVisitor(ILogger logger) {
         this.logger = logger;
     }
 
@@ -37,6 +38,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitStart(UCELParser.StartContext ctx) {
+        enterScope(ctx.scope);
         var declTemplate = visit(ctx.declarations());
         var stmnts = new ArrayList<Template>();
 
@@ -45,7 +47,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         }
 
         var sysTemplate = visit(ctx.system());
-
+        exitScope();
         return new StartTemplate(declTemplate, stmnts, sysTemplate);
     }
 
@@ -64,6 +66,25 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
         return new SystemTemplate(exprs);
     }
+
+    //endregion
+
+    //region FuncCall
+
+    @Override
+    public Template visitFuncCall(UCELParser.FuncCallContext ctx) {
+        String callName;
+        try {
+            callName = currentScope.get(ctx.reference).generateName();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        var argTemplate = visit(ctx.arguments());
+
+        return new FuncCallTemplate(callName, argTemplate);
+    }
+
 
     //endregion
 
@@ -94,7 +115,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                 var parameters = visit(ctx.parameters());
                 String nameOfCall = null;
                 try {
-                    nameOfCall = currentScope.get(ctx.occurrences.get(i).getFuncCallContext().reference).getIdentifier();
+                    nameOfCall = currentScope.getParent().get(ctx.occurrences.get(i).getFuncCallContext().reference).generateName();
                 } catch (Exception e) {
                     throw new RuntimeException("error: could not find occurrence");
                 }

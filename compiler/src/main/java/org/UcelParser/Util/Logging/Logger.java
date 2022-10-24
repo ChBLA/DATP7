@@ -2,7 +2,7 @@ package org.UcelParser.Util.Logging;
 
 import java.util.ArrayList;
 
-public class Logger {
+public class Logger implements ILogger {
 
     private ArrayList<Log> logs;
     private String[] lines;
@@ -13,7 +13,7 @@ public class Logger {
         this("");
         testMode = true;
     }
-    
+
     public Logger(boolean testMode) {
         this("");
         this.testMode = testMode;
@@ -26,10 +26,12 @@ public class Logger {
         lines = input.split("\n");
     }
 
+    @Override
     public void setSource(String source) {
         lines = source.split("\n");
     }
 
+    @Override
     public void log(Log log) {
         if(log instanceof ErrorLog) errorCount++;
 
@@ -38,11 +40,14 @@ public class Logger {
         if(!testMode) log.unpack();
     }
 
+    @Override
     public int getErrorCount() {
         return errorCount;
     }
+    @Override
     public boolean hasErrors() { return errorCount > 0; }
 
+    @Override
     public void printLogs() {
         formatLogs(true);
     }

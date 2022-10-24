@@ -15,7 +15,7 @@ import org.UcelParser.Util.Logging.*;
 
 public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private Scope currentScope;
-    private Logger logger;
+    private ILogger logger;
 
     public TypeCheckerVisitor() {
             this.currentScope = null;
@@ -27,7 +27,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             this.logger = new Logger();
         }
 
-    public TypeCheckerVisitor(Logger logger) {
+    public TypeCheckerVisitor(ILogger logger) {
             this.currentScope = null;
             this.logger = logger;
         }
@@ -111,21 +111,24 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //region function
     @Override
     public Type visitFunction(UCELParser.FunctionContext ctx) {
-        Type type = visit(ctx.type());
-        Type parameterType = visit(ctx.parameters());
-
-
-        if(type.equals(ERROR_TYPE) || parameterType.equals(ERROR_TYPE)) {
-            //No logging, passing through
-            return ERROR_TYPE;
-        }
-
         DeclarationInfo declInfo = null;
 
         try {
             declInfo = currentScope.get(ctx.reference);
         } catch (Exception e) {
             logger.log(new ErrorLog(ctx, "Compiler error: " + e.getMessage()));
+            return ERROR_TYPE;
+        }
+
+        enterScope(ctx.scope);
+
+        Type type = visit(ctx.type());
+        Type parameterType = visit(ctx.parameters());
+
+
+        if(type.equals(ERROR_TYPE) || parameterType.equals(ERROR_TYPE)) {
+            //No logging, passing through
+            exitScope();
             return ERROR_TYPE;
         }
 
@@ -142,13 +145,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         Type blockType = visit(ctx.block());
 
-        if(blockType.equals(type)){
-            return VOID_TYPE;
-        } else {
-            //No logging, should be noticed by return statement
-            return ERROR_TYPE;
-        }
-
+        exitScope();
+        return blockType.equals(type) ? VOID_TYPE : ERROR_TYPE;
     }
     //endregion
 

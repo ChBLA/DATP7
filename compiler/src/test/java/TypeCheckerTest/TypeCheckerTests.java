@@ -702,6 +702,7 @@ public class TypeCheckerTests  {
     @Test
     void functionSetType() {
         Scope scope = mock(Scope.class);
+        Scope funcScope = mock(Scope.class);
         TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
         String funcName = "f";
 
@@ -726,19 +727,22 @@ public class TypeCheckerTests  {
         DeclarationReference declRef = new DeclarationReference(0,0);
         DeclarationInfo declInfo = new DeclarationInfo(funcName);
         node.reference = declRef;
+        node.scope = funcScope;
 
         try{
             when(scope.get(declRef)).thenReturn(declInfo);
         } catch (Exception e) {fail();}
 
-        visitor.visitFunction(node);
+        var actual = visitor.visitFunction(node);
 
         assertEquals(new Type(Type.TypeEnum.functionType, new Type[]{INT_TYPE, STRING_TYPE, BOOL_TYPE}), declInfo.getType());
+        assertEquals(VOID_TYPE, actual);
     }
 
     @Test
     void functionVisitParameter() {
         Scope scope = mock(Scope.class);
+        Scope childScope = mock(Scope.class);
         TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
         String funcName = "f";
 
@@ -763,19 +767,22 @@ public class TypeCheckerTests  {
         DeclarationReference declRef = new DeclarationReference(0,0);
         DeclarationInfo declInfo = new DeclarationInfo(funcName);
         node.reference = declRef;
+        node.scope = childScope;
 
         try{
             when(scope.get(declRef)).thenReturn(declInfo);
         } catch (Exception e) {fail();}
 
-        visitor.visitFunction(node);
+        var actual = visitor.visitFunction(node);
 
         verify(parameters, times(1)).accept(visitor);
+        assertEquals(VOID_TYPE, actual);
     }
 
     @Test
     void functionVisitBlock() {
         Scope scope = mock(Scope.class);
+        Scope funcScope = mock(Scope.class);
         TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
         String funcName = "f";
 
@@ -800,14 +807,16 @@ public class TypeCheckerTests  {
         DeclarationReference declRef = new DeclarationReference(0,0);
         DeclarationInfo declInfo = new DeclarationInfo(funcName);
         node.reference = declRef;
+        node.scope = funcScope;
 
         try{
             when(scope.get(declRef)).thenReturn(declInfo);
         } catch (Exception e) {fail();}
 
-        visitor.visitFunction(node);
+        var actual = visitor.visitFunction(node);
 
         verify(block, times(1)).accept(visitor);
+        assertEquals(VOID_TYPE, actual);
     }
 
     //endregion

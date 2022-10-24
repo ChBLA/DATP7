@@ -35,6 +35,8 @@ public class CodeGenTests {
     //region Start
     @Test
     void startDeclarationSystemGeneratedCorrectly() {
+        var scopeMock = mock(Scope.class);
+
         var declTemplate = generateDefaultDeclarationTemplate("a", "1");
         var sysTemplate = generateDefaultSystemTemplate("B");
 
@@ -46,6 +48,7 @@ public class CodeGenTests {
         var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
         var sysNode = mockForVisitorResult(UCELParser.SystemContext.class, sysTemplate, visitor);
 
+        node.scope = scopeMock;
         when(node.declarations()).thenReturn(declNode);
         when(node.system()).thenReturn(sysNode);
 
@@ -56,6 +59,7 @@ public class CodeGenTests {
 
     @Test
     void startOneStatementGeneratedCorrectly() {
+        var scopeMock = mock(Scope.class);
         var declTemplate = generateDefaultDeclarationTemplate("a", "1");
         var stmnt1Template = generateDefaultStatementTemplate();
         var sysTemplate = generateDefaultSystemTemplate("B");
@@ -71,6 +75,7 @@ public class CodeGenTests {
 
         var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1Node); }};
 
+        node.scope = scopeMock;
         when(node.declarations()).thenReturn(declNode);
         when(node.statement()).thenReturn(stmnts);
         when(node.system()).thenReturn(sysNode);
@@ -82,6 +87,7 @@ public class CodeGenTests {
 
     @Test
     void startMultipleStatementsGeneratedCorrectly() {
+        var scopeMock = mock(Scope.class);
         var declTemplate = generateDefaultDeclarationTemplate("a", "1");
         var stmnt1Template = generateDefaultStatementTemplate();
         var stmnt2Template = generateDefaultStatementTemplate();
@@ -99,6 +105,7 @@ public class CodeGenTests {
 
         var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1Node); add(stmnt2Node); }};
 
+        node.scope = scopeMock;
         when(node.declarations()).thenReturn(declNode);
         when(node.statement()).thenReturn(stmnts);
         when(node.system()).thenReturn(sysNode);
@@ -161,7 +168,7 @@ public class CodeGenTests {
         Template block = new ManualTemplate(String.format("{%n}"));
         Template parameters = new ManualTemplate("");
 
-        String expected = String.format("%s %s(%s)%n%s", type, ID, parameters, block);
+        String expected = String.format("%s %s(%s)%n%s%n%n", type, ID, parameters, block);
 
         Scope scopeMock = mock(Scope.class);
         var visitor = new CodeGenVisitor();
@@ -198,7 +205,7 @@ public class CodeGenTests {
         Template block = new ManualTemplate(String.format("{%n}"));
         Template parameters = new ManualTemplate("int a");
 
-        String expected = String.format("%s %s(%s)%n%s", type, ID, parameters, block);
+        String expected = String.format("%s %s(%s)%n%s%n%n", type, ID, parameters, block);
 
         Scope scopeMock = mock(Scope.class);
         var visitor = new CodeGenVisitor();
@@ -235,8 +242,9 @@ public class CodeGenTests {
         Template block = new ManualTemplate(String.format("{%n}"));
         Template parameters = new ManualTemplate("");
 
-        String expected = String.format("int functionName1()%n{%n}%n%nint functionName2()%n{%n}");
+        String expected = String.format("int functionName1()%n{%n}%n%nint functionName2()%n{%n}%n%n");
 
+        Scope funcScope = mock(Scope.class);
         Scope scopeMock = mock(Scope.class);
         var visitor = new CodeGenVisitor();
 
@@ -271,7 +279,7 @@ public class CodeGenTests {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        when(FuncCallInfoMock1.getIdentifier()).thenReturn("functionName1");
+        when(FuncCallInfoMock1.generateName()).thenReturn("functionName1");
 
         var FuncCallCtxMock2 = mock(UCELParser.FuncCallContext.class);
         FuncCallCtxMock2.reference = mock(DeclarationReference.class);
@@ -281,7 +289,7 @@ public class CodeGenTests {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        when(FuncCallInfoMock2.getIdentifier()).thenReturn("functionName2");
+        when(FuncCallInfoMock2.generateName()).thenReturn("functionName2");
 
         var occurrenceMock1 = mock(FuncCallOccurrence.class);
         when(occurrenceMock1.getFuncCallContext()).thenReturn(FuncCallCtxMock1);
@@ -296,7 +304,9 @@ public class CodeGenTests {
         occurrencesList.add(occurrenceMock2);
 
         node.occurrences = occurrencesList;
-        node.scope = scopeMock;
+        node.scope = funcScope;
+
+        when(funcScope.getParent()).thenReturn(scopeMock);
 
         var actual = visitor.visitFunction(node).toString();
         assertEquals(expected, actual);
