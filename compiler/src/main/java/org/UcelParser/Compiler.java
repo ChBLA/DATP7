@@ -1,6 +1,9 @@
 package org.UcelParser;
 
+import org.Ucel.Graph;
 import org.Ucel.IProject;
+import org.Ucel.Location;
+import org.Ucel.Project;
 import org.UcelParser.CodeGeneration.CodeGenVisitor;
 import org.UcelParser.CodeGeneration.templates.Template;
 import org.UcelParser.Util.Exception.ErrorsFoundException;
@@ -31,6 +34,30 @@ public class Compiler {
         this.referenceVisitor = new ReferenceVisitor(logger);
         this.typeCheckerVisitor = new TypeCheckerVisitor(logger);
         this.codeGenVisitor = new CodeGenVisitor(logger);
+    }
+
+    public IProject compileProject(IProject project) {
+
+        return generateDummyProject();
+    }
+
+    private IProject generateDummyProject() {
+        Project project = new Project();
+        project.setDeclaration("// Declarations");
+
+        org.Ucel.Template template = new org.Ucel.Template();
+        template.setName("DummyTemplate");
+        template.setDeclarations("// Template Declaration");
+        Graph graph = new Graph();
+        Location initNode = new Location();
+        initNode.setInitial(true);
+        graph.addLocation(initNode);
+        template.setGraph(graph);
+
+
+        project.setSystemDeclarations("// System Declarations");
+
+        return project;
     }
 
     public String compile(String input) {
