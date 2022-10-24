@@ -25,7 +25,7 @@ public class UcelEditorUI {
         compileButton.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                workspace.getCurrentProject();
+                workspace.compileCurrentProject();
             }
         });
         jPanel.add(compileButton);

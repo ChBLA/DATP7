@@ -4,7 +4,9 @@ import com.uppaal.model.core2.Document;
 import com.uppaal.model.core2.PrototypeDocument;
 import com.uppaal.plugin.PluginWorkspace;
 import org.Ucel.IProject;
+import org.UcelParser.Compiler;
 import org.UcelPlugin.DocumentParser.DocumentParser;
+import org.UcelPlugin.DocumentParser.ProjectToDocumentParser;
 import org.UcelPlugin.Models.SharedInterface.Project;
 
 import javax.swing.*;
@@ -30,6 +32,20 @@ public class UcelEditorWorkspace implements PluginWorkspace {
         Document document = uppaalManager.getCurrentDocument();
         DocumentParser documentParser = new DocumentParser(document);
         Project project = documentParser.parseDocument();
+        System.out.println(project);
+    }
+
+    public void compileCurrentProject() {
+        Document document = uppaalManager.getCurrentDocument();
+        DocumentParser documentParser = new DocumentParser(document);
+        Project project = documentParser.parseDocument();
+
+        Compiler compiler = new Compiler();
+        IProject compiledProject = compiler.compileProject(project);
+
+        ProjectToDocumentParser projParser = new ProjectToDocumentParser(document);
+        projParser.parseProject(compiledProject);
+
         System.out.println(project);
     }
 
