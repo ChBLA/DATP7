@@ -23,6 +23,6 @@ public class Main {
                           "bool b = true; \n " +
                           "bool a = true > 12 && true || b;\n" +
                        "}}";
-        new Compiler(input);
+        new Compiler().compile(input);
     }
 }

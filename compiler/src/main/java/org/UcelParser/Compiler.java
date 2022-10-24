@@ -17,29 +17,45 @@ import org.UcelParser.Util.Logging.Logger;
 
 
 public class Compiler {
-    public Compiler(String input) {
+    private final ReferenceVisitor referenceVisitor;
+    private final TypeCheckerVisitor typeCheckerVisitor;
+    private final CodeGenVisitor codeGenVisitor;
+    private final Logger logger;
 
+    public Compiler() {
+        this(new Logger());
+    }
+
+    public Compiler(Logger logger) {
+        this.logger = logger;
+        this.referenceVisitor = new ReferenceVisitor(logger);
+        this.typeCheckerVisitor = new TypeCheckerVisitor(logger);
+        this.codeGenVisitor = new CodeGenVisitor(logger);
+    }
+
+    public String compile(String input) {
         CharStream charStream = CharStreams.fromString(input);
         UCELLexer lexer = new UCELLexer(charStream);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         UCELParser parser = new UCELParser(tokenStream);
 
-        Logger logger = new Logger(input);
-        var referenceVisitor = new ReferenceVisitor(logger);
-        var typeCheckerVisitor = new TypeCheckerVisitor(logger);
-        var codeGenerationVisitor = new CodeGenVisitor(logger);
+        this.logger.setSource(input);
+
+        Template generatedCode = null;
 
         UCELParser.BlockContext block = parser.block();
 
         try {
             var refTree = runVisitor(referenceVisitor, block, logger);
             var typeTree = runVisitor(typeCheckerVisitor, refTree, logger);
-            var generatedCode = runVisitor(codeGenerationVisitor, typeTree, logger);
+            generatedCode = runVisitor(codeGenVisitor, typeTree, logger);
             System.out.println(generatedCode);
         } catch (ErrorsFoundException ignored) {
         }
 
         logger.printLogs();
+
+        return generatedCode != null ? generatedCode.toString() : "";
     }
 
     private ParserRuleContext runVisitor(UCELBaseVisitor visitor, ParserRuleContext tree, Logger logger) throws ErrorsFoundException{
