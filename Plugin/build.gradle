@@ -23,6 +23,7 @@ dependencies {
     implementation fileTree(UPPAAL_HOME) { include '*.jar' }
     implementation fileTree(UPPAAL_HOME) { include 'lib/*.jar' }
     implementation findProject(':UppaalInterface')
+    implementation findProject(':compiler')
 }
 
 task buildFatjar(type: Jar) {
