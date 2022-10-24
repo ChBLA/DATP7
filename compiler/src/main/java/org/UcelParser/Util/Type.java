@@ -16,7 +16,7 @@ public class Type {
         clockType,
         scalarType,
         structType,
-        processType,
+        processType, templateType,
         voidType,
         errorType, invalidType,
         functionType,
