@@ -1,6 +1,7 @@
 package TypeCheckerTest;
 
 import org.UcelParser.CodeGeneration.CodeGenVisitor;
+import org.UcelParser.ReferenceHandler.ReferenceVisitor;
 import org.UcelParser.TypeChecker.TypeCheckerVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.DeclarationInfo;
@@ -350,6 +351,131 @@ public class TypeCheckerTests  {
 
     //region instantiation
 
+    @Test
+    void instantiationSetInstantiationType() {
+        Scope scope = mock(Scope.class);
+        Scope innerScope = mock(Scope.class);
+        when(innerScope.getParent()).thenReturn(scope);
+
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.InstantiationContext node = mock(UCELParser.InstantiationContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.ArgumentsContext arguments = mock(UCELParser.ArgumentsContext.class);
+
+        when(node.parameters()).thenReturn(parameters);
+        when(node.arguments()).thenReturn(arguments);
+
+        when(parameters.accept(visitor)).thenReturn(new Type(Type.TypeEnum.voidType, new Type[]{}));
+        when(arguments.accept(visitor)).thenReturn(new Type(Type.TypeEnum.voidType, new Type[]{}));
+
+        DeclarationReference instantiationReference = new DeclarationReference(0,0);
+        DeclarationReference constructorReference = new DeclarationReference(1,0);
+
+        node.instantiatedReference = instantiationReference;
+        node.constructorReference = constructorReference;
+        node.scope = innerScope;
+
+        DeclarationInfo instantiationInfo = new DeclarationInfo("i");
+        DeclarationInfo constructorInfo = new DeclarationInfo("c",
+                new Type(Type.TypeEnum.templateType, new Type[]{PROCESS_TYPE}));
+
+        Type expectedType = new Type(Type.TypeEnum.templateType, new Type[]{PROCESS_TYPE});
+
+        try{
+            when(scope.get(instantiationReference)).thenReturn(instantiationInfo);
+            when(innerScope.get(constructorReference)).thenReturn(constructorInfo);
+        } catch (Exception e) {
+            fail();
+        }
+
+        visitor.visitInstantiation(node);
+
+        assertEquals(expectedType, instantiationInfo.getType());
+    }
+
+    @Test
+    void instantiationSetInstantiationTypeWithParameters() {
+        Scope scope = mock(Scope.class);
+        Scope innerScope = mock(Scope.class);
+        when(innerScope.getParent()).thenReturn(scope);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.InstantiationContext node = mock(UCELParser.InstantiationContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.ArgumentsContext arguments = mock(UCELParser.ArgumentsContext.class);
+
+        when(node.parameters()).thenReturn(parameters);
+        when(node.arguments()).thenReturn(arguments);
+
+        when(parameters.accept(visitor)).thenReturn(new Type(Type.TypeEnum.voidType, new Type[]{BOOL_TYPE, STRING_TYPE}));
+        when(arguments.accept(visitor)).thenReturn(new Type(Type.TypeEnum.voidType, new Type[]{}));
+
+        DeclarationReference instantiationReference = new DeclarationReference(0,0);
+        DeclarationReference constructorReference = new DeclarationReference(1,0);
+
+        node.instantiatedReference = instantiationReference;
+        node.constructorReference = constructorReference;
+        node.scope = innerScope;
+
+        DeclarationInfo instantiationInfo = new DeclarationInfo("i");
+        DeclarationInfo constructorInfo = new DeclarationInfo("c",
+                new Type(Type.TypeEnum.templateType, new Type[]{PROCESS_TYPE}));
+
+        Type expectedType = new Type(Type.TypeEnum.templateType, new Type[]{PROCESS_TYPE, BOOL_TYPE, STRING_TYPE});
+
+        try{
+            when(scope.get(instantiationReference)).thenReturn(instantiationInfo);
+            when(innerScope.get(constructorReference)).thenReturn(constructorInfo);
+        } catch (Exception e) {
+            fail();
+        }
+
+        visitor.visitInstantiation(node);
+
+        assertEquals(expectedType, instantiationInfo.getType());
+    }
+
+    @Test
+    void instantiationErrorOnInvalidConstructorTypes() {
+        Scope scope = mock(Scope.class);
+        Scope innerScope = mock(Scope.class);
+        when(innerScope.getParent()).thenReturn(scope);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
+
+        UCELParser.InstantiationContext node = mock(UCELParser.InstantiationContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.ArgumentsContext arguments = mock(UCELParser.ArgumentsContext.class);
+
+        when(node.parameters()).thenReturn(parameters);
+        when(node.arguments()).thenReturn(arguments);
+
+        when(parameters.accept(visitor)).thenReturn(new Type(Type.TypeEnum.voidType, new Type[]{BOOL_TYPE, STRING_TYPE}));
+        when(arguments.accept(visitor)).thenReturn(new Type(Type.TypeEnum.voidType, new Type[]{DOUBLE_TYPE}));
+
+        DeclarationReference instantiationReference = new DeclarationReference(0,0);
+        DeclarationReference constructorReference = new DeclarationReference(1,0);
+
+        node.instantiatedReference = instantiationReference;
+        node.constructorReference = constructorReference;
+        node.scope = innerScope;
+
+        DeclarationInfo instantiationInfo = new DeclarationInfo("i");
+        DeclarationInfo constructorInfo = new DeclarationInfo("c",
+                new Type(Type.TypeEnum.templateType, new Type[]{PROCESS_TYPE, INT_TYPE}));
+
+
+        try{
+            when(scope.get(instantiationReference)).thenReturn(instantiationInfo);
+            when(innerScope.get(constructorReference)).thenReturn(constructorInfo);
+        } catch (Exception e) {
+            fail();
+        }
+
+        Type actual = visitor.visitInstantiation(node);
+
+        assertEquals(ERROR_TYPE, actual);
+    }
 
     //endregion
 

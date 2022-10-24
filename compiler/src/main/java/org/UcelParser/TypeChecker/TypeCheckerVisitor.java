@@ -150,7 +150,58 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
     //endregion
 
+    //region Instantiation
 
+    @Override
+    public Type visitInstantiation(UCELParser.InstantiationContext ctx) {
+        DeclarationInfo instantiationInfo = null, constructorInfo = null;
+
+        Type[] parameterTypes = visit(ctx.parameters()).getParameters();
+
+        enterScope(ctx.scope);
+
+        try {
+            instantiationInfo = currentScope.getParent().get(ctx.instantiatedReference);
+            constructorInfo = currentScope.get(ctx.constructorReference);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            exitScope();
+            return ERROR_TYPE;
+        }
+
+        Type[] argumentTypes = visit(ctx.arguments()).getParameters();
+        Type constructorType = constructorInfo.getType();
+
+        if(constructorType.getEvaluationType() != Type.TypeEnum.templateType) {
+            logger.log(new ErrorLog(ctx, "Expected a template but found: " + constructorType));
+            exitScope();
+            return ERROR_TYPE;
+        }
+
+        Type[] constructorParameters = constructorType.getParameters();
+        for (int i = 1; i < constructorParameters.length; i++) {
+            if(!constructorParameters[i].equals(argumentTypes[i-1])) {
+                logger.log(new ErrorLog(ctx, "Expected argument of type: " + constructorParameters[i] +
+                        " but found: " + argumentTypes[i-1]));
+                exitScope();
+                return ERROR_TYPE;
+            }
+        }
+
+        Type[] instantiationParameters = new Type[parameterTypes.length + 1];
+        instantiationParameters[0] = PROCESS_TYPE;
+        for (int i = 1; i < instantiationParameters.length; i++)
+            instantiationParameters[i] = parameterTypes[i-1];
+
+        Type instantiationType = new Type(Type.TypeEnum.templateType, instantiationParameters);
+
+        instantiationInfo.setType(instantiationType);
+
+        exitScope();
+        return VOID_TYPE;
+    }
+
+    //endregion
 
     //region Parameters
     @Override
