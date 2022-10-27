@@ -65,7 +65,7 @@ public class UcelEditorWorkspace implements PluginWorkspace {
         UCELParser systemDeclParser = new UCELParser(systemDeclTokenStream);
 
         var systemDeclTree = systemDeclParser.psystem();
-
+        System.out.println("System decl tree");
         return new CodeTree(declTree, templateTrees, systemDeclTree);
     }
 
@@ -73,7 +73,7 @@ public class UcelEditorWorkspace implements PluginWorkspace {
         Document document = uppaalManager.getCurrentDocument();
         DocumentParser documentParser = new DocumentParser(document);
         Project project = documentParser.parseDocument();
-
+        var codeTree = getCurrentProject();
         Compiler compiler = new Compiler();
         IProject compiledProject = compiler.compileProject(project);
 
