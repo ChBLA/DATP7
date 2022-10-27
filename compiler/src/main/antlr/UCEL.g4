@@ -9,6 +9,14 @@ grammar UCEL;
     import org.UcelParser.Util.FuncCallOccurrence;
 }
 
+pdeclaration locals [Scope scope]
+    : declarations statement* link_stmnt*;
+ptemplate locals [Scope scope]
+    : declarations statement* link_stmnt*;
+psystem locals [Scope scope]
+    : declarations statement* link_stmnt* system;
+
+
 start locals [Scope scope]
     : declarations statement* link_stmnt* system;
 system : SYSTEM expression ((COMMA | '<') expression)* END;
