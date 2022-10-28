@@ -11,6 +11,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import org.UcelParser.ManualParser.ManualParser;
+import org.UcelParser.UCELParser_Generated.UCELParser;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class ManualParsingTests {
 
@@ -93,6 +101,47 @@ public class ManualParsingTests {
     //endregion
 
     //region Update
+
+    @Test
+    void updateSetsParent() {
+        ManualParser manualParser = new ManualParser();
+        ParserRuleContext parent = mock(ParserRuleContext.class);
+
+        ParserRuleContext actual = manualParser.parseUpdate(parent, "");
+
+        assertEquals(parent, actual.getParent());
+    }
+
+    @Test
+    void updateReturnsRightExpressions() {
+        ManualParser manualParser = new ManualParser();
+        ParserRuleContext parent = mock(ParserRuleContext.class);
+
+        ParserRuleContext actual = manualParser.parseUpdate(parent, "a+b, !x");
+
+        assertTrue(actual.getChild(0) instanceof UCELParser.AddSubContext);
+        assertTrue(actual.getChild(1) instanceof UCELParser.UnaryContext);
+    }
+
+    @Test
+    void updateReturnsCorrectlyWithNoChildren() {
+        ManualParser manualParser = new ManualParser();
+        ParserRuleContext parent = mock(ParserRuleContext.class);
+
+        ParserRuleContext actual = manualParser.parseUpdate(parent, "");
+
+        assertTrue(actual.getChildCount() == 0);
+    }
+
+    @Test
+    void updateReturnsNullOnError() {
+        ManualParser manualParser = new ManualParser();
+        ParserRuleContext parent = mock(ParserRuleContext.class);
+
+        ParserRuleContext actual = manualParser.parseUpdate(parent, ";;,;");
+
+        assertTrue(actual == null);
+    }
 
     //endregion
     //endregion

@@ -81,6 +81,13 @@ public class ManualParser {
 
     //region Update
 
+    public UCELParser.UpdateContext parseUpdate(ParserRuleContext parent, String update) {
+        UCELParser parser = generateParser(update);
+        UCELParser.UpdateContext updateNode = parser.update();
+        updateNode.parent = parent;
+        return parser.getNumberOfSyntaxErrors() == 0 ? updateNode : null;
+    }
+
     //endregion
     //endregion
     //endregion
