@@ -1,18 +1,16 @@
 package ParserTests;
 
+import org.Ucel.ILocation;
 import org.UcelParser.ManualParser.ManualParser;
-import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.junit.jupiter.api.Test;
-
-import java.util.ArrayList;
-import java.util.List;
-
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class ManualParsingTests {
 
@@ -32,11 +30,51 @@ public class ManualParsingTests {
     //region Locations
 
     //region Invariant
+    @Test
+    void makeInvariantNodeFromValidExpression() {
+        var expr = "2 > 1";
+        var parent = mock(ParserRuleContext.class);
 
+        var parser = new ManualParser();
+        var actual = parser.parseInvariant(parent, expr);
+
+        assertEquals(parent, actual.parent);
+    }
+
+    @Test
+    void makeInvariantNodeFromInvalidExpressionReturnsNull() {
+        var expr = "for (i = 0;;)";
+        var parent = mock(ParserRuleContext.class);
+
+        var parser = new ManualParser();
+        var actual = parser.parseInvariant(parent, expr);
+
+        assertNull(actual);
+    }
     //endregion
 
     //region Exponential
+    @Test
+    void makeExponentialNodeFromValidExpressions() {
+        var input = "2:1";
+        var parent = mock(ParserRuleContext.class);
 
+        var parser = new ManualParser();
+        var actual = parser.parseExponential(parent, input);
+
+        assertEquals(parent, actual.parent);
+    }
+
+    @Test
+    void makeExponentialNodeFromInvalidExpressionsReturnsNull() {
+        var expr = "for (i = 0;;)";
+        var parent = mock(ParserRuleContext.class);
+
+        var parser = new ManualParser();
+        var actual = parser.parseExponential(parent, expr);
+
+        assertNull(actual);
+    }
     //endregion
     //endregion
 

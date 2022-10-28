@@ -1,5 +1,6 @@
 package org.UcelParser.ManualParser;
 
+import org.Ucel.ILocation;
 import org.Ucel.IProject;
 import org.UcelParser.UCELParser_Generated.UCELLexer;
 import org.UcelParser.UCELParser_Generated.UCELParser;
@@ -42,13 +43,26 @@ public class ManualParser {
 
 
     //region Locations
+    public ParserRuleContext parseLocation(ParserRuleContext parent, ILocation location) {
+        return null;
+    }
 
     //region Invariant
-
+    public ParserRuleContext parseInvariant(ParserRuleContext parent, String input) {
+        var parser = generateParser(input);
+        var node = parser.invariant();
+        node.parent = parent;
+        return parser.getNumberOfSyntaxErrors() > 0 ? null : node;
+    }
     //endregion
 
     //region Exponential
-
+    public ParserRuleContext parseExponential(ParserRuleContext parent, String input) {
+        var parser = generateParser(input);
+        var node = parser.exponential();
+        node.parent = parent;
+        return parser.getNumberOfSyntaxErrors() > 0 ? null : node;
+    }
     //endregion
     //endregion
 
