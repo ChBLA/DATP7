@@ -34,7 +34,12 @@ public class ManualParser {
 //    }
 
     //region Project declarations
-
+    public UCELParser.PdeclarationContext parseProjectDeclaration(UCELParser.ProjectContext parent, String declaration) {
+        var declParser = generateParser(declaration);
+        var declNode = declParser.pdeclaration();
+        declNode.parent = parent;
+        return declParser.getNumberOfSyntaxErrors() == 0 && isEOF(declParser) ? declNode : null;
+    }
 
     //endregion
 
@@ -136,7 +141,12 @@ public class ManualParser {
     //endregion
 
     //region Project system
-
+        public UCELParser.SystemContext parseProjectSystem(UCELParser.ProjectContext parent, String system) {
+        var systemParser = generateParser(system);
+        var systemNode = systemParser.system();
+        systemNode.parent = parent;
+        return systemParser.getNumberOfSyntaxErrors() == 0 && isEOF(systemParser) ? systemNode : null;
+        }
     //endregion
     //endregion
 

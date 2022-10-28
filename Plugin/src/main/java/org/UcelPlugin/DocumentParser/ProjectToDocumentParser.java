@@ -1,16 +1,16 @@
 package org.UcelPlugin.DocumentParser;
 
-import com.uppaal.model.core2.Document;
-import com.uppaal.model.core2.Property;
-import com.uppaal.model.core2.PrototypeDocument;
+import com.uppaal.model.core2.*;
+import org.Ucel.IGraph;
 import org.Ucel.IProject;
-import org.UcelPlugin.Models.SharedInterface.Project;
-import org.UcelPlugin.Models.SharedInterface.Template;
+import org.Ucel.ITemplate;
+
+import java.util.List;
 
 public class ProjectToDocumentParser {
 
     public ProjectToDocumentParser() {
-        this(new PrototypeDocument().getDocument());
+        this(new Document(new PrototypeDocument()));
     }
 
     public ProjectToDocumentParser(Document document) {
@@ -28,12 +28,38 @@ public class ProjectToDocumentParser {
         document.setProperty("declaration", project.getDeclaration());
 
         // Templates
-//        for (Template tmp : parseTemplates(document)) {
-//            project.putTemplate(tmp);
-//        }
+        removeTemplates();
+        addTemplates(project.getTemplates());
 
         // System Declaration
         document.setProperty("system", project.getSystemDeclarations());
     }
 
+    public void removeTemplates() {
+        Node template = document.getTemplates();
+        while(template != null) {
+            template.remove();
+            template = template.next;
+        }
+    }
+
+    private void addTemplates(List<ITemplate> inputTemplates) {
+        for(var tmp: inputTemplates)
+            addTemplate(tmp);
+    }
+
+    private void addTemplate(ITemplate inputTemplate) {
+        var outTemp = document.createTemplate();
+        document.insert(outTemp, null);
+
+        outTemp.setProperty("name", inputTemplate.getName());
+        outTemp.setProperty("parameter", inputTemplate.getParameters());
+        addGraph(outTemp, inputTemplate.getGraph());
+        outTemp.setProperty("declaration", inputTemplate.getDeclarations());
+    }
+
+    private void addGraph(Template template, IGraph graph) {
+        var graphParser = new GraphParserUcelToUpp(template, graph);
+        graphParser.addGraph();
+    }
 }

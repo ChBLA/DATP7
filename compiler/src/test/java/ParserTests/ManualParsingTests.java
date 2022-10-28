@@ -28,7 +28,14 @@ public class ManualParsingTests {
 
 
     //region Project declarations
+    @Test
+    void pDeclSetsParent() {
+        var parser = new ManualParser();
+        var parent = mock(UCELParser.ProjectContext.class);
+        var actual = parser.parseProjectDeclaration(parent, "int i = 0;");
 
+        assertEquals(parent, actual.parent);
+    }
 
     //endregion
 
@@ -330,7 +337,6 @@ public class ManualParsingTests {
     //endregion
 
     //region Update
-
     @Test
     void updateSetsParent() {
         ManualParser manualParser = new ManualParser();
@@ -378,7 +384,14 @@ public class ManualParsingTests {
     //endregion
 
     //region Project system
+    @Test
+    void pSysSetsParent() {
+        var parser = new ManualParser();
+        var parent = mock(UCELParser.ProjectContext.class);
+        var actual = parser.parseProjectSystem(parent, "system s;");
 
+        assertEquals(parent, actual.parent);
+    }
     //endregion
     //endregion
 }
