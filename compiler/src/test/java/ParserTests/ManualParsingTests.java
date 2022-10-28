@@ -1,5 +1,19 @@
 package ParserTests;
 
+import org.UcelParser.ManualParser.ManualParser;
+import org.UcelParser.UCELParser_Generated.UCELParser;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNodeImpl;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 public class ManualParsingTests {
 
     //region Project
@@ -37,7 +51,29 @@ public class ManualParsingTests {
     //endregion
 
     //region Sync
+    @Test
+    public void parseSyncNotNullTest() {
+        String parseString = "1!";
 
+        var parentMock = mock(UCELParser.EdgeContext.class);
+
+        var parser = new ManualParser();
+
+        var actual = parser.parseSync(parentMock, parseString);
+
+        assertNotNull(actual);
+        assertEquals(parentMock, actual.parent);
+    }
+
+    @Test
+    public void parseSyncNullTest() {
+        String parseString = "!";
+        var parser = new ManualParser();
+
+        var actual = parser.parseSync(null, parseString);
+
+        assertNull(actual);
+    }
     //endregion
 
     //region Update

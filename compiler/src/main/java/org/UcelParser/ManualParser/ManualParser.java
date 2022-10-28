@@ -13,6 +13,10 @@ import java.util.ArrayList;
 
 public class ManualParser {
 
+    public ManualParser() {
+
+    }
+
     //region Project
 //    public ParseTree parseProject(IProject project) {
 //        var node = new UCELParser.ProjectContext(null, -1);
@@ -62,7 +66,12 @@ public class ManualParser {
     //endregion
 
     //region Sync
-
+    public ParserRuleContext parseSync(ParserRuleContext parent, String input) {
+        var parser = generateParser(input);
+        var tree = parser.sync();
+        tree.setParent(parent);
+        return (parser.getNumberOfSyntaxErrors() == 0) ? tree : null;
+    }
     //endregion
 
     //region Update
