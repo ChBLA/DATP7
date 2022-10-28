@@ -1,5 +1,6 @@
 package org.UcelParser.ManualParser;
 
+import org.Ucel.ILocation;
 import org.Ucel.IProject;
 import org.UcelParser.UCELParser_Generated.UCELLexer;
 import org.UcelParser.UCELParser_Generated.UCELParser;
@@ -41,6 +42,9 @@ public class ManualParser {
 
 
     //region Locations
+    public ParserRuleContext parseLocation(ParserRuleContext parent, ILocation location) {
+        return null;
+    }
 
     //region Invariant
     public ParserRuleContext parseInvariant(ParserRuleContext parent, String input) {
