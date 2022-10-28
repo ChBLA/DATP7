@@ -1,6 +1,8 @@
 package ParserTests;
 
 import org.Ucel.*;
+import org.Ucel.IEdge;
+import org.Ucel.ILocation;
 import org.UcelParser.ManualParser.ManualParser;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -195,7 +197,192 @@ public class ManualParsingTests {
 
     //region Edges
 
+    @Test
+    public void parseEdgeReturnsCorrectEdgeCtx() {
+        var parent = mock(ParserRuleContext.class);
+        var edge = mock(IEdge.class);
+        var locationStart = mock(ILocation.class);
+        var locationEnd = mock(ILocation.class);
+
+        var selectMock = mock(UCELParser.SelectContext.class);
+        var guardMock = mock(UCELParser.GuardContext.class);
+        var syncMock = mock(UCELParser.SyncContext.class);
+        var updateMock = mock(UCELParser.UpdateContext.class);
+
+
+        when(edge.getLocationStart()).thenReturn(locationStart);
+        when(edge.getLocationEnd()).thenReturn(locationEnd);
+        when(locationStart.getName()).thenReturn("1");
+        when(locationEnd.getName()).thenReturn("2");
+        when(edge.getComment()).thenReturn("comment");
+        when(edge.getTestCode()).thenReturn("testCode");
+
+        var parser = mock(ManualParser.class);
+        when(parser.parseEdge(parent, edge)).thenCallRealMethod();
+
+        when(parser.parseSelect(any(), any())).thenReturn(selectMock);
+        when(parser.parseGuard(any(), any())).thenReturn(guardMock);
+        when(parser.parseSync(any(), any())).thenReturn(syncMock);
+        when(parser.parseUpdate(any(), any())).thenReturn(updateMock);
+
+        var actual = parser.parseEdge(parent, edge);
+
+        assertEquals(parent, actual.parent);
+        assertNotNull(actual);
+        assertEquals(4, actual.getChildCount());
+        assertEquals(actual.locationStartID, Integer.parseInt(locationStart.getName()));
+        assertEquals(actual.locationEndID, Integer.parseInt(locationEnd.getName()));
+        assertEquals(actual.comments, edge.getComment());
+        assertEquals(actual.testCode, edge.getTestCode());
+    }
+
+    @Test
+    public void parseEdgeReturnsNullWhenInvalidSelect() {
+        var parent = mock(ParserRuleContext.class);
+        var edge = mock(IEdge.class);
+        var locationStart = mock(ILocation.class);
+        var locationEnd = mock(ILocation.class);
+
+        var guardMock = mock(UCELParser.GuardContext.class);
+        var syncMock = mock(UCELParser.SyncContext.class);
+        var updateMock = mock(UCELParser.UpdateContext.class);
+
+        when(edge.getLocationStart()).thenReturn(locationStart);
+        when(edge.getLocationEnd()).thenReturn(locationEnd);
+        when(locationStart.getName()).thenReturn("1");
+        when(locationEnd.getName()).thenReturn("2");
+        when(edge.getComment()).thenReturn("comment");
+        when(edge.getTestCode()).thenReturn("testCode");
+
+        var parser = mock(ManualParser.class);
+        when(parser.parseEdge(parent, edge)).thenCallRealMethod();
+
+        when(parser.parseSelect(any(), any())).thenReturn(null);
+        when(parser.parseGuard(any(), any())).thenReturn(guardMock);
+        when(parser.parseSync(any(), any())).thenReturn(syncMock);
+        when(parser.parseUpdate(any(), any())).thenReturn(updateMock);
+
+        var actual = parser.parseEdge(parent, edge);
+
+        assertNull(actual);
+    }
+
+    @Test
+    public void parseEdgeReturnsNullWhenInvalidGuard() {
+        var parent = mock(ParserRuleContext.class);
+        var edge = mock(IEdge.class);
+        var locationStart = mock(ILocation.class);
+        var locationEnd = mock(ILocation.class);
+
+        var selectMock = mock(UCELParser.SelectContext.class);
+        var syncMock = mock(UCELParser.SyncContext.class);
+        var updateMock = mock(UCELParser.UpdateContext.class);
+
+        when(edge.getLocationStart()).thenReturn(locationStart);
+        when(edge.getLocationEnd()).thenReturn(locationEnd);
+        when(locationStart.getName()).thenReturn("1");
+        when(locationEnd.getName()).thenReturn("2");
+        when(edge.getComment()).thenReturn("comment");
+        when(edge.getTestCode()).thenReturn("testCode");
+
+        var parser = mock(ManualParser.class);
+        when(parser.parseEdge(parent, edge)).thenCallRealMethod();
+
+        when(parser.parseSelect(any(), any())).thenReturn(selectMock);
+        when(parser.parseGuard(any(), any())).thenReturn(null);
+        when(parser.parseSync(any(), any())).thenReturn(syncMock);
+        when(parser.parseUpdate(any(), any())).thenReturn(updateMock);
+
+        var actual = parser.parseEdge(parent, edge);
+
+        assertNull(actual);
+    }
+
+    @Test
+    public void parseEdgeReturnsNullWhenInvalidSync() {
+        var parent = mock(ParserRuleContext.class);
+        var edge = mock(IEdge.class);
+        var locationStart = mock(ILocation.class);
+        var locationEnd = mock(ILocation.class);
+
+        var selectMock = mock(UCELParser.SelectContext.class);
+        var guardMock = mock(UCELParser.GuardContext.class);
+        var updateMock = mock(UCELParser.UpdateContext.class);
+
+        when(edge.getLocationStart()).thenReturn(locationStart);
+        when(edge.getLocationEnd()).thenReturn(locationEnd);
+        when(locationStart.getName()).thenReturn("1");
+        when(locationEnd.getName()).thenReturn("2");
+        when(edge.getComment()).thenReturn("comment");
+        when(edge.getTestCode()).thenReturn("testCode");
+
+        var parser = mock(ManualParser.class);
+        when(parser.parseEdge(parent, edge)).thenCallRealMethod();
+
+        when(parser.parseSelect(any(), any())).thenReturn(selectMock);
+        when(parser.parseGuard(any(), any())).thenReturn(guardMock);
+        when(parser.parseSync(any(), any())).thenReturn(null);
+        when(parser.parseUpdate(any(), any())).thenReturn(updateMock);
+
+        var actual = parser.parseEdge(parent, edge);
+
+        assertNull(actual);
+    }
+
+    @Test
+    public void parseEdgeReturnsNullWhenInvalidUpdate() {
+        var parent = mock(ParserRuleContext.class);
+        var edge = mock(IEdge.class);
+        var locationStart = mock(ILocation.class);
+        var locationEnd = mock(ILocation.class);
+
+        var selectMock = mock(UCELParser.SelectContext.class);
+        var guardMock = mock(UCELParser.GuardContext.class);
+        var syncMock = mock(UCELParser.SyncContext.class);
+        var updateMock = mock(UCELParser.UpdateContext.class);
+
+        when(edge.getLocationStart()).thenReturn(locationStart);
+        when(edge.getLocationEnd()).thenReturn(locationEnd);
+        when(locationStart.getName()).thenReturn("1");
+        when(locationEnd.getName()).thenReturn("2");
+        when(edge.getComment()).thenReturn("comment");
+        when(edge.getTestCode()).thenReturn("testCode");
+
+        var parser = mock(ManualParser.class);
+        when(parser.parseEdge(parent, edge)).thenCallRealMethod();
+
+        when(parser.parseSelect(any(), any())).thenReturn(selectMock);
+        when(parser.parseGuard(any(), any())).thenReturn(guardMock);
+        when(parser.parseSync(any(), any())).thenReturn(syncMock);
+        when(parser.parseUpdate(any(), any())).thenReturn(null);
+
+        var actual = parser.parseEdge(parent, edge);
+
+        assertNull(actual);
+    }
+
     //region Select
+    @Test
+    public void parseSelectNotNullTest() {
+        String parseString = "a : int[0,10]";
+
+        var parentMock = mock(UCELParser.EdgeContext.class);
+
+        var parser = new ManualParser();
+
+        var actual = parser.parseSelect(parentMock, parseString);
+
+        assertNotNull(actual);
+        assertEquals(parentMock, actual.parent);
+    }
+
+    @Test
+    public void parseSelectNullTest() {
+        String parseString = "a : int[0,10] this does not work";
+        var parser = new ManualParser();
+        var actual = parser.parseSelect(null, parseString);
+        assertNull(actual);
+    }
 
     //endregion
 
@@ -219,9 +406,7 @@ public class ManualParsingTests {
     public void parseGuardNullTest() {
         String parseString = "a!";
         var parser = new ManualParser();
-
         var actual = parser.parseGuard(null, parseString);
-
         assertNull(actual);
     }
 
@@ -246,9 +431,7 @@ public class ManualParsingTests {
     public void parseSyncNullTest() {
         String parseString = "!";
         var parser = new ManualParser();
-
         var actual = parser.parseSync(null, parseString);
-
         assertNull(actual);
     }
     //endregion

@@ -91,11 +91,38 @@ public class ManualParser {
     //endregion
 
     //region Edges
+
     public UCELParser.EdgeContext parseEdge(ParserRuleContext parent, IEdge edge) {
-        return null;
+        var edgeCtx = new UCELParser.EdgeContext(parent, 1);
+        edgeCtx.parent = parent;
+
+        edgeCtx.locationStartID = Integer.parseInt(edge.getLocationStart().getName());
+        edgeCtx.locationEndID = Integer.parseInt(edge.getLocationEnd().getName());
+        edgeCtx.comments = edge.getComment();
+        edgeCtx.testCode = edge.getTestCode();
+
+        var select = parseSelect(edgeCtx, edge.getSelect());
+        var guard = parseGuard(edgeCtx, edge.getGuard());
+        var sync = parseSync(edgeCtx, edge.getSync());
+        var update = parseUpdate(edgeCtx, edge.getUpdate());
+
+        edgeCtx.children = new ArrayList<>();
+        edgeCtx.children.add(select);
+        edgeCtx.children.add(guard);
+        edgeCtx.children.add(sync);
+        edgeCtx.children.add(update);
+
+        return edgeCtx.children.contains(null) ? null : edgeCtx;
     }
 
     //region Select
+
+    public ParserRuleContext parseSelect(ParserRuleContext parent, String input) {
+        var parser = generateParser(input);
+        var tree = parser.select();
+        tree.parent = parent;
+        return (parser.getNumberOfSyntaxErrors() == 0 && isEOF(parser)) ? tree : null;
+    }
 
     //endregion
 
