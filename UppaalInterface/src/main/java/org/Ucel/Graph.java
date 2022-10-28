@@ -1,8 +1,6 @@
 package org.Ucel;
 
 
-import org.Ucel.Exceptions.KeyNotFoundException;
-
 import java.util.*;
 
 public class Graph implements IGraph {
@@ -24,7 +22,7 @@ public class Graph implements IGraph {
         return edges;
     }
 
-    public void AddEdge(IEdge edge) throws IllegalArgumentException {
+    public void addEdge(IEdge edge) throws IllegalArgumentException {
         if (!locations.contains(edge.getLocationStart()))
             throw new IllegalArgumentException("Start location of edge not found in graph");
         if (!locations.contains(edge.getLocationEnd()))

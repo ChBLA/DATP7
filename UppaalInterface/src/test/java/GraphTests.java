@@ -1,5 +1,4 @@
 import org.Ucel.*;
-import org.Ucel.Exceptions.KeyNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
@@ -39,7 +38,7 @@ public class GraphTests {
         edge.setLocationStart(start);
         edge.setLocationEnd(end);
 
-        graph.AddEdge(edge);
+        graph.addEdge(edge);
 
         assertEquals(edge, graph.getEdges().get(0));
     }
@@ -56,7 +55,7 @@ public class GraphTests {
 
             @Override
             public void execute() throws Throwable {
-                graph.AddEdge(edge);
+                graph.addEdge(edge);
             }
         });
     }
