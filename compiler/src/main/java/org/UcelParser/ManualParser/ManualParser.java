@@ -96,7 +96,7 @@ public class ManualParser {
         UCELParser parser = generateParser(update);
         UCELParser.UpdateContext updateNode = parser.update();
         updateNode.parent = parent;
-        return parser.getNumberOfSyntaxErrors() == 0 ? updateNode : null;
+        return parser.getNumberOfSyntaxErrors() == 0 && isEOF(parser) ? updateNode : null;
     }
 
     //endregion

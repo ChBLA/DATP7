@@ -167,7 +167,7 @@ public class ManualParsingTests {
         ParserRuleContext actual = manualParser.parseUpdate(parent, "a+b, !x");
 
         assertTrue(actual.getChild(0) instanceof UCELParser.AddSubContext);
-        assertTrue(actual.getChild(1) instanceof UCELParser.UnaryContext);
+        assertTrue(actual.getChild(2) instanceof UCELParser.UnaryExprContext);
     }
 
     @Test
