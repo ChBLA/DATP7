@@ -9,6 +9,31 @@ grammar UCEL;
     import org.UcelParser.Util.FuncCallOccurrence;
 }
 
+project : pdeclaration ptemplate* psystem;
+
+pdeclaration locals [Scope scope]
+    : declarations;
+ptemplate locals [Scope scope]
+    : ID parameters graph declarations;
+psystem locals [Scope scope]
+    : declarations link_stmnt* system;
+
+graph : location* edge*;
+
+location
+    locals [Boolean isInitial, Boolean isUrgent, Boolean isCommitted, Integer posX,
+            Integer posY, String comments, String testCodeEnter, String testCodeExit, Integer id]
+    : ID? invariant exponential;
+exponential : expression COLON expression;
+invariant : expression;
+
+edge locals [Scope scope, Integer locationStartID, Integer locationEndID, String comments, String testCode]
+    : select guard sync update;
+select : ID COLON type (COMMA ID COLON type)*;
+guard : expression;
+sync : expression (NEG | QUESTIONMARK);
+update : (expression (COMMA expression)*)?;
+
 start locals [Scope scope]
     : declarations statement* link_stmnt* system;
 system : SYSTEM expression ((COMMA | '<') expression)* END;
@@ -42,7 +67,7 @@ parameters : ( parameter (COMMA parameter)* )?;
 parameter  locals [DeclarationReference reference]
               : type REF? (BITAND)? ID arrayDecl*;
 
-declarations  : (variableDecl | typeDecl | function | chanPriority | component | interface_decl)*;
+declarations  : (variableDecl | typeDecl | function | chanPriority | component | interface_decl)+;
 variableDecl  : type variableID (COMMA variableID)* END;
 
 variableID locals [DeclarationReference reference]

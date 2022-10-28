@@ -5,14 +5,20 @@ import com.uppaal.model.core2.PrototypeDocument;
 import com.uppaal.plugin.PluginWorkspace;
 import org.Ucel.IProject;
 import org.UcelParser.Compiler;
+import org.UcelParser.UCELParser_Generated.UCELLexer;
+import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelPlugin.DocumentParser.DocumentParser;
 import org.UcelPlugin.DocumentParser.ProjectToDocumentParser;
 import org.UcelPlugin.Models.SharedInterface.Project;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 
 public class UcelEditorWorkspace implements PluginWorkspace {
 
@@ -28,18 +34,46 @@ public class UcelEditorWorkspace implements PluginWorkspace {
         return editorUi;
     }
 
-    public void getCurrentProject() {
+    public CodeTree getCurrentProject() {
         Document document = uppaalManager.getCurrentDocument();
         DocumentParser documentParser = new DocumentParser(document);
         Project project = documentParser.parseDocument();
         System.out.println(project);
+
+        var declaration = project.getDeclaration();
+        CharStream declCharStream = CharStreams.fromString(declaration);
+        UCELLexer declLexer = new UCELLexer(declCharStream);
+        CommonTokenStream declTokenStream = new CommonTokenStream(declLexer);
+        UCELParser declParser = new UCELParser(declTokenStream);
+
+        var declTree = declParser.pdeclaration();
+
+        var templateTrees = new ArrayList<UCELParser.PtemplateContext>();
+        for (var template : project.getTemplates()) {
+            CharStream charStream = CharStreams.fromString(template.getDeclarations());
+            UCELLexer lexer = new UCELLexer(charStream);
+            CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+            UCELParser templateParser = new UCELParser(tokenStream);
+            var templateTree = templateParser.ptemplate();
+            templateTrees.add(templateTree);
+        }
+
+        var systemDeclaration = project.getSystemDeclarations();
+        CharStream systemDeclCharStream = CharStreams.fromString(systemDeclaration);
+        UCELLexer systemDeclLexer = new UCELLexer(systemDeclCharStream);
+        CommonTokenStream systemDeclTokenStream = new CommonTokenStream(systemDeclLexer);
+        UCELParser systemDeclParser = new UCELParser(systemDeclTokenStream);
+
+        var systemDeclTree = systemDeclParser.psystem();
+        System.out.println("System decl tree");
+        return new CodeTree(declTree, templateTrees, systemDeclTree);
     }
 
     public void compileCurrentProject() {
         Document document = uppaalManager.getCurrentDocument();
         DocumentParser documentParser = new DocumentParser(document);
         Project project = documentParser.parseDocument();
-
+        var codeTree = getCurrentProject();
         Compiler compiler = new Compiler();
         IProject compiledProject = compiler.compileProject(project);
 
