@@ -30,7 +30,27 @@ public class ManualParsingTests {
     //region Locations
 
     //region Invariant
+    @Test
+    void makeInvariantNodeFromValidExpression() {
+        var expr = "2 > 1";
+        var parent = mock(ParserRuleContext.class);
 
+        var parser = new ManualParser();
+        var actual = parser.parseInvariant(parent, expr);
+
+        assertEquals(parent, actual.parent);
+    }
+
+    @Test
+    void makeInvariantNodeFromInvalidExpressionReturnsNull() {
+        var expr = "for (i = 0;;)";
+        var parent = mock(ParserRuleContext.class);
+
+        var parser = new ManualParser();
+        var actual = parser.parseInvariant(parent, expr);
+
+        assertNull(actual);
+    }
     //endregion
 
     //region Exponential

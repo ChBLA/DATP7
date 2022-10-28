@@ -43,7 +43,12 @@ public class ManualParser {
     //region Locations
 
     //region Invariant
-
+    public ParserRuleContext parseInvariant(ParserRuleContext parent, String input) {
+        var parser = generateParser(input);
+        var node = parser.invariant();
+        node.parent = parent;
+        return parser.getNumberOfSyntaxErrors() > 0 ? null : node;
+    }
     //endregion
 
     //region Exponential
