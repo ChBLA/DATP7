@@ -3,11 +3,8 @@ package org.UcelParser.ManualParser;
 import org.Ucel.IProject;
 import org.UcelParser.UCELParser_Generated.UCELLexer;
 import org.UcelParser.UCELParser_Generated.UCELParser;
+import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
 
@@ -62,7 +59,12 @@ public class ManualParser {
     //endregion
 
     //region Guard
-
+    public ParserRuleContext parseGuard(ParserRuleContext parent, String input) {
+        var parser = generateParser(input);
+        var tree = parser.guard();
+        tree.setParent(parent);
+        return (parser.getNumberOfSyntaxErrors() == 0 && isEOF(parser)) ? tree : null;
+    }
     //endregion
 
     //region Sync
@@ -70,7 +72,7 @@ public class ManualParser {
         var parser = generateParser(input);
         var tree = parser.sync();
         tree.setParent(parent);
-        return (parser.getNumberOfSyntaxErrors() == 0) ? tree : null;
+        return (parser.getNumberOfSyntaxErrors() == 0 && isEOF(parser)) ? tree : null;
     }
     //endregion
 
@@ -94,6 +96,9 @@ public class ManualParser {
         return new UCELParser(tokenStream);
     }
 
+    private Boolean isEOF(UCELParser parser) {
+        return parser.getCurrentToken().getType() == UCELParser.EOF;
+    }
 
     //endregion
 

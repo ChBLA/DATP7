@@ -48,6 +48,30 @@ public class ManualParsingTests {
 
     //region Guard
 
+    @Test
+    public void parseGuardNotNullTest() {
+        String parseString = "a < 5";
+
+        var parentMock = mock(UCELParser.EdgeContext.class);
+
+        var parser = new ManualParser();
+
+        var actual = parser.parseGuard(parentMock, parseString);
+
+        assertNotNull(actual);
+        assertEquals(parentMock, actual.parent);
+    }
+
+    @Test
+    public void parseGuardNullTest() {
+        String parseString = "a!";
+        var parser = new ManualParser();
+
+        var actual = parser.parseGuard(null, parseString);
+
+        assertNull(actual);
+    }
+
     //endregion
 
     //region Sync
