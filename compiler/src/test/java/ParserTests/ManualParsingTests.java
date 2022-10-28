@@ -2,6 +2,7 @@ package ParserTests;
 
 import org.Ucel.ILocation;
 import org.UcelParser.ManualParser.ManualParser;
+import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
