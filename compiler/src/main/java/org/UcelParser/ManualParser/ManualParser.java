@@ -1,5 +1,7 @@
 package org.UcelParser.ManualParser;
 
+import org.Ucel.IEdge;
+import org.Ucel.IGraph;
 import org.Ucel.ILocation;
 import org.Ucel.IProject;
 import org.UcelParser.UCELParser_Generated.UCELLexer;
@@ -46,6 +48,23 @@ public class ManualParser {
 
     //region Graph
 
+    public UCELParser.GraphContext parserGraph(ParserRuleContext parent, IGraph graph) {
+        UCELParser.GraphContext graphCtx = new UCELParser.GraphContext(parent, -1);
+        boolean foundNull = false;
+        for(ILocation l : graph.getLocations()) {
+            ParserRuleContext location = parseLocation(graphCtx, l);
+            foundNull = foundNull || location == null;
+            graphCtx.addChild(location);
+        }
+
+        for(IEdge e : graph.getEdges()) {
+            ParserRuleContext edge = parseEdge(graphCtx, e);
+            foundNull = foundNull || edge == null;
+            graphCtx.addChild(edge);
+        }
+
+        return foundNull ? null : graphCtx;
+    }
 
     //region Locations
     public ParserRuleContext parseLocation(ParserRuleContext parent, ILocation location) {
@@ -72,6 +91,9 @@ public class ManualParser {
     //endregion
 
     //region Edges
+    public UCELParser.EdgeContext parseEdge(ParserRuleContext parent, IEdge edge) {
+        return null;
+    }
 
     //region Select
 

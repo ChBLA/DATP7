@@ -1,21 +1,16 @@
 package ParserTests;
 
-import org.Ucel.ILocation;
+import org.Ucel.*;
 import org.UcelParser.ManualParser.ManualParser;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import org.UcelParser.ManualParser.ManualParser;
-import org.UcelParser.UCELParser_Generated.UCELParser;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -41,6 +36,110 @@ public class ManualParsingTests {
     //region Project template
 
     //region Graph
+    @Test
+    void graphSuccessfullyBuild() {
+        ManualParser parser = mock(ManualParser.class);
+        ParserRuleContext parent = mock(ParserRuleContext.class);
+        IGraph graph = mock(IGraph.class);
+        ILocation location1 = mock(ILocation.class);
+        ILocation location2 = mock(ILocation.class);
+
+        IEdge edge1 = mock(IEdge.class);
+        IEdge edge2 = mock(IEdge.class);
+
+        List<IEdge> edges = new ArrayList<>();
+        edges.add(edge1);
+        edges.add(edge2);
+        List<ILocation> locations = new ArrayList<>();
+        locations.add(location1);
+        locations.add(location2);
+        when(graph.getLocations()).thenReturn(locations);
+        when(graph.getEdges()).thenReturn(edges);
+
+        UCELParser.LocationContext locationCtx1 = mock(UCELParser.LocationContext.class);
+        UCELParser.LocationContext locationCtx2 = mock(UCELParser.LocationContext.class);
+
+        UCELParser.EdgeContext edgeCtx1 = mock(UCELParser.EdgeContext.class);
+        UCELParser.EdgeContext edgeCtx2 = mock(UCELParser.EdgeContext.class);
+
+        when(parser.parserGraph(parent, graph)).thenCallRealMethod();
+        when(parser.parseLocation(any(), eq(location1))).thenReturn(locationCtx1);
+        when(parser.parseLocation(any(), eq(location2))).thenReturn(locationCtx2);
+        when(parser.parseEdge(any(), eq(edge1))).thenReturn(edgeCtx1);
+        when(parser.parseEdge(any(), eq(edge2))).thenReturn(edgeCtx2);
+
+        UCELParser.GraphContext actual = parser.parserGraph(parent, graph);
+
+        assertEquals(locationCtx1, actual.getChild(0));
+        assertEquals(locationCtx2, actual.getChild(1));
+        assertEquals(edgeCtx1, actual.getChild(2));
+        assertEquals(edgeCtx2, actual.getChild(3));
+    }
+
+    @Test
+    void graphSuccessfullyBuildNoEdges() {
+        ManualParser parser = mock(ManualParser.class);
+        ParserRuleContext parent = mock(ParserRuleContext.class);
+        IGraph graph = mock(IGraph.class);
+        ILocation location1 = mock(ILocation.class);
+        ILocation location2 = mock(ILocation.class);
+
+        List<IEdge> edges = new ArrayList<>();
+        List<ILocation> locations = new ArrayList<>();
+        locations.add(location1);
+        locations.add(location2);
+        when(graph.getLocations()).thenReturn(locations);
+        when(graph.getEdges()).thenReturn(edges);
+
+        UCELParser.LocationContext locationCtx1 = mock(UCELParser.LocationContext.class);
+        UCELParser.LocationContext locationCtx2 = mock(UCELParser.LocationContext.class);
+
+        when(parser.parserGraph(parent, graph)).thenCallRealMethod();
+        when(parser.parseLocation(any(), eq(location1))).thenReturn(locationCtx1);
+        when(parser.parseLocation(any(), eq(location2))).thenReturn(locationCtx2);
+
+        UCELParser.GraphContext actual = parser.parserGraph(parent, graph);
+
+        assertEquals(locationCtx1, actual.getChild(0));
+        assertEquals(locationCtx2, actual.getChild(1));
+        assertEquals(2, actual.getChildCount());
+    }
+
+    @Test
+    void graphReturnNullOnNullEdge() {
+        ManualParser parser = mock(ManualParser.class);
+        ParserRuleContext parent = mock(ParserRuleContext.class);
+        IGraph graph = mock(IGraph.class);
+        ILocation location1 = mock(ILocation.class);
+        ILocation location2 = mock(ILocation.class);
+
+        IEdge edge1 = mock(IEdge.class);
+        IEdge edge2 = mock(IEdge.class);
+
+        List<IEdge> edges = new ArrayList<>();
+        edges.add(edge1);
+        edges.add(edge2);
+        List<ILocation> locations = new ArrayList<>();
+        locations.add(location1);
+        locations.add(location2);
+        when(graph.getLocations()).thenReturn(locations);
+        when(graph.getEdges()).thenReturn(edges);
+
+        UCELParser.LocationContext locationCtx1 = mock(UCELParser.LocationContext.class);
+        UCELParser.LocationContext locationCtx2 = mock(UCELParser.LocationContext.class);
+
+        UCELParser.EdgeContext edgeCtx1 = mock(UCELParser.EdgeContext.class);
+
+        when(parser.parserGraph(parent, graph)).thenCallRealMethod();
+        when(parser.parseLocation(any(), eq(location1))).thenReturn(locationCtx1);
+        when(parser.parseLocation(any(), eq(location2))).thenReturn(locationCtx2);
+        when(parser.parseEdge(any(), eq(edge1))).thenReturn(edgeCtx1);
+        when(parser.parseEdge(any(), eq(edge2))).thenReturn(null);
+
+        UCELParser.GraphContext actual = parser.parserGraph(parent, graph);
+
+        assertEquals(null, actual);
+    }
 
 
     //region Locations
