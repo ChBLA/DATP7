@@ -47,7 +47,12 @@ public class ManualParser {
     //endregion
 
     //region Exponential
-
+    public ParserRuleContext parseExponential(ParserRuleContext parent, String input) {
+        var parser = generateParser(input);
+        var node = parser.exponential();
+        node.parent = parent;
+        return parser.getNumberOfSyntaxErrors() > 0 ? null : node;
+    }
     //endregion
     //endregion
 
