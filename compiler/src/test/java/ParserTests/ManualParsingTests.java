@@ -490,18 +490,37 @@ public class ManualParsingTests {
     void pSysSetsParent() {
         var parser = new ManualParser();
         var parent = mock(UCELParser.ProjectContext.class);
-        var actual = parser.parseProjectSystem(parent, "system s;");
+        var actual = parser.parseProjectSystem(parent, "int one = 1; system s;");
 
         assertEquals(parent, actual.parent);
     }
 
-    //Generate test on psys returning correctly on valid input
     @ParameterizedTest
     @ValueSource(strings = {"system s;", "system s1;", "system s2;", "system s3;", "system s4;", "system s5;"})
     void pSysReturnsCorrectlyOnValidInput(String input) {
         var parser = new ManualParser();
         var parent = mock(UCELParser.ProjectContext.class);
         var actual = parser.parseProjectSystem(parent, input);
+
+        assertNotNull(actual);
+    }
+
+    @Test
+    void pSysParseViking() {
+        var parser = new ManualParser();
+        var parent = mock(UCELParser.ProjectContext.class);
+        var actual = parser.parseProjectSystem(parent,
+                "const int fastest = 5;\n" +
+                "const int fast    = 10;\n" +
+                "const int slow    = 20;\n" +
+                "const int slowest = 25;\n" +
+                "\n" +
+                "Viking1 = Soldier(fastest);\n" +
+                "Viking2 = Soldier(fast);\n" +
+                "Viking3 = Soldier(slow);\n" +
+                "Viking4 = Soldier(slowest);\n" +
+                "\n" +
+                "system Viking1, Viking2, Viking3, Viking4, Torch;");
 
         assertNotNull(actual);
     }

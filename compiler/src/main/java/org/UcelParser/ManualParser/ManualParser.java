@@ -159,11 +159,11 @@ public class ManualParser {
     //endregion
 
     //region Project system
-        public UCELParser.SystemContext parseProjectSystem(UCELParser.ProjectContext parent, String system) {
-        var systemParser = generateParser(system);
-        var systemNode = systemParser.system();
-        systemNode.parent = parent;
-        return systemParser.getNumberOfSyntaxErrors() == 0 && isEOF(systemParser) ? systemNode : null;
+        public UCELParser.PsystemContext parseProjectSystem(UCELParser.ProjectContext parent, String psystem) {
+        var Parser = generateParser(psystem);
+        var psystemNode = Parser.psystem();
+        psystemNode.parent = parent;
+        return Parser.getNumberOfSyntaxErrors() == 0 && isEOF(Parser) ? psystemNode : null;
         }
     //endregion
     //endregion
