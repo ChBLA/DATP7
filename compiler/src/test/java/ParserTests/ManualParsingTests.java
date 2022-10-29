@@ -147,6 +147,157 @@ public class ManualParsingTests {
 
 
     //region Locations
+    @Test
+    void makeLocationFromValidILocation() {
+        var iLoc = mock(ILocation.class);
+        var parser = mock(ManualParser.class);
+        var parent = mock(ParserRuleContext.class);
+
+        when(iLoc.getInitial()).thenReturn(true);
+        when(iLoc.getUrgent()).thenReturn(false);
+        when(iLoc.getCommitted()).thenReturn(false);
+        when(iLoc.getPosX()).thenReturn(1);
+        when(iLoc.getPosY()).thenReturn(2);
+        when(iLoc.getComments()).thenReturn("comments");
+        when(iLoc.getTestCodeOnEnter()).thenReturn("enter");
+        when(iLoc.getTestCodeOnExit()).thenReturn("exit");
+
+        var invariant = "2 > 1";
+        var exponential = "2:1";
+        var invMock = mock(UCELParser.InvariantContext.class);
+        var expMock = mock(UCELParser.ExponentialContext.class);
+
+        when(iLoc.getName()).thenReturn("Test");
+        when(iLoc.getInvariant()).thenReturn(invariant);
+        when(iLoc.getRateOfExponential()).thenReturn(exponential);
+
+        when(parser.parseLocation(parent, iLoc)).thenCallRealMethod();
+        when(parser.parseExponential(any(), eq(exponential))).thenReturn(expMock);
+        when(parser.parseInvariant(any(), eq(invariant))).thenReturn(invMock);
+
+        var actual = parser.parseLocation(parent, iLoc);
+
+        assertTrue(actual instanceof UCELParser.LocationContext);
+        var actualCasted = (UCELParser.LocationContext)actual;
+        assertEquals(invMock, actualCasted.invariant());
+        assertEquals(expMock, actualCasted.exponential());
+        assertEquals("Test", actualCasted.ID().getText());
+        assertTrue(actualCasted.isInitial);
+        assertFalse(actualCasted.isUrgent);
+        assertFalse(actualCasted.isCommitted);
+        assertEquals(1, actualCasted.posX);
+        assertEquals(2, actualCasted.posY);
+        assertEquals("comments", actualCasted.comments);
+        assertEquals("enter", actualCasted.testCodeEnter);
+        assertEquals("exit", actualCasted.testCodeExit);
+    }
+
+    @Test
+    void makeLocationFromInvalidID() {
+        var iLoc = mock(ILocation.class);
+        var parser = mock(ManualParser.class);
+        var parent = mock(ParserRuleContext.class);
+
+        when(iLoc.getInitial()).thenReturn(true);
+        when(iLoc.getUrgent()).thenReturn(false);
+        when(iLoc.getCommitted()).thenReturn(false);
+        when(iLoc.getPosX()).thenReturn(1);
+        when(iLoc.getPosY()).thenReturn(2);
+        when(iLoc.getComments()).thenReturn("comments");
+        when(iLoc.getTestCodeOnEnter()).thenReturn("enter");
+        when(iLoc.getTestCodeOnExit()).thenReturn("exit");
+
+        var invariant = "2 > 1";
+        var exponential = "2:1";
+        var invMock = mock(UCELParser.InvariantContext.class);
+        var expMock = mock(UCELParser.ExponentialContext.class);
+
+        when(iLoc.getName()).thenReturn("");
+        when(iLoc.getInvariant()).thenReturn(invariant);
+        when(iLoc.getRateOfExponential()).thenReturn(exponential);
+
+        when(parser.parseLocation(parent, iLoc)).thenCallRealMethod();
+        when(parser.parseExponential(any(), eq(exponential))).thenReturn(expMock);
+        when(parser.parseInvariant(any(), eq(invariant))).thenReturn(invMock);
+
+        var actual = parser.parseLocation(parent, iLoc);
+
+        assertTrue(actual instanceof UCELParser.LocationContext);
+        var actualCasted = (UCELParser.LocationContext)actual;
+        assertEquals(invMock, actualCasted.invariant());
+        assertEquals(expMock, actualCasted.exponential());
+        assertNull(actualCasted.ID());
+        assertTrue(actualCasted.isInitial);
+        assertFalse(actualCasted.isUrgent);
+        assertFalse(actualCasted.isCommitted);
+        assertEquals(1, actualCasted.posX);
+        assertEquals(2, actualCasted.posY);
+        assertEquals("comments", actualCasted.comments);
+        assertEquals("enter", actualCasted.testCodeEnter);
+        assertEquals("exit", actualCasted.testCodeExit);
+    }
+    @Test
+    void makeLocationFromInvalidInvariantFails() {
+        var iLoc = mock(ILocation.class);
+        var parser = mock(ManualParser.class);
+        var parent = mock(ParserRuleContext.class);
+
+        when(iLoc.getInitial()).thenReturn(true);
+        when(iLoc.getUrgent()).thenReturn(false);
+        when(iLoc.getCommitted()).thenReturn(false);
+        when(iLoc.getPosX()).thenReturn(1);
+        when(iLoc.getPosY()).thenReturn(2);
+        when(iLoc.getComments()).thenReturn("comments");
+        when(iLoc.getTestCodeOnEnter()).thenReturn("enter");
+        when(iLoc.getTestCodeOnExit()).thenReturn("exit");
+
+        var invariant = "2 > 1";
+        var exponential = "2:1";
+        var invMock = mock(UCELParser.InvariantContext.class);
+        var expMock = mock(UCELParser.ExponentialContext.class);
+
+        when(iLoc.getName()).thenReturn("Test");
+        when(iLoc.getInvariant()).thenReturn(null);
+        when(iLoc.getRateOfExponential()).thenReturn(exponential);
+
+        when(parser.parseLocation(parent, iLoc)).thenCallRealMethod();
+        when(parser.parseExponential(any(), eq(exponential))).thenReturn(expMock);
+        when(parser.parseInvariant(any(), eq(invariant))).thenReturn(invMock);
+
+        var actual = parser.parseLocation(parent, iLoc);
+        assertNull(actual);
+    }
+    @Test
+    void makeLocationFromInvalidExponentialFails() {
+        var iLoc = mock(ILocation.class);
+        var parser = mock(ManualParser.class);
+        var parent = mock(ParserRuleContext.class);
+
+        when(iLoc.getInitial()).thenReturn(true);
+        when(iLoc.getUrgent()).thenReturn(false);
+        when(iLoc.getCommitted()).thenReturn(false);
+        when(iLoc.getPosX()).thenReturn(1);
+        when(iLoc.getPosY()).thenReturn(2);
+        when(iLoc.getComments()).thenReturn("comments");
+        when(iLoc.getTestCodeOnEnter()).thenReturn("enter");
+        when(iLoc.getTestCodeOnExit()).thenReturn("exit");
+
+        var invariant = "2 > 1";
+        var exponential = "2:1";
+        var invMock = mock(UCELParser.InvariantContext.class);
+        var expMock = mock(UCELParser.ExponentialContext.class);
+
+        when(iLoc.getName()).thenReturn("Test");
+        when(iLoc.getInvariant()).thenReturn(invariant);
+        when(iLoc.getRateOfExponential()).thenReturn(null);
+
+        when(parser.parseLocation(parent, iLoc)).thenCallRealMethod();
+        when(parser.parseExponential(any(), eq(exponential))).thenReturn(expMock);
+        when(parser.parseInvariant(any(), eq(invariant))).thenReturn(invMock);
+
+        var actual = parser.parseLocation(parent, iLoc);
+        assertNull(actual);
+    }
 
     //region Invariant
     @Test

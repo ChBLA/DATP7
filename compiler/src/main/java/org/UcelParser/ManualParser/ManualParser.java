@@ -8,10 +8,12 @@ import org.UcelParser.UCELParser_Generated.UCELLexer;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
 
 public class ManualParser {
+    private static int counter = 0;
 
     public ManualParser() {
 
@@ -68,7 +70,31 @@ public class ManualParser {
 
     //region Locations
     public ParserRuleContext parseLocation(ParserRuleContext parent, ILocation location) {
-        return null;
+        var locationNode = new UCELParser.LocationContext(parent, -1);
+
+        var invariantNode = parseInvariant(locationNode, location.getInvariant());
+        var exponentialNode = parseExponential(locationNode, location.getRateOfExponential());
+
+        if (invariantNode == null || exponentialNode == null)
+            return null;
+
+        locationNode.children = new ArrayList<>() {{ add(invariantNode); add(exponentialNode); }};
+
+        if (!location.getName().isEmpty())
+            locationNode.addChild(new CommonToken(UCELParser.ID, location.getName()));
+
+        locationNode.isCommitted = location.getCommitted();
+        locationNode.isInitial = location.getInitial();
+        locationNode.isUrgent = location.getUrgent();
+        locationNode.posX = location.getPosX();
+        locationNode.posY = location.getPosY();
+        locationNode.comments = location.getComments();
+        locationNode.testCodeEnter = location.getTestCodeOnEnter();
+        locationNode.testCodeExit = location.getTestCodeOnExit();
+
+        locationNode.id = getNextID();
+
+        return locationNode;
     }
 
     //region Invariant
@@ -178,6 +204,10 @@ public class ManualParser {
 
     private Boolean isEOF(UCELParser parser) {
         return parser.getCurrentToken().getType() == UCELParser.EOF;
+    }
+
+    private int getNextID() {
+        return counter++;
     }
 
     //endregion
