@@ -495,6 +495,7 @@ public class ManualParsingTests {
         assertEquals(parent, actual.parent);
     }
 
+    //TODO: Vary the cases when more clarity wrt. psysdecl is reached
     @ParameterizedTest
     @ValueSource(strings = {"system s;", "system s1;", "system s2;", "system s3;", "system s4;", "system s5;"})
     void pSysReturnsCorrectlyOnValidInput(String input) {
@@ -511,8 +512,8 @@ public class ManualParsingTests {
         var parent = mock(UCELParser.ProjectContext.class);
         var actual = parser.parseProjectSystem(parent,
                 "const int fastest = 5;\n" +
-                "const int fast    = 10;\n" +
-                "const int slow    = 20;\n" +
+                "const int fast = 10;\n" +
+                "const int slow = 20;\n" +
                 "const int slowest = 25;\n" +
                 "\n" +
                 "Viking1 = Soldier(fastest);\n" +
