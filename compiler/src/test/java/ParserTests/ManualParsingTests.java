@@ -7,6 +7,8 @@ import org.UcelParser.ManualParser.ManualParser;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -491,6 +493,34 @@ public class ManualParsingTests {
         var actual = parser.parseProjectSystem(parent, "system s;");
 
         assertEquals(parent, actual.parent);
+    }
+
+    //Generate test on psys returning correctly on valid input
+    @ParameterizedTest
+    @ValueSource(strings = {"system s;", "system s1;", "system s2;", "system s3;", "system s4;", "system s5;"})
+    void pSysReturnsCorrectlyOnValidInput(String input) {
+        var parser = new ManualParser();
+        var parent = mock(UCELParser.ProjectContext.class);
+        var actual = parser.parseProjectSystem(parent, input);
+
+        assertNotNull(actual);
+    }
+
+    @Test
+    void pSysReturnsNullOnNoEOF() {
+        var parser = new ManualParser();
+        var parent = mock(UCELParser.ProjectContext.class);
+        var actual = parser.parseProjectSystem(parent, "system s");
+
+        assertTrue(null == actual);
+    }
+    @Test
+    void pSysReturnsNullOnNoSystem() {
+        var parser = new ManualParser();
+        var parent = mock(UCELParser.ProjectContext.class);
+        var actual = parser.parseProjectSystem(parent, "int i = 1;");
+
+        assertTrue(null == actual);
     }
     //endregion
     //endregion
