@@ -1,9 +1,6 @@
 package org.UcelParser.ManualParser;
 
-import org.Ucel.IEdge;
-import org.Ucel.IGraph;
-import org.Ucel.ILocation;
-import org.Ucel.IProject;
+import org.Ucel.*;
 import org.UcelParser.UCELParser_Generated.UCELLexer;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.antlr.v4.runtime.*;
@@ -52,6 +49,36 @@ public class ManualParser {
     //endregion
 
     //region Project template
+
+    public UCELParser.PtemplateContext parseTemplate(ParserRuleContext parent, ITemplate template) {
+        if(template.getName() == null || template.getName().isEmpty()) {
+            return null;
+        }
+
+        var node = new UCELParser.PtemplateContext(parent, -1);
+
+        var parametersParser = generateParser(template.getParameters());
+        var declarationsParser = generateParser(template.getDeclarations());
+
+        var parameters = parametersParser.parameters();
+        parameters = parametersParser.getNumberOfSyntaxErrors() == 0 && isEOF(parametersParser) ? parameters : null;
+
+        var ID = new CommonToken(UCELLexer.ID, template.getName());
+        var graph = parserGraph(node, template.getGraph());
+
+        var declarations = declarationsParser.declarations();
+        declarations = declarationsParser.getNumberOfSyntaxErrors() == 0 && isEOF(declarationsParser) ? declarations : null;
+
+        node.children = new ArrayList<>();
+        node.addChild(ID);
+        node.children.add(parameters);
+        node.children.add(graph);
+        node.children.add(declarations);
+
+        node.parent = parent;
+
+        return node.children.contains(null) ? null : node;
+    }
 
     //endregion
 

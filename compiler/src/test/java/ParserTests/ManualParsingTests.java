@@ -77,6 +77,118 @@ public class ManualParsingTests {
 
     //region Project template
 
+    // ! This assumes that generateParser.parameters() and
+    // ! generateParser.declarations() are working correctly
+    @Test
+    void projectTemplateCorrect() {
+        var parser = mock(ManualParser.class);
+        when(parser.parseTemplate(any(), any())).thenCallRealMethod();
+
+        var parent = mock(UCELParser.ProjectContext.class);
+        var templateMock = mock(ITemplate.class);
+        var graphMock = mock(IGraph.class);
+        var graphCTXMock = mock(UCELParser.GraphContext.class);
+
+        when(templateMock.getGraph()).thenReturn(graphMock);
+        when(templateMock.getName()).thenReturn("test");
+        when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
+        when(templateMock.getDeclarations()).thenReturn("int[0,10] a = 0;");
+        when(parser.parserGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
+
+        var actual = parser.parseTemplate(parent, templateMock);
+
+        assertEquals(parent, actual.parent);
+        assertEquals("test", actual.ID().getText());
+        assertEquals(4, actual.children.size());
+        assertTrue(actual.children.get(1) instanceof UCELParser.ParametersContext);
+        assertTrue(actual.children.get(2) instanceof UCELParser.GraphContext);
+        assertTrue(actual.children.get(3) instanceof UCELParser.DeclarationsContext);
+    }
+
+    @Test
+    void projectTemplateParamsNull() {
+        var parser = mock(ManualParser.class);
+        when(parser.parseTemplate(any(), any())).thenCallRealMethod();
+
+        var parent = mock(UCELParser.ProjectContext.class);
+        var templateMock = mock(ITemplate.class);
+        var graphMock = mock(IGraph.class);
+        var graphCTXMock = mock(UCELParser.GraphContext.class);
+
+        when(templateMock.getGraph()).thenReturn(graphMock);
+        when(templateMock.getName()).thenReturn("test");
+        when(templateMock.getParameters()).thenReturn("(int[0,5)");
+        when(templateMock.getDeclarations()).thenReturn("int[0,10] a = 0;");
+        when(parser.parserGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
+
+        var actual = parser.parseTemplate(parent, templateMock);
+
+        assertNull(actual);
+    }
+
+    @Test
+    void projectTemplateIDNull() {
+        var parser = mock(ManualParser.class);
+        when(parser.parseTemplate(any(), any())).thenCallRealMethod();
+
+        var parent = mock(UCELParser.ProjectContext.class);
+        var templateMock = mock(ITemplate.class);
+        var graphMock = mock(IGraph.class);
+        var graphCTXMock = mock(UCELParser.GraphContext.class);
+
+        when(templateMock.getGraph()).thenReturn(graphMock);
+        when(templateMock.getName()).thenReturn(null);
+        when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
+        when(templateMock.getDeclarations()).thenReturn("int[0,10] a = 0;");
+        when(parser.parserGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
+
+        var actual = parser.parseTemplate(parent, templateMock);
+
+        assertNull(actual);
+    }
+
+    @Test
+    void projectTemplateIDEmpty() {
+        var parser = mock(ManualParser.class);
+        when(parser.parseTemplate(any(), any())).thenCallRealMethod();
+
+        var parent = mock(UCELParser.ProjectContext.class);
+        var templateMock = mock(ITemplate.class);
+        var graphMock = mock(IGraph.class);
+        var graphCTXMock = mock(UCELParser.GraphContext.class);
+
+        when(templateMock.getGraph()).thenReturn(graphMock);
+        when(templateMock.getName()).thenReturn("");
+        when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
+        when(templateMock.getDeclarations()).thenReturn("int[0,10] a = 0;");
+        when(parser.parserGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
+
+        var actual = parser.parseTemplate(parent, templateMock);
+
+        assertNull(actual);
+    }
+
+    @Test
+    void projectTemplateDeclarationsNull() {
+        var parser = mock(ManualParser.class);
+        when(parser.parseTemplate(any(), any())).thenCallRealMethod();
+
+        var parent = mock(UCELParser.ProjectContext.class);
+        var templateMock = mock(ITemplate.class);
+        var graphMock = mock(IGraph.class);
+        var graphCTXMock = mock(UCELParser.GraphContext.class);
+
+        when(templateMock.getGraph()).thenReturn(graphMock);
+        when(templateMock.getName()).thenReturn("");
+        when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
+        when(templateMock.getDeclarations()).thenReturn("int[0,10] a 0;");
+        when(parser.parserGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
+
+        var actual = parser.parseTemplate(parent, templateMock);
+
+        assertNull(actual);
+    }
+
     //region Graph
     @Test
     void graphSuccessfullyBuild() {
