@@ -35,6 +35,22 @@ public class ManualParsingTests {
         assertEquals(parent, actual.parent);
     }
 
+    @Test
+    void pDeclValidInput() {
+        var parser = new ManualParser();
+        var parent = mock(UCELParser.ProjectContext.class);
+
+        String input =
+                "chan take, release;		// Take and release torch\n" +
+                "int[0,1] L;		// The side the torch is on\n" +
+                "clock time;		// Global time";
+
+        var actual = parser.parseProjectDeclaration(parent, input);
+
+        assertNotNull(actual);
+    }
+
+
     //endregion
 
     //region Project template
@@ -661,18 +677,20 @@ public class ManualParsingTests {
     void pSysParseViking() {
         var parser = new ManualParser();
         var parent = mock(UCELParser.ProjectContext.class);
-        var actual = parser.parseProjectSystem(parent,
+        String input =
                 "const int fastest = 5;\n" +
                 "const int fast = 10;\n" +
                 "const int slow = 20;\n" +
                 "const int slowest = 25;\n" +
-                "\n" +
-                "Viking1 = Soldier(fastest);\n" +
+
+                /*"Viking1 = Soldier(fastest);\n" +
                 "Viking2 = Soldier(fast);\n" +
                 "Viking3 = Soldier(slow);\n" +
                 "Viking4 = Soldier(slowest);\n" +
-                "\n" +
-                "system Viking1, Viking2, Viking3, Viking4, Torch;");
+                "\n" + */
+                "system Viking1, Viking2, Viking3, Viking4, Torch;";
+
+        var actual = parser.parseProjectSystem(parent, input);
 
         assertNotNull(actual);
     }
