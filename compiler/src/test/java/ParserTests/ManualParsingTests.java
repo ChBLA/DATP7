@@ -23,7 +23,29 @@ import static org.mockito.Mockito.mock;
 public class ManualParsingTests {
 
     //region Project
+    @Test
+    public void parseProjectTest() {
+        var project = mock(IProject.class);
 
+        var parser = new ManualParser();
+
+        var result = parser.parseProject(project);
+
+        assertTrue(result instanceof UCELParser.ProjectContext);
+    }
+    @Test
+    public void parseProjectChildrenExist() {
+        var project = mock(IProject.class);
+
+        var parser = new ManualParser();
+
+        var result = parser.parseProject(project);
+        int expectedChildren = project.getTemplates().size() + 2;
+
+        assertEquals(expectedChildren, result.getChildCount());
+    }
+
+    //endregion
 
     //region Project declarations
     @Test

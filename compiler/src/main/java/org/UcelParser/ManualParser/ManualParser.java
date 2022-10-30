@@ -20,21 +20,26 @@ public class ManualParser {
     }
 
     //region Project
-//    public ParseTree parseProject(IProject project) {
-//        var node = new UCELParser.ProjectContext(null, -1);
-//
-//        var children = new ArrayList<ParseTree>();
-//
-//        children.add(parseProjectDeclaration(node, project.getDeclaration()));
-//        for (var template : project.getTemplates()) {
-//            children.add(parseProjectTemplate(node, template));
-//        }
-//        children.add(parseProjectSystem(node, project.getSystemDeclarations()));
-//
-//        node.children = children;
-//
-//        return node;
-//    }
+    //TODO: Add template back in when done
+    public ParseTree parseProject(IProject project) {
+        var node = new UCELParser.ProjectContext(null, -1);
+
+        var children = new ArrayList<ParseTree>();
+
+        children.add(parseProjectDeclaration(node, project.getDeclaration()));
+
+        /*
+        for (var template : project.getTemplates()) {
+            children.add(parseProjectTemplate(node, template));
+        }*/
+
+        children.add(parseProjectSystem(node, project.getSystemDeclarations()));
+
+        node.children = children;
+
+        return node;
+    }
+    //endregion
 
     //region Project declarations
     public UCELParser.PdeclarationContext parseProjectDeclaration(UCELParser.ProjectContext parent, String declaration) {
@@ -47,6 +52,8 @@ public class ManualParser {
     //endregion
 
     //region Project template
+
+    //endregion
 
     //region Graph
 
