@@ -5,7 +5,6 @@ import org.UcelParser.UCELParser_Generated.UCELLexer;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.ArrayList;
 
@@ -64,7 +63,7 @@ public class ManualParser {
         parameters = parametersParser.getNumberOfSyntaxErrors() == 0 && isEOF(parametersParser) ? parameters : null;
 
         var ID = new CommonToken(UCELLexer.ID, template.getName());
-        var graph = parserGraph(node, template.getGraph());
+        var graph = parseGraph(node, template.getGraph());
 
         var declarations = declarationsParser.declarations();
         declarations = declarationsParser.getNumberOfSyntaxErrors() == 0 && isEOF(declarationsParser) ? declarations : null;
@@ -84,7 +83,7 @@ public class ManualParser {
 
     //region Graph
 
-    public UCELParser.GraphContext parserGraph(ParserRuleContext parent, IGraph graph) {
+    public UCELParser.GraphContext parseGraph(ParserRuleContext parent, IGraph graph) {
         UCELParser.GraphContext graphCtx = new UCELParser.GraphContext(parent, -1);
         boolean foundNull = false;
         for(ILocation l : graph.getLocations()) {

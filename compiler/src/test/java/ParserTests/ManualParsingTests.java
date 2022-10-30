@@ -93,7 +93,7 @@ public class ManualParsingTests {
         when(templateMock.getName()).thenReturn("test");
         when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
         when(templateMock.getDeclarations()).thenReturn("int[0,10] a = 0;");
-        when(parser.parserGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
+        when(parser.parseGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
 
         var actual = parser.parseTemplate(parent, templateMock);
 
@@ -119,7 +119,7 @@ public class ManualParsingTests {
         when(templateMock.getName()).thenReturn("test");
         when(templateMock.getParameters()).thenReturn("(int[0,5)");
         when(templateMock.getDeclarations()).thenReturn("int[0,10] a = 0;");
-        when(parser.parserGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
+        when(parser.parseGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
 
         var actual = parser.parseTemplate(parent, templateMock);
 
@@ -140,7 +140,7 @@ public class ManualParsingTests {
         when(templateMock.getName()).thenReturn(null);
         when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
         when(templateMock.getDeclarations()).thenReturn("int[0,10] a = 0;");
-        when(parser.parserGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
+        when(parser.parseGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
 
         var actual = parser.parseTemplate(parent, templateMock);
 
@@ -161,7 +161,7 @@ public class ManualParsingTests {
         when(templateMock.getName()).thenReturn("");
         when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
         when(templateMock.getDeclarations()).thenReturn("int[0,10] a = 0;");
-        when(parser.parserGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
+        when(parser.parseGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
 
         var actual = parser.parseTemplate(parent, templateMock);
 
@@ -182,7 +182,7 @@ public class ManualParsingTests {
         when(templateMock.getName()).thenReturn("");
         when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
         when(templateMock.getDeclarations()).thenReturn("int[0,10] a 0;");
-        when(parser.parserGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
+        when(parser.parseGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
 
         var actual = parser.parseTemplate(parent, templateMock);
 
@@ -216,13 +216,13 @@ public class ManualParsingTests {
         UCELParser.EdgeContext edgeCtx1 = mock(UCELParser.EdgeContext.class);
         UCELParser.EdgeContext edgeCtx2 = mock(UCELParser.EdgeContext.class);
 
-        when(parser.parserGraph(parent, graph)).thenCallRealMethod();
+        when(parser.parseGraph(parent, graph)).thenCallRealMethod();
         when(parser.parseLocation(any(), eq(location1))).thenReturn(locationCtx1);
         when(parser.parseLocation(any(), eq(location2))).thenReturn(locationCtx2);
         when(parser.parseEdge(any(), eq(edge1))).thenReturn(edgeCtx1);
         when(parser.parseEdge(any(), eq(edge2))).thenReturn(edgeCtx2);
 
-        UCELParser.GraphContext actual = parser.parserGraph(parent, graph);
+        UCELParser.GraphContext actual = parser.parseGraph(parent, graph);
 
         assertEquals(locationCtx1, actual.getChild(0));
         assertEquals(locationCtx2, actual.getChild(1));
@@ -248,11 +248,11 @@ public class ManualParsingTests {
         UCELParser.LocationContext locationCtx1 = mock(UCELParser.LocationContext.class);
         UCELParser.LocationContext locationCtx2 = mock(UCELParser.LocationContext.class);
 
-        when(parser.parserGraph(parent, graph)).thenCallRealMethod();
+        when(parser.parseGraph(parent, graph)).thenCallRealMethod();
         when(parser.parseLocation(any(), eq(location1))).thenReturn(locationCtx1);
         when(parser.parseLocation(any(), eq(location2))).thenReturn(locationCtx2);
 
-        UCELParser.GraphContext actual = parser.parserGraph(parent, graph);
+        UCELParser.GraphContext actual = parser.parseGraph(parent, graph);
 
         assertEquals(locationCtx1, actual.getChild(0));
         assertEquals(locationCtx2, actual.getChild(1));
@@ -284,13 +284,13 @@ public class ManualParsingTests {
 
         UCELParser.EdgeContext edgeCtx1 = mock(UCELParser.EdgeContext.class);
 
-        when(parser.parserGraph(parent, graph)).thenCallRealMethod();
+        when(parser.parseGraph(parent, graph)).thenCallRealMethod();
         when(parser.parseLocation(any(), eq(location1))).thenReturn(locationCtx1);
         when(parser.parseLocation(any(), eq(location2))).thenReturn(locationCtx2);
         when(parser.parseEdge(any(), eq(edge1))).thenReturn(edgeCtx1);
         when(parser.parseEdge(any(), eq(edge2))).thenReturn(null);
 
-        UCELParser.GraphContext actual = parser.parserGraph(parent, graph);
+        UCELParser.GraphContext actual = parser.parseGraph(parent, graph);
 
         assertEquals(null, actual);
     }
