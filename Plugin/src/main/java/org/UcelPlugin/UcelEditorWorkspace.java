@@ -1,24 +1,16 @@
 package org.UcelPlugin;
 
 import com.uppaal.model.core2.Document;
-import com.uppaal.model.core2.PrototypeDocument;
 import com.uppaal.plugin.PluginWorkspace;
 import org.Ucel.IProject;
 import org.UcelParser.Compiler;
-import org.UcelParser.UCELParser_Generated.UCELLexer;
-import org.UcelParser.UCELParser_Generated.UCELParser;
-import org.UcelPlugin.DocumentParser.DocumentParser;
-import org.UcelPlugin.DocumentParser.ProjectToDocumentParser;
+import org.UcelPlugin.DocumentParser.UppaalToUcelDocumentParser;
+import org.UcelPlugin.DocumentParser.UcelToUppaalDocumentParser;
 import org.UcelPlugin.Models.SharedInterface.Project;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;;
+;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
 
 public class UcelEditorWorkspace implements PluginWorkspace {
 
@@ -38,13 +30,13 @@ public class UcelEditorWorkspace implements PluginWorkspace {
 
     public void compileCurrentProject() {
         Document document = uppaalManager.getCurrentDocument();
-        DocumentParser documentParser = new DocumentParser(document);
+        UppaalToUcelDocumentParser documentParser = new UppaalToUcelDocumentParser(document);
         Project project = documentParser.parseDocument();
 
         Compiler compiler = new Compiler();
         IProject compiledProject = compiler.compileProject(project);
 
-        ProjectToDocumentParser projParser = new ProjectToDocumentParser(document);
+        UcelToUppaalDocumentParser projParser = new UcelToUppaalDocumentParser(document);
         projParser.parseProject(compiledProject);
 
         System.out.println(project);

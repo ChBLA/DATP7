@@ -7,13 +7,13 @@ import org.Ucel.ITemplate;
 
 import java.util.List;
 
-public class ProjectToDocumentParser {
+public class UcelToUppaalDocumentParser {
 
-    public ProjectToDocumentParser() {
+    public UcelToUppaalDocumentParser() {
         this(new Document(new PrototypeDocument()));
     }
 
-    public ProjectToDocumentParser(Document document) {
+    public UcelToUppaalDocumentParser(Document document) {
         this.document = document;
     }
 
@@ -59,7 +59,7 @@ public class ProjectToDocumentParser {
     }
 
     private void addGraph(Template template, IGraph graph) {
-        var graphParser = new GraphParserUcelToUpp(template, graph);
+        var graphParser = new UcelToUppaalGraphParser(template, graph);
         graphParser.addGraph();
     }
 }

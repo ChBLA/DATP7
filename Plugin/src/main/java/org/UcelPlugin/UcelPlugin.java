@@ -5,7 +5,7 @@ import com.uppaal.model.core2.PrototypeDocument;
 import com.uppaal.plugin.Plugin;
 import com.uppaal.plugin.PluginWorkspace;
 import com.uppaal.plugin.Registry;
-import org.UcelPlugin.DocumentParser.DocumentParser;
+import org.UcelPlugin.DocumentParser.UppaalToUcelDocumentParser;
 import org.UcelPlugin.Models.SharedInterface.Project;
 
 import java.io.IOException;
@@ -21,7 +21,7 @@ public class UcelPlugin implements Plugin {
 
         try {
             Document document = new PrototypeDocument().load(new URL("file", null, "demo/train-gate.xml"));
-            DocumentParser documentParser = new DocumentParser(document);
+            UppaalToUcelDocumentParser documentParser = new UppaalToUcelDocumentParser(document);
             Project project = documentParser.parseDocument();
             System.out.println(project);
         }

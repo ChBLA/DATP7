@@ -9,9 +9,9 @@ import org.Ucel.ILocation;
 import java.util.Hashtable;
 import java.util.List;
 
-public class GraphParserUcelToUpp {
+public class UcelToUppaalGraphParser {
 
-    public GraphParserUcelToUpp(Template template, IGraph inputGraph) {
+    public UcelToUppaalGraphParser(Template template, IGraph inputGraph) {
         this.template = template;
         this.inputGraph = inputGraph;
     }

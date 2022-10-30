@@ -5,9 +5,9 @@ import org.UcelPlugin.Models.SharedInterface.Graph;
 
 import java.util.Hashtable;
 
-public class GraphParser {
+public class UppaalToUcelGraphParser {
 
-    public GraphParser() {
+    public UppaalToUcelGraphParser() {
 
     }
 
