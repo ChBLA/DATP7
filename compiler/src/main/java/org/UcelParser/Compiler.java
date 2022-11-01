@@ -36,11 +36,11 @@ public class Compiler {
 
     public IProject compileProject(IProject project) {
 
-        ManualParser manualParser = new ManualParser();
-        ParseTree root = manualParser.parseProject(project);
-        referenceVisitor.visit(root);
-        typeCheckerVisitor.visit(root);
-        codeGenVisitor.visit(root);
+        //ManualParser manualParser = new ManualParser();
+        //ParseTree root = manualParser.parseProject(project);
+        //referenceVisitor.visit(root);
+        //typeCheckerVisitor.visit(root);
+        //codeGenVisitor.visit(root);
 
         return generateDummyProject();
     }
