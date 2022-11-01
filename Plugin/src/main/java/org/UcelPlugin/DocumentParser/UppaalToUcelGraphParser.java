@@ -39,28 +39,28 @@ public class UppaalToUcelGraphParser {
 
         // Optional Properties
         if (node.getProperty(UppaalPropertyNames.Location.invariant) != null)
-            newLocation.setInvariant(node.getPropertyValue(UppaalPropertyNames.Location.invariant));
+            newLocation.setInvariant( (String) node.getPropertyValue(UppaalPropertyNames.Location.invariant));
 
         if (node.getProperty(UppaalPropertyNames.Location.rateOfExponential) != null)
-            newLocation.setRateOfExponential(node.getPropertyValue(UppaalPropertyNames.Location.rateOfExponential));
+            newLocation.setRateOfExponential( (String) node.getPropertyValue(UppaalPropertyNames.Location.rateOfExponential));
 
         if (node.getProperty(UppaalPropertyNames.Location.init) != null)
-            newLocation.setInitial(node.getPropertyValue(UppaalPropertyNames.Location.init));
+            newLocation.setInitial( (boolean) node.getPropertyValue(UppaalPropertyNames.Location.init));
 
         if (node.getProperty(UppaalPropertyNames.Location.urgent) != null)
-            newLocation.setUrgent(node.getPropertyValue(UppaalPropertyNames.Location.urgent));
+            newLocation.setUrgent( (boolean) node.getPropertyValue(UppaalPropertyNames.Location.urgent));
 
         if (node.getProperty(UppaalPropertyNames.Location.committed) != null)
-            newLocation.setCommitted(node.getPropertyValue(UppaalPropertyNames.Location.committed));
+            newLocation.setCommitted( (boolean) node.getPropertyValue(UppaalPropertyNames.Location.committed));
 
         if (node.getProperty(UppaalPropertyNames.Location.comments) != null)
-            newLocation.setComments(node.getPropertyValue(UppaalPropertyNames.Location.comments));
+            newLocation.setComments( (String) node.getPropertyValue(UppaalPropertyNames.Location.comments));
 
         if (node.getProperty(UppaalPropertyNames.Location.testCodeOnEnter) != null)
-            newLocation.setTestCodeOnEnter(node.getPropertyValue(UppaalPropertyNames.Location.testCodeOnEnter));
+            newLocation.setTestCodeOnEnter( (String) node.getPropertyValue(UppaalPropertyNames.Location.testCodeOnEnter));
 
         if (node.getProperty(UppaalPropertyNames.Location.testCodeOnExit) != null)
-            newLocation.setTestCodeOnExit(node.getPropertyValue(UppaalPropertyNames.Location.testCodeOnExit));
+            newLocation.setTestCodeOnExit( (String) node.getPropertyValue(UppaalPropertyNames.Location.testCodeOnExit));
 
         locationAssoc.put(node, newLocation);
         newGraph.addLocation(newLocation);
@@ -75,17 +75,17 @@ public class UppaalToUcelGraphParser {
         newEdge.setLocationEnd(locationAssoc.get(node.getTarget()));
 
         if (node.getProperty(UppaalPropertyNames.Edge.select) != null)
-            newEdge.setSelect(node.getPropertyValue(UppaalPropertyNames.Edge.select));
+            newEdge.setSelect( (String) node.getPropertyValue(UppaalPropertyNames.Edge.select));
         if (node.getProperty(UppaalPropertyNames.Edge.guard) != null)
-            newEdge.setGuard(node.getPropertyValue(UppaalPropertyNames.Edge.guard));
+            newEdge.setGuard( (String) node.getPropertyValue(UppaalPropertyNames.Edge.guard));
         if (node.getProperty(UppaalPropertyNames.Edge.sync) != null)
-            newEdge.setSync(node.getPropertyValue(UppaalPropertyNames.Edge.sync));
+            newEdge.setSync( (String) node.getPropertyValue(UppaalPropertyNames.Edge.sync));
         if (node.getProperty(UppaalPropertyNames.Edge.update) != null)
-            newEdge.setUpdate(node.getPropertyValue(UppaalPropertyNames.Edge.update));
+            newEdge.setUpdate( (String) node.getPropertyValue(UppaalPropertyNames.Edge.update));
         if (node.getProperty(UppaalPropertyNames.Edge.comment) != null)
-            newEdge.setComment(node.getPropertyValue(UppaalPropertyNames.Edge.comment));
+            newEdge.setComment( (String) node.getPropertyValue(UppaalPropertyNames.Edge.comment));
         if (node.getProperty(UppaalPropertyNames.Edge.testCode) != null)
-            newEdge.setTestCode(node.getPropertyValue(UppaalPropertyNames.Edge.testCode));
+            newEdge.setTestCode( (String) node.getPropertyValue(UppaalPropertyNames.Edge.testCode));
 
         edgeAssoc.put(node, newEdge);
         newGraph.addEdge(newEdge);

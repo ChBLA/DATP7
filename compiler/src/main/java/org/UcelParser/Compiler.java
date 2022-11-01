@@ -3,6 +3,7 @@ package org.UcelParser;
 import org.Ucel.*;
 import org.UcelParser.CodeGeneration.CodeGenVisitor;
 import org.UcelParser.CodeGeneration.templates.Template;
+import org.UcelParser.ManualParser.ManualParser;
 import org.UcelParser.Util.Exception.ErrorsFoundException;
 import org.UcelParser.Util.Logging.ILogger;
 import org.antlr.v4.runtime.*;
@@ -13,6 +14,7 @@ import org.UcelParser.UCELParser_Generated.*;
 import org.UcelParser.ReferenceHandler.ReferenceVisitor;
 import org.UcelParser.TypeChecker.TypeCheckerVisitor;
 import org.UcelParser.Util.Logging.Logger;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 
 public class Compiler {
@@ -33,6 +35,12 @@ public class Compiler {
     }
 
     public IProject compileProject(IProject project) {
+
+        ManualParser manualParser = new ManualParser();
+        ParseTree root = manualParser.parseProject(project);
+        referenceVisitor.visit(root);
+        typeCheckerVisitor.visit(root);
+        codeGenVisitor.visit(root);
 
         return generateDummyProject();
     }

@@ -19,7 +19,7 @@ public class UppaalToUcelDocumentParser {
         Project project = new Project();
 
         // Declarations
-        project.setDeclaration(document.getPropertyValue("declaration"));
+        project.setDeclaration( (String) document.getPropertyValue("declaration"));
 
         // Templates
         for (Template tmp : parseTemplates(document)) {
@@ -27,7 +27,7 @@ public class UppaalToUcelDocumentParser {
         }
 
         // System Declaration
-        project.setSystemDeclarations(document.getPropertyValue("system"));
+        project.setSystemDeclarations( (String) document.getPropertyValue("system"));
 
         return project;
     }
@@ -49,10 +49,10 @@ public class UppaalToUcelDocumentParser {
         Template interfaceTemplate = new Template();
         UppaalToUcelGraphParser graphParser = new UppaalToUcelGraphParser();
 
-        interfaceTemplate.setName(uppaalTemplate.getPropertyValue(UppaalPropertyNames.Template.name));
-        interfaceTemplate.setParameters(uppaalTemplate.getPropertyValue(UppaalPropertyNames.Template.parameter));
+        interfaceTemplate.setName( (String) uppaalTemplate.getPropertyValue(UppaalPropertyNames.Template.name));
+        interfaceTemplate.setParameters( (String) uppaalTemplate.getPropertyValue(UppaalPropertyNames.Template.parameter));
         interfaceTemplate.setGraph(graphParser.parseGraph(uppaalTemplate));
-        interfaceTemplate.setDeclarations(uppaalTemplate.getPropertyValue(UppaalPropertyNames.Template.declaration));
+        interfaceTemplate.setDeclarations( (String) uppaalTemplate.getPropertyValue(UppaalPropertyNames.Template.declaration));
 
         return interfaceTemplate;
     }
