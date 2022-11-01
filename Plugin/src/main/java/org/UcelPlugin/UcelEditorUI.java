@@ -1,16 +1,28 @@
 package org.UcelPlugin;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.function.Consumer;
 
-public class UcelEditorUI {
-    public UcelEditorUI(UcelEditorWorkspace workspace) {
+public class UcelEditorUI extends BaseWorkspace {
+    public UcelEditorUI() {
         setJPanel(new JPanel());
         this.loadCompileButton();
-        this.workspace = workspace;
     }
 
-    private UcelEditorWorkspace workspace;
+    @Override
+    public String getTitle() { return "UCEL"; }
+    @Override
+    public String getTitleToolTip() {
+        return "Uppaal Component Extension Language - Editor";
+    }
+
+    @Override
+    public Component getComponent() {
+        return jPanel;
+    }
+
     private JPanel jPanel;
     public JPanel getJPanel() {
         return jPanel;
@@ -22,13 +34,15 @@ public class UcelEditorUI {
     private JButton compileButton;
     private void loadCompileButton() {
         compileButton = new JButton("Compile");
+        jPanel.add(compileButton);
+    }
+    public void addCompileAction(Consumer onCompile) {
         compileButton.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                workspace.compileCurrentProject();
+                onCompile.accept(e);
             }
         });
-        jPanel.add(compileButton);
     }
 
 }

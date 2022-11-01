@@ -1,25 +1,18 @@
 package org.UcelParser;
 
-import org.Ucel.Graph;
-import org.Ucel.IProject;
-import org.Ucel.Location;
-import org.Ucel.Project;
+import org.Ucel.*;
 import org.UcelParser.CodeGeneration.CodeGenVisitor;
 import org.UcelParser.CodeGeneration.templates.Template;
 import org.UcelParser.Util.Exception.ErrorsFoundException;
 import org.UcelParser.Util.Logging.ILogger;
-import org.antlr.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import org.UcelParser.UCELParser_Generated.*;
-import org.UcelParser.Util.*;
 import org.UcelParser.ReferenceHandler.ReferenceVisitor;
 import org.UcelParser.TypeChecker.TypeCheckerVisitor;
 import org.UcelParser.Util.Logging.Logger;
-
-import java.util.ArrayList;
 
 
 public class Compiler {
@@ -54,9 +47,17 @@ public class Compiler {
         Graph graph = new Graph();
         Location initNode = new Location();
         initNode.setInitial(true);
+        Location otherNode = new Location();
+        otherNode.setPosX(30);
+        otherNode.setPosY(40);
         graph.addLocation(initNode);
+        graph.addLocation(otherNode);
+        Edge edge = new Edge();
+        edge.setLocationStart(initNode);
+        edge.setLocationEnd(otherNode);
+        graph.addEdge(edge);
         template.setGraph(graph);
-
+        project.putTemplate(template);
 
         project.setSystemDeclarations("// System Declarations");
 

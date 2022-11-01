@@ -1,14 +1,13 @@
 package org.UcelPlugin.DocumentParser;
 
 import com.uppaal.model.core2.*;
-import org.Ucel.ILocation;
 import org.UcelPlugin.Models.SharedInterface.Graph;
 
 import java.util.Hashtable;
 
-public class GraphParser {
+public class UppaalToUcelGraphParser {
 
-    public GraphParser() {
+    public UppaalToUcelGraphParser() {
 
     }
 
@@ -89,7 +88,7 @@ public class GraphParser {
             newEdge.setTestCode(node.getPropertyValue("testCode"));
 
         edgeAssoc.put(node, newEdge);
-        newGraph.AddEdge(newEdge);
+        newGraph.addEdge(newEdge);
         visitGraph(node.next, newGraph);
     }
 

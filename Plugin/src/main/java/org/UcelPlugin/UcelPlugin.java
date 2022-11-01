@@ -1,39 +1,45 @@
 package org.UcelPlugin;
 
 import com.uppaal.model.core2.Document;
-import com.uppaal.model.core2.PrototypeDocument;
 import com.uppaal.plugin.Plugin;
 import com.uppaal.plugin.PluginWorkspace;
 import com.uppaal.plugin.Registry;
-import org.UcelPlugin.DocumentParser.DocumentParser;
+import org.Ucel.IProject;
+import org.UcelParser.Compiler;
+import org.UcelPlugin.DocumentParser.UcelToUppaalDocumentParser;
+import org.UcelPlugin.DocumentParser.UppaalToUcelDocumentParser;
 import org.UcelPlugin.Models.SharedInterface.Project;
 
-import java.io.IOException;
-import java.net.URL;
-
 public class UcelPlugin implements Plugin {
-    private PluginWorkspace[] workspaces = new PluginWorkspace[1];
+    private UcelEditorUI ui = new UcelEditorUI();
+    private PluginWorkspace[] workspaces = new PluginWorkspace[]{ui};
+
+    public PluginWorkspace[] getWorkspaces() {
+        return workspaces;
+    }
+
     private UppaalManager uppaalManager;
 
     public UcelPlugin(Registry registry) {
         this.uppaalManager = new UppaalManager(registry);
-        workspaces[0] = new UcelEditorWorkspace(uppaalManager);
 
-        try {
-            Document document = new PrototypeDocument().load(new URL("file", null, "demo/train-gate.xml"));
-            DocumentParser documentParser = new DocumentParser(document);
-            Project project = documentParser.parseDocument();
-            System.out.println(project);
-        }
-        catch (IOException e) {
-            System.err.println("Model not found");
-        }
+        ui.addCompileAction(e ->
+                setCurrentProject(CompileCurrentProject())
+        );
     }
 
-    /**
-     * Returns workspaces to be loaded into separate tabs.
-     */
-    public PluginWorkspace[] getWorkspaces() {
-        return workspaces;
+    private IProject CompileCurrentProject() {
+        Document document = uppaalManager.getCurrentDocument();
+        UppaalToUcelDocumentParser documentParser = new UppaalToUcelDocumentParser(document);
+        Project project = documentParser.parseDocument();
+
+        Compiler compiler = new Compiler();
+        return compiler.compileProject(project);
+    }
+
+    private void setCurrentProject(IProject project) {
+        Document document = uppaalManager.getCurrentDocument();
+        UcelToUppaalDocumentParser projParser = new UcelToUppaalDocumentParser(document);
+        projParser.parseProject(project);
     }
 }
