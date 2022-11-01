@@ -1,5 +1,7 @@
 package org.Ucel;
 
+import java.util.Objects;
+
 public class Location implements ILocation {
     public Location() {
         this(0, 0, "", "", "", false, false, false, "", "", "");
@@ -138,5 +140,18 @@ public class Location implements ILocation {
 
     public void setTestCodeOnExit(String value) {
         testCodeOnExit = value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Location location = (Location) o;
+        return posX == location.posX && posY == location.posY && initial == location.initial && urgent == location.urgent && committed == location.committed && Objects.equals(name, location.name) && Objects.equals(invariant, location.invariant) && Objects.equals(rateOfExponential, location.rateOfExponential) && Objects.equals(comments, location.comments) && Objects.equals(testCodeOnEnter, location.testCodeOnEnter) && Objects.equals(testCodeOnExit, location.testCodeOnExit);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(posX, posY, name, invariant, rateOfExponential, initial, urgent, committed, comments, testCodeOnEnter, testCodeOnExit);
     }
 }

@@ -1,5 +1,7 @@
 package org.Ucel;
 
+import java.util.Objects;
+
 public class Edge implements IEdge {
 
     public Edge() {
@@ -112,5 +114,18 @@ public class Edge implements IEdge {
 
     public void setTestCode(String value) {
         testCode = value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Edge edge = (Edge) o;
+        return Objects.equals(locationStart, edge.locationStart) && Objects.equals(locationEnd, edge.locationEnd) && Objects.equals(select, edge.select) && Objects.equals(guard, edge.guard) && Objects.equals(sync, edge.sync) && Objects.equals(update, edge.update) && Objects.equals(comment, edge.comment) && Objects.equals(testCode, edge.testCode);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(locationStart, locationEnd, select, guard, sync, update, comment, testCode);
     }
 }
