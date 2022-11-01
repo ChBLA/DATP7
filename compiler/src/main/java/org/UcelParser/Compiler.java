@@ -22,7 +22,7 @@ public class Compiler {
     private final ILogger logger;
 
     public Compiler() {
-        this(new Logger());
+        this(new Logger(false));
     }
 
     public Compiler(ILogger logger) {

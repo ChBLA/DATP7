@@ -67,7 +67,7 @@ parameters : ( parameter (COMMA parameter)* )?;
 parameter  locals [DeclarationReference reference]
               : type REF? (BITAND)? ID arrayDecl*;
 
-declarations  : (variableDecl | typeDecl | function | chanPriority | component | interface_decl)+;
+declarations  : (variableDecl | typeDecl | function | chanPriority | instantiation | component | interface_decl)+;
 variableDecl  : type variableID (COMMA variableID)* END;
 
 variableID locals [DeclarationReference reference]

@@ -91,7 +91,7 @@ public class ManualParsingTests {
 
         when(templateMock.getGraph()).thenReturn(graphMock);
         when(templateMock.getName()).thenReturn("test");
-        when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
+        when(templateMock.getParameters()).thenReturn("int[0,5] a");
         when(templateMock.getDeclarations()).thenReturn("int[0,10] a = 0;");
         when(parser.parseGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
 
@@ -138,7 +138,7 @@ public class ManualParsingTests {
 
         when(templateMock.getGraph()).thenReturn(graphMock);
         when(templateMock.getName()).thenReturn(null);
-        when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
+        when(templateMock.getParameters()).thenReturn("int[0,5] a");
         when(templateMock.getDeclarations()).thenReturn("int[0,10] a = 0;");
         when(parser.parseGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
 
@@ -159,7 +159,7 @@ public class ManualParsingTests {
 
         when(templateMock.getGraph()).thenReturn(graphMock);
         when(templateMock.getName()).thenReturn("");
-        when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
+        when(templateMock.getParameters()).thenReturn("int[0,5] a");
         when(templateMock.getDeclarations()).thenReturn("int[0,10] a = 0;");
         when(parser.parseGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
 
@@ -180,7 +180,7 @@ public class ManualParsingTests {
 
         when(templateMock.getGraph()).thenReturn(graphMock);
         when(templateMock.getName()).thenReturn("");
-        when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
+        when(templateMock.getParameters()).thenReturn("int[0,5] a");
         when(templateMock.getDeclarations()).thenReturn("int[0,10] a 0;");
         when(parser.parseGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
 
@@ -816,12 +816,12 @@ public class ManualParsingTests {
                 "const int fast = 10;\n" +
                 "const int slow = 20;\n" +
                 "const int slowest = 25;\n" +
-
-                /*"Viking1 = Soldier(fastest);\n" +
+                "\n" +
+                "Viking1 = Soldier(fastest);\n" +
                 "Viking2 = Soldier(fast);\n" +
                 "Viking3 = Soldier(slow);\n" +
                 "Viking4 = Soldier(slowest);\n" +
-                "\n" + */
+                "\n" +
                 "system Viking1, Viking2, Viking3, Viking4, Torch;";
 
         var actual = parser.parseProjectSystem(parent, input);
