@@ -48,6 +48,7 @@ public class UcelToUppaalGraphParser {
         loc.setProperty(UppaalPropertyNames.Location.posY, ucelLocation.getPosY());
         loc.setProperty(UppaalPropertyNames.Location.name, ucelLocation.getName());
 
+        loc.setProperty(UppaalPropertyNames.Location.invariant, ucelLocation.getInvariant());
         loc.setProperty(UppaalPropertyNames.Location.rateOfExponential, ucelLocation.getRateOfExponential());
         loc.setProperty(UppaalPropertyNames.Location.init, ucelLocation.getInitial());
         loc.setProperty(UppaalPropertyNames.Location.urgent, ucelLocation.getUrgent());

@@ -38,8 +38,8 @@ public class UppaalToUcelGraphParser {
         newLocation.setName(node.getName());
 
         // Optional Properties
-        if (node.getProperty("invariant") != null)
-            newLocation.setInvariant(node.getPropertyValue("invariant"));
+        if (node.getProperty(UppaalPropertyNames.Location.invariant) != null)
+            newLocation.setInvariant(node.getPropertyValue(UppaalPropertyNames.Location.invariant));
 
         if (node.getProperty(UppaalPropertyNames.Location.rateOfExponential) != null)
             newLocation.setRateOfExponential(node.getPropertyValue(UppaalPropertyNames.Location.rateOfExponential));

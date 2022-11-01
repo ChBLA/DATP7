@@ -16,6 +16,7 @@ public class UppaalPropertyNames {
         public static final String posX = "x";
         public static final String posY = "y";
         public static final String name = "name";
+        public static final String invariant = "invariant";
         public static final String rateOfExponential = "rateOfExponential";
         public static final String init = "init";
         public static final String urgent = "urgent";
