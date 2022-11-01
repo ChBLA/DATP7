@@ -152,6 +152,9 @@ public class TypeCheckerTests  {
         var system = mockForVisitorResult(UCELParser.SystemContext.class, VOID_TYPE, visitor);
         var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
 
+        var scopeMock = mock(Scope.class);
+
+        node.scope = scopeMock;
         when(node.declarations()).thenReturn(decls);
         when(node.statement()).thenReturn(stmnts);
         when(node.system()).thenReturn(system);
@@ -179,7 +182,9 @@ public class TypeCheckerTests  {
         var stmnt2 = mockForVisitorResult(UCELParser.StatementContext.class, type, visitor);
         var system = mockForVisitorResult(UCELParser.SystemContext.class, VOID_TYPE, visitor);
         var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+        var scopeMock = mock(Scope.class);
 
+        node.scope = scopeMock;
         when(node.declarations()).thenReturn(decls);
         when(node.statement()).thenReturn(stmnts);
         when(node.system()).thenReturn(system);
@@ -207,7 +212,9 @@ public class TypeCheckerTests  {
         var stmnt2 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
         var system = mockForVisitorResult(UCELParser.SystemContext.class, type, visitor);
         var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+        var scopeMock = mock(Scope.class);
 
+        node.scope = scopeMock;
         when(node.declarations()).thenReturn(decls);
         when(node.statement()).thenReturn(stmnts);
         when(node.system()).thenReturn(system);
@@ -234,7 +241,9 @@ public class TypeCheckerTests  {
         var stmnt2 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
         var system = mockForVisitorResult(UCELParser.SystemContext.class, VOID_TYPE, visitor);
         var stmnts = new ArrayList<UCELParser.StatementContext>() {{ add(stmnt1); add(stmnt2); }};
+        var scopeMock = mock(Scope.class);
 
+        node.scope = scopeMock;
         when(node.declarations()).thenReturn(decls);
         when(node.statement()).thenReturn(stmnts);
         when(node.system()).thenReturn(system);
@@ -2861,8 +2870,12 @@ public class TypeCheckerTests  {
         UCELParser.ArgumentsContext argsCtx = mock(UCELParser.ArgumentsContext.class);
         DeclarationInfo declarationInfo = new DeclarationInfo("f", funcType);
         DeclarationReference declRef = new DeclarationReference(0,0);
+        var originDefMock = mock(DeclarationInfo.class);
 
+
+        funcCtx.originDefinition = originDefMock;
         funcCtx.reference = declRef;
+        when(originDefMock.getType()).thenReturn(funcType);
         when(funcCtx.arguments()).thenReturn(argsCtx);
         when(argsCtx.accept(visitor)).thenReturn(argsType);
 

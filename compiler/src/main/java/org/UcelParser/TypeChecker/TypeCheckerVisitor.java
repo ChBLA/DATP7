@@ -945,13 +945,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type funcType;
 
         // Get type of function declaration
-        try {
-            funcDecl = currentScope.get(ctx.reference);
-            funcType = funcDecl.getType();
-        } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Definition not found for "));
-            return ERROR_TYPE;
-        }
+        funcType = ctx.originDefinition.getType();
 
         // Compare input parameter types
         Type[] declParams = funcType.getParameters();
