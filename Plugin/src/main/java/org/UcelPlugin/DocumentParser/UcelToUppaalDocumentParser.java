@@ -25,14 +25,14 @@ public class UcelToUppaalDocumentParser {
 
     public void parseProject(IProject project) {
         // Declarations
-        document.setProperty("declaration", project.getDeclaration());
+        document.setProperty(UppaalPropertyNames.Project.declaration, project.getDeclaration());
 
         // Templates
         removeTemplates();
         addTemplates(project.getTemplates());
 
         // System Declaration
-        document.setProperty("system", project.getSystemDeclarations());
+        document.setProperty(UppaalPropertyNames.Project.systemDeclaration, project.getSystemDeclarations());
     }
 
     public void removeTemplates() {
@@ -52,10 +52,10 @@ public class UcelToUppaalDocumentParser {
         var outTemp = document.createTemplate();
         document.insert(outTemp, null);
 
-        outTemp.setProperty("name", inputTemplate.getName());
-        outTemp.setProperty("parameter", inputTemplate.getParameters());
+        outTemp.setProperty(UppaalPropertyNames.Template.name, inputTemplate.getName());
+        outTemp.setProperty(UppaalPropertyNames.Template.parameter, inputTemplate.getParameters());
         addGraph(outTemp, inputTemplate.getGraph());
-        outTemp.setProperty("declaration", inputTemplate.getDeclarations());
+        outTemp.setProperty(UppaalPropertyNames.Template.declaration, inputTemplate.getDeclarations());
     }
 
     private void addGraph(Template template, IGraph graph) {

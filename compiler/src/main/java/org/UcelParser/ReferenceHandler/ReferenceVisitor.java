@@ -273,6 +273,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
                 throw new RuntimeException(e);
             }
             ctx.reference = newFuncReference;
+            ctx.originDefinition = funcInfo;
         } else {
             ctx.reference = tableReference;
         }

@@ -122,7 +122,7 @@ chanExpr locals [DeclarationReference reference]
             : ID
             | chanExpr LEFTBRACKET expression RIGHTBRACKET;
 
-expression locals [DeclarationReference reference]
+expression locals [DeclarationReference reference, DeclarationInfo originDefinition]
             :  literal                                          #LiteralExpr
             |  ID                                               #IdExpr
             |  expression LEFTBRACKET expression RIGHTBRACKET   #ArrayIndex

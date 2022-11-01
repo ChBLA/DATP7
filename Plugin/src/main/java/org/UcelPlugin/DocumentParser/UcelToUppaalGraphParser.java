@@ -44,17 +44,18 @@ public class UcelToUppaalGraphParser {
         var loc = template.createLocation();
         template.insert(loc, null);
 
-        loc.setProperty("x", ucelLocation.getPosX());
-        loc.setProperty("y", ucelLocation.getPosY());
-        loc.setProperty("name", ucelLocation.getName());
+        loc.setProperty(UppaalPropertyNames.Location.posX, ucelLocation.getPosX());
+        loc.setProperty(UppaalPropertyNames.Location.posY, ucelLocation.getPosY());
+        loc.setProperty(UppaalPropertyNames.Location.name, ucelLocation.getName());
 
-        loc.setProperty("rateOfExponential", ucelLocation.getRateOfExponential());
-        loc.setProperty("init", ucelLocation.getInitial());
-        loc.setProperty("urgent", ucelLocation.getUrgent());
-        loc.setProperty("committed", ucelLocation.getCommitted());
-        loc.setProperty("comments", ucelLocation.getComments());
-        loc.setProperty("testCodeOnEnter", ucelLocation.getTestCodeOnEnter());
-        loc.setProperty("testCodeOnExit", ucelLocation.getTestCodeOnExit());
+        loc.setProperty(UppaalPropertyNames.Location.invariant, ucelLocation.getInvariant());
+        loc.setProperty(UppaalPropertyNames.Location.rateOfExponential, ucelLocation.getRateOfExponential());
+        loc.setProperty(UppaalPropertyNames.Location.init, ucelLocation.getInitial());
+        loc.setProperty(UppaalPropertyNames.Location.urgent, ucelLocation.getUrgent());
+        loc.setProperty(UppaalPropertyNames.Location.committed, ucelLocation.getCommitted());
+        loc.setProperty(UppaalPropertyNames.Location.comments, ucelLocation.getComments());
+        loc.setProperty(UppaalPropertyNames.Location.testCodeOnEnter, ucelLocation.getTestCodeOnEnter());
+        loc.setProperty(UppaalPropertyNames.Location.testCodeOnExit, ucelLocation.getTestCodeOnExit());
 
         locationAssoc.put(ucelLocation, loc);
     }
@@ -66,12 +67,12 @@ public class UcelToUppaalGraphParser {
         edge.setSource(locationAssoc.get(ucelEdge.getLocationStart()));
         edge.setTarget(locationAssoc.get(ucelEdge.getLocationEnd()));
 
-        edge.setProperty("select", ucelEdge.getSelect());
-        edge.setProperty("guard", ucelEdge.getGuard());
-        edge.setProperty("sync", ucelEdge.getSync());
-        edge.setProperty("update", ucelEdge.getUpdate());
-        edge.setProperty("comment", ucelEdge.getComment());
-        edge.setProperty("testCode", ucelEdge.getTestCode());
+        edge.setProperty(UppaalPropertyNames.Edge.select, ucelEdge.getSelect());
+        edge.setProperty(UppaalPropertyNames.Edge.guard, ucelEdge.getGuard());
+        edge.setProperty(UppaalPropertyNames.Edge.sync, ucelEdge.getSync());
+        edge.setProperty(UppaalPropertyNames.Edge.update, ucelEdge.getUpdate());
+        edge.setProperty(UppaalPropertyNames.Edge.comment, ucelEdge.getComment());
+        edge.setProperty(UppaalPropertyNames.Edge.testCode, ucelEdge.getTestCode());
     }
 
 
