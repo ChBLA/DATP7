@@ -798,7 +798,7 @@ public class ManualParsingTests {
 
     //TODO: Vary the cases when more clarity wrt. psysdecl is reached
     @ParameterizedTest
-    @ValueSource(strings = {"system s;", "system s1;", "system s2;", "system s3;", "system s4;", "system s5;"})
+    @ValueSource(strings = {"int one = 0; system s;", "system s1;", "system s2;", "system s3;", "system s4;", "system s5;"})
     void pSysReturnsCorrectlyOnValidInput(String input) {
         var parser = new ManualParser();
         var parent = mock(UCELParser.ProjectContext.class);

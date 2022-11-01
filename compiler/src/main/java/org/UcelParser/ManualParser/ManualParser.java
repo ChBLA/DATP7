@@ -24,10 +24,10 @@ public class ManualParser {
 
         children.add(parseProjectDeclaration(node, project.getDeclaration()));
 
-        /*
+
         for (var template : project.getTemplates()) {
-            children.add(parseProjectTemplate(node, template));
-        }*/
+            children.add(parseTemplate(node, template));
+        }
 
         children.add(parseProjectSystem(node, project.getSystemDeclarations()));
 

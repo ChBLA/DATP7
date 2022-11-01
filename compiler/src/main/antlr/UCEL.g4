@@ -16,7 +16,7 @@ pdeclaration locals [Scope scope]
 ptemplate locals [Scope scope]
     : ID parameters graph declarations;
 psystem locals [Scope scope]
-    : declarations link_stmnt* system;
+    : declarations build? system;
 
 graph : location* edge*;
 
@@ -35,27 +35,26 @@ sync : expression (NEG | QUESTIONMARK);
 update : (expression (COMMA expression)*)?;
 
 start locals [Scope scope]
-    : declarations statement* link_stmnt* system;
+    : declarations statement* system;
+    //TODO: Add ? after expression to make the tests run :D
 system : SYSTEM expression ((COMMA | '<') expression)* END;
 
 component locals [Scope scope]
-    : COMP ID LEFTPAR parameters? RIGHTPAR LEFTCURLYBRACE comp_body RIGHTCURLYBRACE;
-comp_body locals [Scope scope]
-    : interfaces? (DECLARATIONS COLON declarations)? links?;
+    : COMP ID LEFTPAR parameters? RIGHTPAR COLON LEFTPAR parameters? RIGHTPAR LEFTCURLYBRACE compBody RIGHTCURLYBRACE;
+compBody locals [Scope scope]
+    : declarations? build?;
 
-interfaces : INTERFACES COLON interface_stmnt+;
-interface_stmnt : (IN | OUT) ID ID (COMMA (IN | OUT) ID ID)* END;
 
-links : LINKS COLON link_stmnt+;
-link_stmnt : arrayDeclID LINK_OP arrayDeclID WITH ID END
-           | FOR LEFTPAR ID? COLON type? RIGHTPAR link_block
-           | IF LEFTPAR expression RIGHTPAR link_block
-                (elif LEFTPAR expression RIGHTPAR link_block)*
-                (ELSE link_block)?;
-link_block : LEFTCURLYBRACE link_stmnt+ RIGHTCURLYBRACE;
-elif : ELSE IF;
+build : BUILD COLON LEFTCURLYBRACE buildDecl* buildStmnt+ RIGHTCURLYBRACE;
+buildStmnt : LINK expression expression END                    #LinkStatement
+           | FOR LEFTPAR ID? COLON type? RIGHTPAR buildBlock   #BuildIteration
+           | IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?  #BuildIf
+           | ID (LEFTBRACKET expression RIGHTBRACKET)* '=' ID LEFTPAR arguments RIGHTPAR END  #CompCon
+           ;
+buildBlock : LEFTCURLYBRACE buildStmnt+ RIGHTCURLYBRACE;
+buildDecl : ID ID (arrayDecl)* END;
 
-interface_decl : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;
+interfaceDecl : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;
 interfaceVarDecl : type arrayDeclID (COMMA type arrayDeclID)*;
 
 instantiation locals [Scope scope, DeclarationReference instantiatedReference, DeclarationReference constructorReference]
@@ -67,7 +66,7 @@ parameters : ( parameter (COMMA parameter)* )?;
 parameter  locals [DeclarationReference reference]
               : type REF? (BITAND)? ID arrayDecl*;
 
-declarations  : (variableDecl | typeDecl | function | chanPriority | instantiation | component | interface_decl)+;
+declarations  : (variableDecl | typeDecl | function | chanPriority | instantiation | component | interfaceDecl)+;
 variableDecl  : type variableID (COMMA variableID)* END;
 
 variableID locals [DeclarationReference reference]
@@ -212,8 +211,8 @@ UNDERSCORE : '_';
 USES : 'uses';
 AS : 'as';
 CONTAINS : 'contains';
-LINKS : 'links';
-LINK_OP : '->' | '<-' | '<->';
+LINK : 'link';
+BUILD : 'build';
 WITH : 'with';
 ELSE : 'else';
 
