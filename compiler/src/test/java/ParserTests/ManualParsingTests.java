@@ -91,7 +91,7 @@ public class ManualParsingTests {
 
         when(templateMock.getGraph()).thenReturn(graphMock);
         when(templateMock.getName()).thenReturn("test");
-        when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
+        when(templateMock.getParameters()).thenReturn("int[0,5] a");
         when(templateMock.getDeclarations()).thenReturn("int[0,10] a = 0;");
         when(parser.parseGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
 
@@ -138,7 +138,7 @@ public class ManualParsingTests {
 
         when(templateMock.getGraph()).thenReturn(graphMock);
         when(templateMock.getName()).thenReturn(null);
-        when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
+        when(templateMock.getParameters()).thenReturn("int[0,5] a");
         when(templateMock.getDeclarations()).thenReturn("int[0,10] a = 0;");
         when(parser.parseGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
 
@@ -159,7 +159,7 @@ public class ManualParsingTests {
 
         when(templateMock.getGraph()).thenReturn(graphMock);
         when(templateMock.getName()).thenReturn("");
-        when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
+        when(templateMock.getParameters()).thenReturn("int[0,5] a");
         when(templateMock.getDeclarations()).thenReturn("int[0,10] a = 0;");
         when(parser.parseGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
 
@@ -180,7 +180,7 @@ public class ManualParsingTests {
 
         when(templateMock.getGraph()).thenReturn(graphMock);
         when(templateMock.getName()).thenReturn("");
-        when(templateMock.getParameters()).thenReturn("(int[0,5] a)");
+        when(templateMock.getParameters()).thenReturn("int[0,5] a");
         when(templateMock.getDeclarations()).thenReturn("int[0,10] a 0;");
         when(parser.parseGraph(any(), eq(graphMock))).thenReturn(graphCTXMock);
 
