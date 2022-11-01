@@ -58,6 +58,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     @Override
     public Type visitStart(UCELParser.StartContext ctx) {
+        enterScope(ctx.scope);
         var declType = visit(ctx.declarations());
         if (declType.equals(ERROR_TYPE)) {
             //No logging, passing through
@@ -81,6 +82,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         var sysType = visit(ctx.system());
         if (!sysType.equals(VOID_TYPE) && !sysType.equals(ERROR_TYPE))
             logger.log(new ErrorLog(ctx, "Compiler error during type checking"));
+
+        exitScope();
         return sysType.equals(VOID_TYPE) && correct ? VOID_TYPE : ERROR_TYPE;
     }
 
