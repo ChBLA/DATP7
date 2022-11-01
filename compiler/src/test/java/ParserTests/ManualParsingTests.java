@@ -816,12 +816,12 @@ public class ManualParsingTests {
                 "const int fast = 10;\n" +
                 "const int slow = 20;\n" +
                 "const int slowest = 25;\n" +
-
-                /*"Viking1 = Soldier(fastest);\n" +
+                "\n" +
+                "Viking1 = Soldier(fastest);\n" +
                 "Viking2 = Soldier(fast);\n" +
                 "Viking3 = Soldier(slow);\n" +
                 "Viking4 = Soldier(slowest);\n" +
-                "\n" + */
+                "\n" +
                 "system Viking1, Viking2, Viking3, Viking4, Torch;";
 
         var actual = parser.parseProjectSystem(parent, input);
