@@ -147,6 +147,59 @@ public class CodeGenTests {
 
     //endregion
 
+    //region Project system
+    @Test
+    void projectSystemNoBuildGeneratedCorrectly() {
+        var declTemplate = generateDefaultDeclarationTemplate("a", "1");
+        var sysTemplate = generateDefaultSystemTemplate("a");
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.PsystemContext.class);
+        var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
+        var sysNode = mockForVisitorResult(UCELParser.SystemContext.class, sysTemplate, visitor);
+
+        when(node.declarations()).thenReturn(declNode);
+        when(node.system()).thenReturn(sysNode);
+
+        var actual = visitor.visitPsystem(node);
+        assertInstanceOf(PSystemTemplate.class, actual);
+        var actualCasted = (PSystemTemplate) actual;
+        assertEquals(declTemplate, actualCasted.declarations);
+        assertEquals(sysTemplate, actualCasted.system);
+        assertNull(actualCasted.build);
+    }
+
+    private Template generateDefaultBuildTemplate() {
+        return new ManualTemplate("build : {\n}");
+    }
+    @Test
+    void projectSystemWithBuildGeneratedCorrectly() {
+        var declTemplate = generateDefaultDeclarationTemplate("a", "1");
+        var sysTemplate = generateDefaultSystemTemplate("a");
+        var buildTemplate = generateDefaultBuildTemplate();
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.PsystemContext.class);
+        var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
+        var sysNode = mockForVisitorResult(UCELParser.SystemContext.class, sysTemplate, visitor);
+        var buildNode = mockForVisitorResult(UCELParser.BuildContext.class, buildTemplate, visitor);
+
+        when(node.declarations()).thenReturn(declNode);
+        when(node.system()).thenReturn(sysNode);
+        when(node.build()).thenReturn(buildNode);
+
+        var actual = visitor.visitPsystem(node);
+        assertInstanceOf(PSystemTemplate.class, actual);
+        var actualCasted = (PSystemTemplate) actual;
+        assertEquals(declTemplate, actualCasted.declarations);
+        assertEquals(sysTemplate, actualCasted.system);
+        assertEquals(buildTemplate, actualCasted.build);
+    }
+
+    //endregion
+
     //endregion
 
     //region Start
