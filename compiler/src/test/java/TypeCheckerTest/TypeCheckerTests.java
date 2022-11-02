@@ -3615,6 +3615,31 @@ public class TypeCheckerTests  {
     //endregion
 
     //region Project Graph
+    //region Location
+    @Test
+    void location() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.LocationContext.class);
+        var id= mock(TerminalNode.class);
+        var invariant = mockForVisitorResult(UCELParser.InvariantContext.class, VOID_TYPE, visitor);
+        var exponential = mockForVisitorResult(UCELParser.ExponentialContext.class, VOID_TYPE, visitor);
+
+        when(node.ID()).thenReturn(id);
+        when(node.invariant()).thenReturn(invariant);
+        when(node.exponential()).thenReturn(exponential);
+
+        var actual = visitor.visitLocation(node);
+
+        verify(id, times(1)).accept(visitor);
+        verify(invariant, times(1)).accept(visitor);
+        verify(exponential, times(1)).accept(visitor);
+
+        assertEquals(expected, actual);
+    }
+    //endregion
 
     //endregion
 

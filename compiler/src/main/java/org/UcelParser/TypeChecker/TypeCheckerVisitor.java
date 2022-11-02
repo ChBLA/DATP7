@@ -1166,6 +1166,15 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //region Project Graph
 
+    @Override
+    public Type visitLocation(UCELParser.LocationContext ctx) {
+        visit(ctx.ID()); // name
+        visit(ctx.invariant());
+        visit(ctx.exponential());
+
+        return VOID_TYPE;
+    }
+
     //endregion
 
     private void enterScope(Scope scope) {
