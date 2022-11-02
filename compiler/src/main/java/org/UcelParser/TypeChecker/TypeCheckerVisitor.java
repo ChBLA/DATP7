@@ -1164,6 +1164,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //endregion
 
+    //region Project Graph
+
+    //endregion
+
     private void enterScope(Scope scope) {
         currentScope = scope;
     }
