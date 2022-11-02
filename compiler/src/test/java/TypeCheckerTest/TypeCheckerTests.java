@@ -3615,6 +3615,9 @@ public class TypeCheckerTests  {
     //endregion
 
     //region Project Graph
+    //region graph
+    //endregion
+
     //region Location
     @Test
     void location() {
@@ -3639,6 +3642,31 @@ public class TypeCheckerTests  {
 
         assertEquals(expected, actual);
     }
+    //endregion
+
+    //region invariant
+
+    //endregion
+
+    //region exponential
+    //endregion
+
+    //region invariant
+    //endregion
+
+    //region edge
+    //endregion
+
+    //region select
+    //endregion
+
+    //region guard
+    //endregion
+
+    //region sync
+    //endregion
+
+    //region update
     //endregion
 
     //endregion
