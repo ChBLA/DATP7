@@ -31,6 +31,7 @@ import static org.mockito.Mockito.times;
 
 public class TypeCheckerTests  {
 
+    //region Helper types
     private static final Type DOUBLE_ARRAY_TYPE = new Type(Type.TypeEnum.doubleType, 1);
     private static final Type VOID_2D_ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 2);
     private static final Type INT_2D_ARRAY_TYPE = new Type(Type.TypeEnum.intType, 2);
@@ -50,7 +51,7 @@ public class TypeCheckerTests  {
     private static final Type BOOL_TYPE = new Type(Type.TypeEnum.boolType);
     private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
-
+    //endregion
 
     //region Parameter
     @Test
