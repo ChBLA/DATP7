@@ -1,5 +1,7 @@
 package org.Ucel;
 
+import java.util.Objects;
+
 public class Template implements ITemplate {
 
     private String name = "";
@@ -44,5 +46,18 @@ public class Template implements ITemplate {
 
     public void setDeclarations(String value) {
         declarations = value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Template template = (Template) o;
+        return Objects.equals(name, template.name) && Objects.equals(parameters, template.parameters) && Objects.equals(graph, template.graph) && Objects.equals(declarations, template.declarations);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, parameters, graph, declarations);
     }
 }

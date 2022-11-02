@@ -49,4 +49,17 @@ public class Project implements IProject {
     public void setSystemDeclarations(String value) {
         systemDeclarations = value;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Project project = (Project) o;
+        return Objects.equals(declaration, project.declaration) && Objects.equals(templates, project.templates) && Objects.equals(systemDeclarations, project.systemDeclarations);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(declaration, templates, systemDeclarations);
+    }
 }
