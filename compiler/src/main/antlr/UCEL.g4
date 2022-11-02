@@ -13,7 +13,7 @@ project : pdeclaration ptemplate* psystem;
 
 pdeclaration locals [Scope scope]
     : declarations;
-ptemplate locals [Scope scope]
+ptemplate locals [Scope scope, DeclarationReference reference]
     : ID parameters graph declarations;
 psystem locals [Scope scope]
     : declarations build? system;

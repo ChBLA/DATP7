@@ -23,6 +23,147 @@ import static org.mockito.Mockito.*;
 
 public class ReferenceHandlerTests {
 
+    //region pTemplate
+
+    @Test
+    void pTemplateVisitsGraph() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        String templateIdentifier = "p";
+        UCELParser.PtemplateContext node = mock(UCELParser.PtemplateContext.class);
+        UCELParser.GraphContext graph = mock(UCELParser.GraphContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.DeclarationsContext decls = mock(UCELParser.DeclarationsContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.graph()).thenReturn(graph);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(templateIdentifier);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.declarations()).thenReturn(decls);
+
+        when(graph.accept(visitor)).thenReturn(true);
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(decls.accept(visitor)).thenReturn(true);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(templateIdentifier, false)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail(); }
+
+        visitor.visitPtemplate(node);
+
+        verify(graph, times(1)).accept(visitor);
+    }
+
+    @Test
+    void templateVisitsParameters() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        String templateIdentifier = "p";
+        UCELParser.PtemplateContext node = mock(UCELParser.PtemplateContext.class);
+        UCELParser.GraphContext graph = mock(UCELParser.GraphContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.DeclarationsContext decls = mock(UCELParser.DeclarationsContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.graph()).thenReturn(graph);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(templateIdentifier);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.declarations()).thenReturn(decls);
+
+        when(graph.accept(visitor)).thenReturn(true);
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(decls.accept(visitor)).thenReturn(true);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(templateIdentifier, false)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail(); }
+
+        visitor.visitPtemplate(node);
+
+        verify(parameters, times(1)).accept(visitor);
+    }
+
+    @Test
+    void templateVisitsDeclaration() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        String templateIdentifier = "p";
+        UCELParser.PtemplateContext node = mock(UCELParser.PtemplateContext.class);
+        UCELParser.GraphContext graph = mock(UCELParser.GraphContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.DeclarationsContext decls = mock(UCELParser.DeclarationsContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.graph()).thenReturn(graph);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(templateIdentifier);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.declarations()).thenReturn(decls);
+
+        when(graph.accept(visitor)).thenReturn(true);
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(decls.accept(visitor)).thenReturn(true);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(templateIdentifier, false)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail(); }
+
+        visitor.visitPtemplate(node);
+
+        verify(decls, times(1)).accept(visitor);
+    }
+
+    @Test
+    void templateAddedToScope() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        String templateIdentifier = "p";
+        UCELParser.PtemplateContext node = mock(UCELParser.PtemplateContext.class);
+        UCELParser.GraphContext graph = mock(UCELParser.GraphContext.class);
+        UCELParser.ParametersContext parameters = mock(UCELParser.ParametersContext.class);
+        UCELParser.DeclarationsContext decls = mock(UCELParser.DeclarationsContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.graph()).thenReturn(graph);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(templateIdentifier);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.declarations()).thenReturn(decls);
+
+        when(graph.accept(visitor)).thenReturn(true);
+        when(parameters.accept(visitor)).thenReturn(true);
+        when(decls.accept(visitor)).thenReturn(true);
+
+        DeclarationReference declRef = new DeclarationReference(0,0);
+
+        try {
+            when(scope.isUnique(templateIdentifier, false)).thenReturn(true);
+            when(scope.add(any())).thenReturn(declRef);
+        } catch (Exception e) {fail(); }
+
+        visitor.visitPtemplate(node);
+
+        assertEquals(declRef, node.reference);
+    }
+
+
+    //endregion
+
     //region start
     @Test
     void startVisitsDeclarationsAndSystem() {
