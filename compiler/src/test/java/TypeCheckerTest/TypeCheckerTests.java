@@ -3614,6 +3614,10 @@ public class TypeCheckerTests  {
 
     //endregion
 
+    //region Project Graph
+
+    //endregion
+
     //region Helper methods
 
     private<T extends RuleContext> T mockForVisitorResult(final Class<T> nodeType, final Type visitResult, TypeCheckerVisitor visitor) {
@@ -3642,9 +3646,5 @@ public class TypeCheckerTests  {
 
         return args.stream();
     }
-    //endregion
-
-    //region Project Graph
-
     //endregion
 }
