@@ -36,7 +36,12 @@ public class Graph implements IGraph {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Graph graph = (Graph) o;
-        return Objects.equals(locations, graph.locations) && Objects.equals(edges, graph.edges);
+
+        return listEqualIgnoringOrder(locations, graph.locations) && listEqualIgnoringOrder(edges, graph.edges);
+    }
+
+    private <T> boolean listEqualIgnoringOrder(ArrayList<T> list1, ArrayList<T> list2) {
+        return list1.containsAll(list2) && list2.containsAll(list1);
     }
 
     @Override
