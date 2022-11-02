@@ -28,8 +28,7 @@ public class ReferenceHandlerTests {
 
     @Test
     void projectSetsScope() {
-        Scope scope = mock(Scope.class);
-        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope) null);
 
         UCELParser.ProjectContext node = mock(UCELParser.ProjectContext.class);
         UCELParser.PdeclarationContext decls = mock(UCELParser.PdeclarationContext.class);
@@ -54,8 +53,7 @@ public class ReferenceHandlerTests {
 
     @Test
     void projectVisitDecls() {
-        Scope scope = mock(Scope.class);
-        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope) null);
 
         UCELParser.ProjectContext node = mock(UCELParser.ProjectContext.class);
         UCELParser.PdeclarationContext decls = mock(UCELParser.PdeclarationContext.class);
@@ -80,8 +78,7 @@ public class ReferenceHandlerTests {
 
     @Test
     void projectVisitTemplate() {
-        Scope scope = mock(Scope.class);
-        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope) null);
 
         UCELParser.ProjectContext node = mock(UCELParser.ProjectContext.class);
         UCELParser.PdeclarationContext decls = mock(UCELParser.PdeclarationContext.class);
@@ -106,8 +103,7 @@ public class ReferenceHandlerTests {
 
     @Test
     void projectVisitSystem() {
-        Scope scope = mock(Scope.class);
-        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope) null);
 
         UCELParser.ProjectContext node = mock(UCELParser.ProjectContext.class);
         UCELParser.PdeclarationContext decls = mock(UCELParser.PdeclarationContext.class);
@@ -343,6 +339,78 @@ public class ReferenceHandlerTests {
         assertEquals(declRef, node.reference);
     }
 
+
+    //endregion
+
+    //region Graph
+    @Test
+    void graphVisitLocation() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.GraphContext node = mock(UCELParser.GraphContext.class);
+        UCELParser.LocationContext locations0 = mock(UCELParser.LocationContext.class);
+        UCELParser.EdgeContext edge0 = mock(UCELParser.EdgeContext.class);
+
+        when(node.getChildCount()).thenReturn(2);
+        when(node.getChild(0)).thenReturn(locations0);
+        when(node.getChild(1)).thenReturn(edge0);
+
+        when(locations0.accept(visitor)).thenReturn(true);
+        when(edge0.accept(visitor)).thenReturn(true);
+
+        visitor.visitGraph(node);
+
+        verify(locations0, times(1)).accept(visitor);
+    }
+
+    @Test
+    void graphVisitSecondLocation() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.GraphContext node = mock(UCELParser.GraphContext.class);
+        UCELParser.LocationContext locations0 = mock(UCELParser.LocationContext.class);
+        UCELParser.LocationContext locations1 = mock(UCELParser.LocationContext.class);
+        UCELParser.EdgeContext edge0 = mock(UCELParser.EdgeContext.class);
+
+        when(node.getChildCount()).thenReturn(3);
+        when(node.getChild(0)).thenReturn(locations0);
+        when(node.getChild(1)).thenReturn(locations1);
+        when(node.getChild(2)).thenReturn(edge0);
+
+        when(locations0.accept(visitor)).thenReturn(true);
+        when(locations1.accept(visitor)).thenReturn(true);
+        when(edge0.accept(visitor)).thenReturn(true);
+
+        visitor.visitGraph(node);
+
+        verify(locations1, times(1)).accept(visitor);
+    }
+
+    @Test
+    void graphVisitEdge() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.GraphContext node = mock(UCELParser.GraphContext.class);
+        UCELParser.LocationContext locations0 = mock(UCELParser.LocationContext.class);
+        UCELParser.LocationContext locations1 = mock(UCELParser.LocationContext.class);
+        UCELParser.EdgeContext edge0 = mock(UCELParser.EdgeContext.class);
+
+        when(node.getChildCount()).thenReturn(3);
+        when(node.getChild(0)).thenReturn(locations0);
+        when(node.getChild(1)).thenReturn(locations1);
+        when(node.getChild(2)).thenReturn(edge0);
+
+        when(locations0.accept(visitor)).thenReturn(true);
+        when(locations1.accept(visitor)).thenReturn(true);
+        when(edge0.accept(visitor)).thenReturn(true);
+
+        visitor.visitGraph(node);
+
+        verify(edge0, times(1)).accept(visitor);
+    }
 
     //endregion
 
