@@ -31,6 +31,7 @@ import static org.mockito.Mockito.times;
 
 public class TypeCheckerTests  {
 
+    //region Helper types
     private static final Type DOUBLE_ARRAY_TYPE = new Type(Type.TypeEnum.doubleType, 1);
     private static final Type VOID_2D_ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 2);
     private static final Type INT_2D_ARRAY_TYPE = new Type(Type.TypeEnum.intType, 2);
@@ -50,7 +51,7 @@ public class TypeCheckerTests  {
     private static final Type BOOL_TYPE = new Type(Type.TypeEnum.boolType);
     private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
-
+    //endregion
 
     //region Parameter
     @Test
@@ -3609,6 +3610,63 @@ public class TypeCheckerTests  {
         //Verification has been postponed
     }
 
+    //endregion
+
+    //endregion
+
+    //region Project Graph
+    //region graph
+    //endregion
+
+    //region Location
+    @Test
+    void location() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.LocationContext.class);
+        var id= mock(TerminalNode.class);
+        var invariant = mockForVisitorResult(UCELParser.InvariantContext.class, VOID_TYPE, visitor);
+        var exponential = mockForVisitorResult(UCELParser.ExponentialContext.class, VOID_TYPE, visitor);
+
+        when(node.ID()).thenReturn(id);
+        when(node.invariant()).thenReturn(invariant);
+        when(node.exponential()).thenReturn(exponential);
+
+        var actual = visitor.visitLocation(node);
+
+        verify(id, times(1)).accept(visitor);
+        verify(invariant, times(1)).accept(visitor);
+        verify(exponential, times(1)).accept(visitor);
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
+    //region invariant
+
+    //endregion
+
+    //region exponential
+    //endregion
+
+    //region invariant
+    //endregion
+
+    //region edge
+    //endregion
+
+    //region select
+    //endregion
+
+    //region guard
+    //endregion
+
+    //region sync
+    //endregion
+
+    //region update
     //endregion
 
     //endregion
