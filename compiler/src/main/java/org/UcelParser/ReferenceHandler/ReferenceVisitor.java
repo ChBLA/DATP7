@@ -28,6 +28,42 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     }
 
     @Override
+    public Boolean visitPtemplate(UCELParser.PtemplateContext ctx) {
+        String templateName = ctx.ID().getText();
+        try {
+            if(!currentScope.isUnique(templateName, false)) {
+                logger.log(new ErrorLog(ctx, "Template name '" + templateName + "' is already declared"));
+                return false;
+            }
+            DeclarationReference declRef = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
+            ctx.reference = declRef;
+
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+        }
+
+        enterScope();
+        ctx.scope = currentScope;
+
+        if(!visit(ctx.graph()) || !visit(ctx.parameters())) {
+            //No logging, passing through
+            exitScope();
+            return false;
+        }
+
+        if(!visit(ctx.declarations())) {
+            //No logging, passing through
+            exitScope();
+            return false;
+        }
+
+        //TODO occurences?? ctx.occurrences = new ArrayList<>();
+        exitScope();
+        return true;
+    }
+
+
+    @Override
     public Boolean visitStart(UCELParser.StartContext ctx) {
         boolean success = true;
         enterScope();
@@ -83,11 +119,13 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         if(!visit(ctx.type()) || !visit(ctx.parameters())) {
             //No logging, passing through
+            exitScope();
             return false;
         }
 
         if(!visit(ctx.block())) {
             //No logging, passing through
+            exitScope();
             return false;
         }
 
