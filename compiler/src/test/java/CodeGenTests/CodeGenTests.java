@@ -1,6 +1,7 @@
 package CodeGenTests;
 
-import org.UcelParser.CodeGeneration.templates.ManualTemplate;
+import org.Ucel.Project;
+import org.UcelParser.CodeGeneration.templates.*;
 import org.UcelParser.Util.*;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;
@@ -22,7 +23,6 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import org.UcelParser.CodeGeneration.CodeGenVisitor;
-import org.UcelParser.CodeGeneration.templates.Template;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.stringtemplate.v4.ST;
 
@@ -31,6 +31,121 @@ import static org.mockito.Mockito.*;
 
 
 public class CodeGenTests {
+
+    //region Project structure
+
+    //region Project
+    @Test
+    void projectNoPTemplatesGeneratedCorrectly() {
+        var pDeclTemplate = generateDefaultPDeclTemplate();
+        var pSystemTemplate = generateDefaultPSystemTemplate();
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.ProjectContext.class);
+        var systemNode = mockForVisitorResult(UCELParser.PsystemContext.class, pSystemTemplate, visitor);
+        var declNode = mockForVisitorResult(UCELParser.PdeclarationContext.class, pDeclTemplate, visitor);
+
+        when(node.psystem()).thenReturn(systemNode);
+        when(node.pdeclaration()).thenReturn(declNode);
+
+        var actual = visitor.visitProject(node);
+        assertInstanceOf(ProjectTemplate.class, actual);
+        var actualCasted = (ProjectTemplate) actual;
+        assertEquals(pDeclTemplate, actualCasted.pDeclarationTemplate);
+        assertEquals(pSystemTemplate, actualCasted.pSystemTemplate);
+        assertInstanceOf(PTemplatesTemplate.class, actualCasted.pTemplatesTemplate);
+        var actualPTemplates = (PTemplatesTemplate) actualCasted.pTemplatesTemplate;
+        assertTrue(actualPTemplates.pTemplateTemplates.isEmpty());
+    }
+
+    @Test
+    void projectOnePTemplateGeneratedCorrectly() {
+        var pDeclTemplate = generateDefaultPDeclTemplate();
+        var pSystemTemplate = generateDefaultPSystemTemplate();
+        var pTemplateTemplate = generateDefaultPTemplateTemplate();
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.ProjectContext.class);
+        var systemNode = mockForVisitorResult(UCELParser.PsystemContext.class, pSystemTemplate, visitor);
+        var declNode = mockForVisitorResult(UCELParser.PdeclarationContext.class, pDeclTemplate, visitor);
+        var tempNode1 = mockForVisitorResult(UCELParser.PtemplateContext.class, pTemplateTemplate, visitor);
+
+        var pTemplateNodes = new ArrayList<UCELParser.PtemplateContext>() {{ add(tempNode1); }};
+
+        when(node.psystem()).thenReturn(systemNode);
+        when(node.pdeclaration()).thenReturn(declNode);
+        when(node.ptemplate()).thenReturn(pTemplateNodes);
+
+        var actual = visitor.visitProject(node);
+        assertInstanceOf(ProjectTemplate.class, actual);
+        var actualCasted = (ProjectTemplate) actual;
+        assertEquals(pDeclTemplate, actualCasted.pDeclarationTemplate);
+        assertEquals(pSystemTemplate, actualCasted.pSystemTemplate);
+        assertInstanceOf(PTemplatesTemplate.class, actualCasted.pTemplatesTemplate);
+        var actualPTemplates = (PTemplatesTemplate) actualCasted.pTemplatesTemplate;
+        assertEquals(pTemplateNodes.size(), actualPTemplates.pTemplateTemplates.size());
+        assertEquals(pTemplateTemplate, actualPTemplates.pTemplateTemplates.get(0));
+    }
+
+    @Test
+    void projectManyPTemplatesGeneratedCorrectly() {
+        var pDeclTemplate = generateDefaultPDeclTemplate();
+        var pSystemTemplate = generateDefaultPSystemTemplate();
+        var pTemplateTemplate1 = generateDefaultPTemplateTemplate();
+        var pTemplateTemplate2 = generateDefaultPTemplateTemplate();
+        var pTemplateTemplates = new ArrayList<PTemplateTemplate>() {{add(pTemplateTemplate1); add(pTemplateTemplate2);}};
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.ProjectContext.class);
+        var systemNode = mockForVisitorResult(UCELParser.PsystemContext.class, pSystemTemplate, visitor);
+        var declNode = mockForVisitorResult(UCELParser.PdeclarationContext.class, pDeclTemplate, visitor);
+        var tempNode1 = mockForVisitorResult(UCELParser.PtemplateContext.class, pTemplateTemplate1, visitor);
+        var tempNode2 = mockForVisitorResult(UCELParser.PtemplateContext.class, pTemplateTemplate2, visitor);
+
+        var pTemplateNodes = new ArrayList<UCELParser.PtemplateContext>() {{ add(tempNode1); add(tempNode2); }};
+
+        when(node.psystem()).thenReturn(systemNode);
+        when(node.pdeclaration()).thenReturn(declNode);
+        when(node.ptemplate()).thenReturn(pTemplateNodes);
+
+        var actual = visitor.visitProject(node);
+        assertInstanceOf(ProjectTemplate.class, actual);
+        var actualCasted = (ProjectTemplate) actual;
+        assertEquals(pDeclTemplate, actualCasted.pDeclarationTemplate);
+        assertEquals(pSystemTemplate, actualCasted.pSystemTemplate);
+        assertInstanceOf(PTemplatesTemplate.class, actualCasted.pTemplatesTemplate);
+        var actualPTemplates = (PTemplatesTemplate) actualCasted.pTemplatesTemplate;
+        assertEquals(pTemplateNodes.size(), actualPTemplates.pTemplateTemplates.size());
+        for (int i = 0; i < pTemplateNodes.size(); i++) {
+            assertEquals(pTemplateTemplates.get(i), actualPTemplates.pTemplateTemplates.get(i));
+        }
+    }
+
+
+    //endregion
+
+    //region Project Declaration
+    @Test
+    void pDeclarationGeneratedCorrectly() {
+        var declTemp = generateDefaultDeclarationTemplate("a", "1");
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.PdeclarationContext.class);
+        var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemp, visitor);
+
+        when(node.declarations()).thenReturn(declNode);
+
+        var actual = visitor.visitPdeclaration(node);
+        assertInstanceOf(PDeclarationTemplate.class, actual);
+        var actualCasted = (PDeclarationTemplate) actual;
+        assertEquals(declTemp, actualCasted.declarations);
+    }
+
+    //endregion
 
     //region Start
     @Test
@@ -3361,6 +3476,18 @@ public class CodeGenTests {
 
     private Template generateEmptyAssignTemplate() {
         return new ManualTemplate("");
+    }
+
+    private Template generateDefaultPDeclTemplate() {
+        return new ManualTemplate(String.format("%s", generateDefaultDeclarationTemplate("a", "4")));
+    }
+
+    private Template generateDefaultPSystemTemplate() {
+        return new ManualTemplate(String.format("%s\n%s", generateDefaultDeclarationTemplate("a", "4"), generateDefaultSystemTemplate("a")));
+    }
+
+    private PTemplateTemplate generateDefaultPTemplateTemplate() {
+        return new PTemplateTemplate();
     }
 
     //endregion
