@@ -1168,9 +1168,11 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     @Override
     public Type visitLocation(UCELParser.LocationContext ctx) {
-        visit(ctx.ID()); // name
-        visit(ctx.invariant());
-        visit(ctx.exponential());
+        if(visit(ctx.invariant()).equals(ERROR_TYPE))
+            return ERROR_TYPE;
+
+        if(visit(ctx.exponential()).equals(ERROR_TYPE))
+            return ERROR_TYPE;
 
         return VOID_TYPE;
     }

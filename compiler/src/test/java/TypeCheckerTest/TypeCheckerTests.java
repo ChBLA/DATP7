@@ -3620,25 +3620,58 @@ public class TypeCheckerTests  {
 
     //region Location
     @Test
-    void location() {
+    void locationValid() {
         var expected = VOID_TYPE;
 
         var visitor = new TypeCheckerVisitor();
 
         var node = mock(UCELParser.LocationContext.class);
-        var id= mock(TerminalNode.class);
         var invariant = mockForVisitorResult(UCELParser.InvariantContext.class, VOID_TYPE, visitor);
         var exponential = mockForVisitorResult(UCELParser.ExponentialContext.class, VOID_TYPE, visitor);
 
-        when(node.ID()).thenReturn(id);
         when(node.invariant()).thenReturn(invariant);
         when(node.exponential()).thenReturn(exponential);
 
         var actual = visitor.visitLocation(node);
 
-        verify(id, times(1)).accept(visitor);
         verify(invariant, times(1)).accept(visitor);
         verify(exponential, times(1)).accept(visitor);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void locationInvalidInvariant() {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.LocationContext.class);
+        var invariant = mockForVisitorResult(UCELParser.InvariantContext.class, ERROR_TYPE, visitor);
+        var exponential = mockForVisitorResult(UCELParser.ExponentialContext.class, VOID_TYPE, visitor);
+
+        when(node.invariant()).thenReturn(invariant);
+        when(node.exponential()).thenReturn(exponential);
+
+        var actual = visitor.visitLocation(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void locationInvalidExponential() {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.LocationContext.class);
+        var invariant = mockForVisitorResult(UCELParser.InvariantContext.class, VOID_TYPE, visitor);
+        var exponential = mockForVisitorResult(UCELParser.ExponentialContext.class, ERROR_TYPE, visitor);
+
+        when(node.invariant()).thenReturn(invariant);
+        when(node.exponential()).thenReturn(exponential);
+
+        var actual = visitor.visitLocation(node);
 
         assertEquals(expected, actual);
     }
