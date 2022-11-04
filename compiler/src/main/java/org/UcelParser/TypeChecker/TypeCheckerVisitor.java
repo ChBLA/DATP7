@@ -1177,6 +1177,20 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         return VOID_TYPE;
     }
 
+    @Override
+    public Type visitInvariant(UCELParser.InvariantContext ctx) {
+        var expr = ctx.expression();
+        if(expr == null)
+            return BOOL_TYPE;
+
+        if(visit(expr).equals(BOOL_TYPE))
+            return BOOL_TYPE;
+
+        logger.log(new ErrorLog(ctx, "Invariant must be of type bool"));
+        return ERROR_TYPE;
+    }
+
+
     //endregion
 
     private void enterScope(Scope scope) {

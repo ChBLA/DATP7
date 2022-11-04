@@ -3678,10 +3678,57 @@ public class TypeCheckerTests  {
     //endregion
 
     //region invariant
+    @Test
+    void invariantValid() {
+        var expected = BOOL_TYPE;
 
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.InvariantContext.class);
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitInvariant(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void invariantEmpty() {
+        var expected = BOOL_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.InvariantContext.class);
+
+        when(node.expression()).thenReturn(null);
+
+        var actual = visitor.visitInvariant(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("notBoolTypes")
+    void invariantInvalid(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.InvariantContext.class);
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitInvariant(node);
+
+        assertEquals(expected, actual);
+    }
     //endregion
 
     //region exponential
+
     //endregion
 
     //region invariant
@@ -3714,6 +3761,17 @@ public class TypeCheckerTests  {
     //endregion
 
     //region Arguments for parameterized tests
+
+    private static Stream<Arguments> notBoolTypes() {
+        var args = new ArrayList<Arguments>();
+
+        for (var type : Type.TypeEnum.values()) {
+            if (type != Type.TypeEnum.boolType)
+                args.add(Arguments.of(new Type(type)));
+        }
+
+        return args.stream();
+    }
 
     private static Stream<Arguments> allTypes() {
 

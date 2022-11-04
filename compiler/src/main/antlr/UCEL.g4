@@ -25,7 +25,7 @@ location
             Integer posY, String comments, String testCodeEnter, String testCodeExit, Integer id]
     : ID? invariant exponential;
 exponential : expression COLON expression;
-invariant : expression;
+invariant : expression?;
 
 edge locals [Scope scope, Integer locationStartID, Integer locationEndID, String comments, String testCode]
     : select guard sync update;
