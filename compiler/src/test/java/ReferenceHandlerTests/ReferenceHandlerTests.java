@@ -23,6 +23,184 @@ import static org.mockito.Mockito.*;
 
 public class ReferenceHandlerTests {
 
+
+    //region Project
+
+    @Test
+    void projectSetsScope() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope) null);
+
+        UCELParser.ProjectContext node = mock(UCELParser.ProjectContext.class);
+        UCELParser.PdeclarationContext decls = mock(UCELParser.PdeclarationContext.class);
+        UCELParser.PtemplateContext template0 = mock(UCELParser.PtemplateContext.class);
+        UCELParser.PsystemContext system = mock(UCELParser.PsystemContext.class);
+
+        ArrayList<UCELParser.PtemplateContext> templates = new ArrayList<>();
+        templates.add(template0);
+
+        when(node.pdeclaration()).thenReturn(decls);
+        when(node.ptemplate()).thenReturn(templates);
+        when(node.psystem()).thenReturn(system);
+
+        when(decls.accept(visitor)).thenReturn(true);
+        when(template0.accept(visitor)).thenReturn(true);
+        when(system.accept(visitor)).thenReturn(true);
+
+        visitor.visitProject(node);
+
+        assertTrue(node.scope instanceof Scope);
+    }
+
+    @Test
+    void projectVisitDecls() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope) null);
+
+        UCELParser.ProjectContext node = mock(UCELParser.ProjectContext.class);
+        UCELParser.PdeclarationContext decls = mock(UCELParser.PdeclarationContext.class);
+        UCELParser.PtemplateContext template0 = mock(UCELParser.PtemplateContext.class);
+        UCELParser.PsystemContext system = mock(UCELParser.PsystemContext.class);
+
+        ArrayList<UCELParser.PtemplateContext> templates = new ArrayList<>();
+        templates.add(template0);
+
+        when(node.pdeclaration()).thenReturn(decls);
+        when(node.ptemplate()).thenReturn(templates);
+        when(node.psystem()).thenReturn(system);
+
+        when(decls.accept(visitor)).thenReturn(true);
+        when(template0.accept(visitor)).thenReturn(true);
+        when(system.accept(visitor)).thenReturn(true);
+
+        visitor.visitProject(node);
+
+        verify(decls, times(1)).accept(visitor);
+    }
+
+    @Test
+    void projectVisitTemplate() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope) null);
+
+        UCELParser.ProjectContext node = mock(UCELParser.ProjectContext.class);
+        UCELParser.PdeclarationContext decls = mock(UCELParser.PdeclarationContext.class);
+        UCELParser.PtemplateContext template0 = mock(UCELParser.PtemplateContext.class);
+        UCELParser.PsystemContext system = mock(UCELParser.PsystemContext.class);
+
+        ArrayList<UCELParser.PtemplateContext> templates = new ArrayList<>();
+        templates.add(template0);
+
+        when(node.pdeclaration()).thenReturn(decls);
+        when(node.ptemplate()).thenReturn(templates);
+        when(node.psystem()).thenReturn(system);
+
+        when(decls.accept(visitor)).thenReturn(true);
+        when(template0.accept(visitor)).thenReturn(true);
+        when(system.accept(visitor)).thenReturn(true);
+
+        visitor.visitProject(node);
+
+        verify(template0, times(1)).accept(visitor);
+    }
+
+    @Test
+    void projectVisitSystem() {
+        ReferenceVisitor visitor = new ReferenceVisitor((Scope) null);
+
+        UCELParser.ProjectContext node = mock(UCELParser.ProjectContext.class);
+        UCELParser.PdeclarationContext decls = mock(UCELParser.PdeclarationContext.class);
+        UCELParser.PtemplateContext template0 = mock(UCELParser.PtemplateContext.class);
+        UCELParser.PsystemContext system = mock(UCELParser.PsystemContext.class);
+
+        ArrayList<UCELParser.PtemplateContext> templates = new ArrayList<>();
+        templates.add(template0);
+
+        when(node.pdeclaration()).thenReturn(decls);
+        when(node.ptemplate()).thenReturn(templates);
+        when(node.psystem()).thenReturn(system);
+
+        when(decls.accept(visitor)).thenReturn(true);
+        when(template0.accept(visitor)).thenReturn(true);
+        when(system.accept(visitor)).thenReturn(true);
+
+        visitor.visitProject(node);
+
+        verify(system, times(1)).accept(visitor);
+    }
+
+    //endregion
+
+    //region pSystem
+
+    @Test
+    void pSystemVisitDeclarations() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.PsystemContext node = mock(UCELParser.PsystemContext.class);
+        UCELParser.DeclarationsContext decls = mock(UCELParser.DeclarationsContext.class);
+        UCELParser.BuildContext build = mock(UCELParser.BuildContext.class);
+        UCELParser.SystemContext system = mock(UCELParser.SystemContext.class);
+
+        when(node.declarations()).thenReturn(decls);
+        when(node.build()).thenReturn(build);
+        when(node.system()).thenReturn(system);
+
+        when(decls.accept(visitor)).thenReturn(true);
+        when(build.accept(visitor)).thenReturn(true);
+        when(system.accept(visitor)).thenReturn(true);
+
+        visitor.visitPsystem(node);
+
+        verify(decls, times(1)).accept(visitor);
+    }
+
+    @Test
+    void pSystemVisitBuild() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.PsystemContext node = mock(UCELParser.PsystemContext.class);
+        UCELParser.DeclarationsContext decls = mock(UCELParser.DeclarationsContext.class);
+        UCELParser.BuildContext build = mock(UCELParser.BuildContext.class);
+        UCELParser.SystemContext system = mock(UCELParser.SystemContext.class);
+
+        when(node.declarations()).thenReturn(decls);
+        when(node.build()).thenReturn(build);
+        when(node.system()).thenReturn(system);
+
+        when(decls.accept(visitor)).thenReturn(true);
+        when(build.accept(visitor)).thenReturn(true);
+        when(system.accept(visitor)).thenReturn(true);
+
+        visitor.visitPsystem(node);
+
+        verify(build, times(1)).accept(visitor);
+    }
+
+    @Test
+    void pSystemVisitSystem() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.PsystemContext node = mock(UCELParser.PsystemContext.class);
+        UCELParser.DeclarationsContext decls = mock(UCELParser.DeclarationsContext.class);
+        UCELParser.BuildContext build = mock(UCELParser.BuildContext.class);
+        UCELParser.SystemContext system = mock(UCELParser.SystemContext.class);
+
+        when(node.declarations()).thenReturn(decls);
+        when(node.build()).thenReturn(build);
+        when(node.system()).thenReturn(system);
+
+        when(decls.accept(visitor)).thenReturn(true);
+        when(build.accept(visitor)).thenReturn(true);
+        when(system.accept(visitor)).thenReturn(true);
+
+        visitor.visitPsystem(node);
+
+        verify(system, times(1)).accept(visitor);
+    }
+
+    //endregion
+
     //region pTemplate
 
     @Test
@@ -161,6 +339,78 @@ public class ReferenceHandlerTests {
         assertEquals(declRef, node.reference);
     }
 
+
+    //endregion
+
+    //region Graph
+    @Test
+    void graphVisitLocation() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.GraphContext node = mock(UCELParser.GraphContext.class);
+        UCELParser.LocationContext locations0 = mock(UCELParser.LocationContext.class);
+        UCELParser.EdgeContext edge0 = mock(UCELParser.EdgeContext.class);
+
+        when(node.getChildCount()).thenReturn(2);
+        when(node.getChild(0)).thenReturn(locations0);
+        when(node.getChild(1)).thenReturn(edge0);
+
+        when(locations0.accept(visitor)).thenReturn(true);
+        when(edge0.accept(visitor)).thenReturn(true);
+
+        visitor.visitGraph(node);
+
+        verify(locations0, times(1)).accept(visitor);
+    }
+
+    @Test
+    void graphVisitSecondLocation() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.GraphContext node = mock(UCELParser.GraphContext.class);
+        UCELParser.LocationContext locations0 = mock(UCELParser.LocationContext.class);
+        UCELParser.LocationContext locations1 = mock(UCELParser.LocationContext.class);
+        UCELParser.EdgeContext edge0 = mock(UCELParser.EdgeContext.class);
+
+        when(node.getChildCount()).thenReturn(3);
+        when(node.getChild(0)).thenReturn(locations0);
+        when(node.getChild(1)).thenReturn(locations1);
+        when(node.getChild(2)).thenReturn(edge0);
+
+        when(locations0.accept(visitor)).thenReturn(true);
+        when(locations1.accept(visitor)).thenReturn(true);
+        when(edge0.accept(visitor)).thenReturn(true);
+
+        visitor.visitGraph(node);
+
+        verify(locations1, times(1)).accept(visitor);
+    }
+
+    @Test
+    void graphVisitEdge() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.GraphContext node = mock(UCELParser.GraphContext.class);
+        UCELParser.LocationContext locations0 = mock(UCELParser.LocationContext.class);
+        UCELParser.LocationContext locations1 = mock(UCELParser.LocationContext.class);
+        UCELParser.EdgeContext edge0 = mock(UCELParser.EdgeContext.class);
+
+        when(node.getChildCount()).thenReturn(3);
+        when(node.getChild(0)).thenReturn(locations0);
+        when(node.getChild(1)).thenReturn(locations1);
+        when(node.getChild(2)).thenReturn(edge0);
+
+        when(locations0.accept(visitor)).thenReturn(true);
+        when(locations1.accept(visitor)).thenReturn(true);
+        when(edge0.accept(visitor)).thenReturn(true);
+
+        visitor.visitGraph(node);
+
+        verify(edge0, times(1)).accept(visitor);
+    }
 
     //endregion
 

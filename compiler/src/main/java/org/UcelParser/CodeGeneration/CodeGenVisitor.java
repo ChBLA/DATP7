@@ -34,6 +34,48 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
 
+    //region Project Structure
+    //region Project
+
+    @Override
+    public Template visitProject(UCELParser.ProjectContext ctx) {
+        var pDeclTemplate = visit(ctx.pdeclaration());
+        var pSystemTemplate = visit(ctx.psystem());
+
+        ArrayList<PTemplateTemplate> pTemplateTemplates = new ArrayList<>();
+        for (var pTemp : ctx.ptemplate()) {
+            pTemplateTemplates.add((PTemplateTemplate) visit(pTemp));
+        }
+
+        return new ProjectTemplate(pTemplateTemplates, pDeclTemplate, pSystemTemplate);
+    }
+
+    //endregion
+
+    //region Project declarations
+
+    @Override
+    public Template visitPdeclaration(UCELParser.PdeclarationContext ctx) {
+        return new PDeclarationTemplate(visit(ctx.declarations()));
+    }
+
+
+    //endregion
+
+    //region Project system
+
+    @Override
+    public Template visitPsystem(UCELParser.PsystemContext ctx) {
+        var declTemplate = visit(ctx.declarations());
+        var sysTemplate = visit(ctx.system());
+        var buildTemplate = ctx.build() != null ? visit(ctx.build()) : null;
+
+        return new PSystemTemplate(declTemplate, buildTemplate, sysTemplate);
+    }
+    //endregion
+
+    //endregion
+
     //region Start
 
     @Override

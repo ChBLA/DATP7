@@ -28,6 +28,18 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     }
 
     @Override
+    public Boolean visitProject(UCELParser.ProjectContext ctx) {
+        enterScope();
+        ctx.scope = currentScope;
+        boolean b = visit(ctx.pdeclaration());
+        for(UCELParser.PtemplateContext t : ctx.ptemplate())
+            b = visit(t) && b;
+        b = visit(ctx.psystem()) && b;
+        exitScope();
+        return b;
+    }
+
+    @Override
     public Boolean visitPtemplate(UCELParser.PtemplateContext ctx) {
         String templateName = ctx.ID().getText();
         try {
@@ -57,11 +69,16 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             return false;
         }
 
-        //TODO occurences?? ctx.occurrences = new ArrayList<>();
         exitScope();
         return true;
     }
 
+    @Override
+    public Boolean visitPsystem(UCELParser.PsystemContext ctx) {
+        boolean b = visit(ctx.declarations());
+        b = (ctx.build() == null || visit(ctx.build())) && b;
+        return visit(ctx.system()) && b;
+    }
 
     @Override
     public Boolean visitStart(UCELParser.StartContext ctx) {

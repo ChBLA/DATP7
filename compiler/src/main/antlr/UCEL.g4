@@ -9,14 +9,14 @@ grammar UCEL;
     import org.UcelParser.Util.FuncCallOccurrence;
 }
 
-project : pdeclaration ptemplate* psystem;
 
-pdeclaration locals [Scope scope]
-    : declarations;
+project locals [Scope scope]
+    : pdeclaration ptemplate* psystem;
+
+pdeclaration : declarations;
 ptemplate locals [Scope scope, DeclarationReference reference]
     : ID parameters graph declarations;
-psystem locals [Scope scope]
-    : declarations build? system;
+psystem : declarations build? system;
 
 graph : location* edge*;
 

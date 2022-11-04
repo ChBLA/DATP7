@@ -25,26 +25,23 @@ public class ManualParsingTests {
     //region Project
     @Test
     public void parseProjectTest() {
-        var project = mock(IProject.class);
+        var parser = mock(ManualParser.class);
+        when(parser.parseProject(any())).thenCallRealMethod();
 
-        var parser = new ManualParser();
+        var templateMock = mock(UCELParser.PtemplateContext.class);
 
-        var result = parser.parseProject(project);
+        var projectMock = mock(IProject.class);
 
-        assertTrue(result instanceof UCELParser.ProjectContext);
+        when(projectMock.getDeclaration()).thenReturn("int i = 0;");
+        when(projectMock.getSystemDeclarations()).thenReturn("int i = 0; system goimer;");
+        when(projectMock.getTemplates()).thenReturn(List.of(mock(ITemplate.class)));
+
+        var result = parser.parseProject(projectMock);
+
+        assertNotNull(result);
+        assertEquals(3, result.getChildCount());
+
     }
-    @Test
-    public void parseProjectChildrenExist() {
-        var project = mock(IProject.class);
-
-        var parser = new ManualParser();
-
-        var result = parser.parseProject(project);
-        int expectedChildren = project.getTemplates().size() + 2;
-
-        assertEquals(expectedChildren, result.getChildCount());
-    }
-
     //endregion
 
     //region Project declarations
@@ -72,6 +69,46 @@ public class ManualParsingTests {
         assertNotNull(actual);
     }
 
+    @Test
+    void pDeclParseViking() {
+        var parser = new ManualParser();
+        var parent = mock(UCELParser.ProjectContext.class);
+
+        String input =
+                "/* * Four vikings are about to cross a damaged bridge in the middle of the\n" +
+                        " * night. The bridge can only carry two of the vikings at the time and to\n" +
+                        " * find the way over the bridge the vikings need to bring a torch.  The\n" +
+                        " * vikings need 5, 10, 20 and 25 minutes (one-way) respectively to cross\n" +
+                        " * the bridge.\n" +
+                        "\n" +
+                        " * Does a schedule exist which gets all four vikings over the bridge\n" +
+                        " * within 60 minutes?\n" +
+                        " */\n" +
+                        "\n" +
+                        "chan take, release;\t\t// Take and release torch\n" +
+                        "int[0,1] L;\t\t// The side the torch is on\n" +
+                        "clock time;\t\t// Global time";
+
+        var actual = parser.parseProjectDeclaration(parent, input);
+
+        assertNotNull(actual);
+    }
+
+    void pDeclParseTrain() {
+        var parser = new ManualParser();
+        var parent = mock(UCELParser.ProjectContext.class);
+
+        String input =
+                "const int N = 6;         // # trains\n" +
+                "typedef int[0,N-1] id_t;\n" +
+                "\n" +
+                "chan        appr[N], stop[N], leave[N];\n" +
+                "urgent chan go[N];";
+
+        var actual = parser.parseProjectDeclaration(parent, input);
+
+        assertNotNull(actual);
+    }
 
     //endregion
 
@@ -796,9 +833,8 @@ public class ManualParsingTests {
         assertEquals(parent, actual.parent);
     }
 
-    //TODO: Vary the cases when more clarity wrt. psysdecl is reached
     @ParameterizedTest
-    @ValueSource(strings = {"int one = 0; system s;", "system s1;", "system s2;", "system s3;", "system s4;", "system s5;"})
+    @ValueSource(strings = {"int one = 0; system s;", "typedef int[0,N-1] id_t; system s;"})
     void pSysReturnsCorrectlyOnValidInput(String input) {
         var parser = new ManualParser();
         var parent = mock(UCELParser.ProjectContext.class);
@@ -828,7 +864,6 @@ public class ManualParsingTests {
 
         assertNotNull(actual);
     }
-
     @Test
     void pSysReturnsNullOnNoEOF() {
         var parser = new ManualParser();
