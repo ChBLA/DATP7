@@ -17,7 +17,7 @@ public class ManualParser {
 
     //region Project
     //TODO: Add template back in when done
-    public ParseTree parseProject(IProject project) {
+    public ParserRuleContext parseProject(IProject project) {
         var node = new UCELParser.ProjectContext(null, -1);
 
         var children = new ArrayList<ParseTree>();
