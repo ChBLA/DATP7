@@ -33,7 +33,12 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.logger = logger;
     }
 
+    // Edge
+
+    //endregion
+
     // Exponential
+    @Override
     public Template visitExponential(UCELParser.ExponentialContext ctx) {
         var expr1 = visit(ctx.expression(0));
         var expr2 = visit(ctx.expression(1));
@@ -42,6 +47,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     //endregion
 
     //Invariant
+    @Override
     public Template visitInvariant(UCELParser.InvariantContext ctx) {
         var expr = visit(ctx.expression());
         return new InvariantTemplate(expr);
