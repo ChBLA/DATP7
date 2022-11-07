@@ -184,6 +184,13 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     //endregion
 
+    //region Guard
+    @Override
+    public Template visitGuard(UCELParser.GuardContext ctx) {
+        return visit(ctx.expression());
+    }
+    //endregion
+
     //region Function
 
     @Override

@@ -461,6 +461,26 @@ public class CodeGenTests {
 
     //endregion
 
+    //region Guard
+    @ParameterizedTest
+    @ValueSource(strings = {"==", "!=", "<", ">", "<=", ">="})
+    void guardExpressionGeneratedCorrectly(String expectedOperator) {
+        var exprTemplate = generateDefaultExprTemplate(String.format("x %s 0", expectedOperator));
+        var expected = String.format("%s", exprTemplate);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.GuardContext.class);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+
+        when(node.expression()).thenReturn(exprNode);
+
+        var actual = visitor.visitGuard(node).toString();
+
+        assertEquals(expected, actual);
+    }
+    //endregion
+
     //region Function
 
     @Test
