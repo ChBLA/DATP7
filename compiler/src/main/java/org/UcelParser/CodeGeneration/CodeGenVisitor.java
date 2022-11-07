@@ -33,6 +33,16 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.logger = logger;
     }
 
+    // Location
+    @Override
+    public Template visitLocation(UCELParser.LocationContext ctx) {
+        Template invariant = visit(ctx.invariant());
+        Template exponential = visit(ctx.exponential());
+        return new LocationTemplate(invariant, exponential, ctx);
+    }
+
+    //endregion
+
     // Graph
 
     @Override

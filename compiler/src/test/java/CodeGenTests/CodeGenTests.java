@@ -1,8 +1,8 @@
 package CodeGenTests;
 
-import org.Ucel.Location;
-import org.Ucel.Project;
+import org.UcelParser.CodeGeneration.CodeGenVisitor;
 import org.UcelParser.CodeGeneration.templates.*;
+import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.*;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;
@@ -16,22 +16,43 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.lang.reflect.Field;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import org.UcelParser.CodeGeneration.CodeGenVisitor;
-import org.UcelParser.UCELParser_Generated.UCELParser;
-import org.stringtemplate.v4.ST;
-
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 
 public class CodeGenTests {
+
+    //region Location
+    @Test
+    void LocationGetsCorrectNodes() {
+        var visitor = new CodeGenVisitor();
+
+        var invariantTemplate = generateDefaultInvariantTemplate();
+        var exponentialTemplate = generateDefaultExponentialTemplate();
+
+        var invariantMock = mockForVisitorResult(UCELParser.InvariantContext.class, invariantTemplate, visitor);
+        var exponentialMock = mockForVisitorResult(UCELParser.ExponentialContext.class, exponentialTemplate, visitor);
+
+        var node = mock(UCELParser.LocationContext.class);
+        when(node.invariant()).thenReturn(invariantMock);
+        when(node.exponential()).thenReturn(exponentialMock);
+
+        var actual = visitor.visitLocation(node);
+        assertInstanceOf(LocationTemplate.class, actual);
+
+        var actualCasted = (LocationTemplate) actual;
+        assertEquals(actualCasted.exponential.toString(), exponentialTemplate.toString());
+        assertEquals(actualCasted.invariant.toString(), invariantTemplate.toString());
+        assertEquals(actualCasted.location, node);
+    }
+
+    //endregion
 
     //region Graph
     @Test
@@ -3578,6 +3599,14 @@ public class CodeGenTests {
 
     private PTemplateTemplate generateDefaultPTemplateTemplate() {
         return new PTemplateTemplate();
+    }
+
+    private Template generateDefaultExponentialTemplate() {
+        return new ManualTemplate("1:2");
+    }
+
+    private Template generateDefaultInvariantTemplate() {
+        return new ManualTemplate("a == 5;");
     }
 
     //endregion
