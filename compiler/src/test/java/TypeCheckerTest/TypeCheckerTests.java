@@ -3728,7 +3728,77 @@ public class TypeCheckerTests  {
     //endregion
 
     //region exponential
+    @Test
+    void exponential1ArgValid() {
+        var expected = VOID_TYPE;
 
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.ExponentialContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+
+        when(node.expression()).thenReturn(new ArrayList<>() {{
+            add(expr1);
+        }});
+
+        var actual = visitor.visitExponential(node);
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void exponential2ArgValid() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.ExponentialContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+
+        when(node.expression()).thenReturn(new ArrayList<>() {{
+            add(expr1);
+            add(expr2);
+        }});
+
+        var actual = visitor.visitExponential(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void exponentialValidEmpty() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.ExponentialContext.class);
+
+        when(node.expression()).thenReturn(new ArrayList<>());
+
+        var actual = visitor.visitExponential(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void exponentialInvalid() {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.ExponentialContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, DOUBLE_TYPE, visitor);
+
+        when(node.expression()).thenReturn(new ArrayList<>() {{
+            add(expr1);
+            add(expr2);
+        }});
+
+        var actual = visitor.visitExponential(node);
+
+        assertEquals(expected, actual);
+    }
     //endregion
 
     //region edge

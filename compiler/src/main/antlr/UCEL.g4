@@ -23,8 +23,8 @@ graph : location* edge*;
 location
     locals [Boolean isInitial, Boolean isUrgent, Boolean isCommitted, Integer posX,
             Integer posY, String comments, String testCodeEnter, String testCodeExit, Integer id]
-    : ID? invariant exponential;
-exponential : expression COLON expression;
+    : ID? invariant COMMA exponential;
+exponential : (expression (COLON expression)?)?;
 invariant : expression?;
 
 edge locals [Scope scope, Integer locationStartID, Integer locationEndID, String comments, String testCode]
