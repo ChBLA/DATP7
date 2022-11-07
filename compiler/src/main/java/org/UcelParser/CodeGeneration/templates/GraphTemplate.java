@@ -6,6 +6,7 @@ import java.util.List;
 
 public class GraphTemplate extends Template {
 
+    // TODO: Change this to list of nodeTemplates and edgeTemplates
     public final List<Template> nodes;
     public final List<Template> edges;
 
