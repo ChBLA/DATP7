@@ -3903,6 +3903,53 @@ public class TypeCheckerTests  {
     //endregion
 
     //region sync
+    @Test
+    void syncValid() {
+        var expected = CHAN_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.SyncContext.class);
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, CHAN_TYPE, visitor);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitSync(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void syncEmpty() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.SyncContext.class);
+
+        when(node.expression()).thenReturn(null);
+
+        var actual = visitor.visitSync(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("notChanTypes")
+    void syncInvalid(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.SyncContext.class);
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitSync(node);
+
+        assertEquals(expected, actual);
+    }
     //endregion
 
     //region update
@@ -3984,6 +4031,17 @@ public class TypeCheckerTests  {
 
         for (var type : Type.TypeEnum.values()) {
             if (type != Type.TypeEnum.boolType)
+                args.add(Arguments.of(new Type(type)));
+        }
+
+        return args.stream();
+    }
+
+    private static Stream<Arguments> notChanTypes() {
+        var args = new ArrayList<Arguments>();
+
+        for (var type : Type.TypeEnum.values()) {
+            if (type != Type.TypeEnum.chanType)
                 args.add(Arguments.of(new Type(type)));
         }
 
