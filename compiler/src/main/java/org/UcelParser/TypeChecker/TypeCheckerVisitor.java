@@ -1166,6 +1166,25 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //region Project Graph
 
+    @Override
+    public Type visitGraph(UCELParser.GraphContext ctx) {
+        boolean hadError = false;
+        for(var loc: ctx.location()) {
+            if(visit(loc).equals(ERROR_TYPE))
+                hadError = true;
+        }
+
+        for(var edge: ctx.edge()) {
+            if(visit(edge).equals(ERROR_TYPE))
+                hadError = true;
+        }
+
+        if(hadError)
+            return ERROR_TYPE;
+
+        return VOID_TYPE;
+    }
+
     //region Location
     @Override
     public Type visitLocation(UCELParser.LocationContext ctx) {

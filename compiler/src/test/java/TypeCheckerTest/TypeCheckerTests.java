@@ -3616,6 +3616,97 @@ public class TypeCheckerTests  {
 
     //region Project Graph
     //region graph
+    @Test
+    void graphValid() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.GraphContext.class);
+        var loc1 = mockForVisitorResult(UCELParser.LocationContext.class, VOID_TYPE, visitor);
+        var loc2 = mockForVisitorResult(UCELParser.LocationContext.class, VOID_TYPE, visitor);
+        var edge1 = mockForVisitorResult(UCELParser.EdgeContext.class, VOID_TYPE, visitor);
+
+        when(node.location()).thenReturn(new ArrayList<>() {{
+            add(loc1);
+            add(loc2);
+        }});
+
+        when(node.edge()).thenReturn(new ArrayList<>() {{
+            add(edge1);
+        }});
+
+        var actual = visitor.visitGraph(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void graphValidEmpty() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.GraphContext.class);
+
+        when(node.location()).thenReturn(new ArrayList<>());
+
+        when(node.edge()).thenReturn(new ArrayList<>());
+
+        var actual = visitor.visitGraph(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void graphInvalidLocation() {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.GraphContext.class);
+        var loc1 = mockForVisitorResult(UCELParser.LocationContext.class, VOID_TYPE, visitor);
+        var loc2 = mockForVisitorResult(UCELParser.LocationContext.class, ERROR_TYPE, visitor);
+        var edge1 = mockForVisitorResult(UCELParser.EdgeContext.class, VOID_TYPE, visitor);
+
+        when(node.location()).thenReturn(new ArrayList<>() {{
+            add(loc1);
+            add(loc2);
+        }});
+
+        when(node.edge()).thenReturn(new ArrayList<>() {{
+            add(edge1);
+        }});
+
+        var actual = visitor.visitGraph(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void graphInvalidEdge() {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.GraphContext.class);
+        var loc1 = mockForVisitorResult(UCELParser.LocationContext.class, VOID_TYPE, visitor);
+        var loc2 = mockForVisitorResult(UCELParser.LocationContext.class, VOID_TYPE, visitor);
+        var edge1 = mockForVisitorResult(UCELParser.EdgeContext.class, ERROR_TYPE, visitor);
+
+        when(node.location()).thenReturn(new ArrayList<>() {{
+            add(loc1);
+            add(loc2);
+        }});
+
+        when(node.edge()).thenReturn(new ArrayList<>() {{
+            add(edge1);
+        }});
+
+        var actual = visitor.visitGraph(node);
+
+        assertEquals(expected, actual);
+    }
     //endregion
 
     //region Location
