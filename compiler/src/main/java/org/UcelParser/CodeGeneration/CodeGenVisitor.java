@@ -35,16 +35,31 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.logger = logger;
     }
 
+    // Update
+
+    @Override
+    public Template visitUpdate(UCELParser.UpdateContext ctx) {
+        if (ctx.expression().isEmpty()) {
+            return new ManualTemplate("");
+        }
+
+        List<Template> expressions = ctx.expression().stream()
+                .map(this::visit).collect(Collectors.toList());
+
+        return new UpdateTemplate(expressions);
+    }
+
+
     // Sync
 
     @Override
     public Template visitSync(UCELParser.SyncContext ctx) {
-        var expr = ctx.expression() != null ? visit(ctx.expression()): null;
-        String label;
-
-        if (expr == null) {
+        if (ctx.expression() == null) {
             return new ManualTemplate("");
         }
+
+        var expr = visit(ctx.expression());
+        String label;
 
         if (ctx.QUESTIONMARK() != null) {
             label = ctx.QUESTIONMARK().getText();
@@ -53,7 +68,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
             label = ctx.NEG().getText();
         }
         else {
-            // !! This should not happen !!
+            // !!! This should not happen !!!
             throw new RuntimeException("internal error: label for sync does not exist");
         }
 
