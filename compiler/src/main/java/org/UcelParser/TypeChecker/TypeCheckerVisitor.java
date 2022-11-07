@@ -1179,6 +1179,25 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
     @Override
+    public Type visitExponential(UCELParser.ExponentialContext ctx) {
+        boolean hadError = false;
+        for(var expr: ctx.expression()) {
+            var exprType = visit(expr);
+
+            if(!exprType.equals(INT_TYPE)) {
+                if(!exprType.equals(ERROR_TYPE)) { // Prevent duplicate errors
+                    logger.log(new ErrorLog(expr, "Exponential expr must be of type integer"));
+                }
+                hadError = true;
+            }
+        }
+        if(hadError)
+            return ERROR_TYPE;
+
+        return VOID_TYPE;
+    }
+
+    @Override
     public Type visitInvariant(UCELParser.InvariantContext ctx) {
         var expr = ctx.expression();
         if(expr == null)
@@ -1247,7 +1266,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public Type visitUpdate(UCELParser.UpdateContext ctx) {
 
         boolean hadError = false;
-        for(var expr: ctx.children) {
+        for(var expr: ctx.expression()) {
             if(visit(expr).equals(ERROR_TYPE))
                 hadError = true;
         }

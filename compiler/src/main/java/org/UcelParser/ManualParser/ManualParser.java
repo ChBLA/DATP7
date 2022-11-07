@@ -135,7 +135,7 @@ public class ManualParser {
         var parser = generateParser(input);
         var node = parser.invariant();
         node.parent = parent;
-        return parser.getNumberOfSyntaxErrors() > 0 ? null : node;
+        return parser.getNumberOfSyntaxErrors() == 0 && isEOF(parser) ? node : null;
     }
     //endregion
 
