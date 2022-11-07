@@ -738,6 +738,20 @@ public class CodeGenTests {
 
         assertEquals(expected, actual);
     }
+
+    @Test
+    void guardExpressionNullGeneratedCorrectly() {
+        var expected = "";
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.GuardContext.class);
+
+        when(node.expression()).thenReturn(null);
+
+        var actual = visitor.visitGuard(node).toString();
+
+        assertEquals(expected, actual);
+    }
     //endregion
 
     //region Function
