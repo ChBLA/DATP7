@@ -1229,6 +1229,33 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         logger.log(new ErrorLog(ctx, "Guard must be of type bool"));
         return ERROR_TYPE;
     }
+
+    @Override
+    public Type visitSync(UCELParser.SyncContext ctx) {
+        var expr = ctx.expression();
+        if(expr == null)
+            return VOID_TYPE;
+
+        if(visit(expr).equals(CHAN_TYPE))
+            return CHAN_TYPE;
+
+        logger.log(new ErrorLog(ctx, "Sync must be of type channel, or empty"));
+        return ERROR_TYPE;
+    }
+
+    @Override
+    public Type visitUpdate(UCELParser.UpdateContext ctx) {
+
+        boolean hadError = false;
+        for(var expr: ctx.children) {
+            if(visit(expr).equals(ERROR_TYPE))
+                hadError = true;
+        }
+        if(hadError)
+            return ERROR_TYPE;
+
+        return VOID_TYPE;
+    }
     //endregion
 
 

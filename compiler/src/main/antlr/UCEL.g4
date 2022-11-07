@@ -32,7 +32,7 @@ edge locals [Scope scope, Integer locationStartID, Integer locationEndID, String
 select locals [List<DeclarationReference> references]
     : ID COLON type (COMMA ID COLON type)*;
 guard : expression?;
-sync : expression (NEG | QUESTIONMARK);
+sync : (expression (NEG | QUESTIONMARK))?;
 update : (expression (COMMA expression)*)?;
 
 start locals [Scope scope]
