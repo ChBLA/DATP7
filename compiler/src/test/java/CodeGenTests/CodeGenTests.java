@@ -28,9 +28,107 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region Select
+
+    @Test
+    void selectCorrectOne() {
+        var scopeMock = mock(Scope.class);
+        var visitor = new CodeGenVisitor(scopeMock);
+        var expected = generateDefaultSelectTemplateSingle();
+
+        var typeTemp = new ManualTemplate("int");
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeTemp, visitor);
+
+        var IDMock = mock(TerminalNodeImpl.class);
+        when(IDMock.getText()).thenReturn("a");
+
+        var refMock = mock(DeclarationReference.class);
+        var declInfoMock = mock(DeclarationInfo.class);
+        when(declInfoMock.getIdentifier()).thenReturn("b");
+
+        try {
+            when(scopeMock.get(refMock)).thenReturn(declInfoMock);
+        } catch (Exception e) {
+            fail("unable to mock scope");
+        }
+
+        List<UCELParser.TypeContext> typeContexts = new ArrayList<>();
+        typeContexts.add(typeMock);
+
+        List<TerminalNode> IDs = new ArrayList<>();
+        IDs.add(IDMock);
+
+        List<DeclarationReference> references = new ArrayList<>();
+        references.add(refMock);
+
+        var node = mock(UCELParser.SelectContext.class);
+        when(node.type()).thenReturn(typeContexts);
+        when(node.ID()).thenReturn(IDs);
+        node.references = references;
+
+        var actual = visitor.visitSelect(node).toString();
+        assertEquals(expected.toString(), actual);
+    }
+
+    @Test
+    void selectCorrectMultiple() {
+        var scopeMock = mock(Scope.class);
+        var visitor = new CodeGenVisitor(scopeMock);
+        var expected = generateDefaultSelectTemplateMultiple();
+
+        var typeTemp = new ManualTemplate("int");
+        var typeMock = mockForVisitorResult(UCELParser.TypeContext.class, typeTemp, visitor);
+
+        var IDMock1 = mock(TerminalNodeImpl.class);
+        when(IDMock1.getText()).thenReturn("a");
+
+        var IDMock2 = mock(TerminalNodeImpl.class);
+        when(IDMock2.getText()).thenReturn("b");
+
+        var refMock1 = mock(DeclarationReference.class);
+        var declInfoMock1 = mock(DeclarationInfo.class);
+        when(declInfoMock1.getIdentifier()).thenReturn("c");
+
+        var refMock2 = mock(DeclarationReference.class);
+        var declInfoMock2 = mock(DeclarationInfo.class);
+        when(declInfoMock2.getIdentifier()).thenReturn("d");
+
+        try {
+            when(scopeMock.get(refMock1)).thenReturn(declInfoMock1);
+            when(scopeMock.get(refMock2)).thenReturn(declInfoMock2);
+        } catch (Exception e) {
+            fail("unable to mock scope");
+        }
+
+
+        List<UCELParser.TypeContext> typeContexts = new ArrayList<>();
+        typeContexts.add(typeMock);
+        typeContexts.add(typeMock);
+
+        List<TerminalNode> IDs = new ArrayList<>();
+        IDs.add(IDMock1);
+        IDs.add(IDMock2);
+
+        List<DeclarationReference> references = new ArrayList<>();
+        references.add(refMock1);
+        references.add(refMock2);
+
+        var node = mock(UCELParser.SelectContext.class);
+        when(node.type()).thenReturn(typeContexts);
+        when(node.ID()).thenReturn(IDs);
+        node.references = references;
+
+        var actual = visitor.visitSelect(node).toString();
+        assertEquals(expected.toString(), actual);
+    }
+
+
+
+    //endregion
+
     //region Edge
     @Test
-    void EdgeCorrect() {
+    void edgeCorrect() {
         var visitor = new CodeGenVisitor();
 
         var select = new ManualTemplate("select");
@@ -62,7 +160,7 @@ public class CodeGenTests {
 
     //region invariant
     @Test
-    void InvariantCorrect() {
+    void invariantCorrect() {
         var visitor = new CodeGenVisitor();
 
         var exprTemp = generateDefaultInvariantTemplate();
@@ -78,7 +176,7 @@ public class CodeGenTests {
 
     //region exponential
     @Test
-    void ExponentialCorrect() {
+    void exponentialCorrect() {
         var visitor = new CodeGenVisitor();
 
         var expected = "1 : 2";
@@ -106,7 +204,7 @@ public class CodeGenTests {
 
     //region Location
     @Test
-    void LocationGetsCorrectNodes() {
+    void locationGetsCorrectNodes() {
         var visitor = new CodeGenVisitor();
 
         var invariantTemplate = generateDefaultInvariantTemplate();
@@ -132,7 +230,7 @@ public class CodeGenTests {
 
     //region Graph
     @Test
-    void GraphGetsCorrectLocationAndEdge() {
+    void graphGetsCorrectLocationAndEdge() {
          var visitor = new CodeGenVisitor();
 
          var node = mock(UCELParser.GraphContext.class);
@@ -3751,12 +3849,19 @@ public class CodeGenTests {
     }
 
     private Template generateDefaultExponentialTemplate() {
-        return new ManualTemplate("1:2");
+        return new ManualTemplate("1 : 2");
     }
 
     private Template generateDefaultInvariantTemplate() {
         return new ManualTemplate("a == 5;");
     }
 
+    private Template generateDefaultSelectTemplateMultiple() {
+        return new ManualTemplate("c : int, d : int");
+    }
+
+    private Template generateDefaultSelectTemplateSingle() {
+        return new ManualTemplate("b : int");
+    }
     //endregion
 }
