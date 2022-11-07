@@ -53,6 +53,109 @@ public class TypeCheckerTests  {
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
     //endregion
 
+
+    //region Top level
+
+    @Test
+    void projectReturnsVoidWhenNoErrors() {
+        var visitor = new TypeCheckerVisitor();
+        var pDeclNode = mockForVisitorResult(UCELParser.PdeclarationContext.class, VOID_TYPE, visitor);
+        var pTempNode =  new ArrayList<UCELParser.PtemplateContext>();
+        pTempNode.add(mockForVisitorResult(UCELParser.PtemplateContext.class, VOID_TYPE, visitor));
+        var pSystNode = mockForVisitorResult(UCELParser.PsystemContext.class, VOID_TYPE, visitor);
+        var node = mock(UCELParser.ProjectContext.class);
+        when(node.pdeclaration()).thenReturn(pDeclNode);
+        when(node.ptemplate()).thenReturn(pTempNode);
+        when(node.psystem()).thenReturn(pSystNode);
+
+        var expected = VOID_TYPE;
+        var actual = visitor.visitProject(node);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void projectErrorWhenChildNodeError() {
+        var visitor = new TypeCheckerVisitor();
+        var pDeclNode = mockForVisitorResult(UCELParser.PdeclarationContext.class, ERROR_TYPE, visitor);
+        var pTempNode =  new ArrayList<UCELParser.PtemplateContext>();
+        pTempNode.add(mockForVisitorResult(UCELParser.PtemplateContext.class, VOID_TYPE, visitor));
+        var pSystNode = mockForVisitorResult(UCELParser.PsystemContext.class, VOID_TYPE, visitor);
+        var node = mock(UCELParser.ProjectContext.class);
+        when(node.pdeclaration()).thenReturn(pDeclNode);
+        when(node.ptemplate()).thenReturn(pTempNode);
+        when(node.psystem()).thenReturn(pSystNode);
+
+        var expected = ERROR_TYPE;
+        var actual = visitor.visitProject(node);
+        assertEquals(expected, actual);
+    }
+
+    @Test void ptemplateWhenChildIsSuccess() {
+        var visitor = new TypeCheckerVisitor();
+        var node = mock(UCELParser.PtemplateContext.class);
+        var parameters = mockForVisitorResult(UCELParser.ParametersContext.class, VOID_TYPE, visitor);
+        var graph = mockForVisitorResult(UCELParser.GraphContext.class, VOID_TYPE, visitor);
+        var declarations = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.graph()).thenReturn(graph);
+        when(node.declarations()).thenReturn(declarations);
+
+
+        var expected = VOID_TYPE;
+        var actual = visitor.visitPtemplate(node);
+        assertEquals(expected, actual);
+    }
+
+    @Test void ptemplateWhenChildIsError() {
+        var visitor = new TypeCheckerVisitor();
+        var node = mock(UCELParser.PtemplateContext.class);
+        var parameters = mockForVisitorResult(UCELParser.ParametersContext.class, VOID_TYPE, visitor);
+        var graph = mockForVisitorResult(UCELParser.GraphContext.class, VOID_TYPE, visitor);
+        var declarations = mockForVisitorResult(UCELParser.DeclarationsContext.class, ERROR_TYPE, visitor);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.graph()).thenReturn(graph);
+        when(node.declarations()).thenReturn(declarations);
+
+        var expected = ERROR_TYPE;
+        var actual = visitor.visitPtemplate(node);
+        assertEquals(expected, actual);
+    }
+
+
+
+    @Test
+    void pdeclarationsEvaluateSuccesfully() {
+        var visitor = new TypeCheckerVisitor();
+        var declsNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
+        var node = mock(UCELParser.PdeclarationContext.class);
+        when(node.declarations()).thenReturn(declsNode);
+
+        var expected = VOID_TYPE;
+        var actual = visitor.visitPdeclaration(node);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void pdeclarationsEvaluateFailure() {
+        var visitor = new TypeCheckerVisitor();
+        var declsNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, ERROR_TYPE, visitor);
+        var node = mock(UCELParser.PdeclarationContext.class);
+        when(node.declarations()).thenReturn(declsNode);
+
+        var expected = ERROR_TYPE;
+        var actual = visitor.visitPdeclaration(node);
+        assertEquals(expected, actual);
+    }
+
+
+
+    //endregion
+
+
+
+
+
+
     //region Parameter
     @Test
     void typeForParameterSetCorrectlyInScope() {
