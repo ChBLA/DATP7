@@ -277,7 +277,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     //region Guard
     @Override
     public Template visitGuard(UCELParser.GuardContext ctx) {
-        return visit(ctx.expression());
+        return visit(ctx.expression()) == null ? new ManualTemplate("") : visit(ctx.expression());
     }
     //endregion
 
