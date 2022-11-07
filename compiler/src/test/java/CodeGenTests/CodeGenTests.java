@@ -235,6 +235,55 @@ public class CodeGenTests {
 
     //endregion
 
+    //region Project Template
+    @Test
+    void projectTemplateGeneratedCorrectly() {
+        var declTemplate = generateDefaultDeclarationTemplate("a", "1");
+        var paramTemplate = generateDefaultParametersTemplate("int", "b");
+        var graphTemplate = generateDefaultGraphTemplate();
+
+        String name = "P";
+        var declInfo = mock(DeclarationInfo.class);
+        var declRef = mock(DeclarationReference.class);
+
+        var scopeMock = mock(Scope.class);
+        var childScope = mock(Scope.class);
+
+        try {
+            when(scopeMock.get(declRef)).thenReturn(declInfo);
+            when(declInfo.generateName()).thenReturn(name);
+        } catch (Exception e) {
+            fail();
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
+        var paramNode = mockForVisitorResult(UCELParser.ParametersContext.class, paramTemplate, visitor);
+        var graphNode = mockForVisitorResult(UCELParser.GraphContext.class, graphTemplate, visitor);
+
+        var node = mock(UCELParser.PtemplateContext.class);
+        node.scope = childScope;
+        node.reference = declRef;
+
+        when(node.declarations()).thenReturn(declNode);
+        when(node.parameters()).thenReturn(paramNode);
+        when(node.graph()).thenReturn(graphNode);
+
+        var actual = visitor.visitPtemplate(node);
+
+        assertInstanceOf(PTemplateTemplate.class, actual);
+        var actualCasted = (PTemplateTemplate) actual;
+
+        assertEquals(name, actualCasted.name);
+        assertEquals(declTemplate, actualCasted.declarations);
+        assertEquals(paramTemplate, actualCasted.parameters);
+        assertEquals(graphTemplate, actualCasted.graph);
+    }
+
+
+    //endregion
+
     //endregion
 
     //region Start
@@ -3578,6 +3627,10 @@ public class CodeGenTests {
 
     private PTemplateTemplate generateDefaultPTemplateTemplate() {
         return new PTemplateTemplate();
+    }
+
+    private GraphTemplate generateDefaultGraphTemplate() {
+        return new GraphTemplate(new ArrayList<>(), new ArrayList<>());
     }
 
     //endregion
