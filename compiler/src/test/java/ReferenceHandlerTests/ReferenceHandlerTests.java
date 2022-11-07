@@ -18,6 +18,7 @@ import java.sql.Ref;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 
@@ -685,7 +686,180 @@ public class ReferenceHandlerTests {
 
     //endregion
 
-    
+    //region Select
+
+    @Test
+    void selectHasReferences() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        String s0 = "a", s1 = "b", s2 = "c";
+
+        UCELParser.SelectContext node = mock(UCELParser.SelectContext.class);
+        ArrayList<TerminalNode> ids = new ArrayList<>();
+        ArrayList<UCELParser.TypeContext> types = new ArrayList<>();
+
+        TerminalNode id0 = mock(TerminalNode.class);
+        TerminalNode id1 = mock(TerminalNode.class);
+        TerminalNode id2 = mock(TerminalNode.class);
+
+        ids.add(id0);
+        ids.add(id1);
+        ids.add(id2);
+
+        UCELParser.TypeContext type0 = mock(UCELParser.TypeContext.class);
+        UCELParser.TypeContext type1 = mock(UCELParser.TypeContext.class);
+        UCELParser.TypeContext type2 = mock(UCELParser.TypeContext.class);
+
+        types.add(type0);
+        types.add(type1);
+        types.add(type2);
+
+        when(node.ID()).thenReturn(ids);
+        when(node.type()).thenReturn(types);
+        when(id0.getText()).thenReturn(s0);
+        when(id1.getText()).thenReturn(s1);
+        when(id2.getText()).thenReturn(s2);
+
+        when(type0.accept(visitor)).thenReturn(true);
+        when(type1.accept(visitor)).thenReturn(true);
+        when(type2.accept(visitor)).thenReturn(true);
+
+        DeclarationReference declRef0 = new DeclarationReference(0, 0);
+        DeclarationReference declRef1 = new DeclarationReference(0, 1);
+        DeclarationReference declRef2 = new DeclarationReference(0, 2);
+
+        try {
+            when(scope.isUnique(s0, true)).thenReturn(true);
+            when(scope.isUnique(s1, true)).thenReturn(true);
+            when(scope.isUnique(s2, true)).thenReturn(true);
+            when(scope.add(eq(new DeclarationInfo(s0)))).thenReturn(declRef0);
+            when(scope.add(eq(new DeclarationInfo(s1)))).thenReturn(declRef1);
+            when(scope.add(eq(new DeclarationInfo(s2)))).thenReturn(declRef2);
+        } catch (Exception e) {fail();}
+
+        boolean actual = visitor.visitSelect(node);
+
+        assertTrue(actual);
+        assertTrue(node.references.size() == 3);
+    }
+
+    @Test
+    void selectHasCorrectReference() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        String s0 = "a", s1 = "b", s2 = "c";
+
+        UCELParser.SelectContext node = mock(UCELParser.SelectContext.class);
+        ArrayList<TerminalNode> ids = new ArrayList<>();
+        ArrayList<UCELParser.TypeContext> types = new ArrayList<>();
+
+        TerminalNode id0 = mock(TerminalNode.class);
+        TerminalNode id1 = mock(TerminalNode.class);
+        TerminalNode id2 = mock(TerminalNode.class);
+
+        ids.add(id0);
+        ids.add(id1);
+        ids.add(id2);
+
+        UCELParser.TypeContext type0 = mock(UCELParser.TypeContext.class);
+        UCELParser.TypeContext type1 = mock(UCELParser.TypeContext.class);
+        UCELParser.TypeContext type2 = mock(UCELParser.TypeContext.class);
+
+        types.add(type0);
+        types.add(type1);
+        types.add(type2);
+
+        when(node.ID()).thenReturn(ids);
+        when(node.type()).thenReturn(types);
+        when(id0.getText()).thenReturn(s0);
+        when(id1.getText()).thenReturn(s1);
+        when(id2.getText()).thenReturn(s2);
+
+        when(type0.accept(visitor)).thenReturn(true);
+        when(type1.accept(visitor)).thenReturn(true);
+        when(type2.accept(visitor)).thenReturn(true);
+
+        DeclarationReference declRef0 = new DeclarationReference(0, 0);
+        DeclarationReference declRef1 = new DeclarationReference(0, 1);
+        DeclarationReference declRef2 = new DeclarationReference(0, 2);
+
+        try {
+            when(scope.isUnique(s0, true)).thenReturn(true);
+            when(scope.isUnique(s1, true)).thenReturn(true);
+            when(scope.isUnique(s2, true)).thenReturn(true);
+            when(scope.add(eq(new DeclarationInfo(s0)))).thenReturn(declRef0);
+            when(scope.add(eq(new DeclarationInfo(s1)))).thenReturn(declRef1);
+            when(scope.add(eq(new DeclarationInfo(s2)))).thenReturn(declRef2);
+        } catch (Exception e) {fail();}
+
+        boolean actual = visitor.visitSelect(node);
+
+        assertTrue(actual);
+        assertEquals(declRef1, node.references.get(1));
+    }
+
+    @Test
+    void selectVisitsTypes() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        String s0 = "a", s1 = "b", s2 = "c";
+
+        UCELParser.SelectContext node = mock(UCELParser.SelectContext.class);
+        ArrayList<TerminalNode> ids = new ArrayList<>();
+        ArrayList<UCELParser.TypeContext> types = new ArrayList<>();
+
+        TerminalNode id0 = mock(TerminalNode.class);
+        TerminalNode id1 = mock(TerminalNode.class);
+        TerminalNode id2 = mock(TerminalNode.class);
+
+        ids.add(id0);
+        ids.add(id1);
+        ids.add(id2);
+
+        UCELParser.TypeContext type0 = mock(UCELParser.TypeContext.class);
+        UCELParser.TypeContext type1 = mock(UCELParser.TypeContext.class);
+        UCELParser.TypeContext type2 = mock(UCELParser.TypeContext.class);
+
+        types.add(type0);
+        types.add(type1);
+        types.add(type2);
+
+        when(node.ID()).thenReturn(ids);
+        when(node.type()).thenReturn(types);
+        when(id0.getText()).thenReturn(s0);
+        when(id1.getText()).thenReturn(s1);
+        when(id2.getText()).thenReturn(s2);
+
+        when(type0.accept(visitor)).thenReturn(true);
+        when(type1.accept(visitor)).thenReturn(true);
+        when(type2.accept(visitor)).thenReturn(true);
+
+        DeclarationReference declRef0 = new DeclarationReference(0, 0);
+        DeclarationReference declRef1 = new DeclarationReference(0, 1);
+        DeclarationReference declRef2 = new DeclarationReference(0, 2);
+
+        try {
+            when(scope.isUnique(s0, true)).thenReturn(true);
+            when(scope.isUnique(s1, true)).thenReturn(true);
+            when(scope.isUnique(s2, true)).thenReturn(true);
+            when(scope.add(eq(new DeclarationInfo(s0)))).thenReturn(declRef0);
+            when(scope.add(eq(new DeclarationInfo(s1)))).thenReturn(declRef1);
+            when(scope.add(eq(new DeclarationInfo(s2)))).thenReturn(declRef2);
+        } catch (Exception e) {fail();}
+
+        boolean actual = visitor.visitSelect(node);
+
+        assertTrue(actual);
+        verify(type0, times(1)).accept(visitor);
+        verify(type1, times(1)).accept(visitor);
+        verify(type2, times(1)).accept(visitor);
+
+    }
+
+    //endregion
 
     //region start
     @Test

@@ -3,7 +3,9 @@ package org.UcelParser.ReferenceHandler;
 import org.UcelParser.UCELParser_Generated.*;
 import org.UcelParser.Util.*;
 import org.UcelParser.Util.Logging.*;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
 
@@ -100,6 +102,39 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         ctx.scope = currentScope;
         boolean b = visit(ctx.select()) && visit(ctx.guard()) && visit(ctx.sync()) && visit(ctx.update());
         exitScope();
+        return b;
+    }
+
+    @Override
+    public Boolean visitSelect(UCELParser.SelectContext ctx) {
+        List<TerminalNode> ids = ctx.ID();
+        List<UCELParser.TypeContext> types = ctx.type();
+
+        if(ids.size() != types.size()) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: non equal amounts of identifiers and types"));
+            return false;
+        }
+
+        boolean b = true;
+        ArrayList<DeclarationReference> declRefs = new ArrayList<>();
+        for(int i = 0; i < ids.size(); i++) {
+            b = visit(types.get(i)) && b;
+            String id = ids.get(i).getText();
+
+            try {
+                if(!currentScope.isUnique(id, true)) {
+                    logger.log(new ErrorLog(ctx, "Variable '" + id + "' is not unique"));
+                    b = false;
+                }
+
+                declRefs.add(currentScope.add(new DeclarationInfo(id)));
+            } catch (Exception e) {
+                logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+                return false;
+            }
+
+        }
+        ctx.references = declRefs;
         return b;
     }
 

@@ -1,8 +1,8 @@
 package CodeGenTests;
 
-import org.Ucel.Location;
-import org.Ucel.Project;
+import org.UcelParser.CodeGeneration.CodeGenVisitor;
 import org.UcelParser.CodeGeneration.templates.*;
+import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.*;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.RuleContext;
@@ -16,22 +16,119 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.lang.reflect.Field;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import org.UcelParser.CodeGeneration.CodeGenVisitor;
-import org.UcelParser.UCELParser_Generated.UCELParser;
-import org.stringtemplate.v4.ST;
-
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 
 public class CodeGenTests {
+
+    //region Edge
+    @Test
+    void EdgeCorrect() {
+        var visitor = new CodeGenVisitor();
+
+        var select = new ManualTemplate("select");
+        var guard = new ManualTemplate("guard");
+        var sync = new ManualTemplate("sync");
+        var update = new ManualTemplate("update");
+
+        var selectMock = mockForVisitorResult(UCELParser.SelectContext.class, select, visitor);
+        var guardMock = mockForVisitorResult(UCELParser.GuardContext.class, guard, visitor);
+        var syncMock = mockForVisitorResult(UCELParser.SyncContext.class, sync, visitor);
+        var updateMock = mockForVisitorResult(UCELParser.UpdateContext.class, update, visitor);
+
+        var edgeMock = mock(UCELParser.EdgeContext.class);
+        when(edgeMock.select()).thenReturn(selectMock);
+        when(edgeMock.guard()).thenReturn(guardMock);
+        when(edgeMock.sync()).thenReturn(syncMock);
+        when(edgeMock.update()).thenReturn(updateMock);
+
+        var actual = visitor.visitEdge(edgeMock);
+        assertInstanceOf(EdgeTemplate.class, actual);
+        var actualCasted = (EdgeTemplate) actual;
+        assertEquals(actualCasted.select, select);
+        assertEquals(actualCasted.guard, guard);
+        assertEquals(actualCasted.sync, sync);
+        assertEquals(actualCasted.update, update);
+        assertEquals(actualCasted.edge, edgeMock);
+    }
+    //endregion
+
+    //region invariant
+    @Test
+    void InvariantCorrect() {
+        var visitor = new CodeGenVisitor();
+
+        var exprTemp = generateDefaultInvariantTemplate();
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemp, visitor);
+
+        var node = mock(UCELParser.InvariantContext.class);
+        when(node.expression()).thenReturn(exprMock);
+
+        var actual = visitor.visitInvariant(node);
+        assertEquals(exprTemp.toString(), actual.toString());
+    }
+    //endregion
+
+    //region exponential
+    @Test
+    void ExponentialCorrect() {
+        var visitor = new CodeGenVisitor();
+
+        var expected = "1 : 2";
+
+        var expr1Temp = new ManualTemplate("1");
+        var expr1Mock = mockForVisitorResult(UCELParser.ExpressionContext.class, expr1Temp, visitor);
+
+        var expr2Temp = new ManualTemplate("2");
+        var expr2Mock = mockForVisitorResult(UCELParser.ExpressionContext.class, expr2Temp, visitor);
+
+
+        List<UCELParser.ExpressionContext> exprs = new ArrayList<>();
+        exprs.add(expr1Mock);
+        exprs.add(expr2Mock);
+
+        var node = mock(UCELParser.ExponentialContext.class);
+        when(node.expression()).thenReturn(exprs);
+        when(node.expression(0)).thenReturn(expr1Mock);
+        when(node.expression(1)).thenReturn(expr2Mock);
+
+        var actual = visitor.visitExponential(node).toString();
+        assertEquals(expected, actual);
+    }
+    //endregion
+
+    //region Location
+    @Test
+    void LocationGetsCorrectNodes() {
+        var visitor = new CodeGenVisitor();
+
+        var invariantTemplate = generateDefaultInvariantTemplate();
+        var exponentialTemplate = generateDefaultExponentialTemplate();
+
+        var invariantMock = mockForVisitorResult(UCELParser.InvariantContext.class, invariantTemplate, visitor);
+        var exponentialMock = mockForVisitorResult(UCELParser.ExponentialContext.class, exponentialTemplate, visitor);
+
+        var node = mock(UCELParser.LocationContext.class);
+        when(node.invariant()).thenReturn(invariantMock);
+        when(node.exponential()).thenReturn(exponentialMock);
+
+        var actual = visitor.visitLocation(node);
+        assertInstanceOf(LocationTemplate.class, actual);
+
+        var actualCasted = (LocationTemplate) actual;
+        assertEquals(actualCasted.exponential.toString(), exponentialTemplate.toString());
+        assertEquals(actualCasted.invariant.toString(), invariantTemplate.toString());
+        assertEquals(actualCasted.location, node);
+    }
+
+    //endregion
 
     //region Graph
     @Test
@@ -235,6 +332,55 @@ public class CodeGenTests {
 
     //endregion
 
+    //region Project Template
+    @Test
+    void projectTemplateGeneratedCorrectly() {
+        var declTemplate = generateDefaultDeclarationTemplate("a", "1");
+        var paramTemplate = generateDefaultParametersTemplate("int", "b");
+        var graphTemplate = generateDefaultGraphTemplate();
+
+        String name = "P";
+        var declInfo = mock(DeclarationInfo.class);
+        var declRef = mock(DeclarationReference.class);
+
+        var scopeMock = mock(Scope.class);
+        var childScope = mock(Scope.class);
+
+        try {
+            when(scopeMock.get(declRef)).thenReturn(declInfo);
+            when(declInfo.generateName()).thenReturn(name);
+        } catch (Exception e) {
+            fail();
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
+        var paramNode = mockForVisitorResult(UCELParser.ParametersContext.class, paramTemplate, visitor);
+        var graphNode = mockForVisitorResult(UCELParser.GraphContext.class, graphTemplate, visitor);
+
+        var node = mock(UCELParser.PtemplateContext.class);
+        node.scope = childScope;
+        node.reference = declRef;
+
+        when(node.declarations()).thenReturn(declNode);
+        when(node.parameters()).thenReturn(paramNode);
+        when(node.graph()).thenReturn(graphNode);
+
+        var actual = visitor.visitPtemplate(node);
+
+        assertInstanceOf(PTemplateTemplate.class, actual);
+        var actualCasted = (PTemplateTemplate) actual;
+
+        assertEquals(name, actualCasted.name);
+        assertEquals(declTemplate, actualCasted.declarations);
+        assertEquals(paramTemplate, actualCasted.parameters);
+        assertEquals(graphTemplate, actualCasted.graph);
+    }
+
+
+    //endregion
+
     //endregion
 
     //region Start
@@ -362,6 +508,26 @@ public class CodeGenTests {
     }
 
 
+    //endregion
+
+    //region Guard
+    @ParameterizedTest
+    @ValueSource(strings = {"==", "!=", "<", ">", "<=", ">="})
+    void guardExpressionGeneratedCorrectly(String expectedOperator) {
+        var exprTemplate = generateDefaultExprTemplate(String.format("x %s 0", expectedOperator));
+        var expected = String.format("%s", exprTemplate);
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.GuardContext.class);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+
+        when(node.expression()).thenReturn(exprNode);
+
+        var actual = visitor.visitGuard(node).toString();
+
+        assertEquals(expected, actual);
+    }
     //endregion
 
     //region Function
@@ -3578,6 +3744,18 @@ public class CodeGenTests {
 
     private PTemplateTemplate generateDefaultPTemplateTemplate() {
         return new PTemplateTemplate();
+    }
+
+    private GraphTemplate generateDefaultGraphTemplate() {
+        return new GraphTemplate(new ArrayList<>(), new ArrayList<>());
+    }
+
+    private Template generateDefaultExponentialTemplate() {
+        return new ManualTemplate("1:2");
+    }
+
+    private Template generateDefaultInvariantTemplate() {
+        return new ManualTemplate("a == 5;");
     }
 
     //endregion
