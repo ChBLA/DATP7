@@ -1,5 +1,6 @@
 package CodeGenTests;
 
+import org.Ucel.Location;
 import org.Ucel.Project;
 import org.UcelParser.CodeGeneration.templates.*;
 import org.UcelParser.Util.*;
@@ -31,6 +32,40 @@ import static org.mockito.Mockito.*;
 
 
 public class CodeGenTests {
+
+    //region Graph
+    @Test
+    void GraphGetsCorrectLocationAndEdge() {
+         var visitor = new CodeGenVisitor();
+
+         var node = mock(UCELParser.GraphContext.class);
+
+         var edgeTemplate = new ManualTemplate("edge");
+         var locationTemplate = new ManualTemplate("location");
+
+         var edgeNodeMock = mockForVisitorResult(UCELParser.EdgeContext.class, edgeTemplate, visitor);
+         var locationNodeMock = mockForVisitorResult(UCELParser.LocationContext.class, locationTemplate, visitor);
+
+         List<UCELParser.EdgeContext> edgesList = new ArrayList<>();
+         edgesList.add(edgeNodeMock);
+         List<UCELParser.LocationContext> locationsList = new ArrayList<>();
+         locationsList.add(locationNodeMock);
+
+         when(node.edge()).thenReturn(edgesList);
+         when(node.location()).thenReturn(locationsList);
+
+         var actual = visitor.visitGraph(node);
+
+         assertInstanceOf(GraphTemplate.class, actual);
+         var actualCasted = (GraphTemplate) actual;
+         assertEquals(1, actualCasted.edges.size());
+         assertEquals(1, actualCasted.nodes.size());
+         assertEquals(edgeTemplate, actualCasted.edges.get(0));
+         assertEquals(locationTemplate, actualCasted.nodes.get(0));
+         assertEquals("location", actualCasted.nodes.get(0).template.render());
+         assertEquals("edge", actualCasted.edges.get(0).template.render());
+    }
+    //endregion
 
     //region Project structure
 

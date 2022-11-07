@@ -33,6 +33,21 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.logger = logger;
     }
 
+    // Graph
+
+    @Override
+    public Template visitGraph(UCELParser.GraphContext ctx) {
+        List<Template> nodes = ctx.location().stream()
+                .map(this::visit)
+                .collect(Collectors.toList());
+
+        List<Template> edges = ctx.edge().stream()
+                .map(this::visit)
+                .collect(Collectors.toList());
+
+        return new GraphTemplate(nodes, edges);
+    }
+    //endregion
 
     //region Project Structure
     //region Project
