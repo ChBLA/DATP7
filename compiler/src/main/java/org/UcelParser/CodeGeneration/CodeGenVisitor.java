@@ -33,6 +33,21 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.logger = logger;
     }
 
+    // Exponential
+    public Template visitExponential(UCELParser.ExponentialContext ctx) {
+        var expr1 = visit(ctx.expression(0));
+        var expr2 = visit(ctx.expression(1));
+        return new ExponentialTemplate(expr1, expr2);
+    }
+    //endregion
+
+    //Invariant
+    public Template visitInvariant(UCELParser.InvariantContext ctx) {
+        var expr = visit(ctx.expression());
+        return new InvariantTemplate(expr);
+    }
+    //endregion
+
     // Location
     @Override
     public Template visitLocation(UCELParser.LocationContext ctx) {

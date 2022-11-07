@@ -28,6 +28,50 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region invariant
+    @Test
+    void InvariantCorrect() {
+        var visitor = new CodeGenVisitor();
+
+        var exprTemp = generateDefaultInvariantTemplate();
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemp, visitor);
+
+        var node = mock(UCELParser.InvariantContext.class);
+        when(node.expression()).thenReturn(exprMock);
+
+        var actual = visitor.visitInvariant(node);
+        assertEquals(exprTemp.toString(), actual.toString());
+    }
+    //endregion
+
+    //region exponential
+    @Test
+    void ExponentialCorrect() {
+        var visitor = new CodeGenVisitor();
+
+        var expected = "1 : 2";
+
+        var expr1Temp = new ManualTemplate("1");
+        var expr1Mock = mockForVisitorResult(UCELParser.ExpressionContext.class, expr1Temp, visitor);
+
+        var expr2Temp = new ManualTemplate("2");
+        var expr2Mock = mockForVisitorResult(UCELParser.ExpressionContext.class, expr2Temp, visitor);
+
+
+        List<UCELParser.ExpressionContext> exprs = new ArrayList<>();
+        exprs.add(expr1Mock);
+        exprs.add(expr2Mock);
+
+        var node = mock(UCELParser.ExponentialContext.class);
+        when(node.expression()).thenReturn(exprs);
+        when(node.expression(0)).thenReturn(expr1Mock);
+        when(node.expression(1)).thenReturn(expr2Mock);
+
+        var actual = visitor.visitExponential(node).toString();
+        assertEquals(expected, actual);
+    }
+    //endregion
+
     //region Location
     @Test
     void LocationGetsCorrectNodes() {
