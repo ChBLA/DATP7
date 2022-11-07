@@ -28,6 +28,38 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region Edge
+    @Test
+    void EdgeCorrect() {
+        var visitor = new CodeGenVisitor();
+
+        var select = new ManualTemplate("select");
+        var guard = new ManualTemplate("guard");
+        var sync = new ManualTemplate("sync");
+        var update = new ManualTemplate("update");
+
+        var selectMock = mockForVisitorResult(UCELParser.SelectContext.class, select, visitor);
+        var guardMock = mockForVisitorResult(UCELParser.GuardContext.class, guard, visitor);
+        var syncMock = mockForVisitorResult(UCELParser.SyncContext.class, sync, visitor);
+        var updateMock = mockForVisitorResult(UCELParser.UpdateContext.class, update, visitor);
+
+        var edgeMock = mock(UCELParser.EdgeContext.class);
+        when(edgeMock.select()).thenReturn(selectMock);
+        when(edgeMock.guard()).thenReturn(guardMock);
+        when(edgeMock.sync()).thenReturn(syncMock);
+        when(edgeMock.update()).thenReturn(updateMock);
+
+        var actual = visitor.visitEdge(edgeMock);
+        assertInstanceOf(EdgeTemplate.class, actual);
+        var actualCasted = (EdgeTemplate) actual;
+        assertEquals(actualCasted.select, select);
+        assertEquals(actualCasted.guard, guard);
+        assertEquals(actualCasted.sync, sync);
+        assertEquals(actualCasted.update, update);
+        assertEquals(actualCasted.edge, edgeMock);
+    }
+    //endregion
+
     //region invariant
     @Test
     void InvariantCorrect() {

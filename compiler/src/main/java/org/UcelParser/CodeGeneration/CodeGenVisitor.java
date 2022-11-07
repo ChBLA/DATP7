@@ -34,7 +34,15 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
     // Edge
+    @Override
+    public Template visitEdge(UCELParser.EdgeContext ctx) {
+        Template select = visit(ctx.select());
+        Template guard = visit(ctx.guard());
+        Template sync = visit(ctx.sync());
+        Template update = visit(ctx.update());
 
+        return new EdgeTemplate(select, guard, sync, update, ctx);
+    }
     //endregion
 
     // Exponential
