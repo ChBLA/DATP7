@@ -1247,7 +1247,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public Type visitUpdate(UCELParser.UpdateContext ctx) {
 
         boolean hadError = false;
-        for(var expr: ctx.children) {
+        for(var expr: ctx.expression()) {
             if(visit(expr).equals(ERROR_TYPE))
                 hadError = true;
         }

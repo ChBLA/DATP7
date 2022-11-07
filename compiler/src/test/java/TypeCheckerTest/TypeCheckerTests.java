@@ -3960,15 +3960,15 @@ public class TypeCheckerTests  {
         var visitor = new TypeCheckerVisitor();
 
         var node = mock(UCELParser.UpdateContext.class);
-        var expr1 = mockForVisitorResult(UCELParser.SelectContext.class, VOID_TYPE, visitor);
-        var expr2 = mockForVisitorResult(UCELParser.GuardContext.class, BOOL_TYPE, visitor);
-        var expr3 = mockForVisitorResult(UCELParser.SyncContext.class, VOID_TYPE, visitor);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, VOID_TYPE, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var expr3 = mockForVisitorResult(UCELParser.ExpressionContext.class, VOID_TYPE, visitor);
 
-        node.children = new ArrayList<>() {{
+        when(node.expression()).thenReturn(new ArrayList<>() {{
             add(expr1);
             add(expr2);
             add(expr3);
-        }};
+        }});
 
         var actual = visitor.visitUpdate(node);
 
@@ -3983,7 +3983,7 @@ public class TypeCheckerTests  {
 
         var node = mock(UCELParser.UpdateContext.class);
 
-        node.children = new ArrayList<>();
+        when(node.expression()).thenReturn(new ArrayList<>());
 
         var actual = visitor.visitUpdate(node);
 
@@ -3997,15 +3997,15 @@ public class TypeCheckerTests  {
         var visitor = new TypeCheckerVisitor();
 
         var node = mock(UCELParser.UpdateContext.class);
-        var expr1 = mockForVisitorResult(UCELParser.SelectContext.class, VOID_TYPE, visitor);
-        var expr2 = mockForVisitorResult(UCELParser.GuardContext.class, BOOL_TYPE, visitor);
-        var expr3 = mockForVisitorResult(UCELParser.SyncContext.class, ERROR_TYPE, visitor);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, VOID_TYPE, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var expr3 = mockForVisitorResult(UCELParser.ExpressionContext.class, ERROR_TYPE, visitor);
 
-        node.children = new ArrayList<>() {{
+        when(node.expression()).thenReturn(new ArrayList<>() {{
             add(expr1);
             add(expr2);
             add(expr3);
-        }};
+        }});
 
         var actual = visitor.visitUpdate(node);
 
