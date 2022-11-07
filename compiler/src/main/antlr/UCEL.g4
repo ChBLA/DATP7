@@ -29,9 +29,10 @@ invariant : expression?;
 
 edge locals [Scope scope, Integer locationStartID, Integer locationEndID, String comments, String testCode]
     : select guard sync update;
-select : ID COLON type (COMMA ID COLON type)*;
-guard : expression;
-sync : expression (NEG | QUESTIONMARK);
+select locals [List<DeclarationReference> references]
+    : ID COLON type (COMMA ID COLON type)*;
+guard : expression?;
+sync : (expression (NEG | QUESTIONMARK))?;
 update : (expression (COMMA expression)*)?;
 
 start locals [Scope scope]

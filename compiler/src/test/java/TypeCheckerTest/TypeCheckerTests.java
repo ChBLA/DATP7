@@ -3731,22 +3731,286 @@ public class TypeCheckerTests  {
 
     //endregion
 
-    //region invariant
-    //endregion
-
     //region edge
+    @Test
+    void edgeValid() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.EdgeContext.class);
+        var select = mockForVisitorResult(UCELParser.SelectContext.class, VOID_TYPE, visitor);
+        var guard = mockForVisitorResult(UCELParser.GuardContext.class, BOOL_TYPE, visitor);
+        var sync = mockForVisitorResult(UCELParser.SyncContext.class, VOID_TYPE, visitor);
+        var update = mockForVisitorResult(UCELParser.UpdateContext.class, VOID_TYPE, visitor);
+
+        when(node.select()).thenReturn(select);
+        when(node.guard()).thenReturn(guard);
+        when(node.sync()).thenReturn(sync);
+        when(node.update()).thenReturn(update);
+
+        var actual = visitor.visitEdge(node);
+
+        verify(select, times(1)).accept(visitor);
+        verify(guard, times(1)).accept(visitor);
+        verify(sync, times(1)).accept(visitor);
+        verify(update, times(1)).accept(visitor);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void edgeInvalidSelect() {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.EdgeContext.class);
+        var select = mockForVisitorResult(UCELParser.SelectContext.class, ERROR_TYPE, visitor);
+        var guard = mockForVisitorResult(UCELParser.GuardContext.class, BOOL_TYPE, visitor);
+        var sync = mockForVisitorResult(UCELParser.SyncContext.class, VOID_TYPE, visitor);
+        var update = mockForVisitorResult(UCELParser.UpdateContext.class, VOID_TYPE, visitor);
+
+        when(node.select()).thenReturn(select);
+        when(node.guard()).thenReturn(guard);
+        when(node.sync()).thenReturn(sync);
+        when(node.update()).thenReturn(update);
+
+        var actual = visitor.visitEdge(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void edgeInvalidGuard() {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.EdgeContext.class);
+        var select = mockForVisitorResult(UCELParser.SelectContext.class, VOID_TYPE, visitor);
+        var guard = mockForVisitorResult(UCELParser.GuardContext.class, ERROR_TYPE, visitor);
+        var sync = mockForVisitorResult(UCELParser.SyncContext.class, VOID_TYPE, visitor);
+        var update = mockForVisitorResult(UCELParser.UpdateContext.class, VOID_TYPE, visitor);
+
+        when(node.select()).thenReturn(select);
+        when(node.guard()).thenReturn(guard);
+        when(node.sync()).thenReturn(sync);
+        when(node.update()).thenReturn(update);
+
+        var actual = visitor.visitEdge(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void edgeInvalidSync() {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.EdgeContext.class);
+        var select = mockForVisitorResult(UCELParser.SelectContext.class, VOID_TYPE, visitor);
+        var guard = mockForVisitorResult(UCELParser.GuardContext.class, BOOL_TYPE, visitor);
+        var sync = mockForVisitorResult(UCELParser.SyncContext.class, ERROR_TYPE, visitor);
+        var update = mockForVisitorResult(UCELParser.UpdateContext.class, VOID_TYPE, visitor);
+
+        when(node.select()).thenReturn(select);
+        when(node.guard()).thenReturn(guard);
+        when(node.sync()).thenReturn(sync);
+        when(node.update()).thenReturn(update);
+
+        var actual = visitor.visitEdge(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void edgeInvalidUpdate() {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.EdgeContext.class);
+        var select = mockForVisitorResult(UCELParser.SelectContext.class, VOID_TYPE, visitor);
+        var guard = mockForVisitorResult(UCELParser.GuardContext.class, BOOL_TYPE, visitor);
+        var sync = mockForVisitorResult(UCELParser.SyncContext.class, VOID_TYPE, visitor);
+        var update = mockForVisitorResult(UCELParser.UpdateContext.class, ERROR_TYPE, visitor);
+
+        when(node.select()).thenReturn(select);
+        when(node.guard()).thenReturn(guard);
+        when(node.sync()).thenReturn(sync);
+        when(node.update()).thenReturn(update);
+
+        var actual = visitor.visitEdge(node);
+
+        assertEquals(expected, actual);
+    }
+
     //endregion
 
     //region select
     //endregion
 
     //region guard
+    @Test
+    void guardValid() {
+        var expected = BOOL_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.GuardContext.class);
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitGuard(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void guardEmpty() {
+        var expected = BOOL_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.GuardContext.class);
+
+        when(node.expression()).thenReturn(null);
+
+        var actual = visitor.visitGuard(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("notBoolTypes")
+    void guardInvalid(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.GuardContext.class);
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitGuard(node);
+
+        assertEquals(expected, actual);
+    }
     //endregion
 
     //region sync
+    @Test
+    void syncValid() {
+        var expected = CHAN_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.SyncContext.class);
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, CHAN_TYPE, visitor);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitSync(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void syncEmpty() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.SyncContext.class);
+
+        when(node.expression()).thenReturn(null);
+
+        var actual = visitor.visitSync(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("notChanTypes")
+    void syncInvalid(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.SyncContext.class);
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitSync(node);
+
+        assertEquals(expected, actual);
+    }
     //endregion
 
     //region update
+    @Test
+    void updateValid() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.UpdateContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.SelectContext.class, VOID_TYPE, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.GuardContext.class, BOOL_TYPE, visitor);
+        var expr3 = mockForVisitorResult(UCELParser.SyncContext.class, VOID_TYPE, visitor);
+
+        node.children = new ArrayList<>() {{
+            add(expr1);
+            add(expr2);
+            add(expr3);
+        }};
+
+        var actual = visitor.visitUpdate(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void updateValidEmpty() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.UpdateContext.class);
+
+        node.children = new ArrayList<>();
+
+        var actual = visitor.visitUpdate(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void updateInvalid() {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.UpdateContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.SelectContext.class, VOID_TYPE, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.GuardContext.class, BOOL_TYPE, visitor);
+        var expr3 = mockForVisitorResult(UCELParser.SyncContext.class, ERROR_TYPE, visitor);
+
+        node.children = new ArrayList<>() {{
+            add(expr1);
+            add(expr2);
+            add(expr3);
+        }};
+
+        var actual = visitor.visitUpdate(node);
+
+        assertEquals(expected, actual);
+    }
     //endregion
 
     //endregion
@@ -3767,6 +4031,17 @@ public class TypeCheckerTests  {
 
         for (var type : Type.TypeEnum.values()) {
             if (type != Type.TypeEnum.boolType)
+                args.add(Arguments.of(new Type(type)));
+        }
+
+        return args.stream();
+    }
+
+    private static Stream<Arguments> notChanTypes() {
+        var args = new ArrayList<Arguments>();
+
+        for (var type : Type.TypeEnum.values()) {
+            if (type != Type.TypeEnum.chanType)
                 args.add(Arguments.of(new Type(type)));
         }
 
