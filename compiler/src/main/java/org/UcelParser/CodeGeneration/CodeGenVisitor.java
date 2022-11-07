@@ -153,6 +153,28 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
     //endregion
 
+    //region Project template
+
+    @Override
+    public Template visitPtemplate(UCELParser.PtemplateContext ctx) {
+        String name;
+        try {
+            name = currentScope.get(ctx.reference).generateName();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        enterScope(ctx.scope);
+        var params = visit(ctx.parameters());
+        var decls = visit(ctx.declarations());
+        var graph = (GraphTemplate) visit(ctx.graph());
+
+        exitScope();
+        return new PTemplateTemplate(name, params, graph, decls);
+    }
+
+    //endregion
+
     //endregion
 
     //region Start
@@ -207,6 +229,13 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
 
+    //endregion
+
+    //region Guard
+    @Override
+    public Template visitGuard(UCELParser.GuardContext ctx) {
+        return visit(ctx.expression());
+    }
     //endregion
 
     //region Function
