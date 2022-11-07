@@ -414,6 +414,138 @@ public class ReferenceHandlerTests {
 
     //endregion
 
+    //region Location
+    @Test
+    void locationVisitInvariant() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.LocationContext node = mock(UCELParser.LocationContext.class);
+        UCELParser.InvariantContext invariant = mock(UCELParser.InvariantContext.class);
+        UCELParser.ExponentialContext exponential = mock(UCELParser.ExponentialContext.class);
+
+        when(node.getChildCount()).thenReturn(2);
+        when(node.getChild(0)).thenReturn(invariant);
+        when(node.getChild(1)).thenReturn(exponential);
+
+        when(invariant.accept(visitor)).thenReturn(true);
+        when(exponential.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitLocation(node);
+
+        assertTrue(actual);
+        verify(invariant, times(1)).accept(visitor);
+    }
+
+    @Test
+    void locationVisitExponential() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.LocationContext node = mock(UCELParser.LocationContext.class);
+        UCELParser.InvariantContext invariant = mock(UCELParser.InvariantContext.class);
+        UCELParser.ExponentialContext exponential = mock(UCELParser.ExponentialContext.class);
+
+        when(node.getChildCount()).thenReturn(2);
+        when(node.getChild(0)).thenReturn(invariant);
+        when(node.getChild(1)).thenReturn(exponential);
+
+        when(invariant.accept(visitor)).thenReturn(true);
+        when(exponential.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitLocation(node);
+
+        assertTrue(actual);
+        verify(exponential, times(1)).accept(visitor);
+    }
+
+    //endregion
+
+    //region Exponential
+    @Test
+    void exponentialVisitsExpressions() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.ExponentialContext node = mock(UCELParser.ExponentialContext.class);
+        UCELParser.ExpressionContext expressionLeft = mock(UCELParser.ExpressionContext.class);
+        UCELParser.ExpressionContext expressionRight = mock(UCELParser.ExpressionContext.class);
+
+        ArrayList<UCELParser.ExpressionContext> expressions = new ArrayList<>();
+        expressions.add(expressionLeft);
+        expressions.add(expressionRight);
+        when(node.expression()).thenReturn(expressions);
+
+        when(expressionLeft.accept(visitor)).thenReturn(true);
+        when(expressionRight.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitExponential(node);
+
+        assertTrue(actual);
+        verify(expressionLeft, times(1)).accept(visitor);
+    }
+
+    @Test
+    void exponentialVisitsExpressionRight() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.ExponentialContext node = mock(UCELParser.ExponentialContext.class);
+        UCELParser.ExpressionContext expressionLeft = mock(UCELParser.ExpressionContext.class);
+        UCELParser.ExpressionContext expressionRight = mock(UCELParser.ExpressionContext.class);
+
+        ArrayList<UCELParser.ExpressionContext> expressions = new ArrayList<>();
+        expressions.add(expressionLeft);
+        expressions.add(expressionRight);
+        when(node.expression()).thenReturn(expressions);
+
+        when(expressionLeft.accept(visitor)).thenReturn(true);
+        when(expressionRight.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitExponential(node);
+
+        assertTrue(actual);
+        verify(expressionRight, times(1)).accept(visitor);
+    }
+    //endregion
+
+    //region Invariant
+
+    @Test
+    void invariantVisitExpression() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.InvariantContext node = mock(UCELParser.InvariantContext.class);
+        UCELParser.ExpressionContext expression = mock(UCELParser.ExpressionContext.class);
+
+        when(node.getChildCount()).thenReturn(1);
+        when(node.getChild(0)).thenReturn(expression);
+
+        when(expression.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitInvariant(node);
+
+        assertTrue(actual);
+        verify(expression, times(1)).accept(visitor);
+    }
+
+    @Test
+    void invariantEmpty() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.InvariantContext node = mock(UCELParser.InvariantContext.class);
+
+        when(node.getChildCount()).thenReturn(0);
+
+        boolean actual = visitor.visitInvariant(node);
+
+        assertTrue(actual);
+    }
+
+    //endregion
+
     //region start
     @Test
     void startVisitsDeclarationsAndSystem() {

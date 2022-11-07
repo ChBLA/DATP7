@@ -23,6 +23,9 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     }
 
     @Override
+    protected Boolean defaultResult() { return true;}
+    
+    @Override
     protected Boolean aggregateResult(Boolean aggregate, Boolean nextResult) {
         return (nextResult == null || nextResult) && (aggregate == null || aggregate);
     }
@@ -78,6 +81,11 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         boolean b = visit(ctx.declarations());
         b = (ctx.build() == null || visit(ctx.build())) && b;
         return visit(ctx.system()) && b;
+    }
+
+    @Override
+    public Boolean visitExponential(UCELParser.ExponentialContext ctx) {
+        return visit(ctx.expression().get(0)) && visit(ctx.expression().get(1));
     }
 
     @Override
