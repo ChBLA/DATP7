@@ -147,7 +147,7 @@ public class Type {
                 s.append("_) -> _");
             }
         }
-        return "[]".repeat(arrayDimensions);
+        return s+"[]".repeat(arrayDimensions);
     }
 
 }

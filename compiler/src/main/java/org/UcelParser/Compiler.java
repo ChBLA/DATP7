@@ -36,11 +36,17 @@ public class Compiler {
 
     public IProject compileProject(IProject project) {
 
-        //ManualParser manualParser = new ManualParser();
-        //ParseTree root = manualParser.parseProject(project);
-        //referenceVisitor.visit(root);
-        //typeCheckerVisitor.visit(root);
-        //codeGenVisitor.visit(root);
+        ManualParser manualParser = new ManualParser();
+        ParserRuleContext tree = manualParser.parseProject(project);
+        logger.setSource("");//TODO inject sources
+        try {
+            var refTree = runVisitor(referenceVisitor, tree, logger);
+            var typeTree = runVisitor(typeCheckerVisitor, refTree, logger);
+            //var generatedCode = runVisitor(codeGenVisitor, typeTree, logger);
+            //System.out.println(generatedCode);
+        } catch (ErrorsFoundException ignored) {}
+
+        logger.printLogs();
 
         return generateDummyProject();
     }

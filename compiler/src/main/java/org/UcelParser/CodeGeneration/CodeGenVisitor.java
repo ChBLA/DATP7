@@ -10,8 +10,10 @@ import org.UcelParser.Util.Logging.Logger;
 import org.UcelParser.Util.Scope;
 import org.UcelParser.CodeGeneration.templates.ManualTemplate;
 import org.UcelParser.CodeGeneration.templates.Template;
+import org.UcelParser.Util.Type;
 
 import javax.swing.text.DefaultCaret;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +35,126 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.logger = logger;
     }
 
+    // Update
+
+    @Override
+    public Template visitUpdate(UCELParser.UpdateContext ctx) {
+        if (ctx.expression().isEmpty()) {
+            return new ManualTemplate("");
+        }
+
+        List<Template> expressions = ctx.expression().stream()
+                .map(this::visit).collect(Collectors.toList());
+
+        return new UpdateTemplate(expressions);
+    }
+
+
+    // Sync
+
+    @Override
+    public Template visitSync(UCELParser.SyncContext ctx) {
+        if (ctx.expression() == null) {
+            return new ManualTemplate("");
+        }
+
+        var expr = visit(ctx.expression());
+        String label;
+
+        if (ctx.QUESTIONMARK() != null) {
+            label = ctx.QUESTIONMARK().getText();
+        }
+        else if (ctx.NEG() != null) {
+            label = ctx.NEG().getText();
+        }
+        else {
+            // !!! This should not happen !!!
+            throw new RuntimeException("internal error: label for sync does not exist");
+        }
+
+        return new SyncTemplate(expr, label);
+    }
+
+
+    //endregion
+
+    // Select
+
+    @Override
+    public Template visitSelect(UCELParser.SelectContext ctx) {
+        List<Template> types = ctx.type().stream().map(this::visit).collect(Collectors.toList());
+        List<String> ids = new ArrayList<>();
+
+        assert ctx.ID().size() == ctx.references.size();
+        assert ctx.ID().size() == types.size();
+        for (int i = 0; i < ctx.ID().size(); i++) {
+            try {
+                ids.add(currentScope.get(ctx.references.get(i)).getIdentifier());
+            } catch (Exception e) {
+                throw new RuntimeException("internal error: could not find declaration for " + ctx.ID(i).getText() + " in scope");
+            }
+        }
+
+        return new SelectTemplate(ids, types);
+    }
+
+    //endregion
+
+    // Edge
+    @Override
+    public Template visitEdge(UCELParser.EdgeContext ctx) {
+        Template select = visit(ctx.select());
+        Template guard = visit(ctx.guard());
+        Template sync = visit(ctx.sync());
+        Template update = visit(ctx.update());
+
+        return new EdgeTemplate(select, guard, sync, update, ctx);
+    }
+    //endregion
+
+    // Exponential
+    @Override
+    public Template visitExponential(UCELParser.ExponentialContext ctx) {
+        var expr1 = visit(ctx.expression(0));
+        var expr2 = visit(ctx.expression(1));
+        return new ExponentialTemplate(expr1, expr2);
+    }
+    //endregion
+
+    //Invariant
+    @Override
+    public Template visitInvariant(UCELParser.InvariantContext ctx) {
+        var expr = visit(ctx.expression());
+        return new InvariantTemplate(expr);
+    }
+    //endregion
+
+    // Location
+    @Override
+    public Template visitLocation(UCELParser.LocationContext ctx) {
+        Template invariant = visit(ctx.invariant());
+        Template exponential = visit(ctx.exponential());
+        String ID = null; //TODO: get ID from somewhere
+        return new LocationTemplate(invariant, exponential, ctx, ID);
+    }
+
+    //endregion
+
+    // Graph
+
+    @Override
+    public Template visitGraph(UCELParser.GraphContext ctx) {
+        List<Template> nodes = ctx.location().stream()
+                .map(this::visit)
+                .collect(Collectors.toList());
+
+        List<Template> edges = ctx.edge().stream()
+                .map(this::visit)
+                .collect(Collectors.toList());
+
+        return new GraphTemplate(nodes, edges);
+    }
+    //endregion
 
     //region Project Structure
     //region Project
@@ -72,6 +194,28 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
         return new PSystemTemplate(declTemplate, buildTemplate, sysTemplate);
     }
+    //endregion
+
+    //region Project template
+
+    @Override
+    public Template visitPtemplate(UCELParser.PtemplateContext ctx) {
+        String name;
+        try {
+            name = currentScope.get(ctx.reference).generateName();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        enterScope(ctx.scope);
+        var params = visit(ctx.parameters());
+        var decls = visit(ctx.declarations());
+        var graph = (GraphTemplate) visit(ctx.graph());
+
+        exitScope();
+        return new PTemplateTemplate(name, params, graph, decls);
+    }
+
     //endregion
 
     //endregion
@@ -128,6 +272,13 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
 
+    //endregion
+
+    //region Guard
+    @Override
+    public Template visitGuard(UCELParser.GuardContext ctx) {
+        return ctx.expression() == null ? new ManualTemplate("") : visit(ctx.expression());
+    }
     //endregion
 
     //region Function

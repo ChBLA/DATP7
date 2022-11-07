@@ -7,6 +7,8 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ManualParser {
     private static int counter = 0;
@@ -17,7 +19,7 @@ public class ManualParser {
 
     //region Project
     //TODO: Add template back in when done
-    public ParseTree parseProject(IProject project) {
+    public ParserRuleContext parseProject(IProject project) {
         var node = new UCELParser.ProjectContext(null, -1);
 
         var children = new ArrayList<ParseTree>();
@@ -84,16 +86,19 @@ public class ManualParser {
     //region Graph
 
     public UCELParser.GraphContext parseGraph(ParserRuleContext parent, IGraph graph) {
+        Map<ILocation, Integer> locationMap = new HashMap<>();
         UCELParser.GraphContext graphCtx = new UCELParser.GraphContext(parent, -1);
         boolean foundNull = false;
         for(ILocation l : graph.getLocations()) {
             ParserRuleContext location = parseLocation(graphCtx, l);
             foundNull = foundNull || location == null;
             graphCtx.addChild(location);
+            if (location != null)
+                locationMap.put(l, ((UCELParser.LocationContext) location).id);
         }
 
         for(IEdge e : graph.getEdges()) {
-            ParserRuleContext edge = parseEdge(graphCtx, e);
+            ParserRuleContext edge = parseEdge(graphCtx, e, locationMap);
             foundNull = foundNull || edge == null;
             graphCtx.addChild(edge);
         }
@@ -135,7 +140,7 @@ public class ManualParser {
         var parser = generateParser(input);
         var node = parser.invariant();
         node.parent = parent;
-        return parser.getNumberOfSyntaxErrors() > 0 ? null : node;
+        return parser.getNumberOfSyntaxErrors() == 0 && isEOF(parser) ? node : null;
     }
     //endregion
 
@@ -144,19 +149,19 @@ public class ManualParser {
         var parser = generateParser(input);
         var node = parser.exponential();
         node.parent = parent;
-        return parser.getNumberOfSyntaxErrors() > 0 ? null : node;
+        return parser.getNumberOfSyntaxErrors() == 0 && isEOF(parser) ? node : null;
     }
     //endregion
     //endregion
 
     //region Edges
 
-    public UCELParser.EdgeContext parseEdge(ParserRuleContext parent, IEdge edge) {
+    public UCELParser.EdgeContext parseEdge(ParserRuleContext parent, IEdge edge, Map<ILocation, Integer> locationMap) {
         var edgeCtx = new UCELParser.EdgeContext(parent, 1);
         edgeCtx.parent = parent;
 
-        edgeCtx.locationStartID = Integer.parseInt(edge.getLocationStart().getName());
-        edgeCtx.locationEndID = Integer.parseInt(edge.getLocationEnd().getName());
+        edgeCtx.locationStartID = locationMap.get(edge.getLocationStart());
+        edgeCtx.locationEndID = locationMap.get(edge.getLocationEnd());
         edgeCtx.comments = edge.getComment();
         edgeCtx.testCode = edge.getTestCode();
 
