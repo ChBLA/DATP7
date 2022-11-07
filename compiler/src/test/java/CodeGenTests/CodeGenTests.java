@@ -28,6 +28,57 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region sync
+
+    @Test
+    void syncQuestionMarkCorrect() {
+        var expected = "a[1]?";
+        var visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class,
+                new ManualTemplate("a[1]"), visitor);
+
+        var terminalNodeMock = mock(TerminalNode.class);
+        when(terminalNodeMock.getText()).thenReturn("?");
+
+        var node = mock(UCELParser.SyncContext.class);
+        when(node.expression()).thenReturn(expr);
+        when(node.QUESTIONMARK()).thenReturn(terminalNodeMock);
+
+        var actual = visitor.visitSync(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void syncNegCorrect() {
+        var expected = "a[1]!";
+        var visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class,
+                new ManualTemplate("a[1]"), visitor);
+
+        var terminalNodeMock = mock(TerminalNode.class);
+        when(terminalNodeMock.getText()).thenReturn("!");
+
+        var node = mock(UCELParser.SyncContext.class);
+        when(node.expression()).thenReturn(expr);
+        when(node.NEG()).thenReturn(terminalNodeMock);
+
+        var actual = visitor.visitSync(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void syncNoExpr() {
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.SyncContext.class);
+
+        var actual = visitor.visitSync(node);
+        assertEquals("", actual.toString());
+    }
+
+    //endregion
+
     //region Select
 
     @Test
