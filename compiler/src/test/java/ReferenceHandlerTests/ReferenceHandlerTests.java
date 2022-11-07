@@ -546,6 +546,147 @@ public class ReferenceHandlerTests {
 
     //endregion
 
+    //region Edge
+
+    @Test
+    void edgeAddsScope() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.EdgeContext node = mock(UCELParser.EdgeContext.class);
+        UCELParser.SelectContext select = mock(UCELParser.SelectContext.class);
+        UCELParser.GuardContext guard = mock(UCELParser.GuardContext.class);
+        UCELParser.SyncContext sync = mock(UCELParser.SyncContext.class);
+        UCELParser.UpdateContext update = mock(UCELParser.UpdateContext.class);
+
+        when(node.select()).thenReturn(select);
+        when(node.guard()).thenReturn(guard);
+        when(node.sync()).thenReturn(sync);
+        when(node.update()).thenReturn(update);
+
+        when(select.accept(visitor)).thenReturn(true);
+        when(guard.accept(visitor)).thenReturn(true);
+        when(sync.accept(visitor)).thenReturn(true);
+        when(update.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitEdge(node);
+
+        assertTrue(actual);
+        assertTrue(node.scope instanceof Scope);
+    }
+
+    @Test
+    void edgeVisitsSelect() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.EdgeContext node = mock(UCELParser.EdgeContext.class);
+        UCELParser.SelectContext select = mock(UCELParser.SelectContext.class);
+        UCELParser.GuardContext guard = mock(UCELParser.GuardContext.class);
+        UCELParser.SyncContext sync = mock(UCELParser.SyncContext.class);
+        UCELParser.UpdateContext update = mock(UCELParser.UpdateContext.class);
+
+        when(node.select()).thenReturn(select);
+        when(node.guard()).thenReturn(guard);
+        when(node.sync()).thenReturn(sync);
+        when(node.update()).thenReturn(update);
+
+        when(select.accept(visitor)).thenReturn(true);
+        when(guard.accept(visitor)).thenReturn(true);
+        when(sync.accept(visitor)).thenReturn(true);
+        when(update.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitEdge(node);
+
+        assertTrue(actual);
+        verify(select, times(1)).accept(visitor);
+    }
+
+    @Test
+    void edgeVisitsGuard() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.EdgeContext node = mock(UCELParser.EdgeContext.class);
+        UCELParser.SelectContext select = mock(UCELParser.SelectContext.class);
+        UCELParser.GuardContext guard = mock(UCELParser.GuardContext.class);
+        UCELParser.SyncContext sync = mock(UCELParser.SyncContext.class);
+        UCELParser.UpdateContext update = mock(UCELParser.UpdateContext.class);
+
+        when(node.select()).thenReturn(select);
+        when(node.guard()).thenReturn(guard);
+        when(node.sync()).thenReturn(sync);
+        when(node.update()).thenReturn(update);
+
+        when(select.accept(visitor)).thenReturn(true);
+        when(guard.accept(visitor)).thenReturn(true);
+        when(sync.accept(visitor)).thenReturn(true);
+        when(update.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitEdge(node);
+
+        assertTrue(actual);
+        verify(guard, times(1)).accept(visitor);
+    }
+
+    @Test
+    void edgeVisitsSync() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.EdgeContext node = mock(UCELParser.EdgeContext.class);
+        UCELParser.SelectContext select = mock(UCELParser.SelectContext.class);
+        UCELParser.GuardContext guard = mock(UCELParser.GuardContext.class);
+        UCELParser.SyncContext sync = mock(UCELParser.SyncContext.class);
+        UCELParser.UpdateContext update = mock(UCELParser.UpdateContext.class);
+
+        when(node.select()).thenReturn(select);
+        when(node.guard()).thenReturn(guard);
+        when(node.sync()).thenReturn(sync);
+        when(node.update()).thenReturn(update);
+
+        when(select.accept(visitor)).thenReturn(true);
+        when(guard.accept(visitor)).thenReturn(true);
+        when(sync.accept(visitor)).thenReturn(true);
+        when(update.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitEdge(node);
+
+        assertTrue(actual);
+        verify(sync, times(1)).accept(visitor);
+    }
+
+    @Test
+    void edgeVisitsUpdate() {
+        Scope scope = mock(Scope.class);
+        ReferenceVisitor visitor = new ReferenceVisitor(scope);
+
+        UCELParser.EdgeContext node = mock(UCELParser.EdgeContext.class);
+        UCELParser.SelectContext select = mock(UCELParser.SelectContext.class);
+        UCELParser.GuardContext guard = mock(UCELParser.GuardContext.class);
+        UCELParser.SyncContext sync = mock(UCELParser.SyncContext.class);
+        UCELParser.UpdateContext update = mock(UCELParser.UpdateContext.class);
+
+        when(node.select()).thenReturn(select);
+        when(node.guard()).thenReturn(guard);
+        when(node.sync()).thenReturn(sync);
+        when(node.update()).thenReturn(update);
+
+        when(select.accept(visitor)).thenReturn(true);
+        when(guard.accept(visitor)).thenReturn(true);
+        when(sync.accept(visitor)).thenReturn(true);
+        when(update.accept(visitor)).thenReturn(true);
+
+        boolean actual = visitor.visitEdge(node);
+
+        assertTrue(actual);
+        verify(update, times(1)).accept(visitor);
+    }
+
+    //endregion
+
+    
+
     //region start
     @Test
     void startVisitsDeclarationsAndSystem() {

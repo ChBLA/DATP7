@@ -22,13 +22,19 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         this.logger = logger;
     }
 
+    //region Util
+
     @Override
     protected Boolean defaultResult() { return true;}
-    
+
     @Override
     protected Boolean aggregateResult(Boolean aggregate, Boolean nextResult) {
         return (nextResult == null || nextResult) && (aggregate == null || aggregate);
     }
+
+    //endregion
+
+    //region ProjectStructure
 
     @Override
     public Boolean visitProject(UCELParser.ProjectContext ctx) {
@@ -89,6 +95,15 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     }
 
     @Override
+    public Boolean visitEdge(UCELParser.EdgeContext ctx) {
+        enterScope();
+        ctx.scope = currentScope;
+        boolean b = visit(ctx.select()) && visit(ctx.guard()) && visit(ctx.sync()) && visit(ctx.update());
+        exitScope();
+        return b;
+    }
+
+    @Override
     public Boolean visitStart(UCELParser.StartContext ctx) {
         boolean success = true;
         enterScope();
@@ -123,6 +138,8 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         return success;
     }
+
+    //endregion
 
     @Override
     public Boolean visitFunction(UCELParser.FunctionContext ctx) {
