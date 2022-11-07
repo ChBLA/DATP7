@@ -3728,7 +3728,77 @@ public class TypeCheckerTests  {
     //endregion
 
     //region exponential
+    @Test
+    void exponential1ArgValid() {
+        var expected = VOID_TYPE;
 
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.ExponentialContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+
+        when(node.expression()).thenReturn(new ArrayList<>() {{
+            add(expr1);
+        }});
+
+        var actual = visitor.visitExponential(node);
+
+        assertEquals(expected, actual);
+    }
+    @Test
+    void exponential2ArgValid() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.ExponentialContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+
+        when(node.expression()).thenReturn(new ArrayList<>() {{
+            add(expr1);
+            add(expr2);
+        }});
+
+        var actual = visitor.visitExponential(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void exponentialValidEmpty() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.ExponentialContext.class);
+
+        when(node.expression()).thenReturn(new ArrayList<>());
+
+        var actual = visitor.visitExponential(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void exponentialInvalid() {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.ExponentialContext.class);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, DOUBLE_TYPE, visitor);
+
+        when(node.expression()).thenReturn(new ArrayList<>() {{
+            add(expr1);
+            add(expr2);
+        }});
+
+        var actual = visitor.visitExponential(node);
+
+        assertEquals(expected, actual);
+    }
     //endregion
 
     //region edge
@@ -3960,15 +4030,15 @@ public class TypeCheckerTests  {
         var visitor = new TypeCheckerVisitor();
 
         var node = mock(UCELParser.UpdateContext.class);
-        var expr1 = mockForVisitorResult(UCELParser.SelectContext.class, VOID_TYPE, visitor);
-        var expr2 = mockForVisitorResult(UCELParser.GuardContext.class, BOOL_TYPE, visitor);
-        var expr3 = mockForVisitorResult(UCELParser.SyncContext.class, VOID_TYPE, visitor);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, VOID_TYPE, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var expr3 = mockForVisitorResult(UCELParser.ExpressionContext.class, VOID_TYPE, visitor);
 
-        node.children = new ArrayList<>() {{
+        when(node.expression()).thenReturn(new ArrayList<>() {{
             add(expr1);
             add(expr2);
             add(expr3);
-        }};
+        }});
 
         var actual = visitor.visitUpdate(node);
 
@@ -3983,7 +4053,7 @@ public class TypeCheckerTests  {
 
         var node = mock(UCELParser.UpdateContext.class);
 
-        node.children = new ArrayList<>();
+        when(node.expression()).thenReturn(new ArrayList<>());
 
         var actual = visitor.visitUpdate(node);
 
@@ -3997,15 +4067,15 @@ public class TypeCheckerTests  {
         var visitor = new TypeCheckerVisitor();
 
         var node = mock(UCELParser.UpdateContext.class);
-        var expr1 = mockForVisitorResult(UCELParser.SelectContext.class, VOID_TYPE, visitor);
-        var expr2 = mockForVisitorResult(UCELParser.GuardContext.class, BOOL_TYPE, visitor);
-        var expr3 = mockForVisitorResult(UCELParser.SyncContext.class, ERROR_TYPE, visitor);
+        var expr1 = mockForVisitorResult(UCELParser.ExpressionContext.class, VOID_TYPE, visitor);
+        var expr2 = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var expr3 = mockForVisitorResult(UCELParser.ExpressionContext.class, ERROR_TYPE, visitor);
 
-        node.children = new ArrayList<>() {{
+        when(node.expression()).thenReturn(new ArrayList<>() {{
             add(expr1);
             add(expr2);
             add(expr3);
-        }};
+        }});
 
         var actual = visitor.visitUpdate(node);
 
