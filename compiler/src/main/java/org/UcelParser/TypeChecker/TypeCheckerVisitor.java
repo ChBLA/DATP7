@@ -1166,6 +1166,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //region Project Graph
 
+    //region Location
     @Override
     public Type visitLocation(UCELParser.LocationContext ctx) {
         if(visit(ctx.invariant()).equals(ERROR_TYPE))
@@ -1189,6 +1190,73 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         logger.log(new ErrorLog(ctx, "Invariant must be of type bool"));
         return ERROR_TYPE;
     }
+    //endregion
+
+    //region Edge
+    @Override
+    public Type visitEdge(UCELParser.EdgeContext ctx) {
+        var select = visit(ctx.select());
+        var guard = visit(ctx.guard());
+        var sync = visit(ctx.sync());
+        var update = visit(ctx.update());
+
+        if(select.equals(ERROR_TYPE))
+            return ERROR_TYPE;
+        if(guard.equals(ERROR_TYPE))
+            return ERROR_TYPE;
+        if(sync.equals(ERROR_TYPE))
+            return ERROR_TYPE;
+        if(update.equals(ERROR_TYPE))
+            return ERROR_TYPE;
+
+        if(!guard.equals(BOOL_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Guard must be of type bool"));
+            return ERROR_TYPE;
+        }
+
+        return VOID_TYPE;
+    }
+
+    @Override
+    public Type visitGuard(UCELParser.GuardContext ctx) {
+        var expr = ctx.expression();
+        if(expr == null)
+            return BOOL_TYPE;
+
+        if(visit(expr).equals(BOOL_TYPE))
+            return BOOL_TYPE;
+
+        logger.log(new ErrorLog(ctx, "Guard must be of type bool"));
+        return ERROR_TYPE;
+    }
+
+    @Override
+    public Type visitSync(UCELParser.SyncContext ctx) {
+        var expr = ctx.expression();
+        if(expr == null)
+            return VOID_TYPE;
+
+        if(visit(expr).equals(CHAN_TYPE))
+            return CHAN_TYPE;
+
+        logger.log(new ErrorLog(ctx, "Sync must be of type channel, or empty"));
+        return ERROR_TYPE;
+    }
+
+    @Override
+    public Type visitUpdate(UCELParser.UpdateContext ctx) {
+
+        boolean hadError = false;
+        for(var expr: ctx.children) {
+            if(visit(expr).equals(ERROR_TYPE))
+                hadError = true;
+        }
+        if(hadError)
+            return ERROR_TYPE;
+
+        return VOID_TYPE;
+    }
+    //endregion
 
 
     //endregion
