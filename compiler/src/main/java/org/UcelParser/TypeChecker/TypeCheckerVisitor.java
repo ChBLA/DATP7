@@ -1216,6 +1216,19 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         return VOID_TYPE;
     }
+
+    @Override
+    public Type visitGuard(UCELParser.GuardContext ctx) {
+        var expr = ctx.expression();
+        if(expr == null)
+            return BOOL_TYPE;
+
+        if(visit(expr).equals(BOOL_TYPE))
+            return BOOL_TYPE;
+
+        logger.log(new ErrorLog(ctx, "Guard must be of type bool"));
+        return ERROR_TYPE;
+    }
     //endregion
 
 

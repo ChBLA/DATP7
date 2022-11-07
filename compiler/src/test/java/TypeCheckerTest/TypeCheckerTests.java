@@ -3853,6 +3853,53 @@ public class TypeCheckerTests  {
     //endregion
 
     //region guard
+    @Test
+    void guardValid() {
+        var expected = BOOL_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.GuardContext.class);
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitGuard(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void guardEmpty() {
+        var expected = BOOL_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.GuardContext.class);
+
+        when(node.expression()).thenReturn(null);
+
+        var actual = visitor.visitGuard(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("notBoolTypes")
+    void guardInvalid(Type type) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.GuardContext.class);
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, type, visitor);
+
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitGuard(node);
+
+        assertEquals(expected, actual);
+    }
     //endregion
 
     //region sync
