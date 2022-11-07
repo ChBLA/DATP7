@@ -1229,6 +1229,20 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         logger.log(new ErrorLog(ctx, "Guard must be of type bool"));
         return ERROR_TYPE;
     }
+
+    @Override
+    public Type visitUpdate(UCELParser.UpdateContext ctx) {
+
+        boolean hadError = false;
+        for(var expr: ctx.children) {
+            if(visit(expr).equals(ERROR_TYPE))
+                hadError = true;
+        }
+        if(hadError)
+            return ERROR_TYPE;
+
+        return VOID_TYPE;
+    }
     //endregion
 
 
