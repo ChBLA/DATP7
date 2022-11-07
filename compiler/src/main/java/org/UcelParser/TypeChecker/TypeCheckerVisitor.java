@@ -696,9 +696,11 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         boolean errorFound = false;
         Type errorType = ERROR_TYPE;
 
-        for(ParseTree pt : ctx.children)
-            if(visit(pt).equals(errorType))
-                errorFound = true;
+        if(ctx.children != null) {
+            for(ParseTree pt : ctx.children)
+                if(visit(pt).equals(errorType))
+                    errorFound = true;
+        }
 
         if(errorFound) return errorType;
         else return VOID_TYPE;
@@ -1219,7 +1221,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         var sync = visit(ctx.sync());
         var update = visit(ctx.update());
 
-        if(select.equals(ERROR_TYPE))
+        if(select != null && select.equals(ERROR_TYPE))
             return ERROR_TYPE;
         if(guard.equals(ERROR_TYPE))
             return ERROR_TYPE;
