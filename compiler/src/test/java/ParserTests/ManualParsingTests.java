@@ -11,6 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -253,11 +254,18 @@ public class ManualParsingTests {
         UCELParser.EdgeContext edgeCtx1 = mock(UCELParser.EdgeContext.class);
         UCELParser.EdgeContext edgeCtx2 = mock(UCELParser.EdgeContext.class);
 
+        locationCtx1.id = 1;
+        locationCtx2.id = 2;
+
+        var locMap = new HashMap<ILocation, Integer>();
+        locMap.put(location1, locationCtx1.id);
+        locMap.put(location2, locationCtx2.id);
+
         when(parser.parseGraph(parent, graph)).thenCallRealMethod();
         when(parser.parseLocation(any(), eq(location1))).thenReturn(locationCtx1);
         when(parser.parseLocation(any(), eq(location2))).thenReturn(locationCtx2);
-        when(parser.parseEdge(any(), eq(edge1))).thenReturn(edgeCtx1);
-        when(parser.parseEdge(any(), eq(edge2))).thenReturn(edgeCtx2);
+        when(parser.parseEdge(any(), eq(edge1), eq(locMap))).thenReturn(edgeCtx1);
+        when(parser.parseEdge(any(), eq(edge2), eq(locMap))).thenReturn(edgeCtx2);
 
         UCELParser.GraphContext actual = parser.parseGraph(parent, graph);
 
@@ -319,17 +327,24 @@ public class ManualParsingTests {
         UCELParser.LocationContext locationCtx1 = mock(UCELParser.LocationContext.class);
         UCELParser.LocationContext locationCtx2 = mock(UCELParser.LocationContext.class);
 
+        locationCtx1.id = 1;
+        locationCtx2.id = 2;
+
+        var locMap = new HashMap<ILocation, Integer>();
+        locMap.put(location1, locationCtx1.id);
+        locMap.put(location2, locationCtx2.id);
+
         UCELParser.EdgeContext edgeCtx1 = mock(UCELParser.EdgeContext.class);
 
         when(parser.parseGraph(parent, graph)).thenCallRealMethod();
         when(parser.parseLocation(any(), eq(location1))).thenReturn(locationCtx1);
         when(parser.parseLocation(any(), eq(location2))).thenReturn(locationCtx2);
-        when(parser.parseEdge(any(), eq(edge1))).thenReturn(edgeCtx1);
-        when(parser.parseEdge(any(), eq(edge2))).thenReturn(null);
+        when(parser.parseEdge(any(), eq(edge1), eq(locMap))).thenReturn(edgeCtx1);
+        when(parser.parseEdge(any(), eq(edge2), eq(locMap))).thenReturn(null);
 
         UCELParser.GraphContext actual = parser.parseGraph(parent, graph);
 
-        assertEquals(null, actual);
+        assertNull(actual);
     }
 
 
@@ -552,26 +567,29 @@ public class ManualParsingTests {
 
         when(edge.getLocationStart()).thenReturn(locationStart);
         when(edge.getLocationEnd()).thenReturn(locationEnd);
-        when(locationStart.getName()).thenReturn("1");
-        when(locationEnd.getName()).thenReturn("2");
+
+        var locMap = new HashMap<ILocation, Integer>();
+        locMap.put(locationStart, 1);
+        locMap.put(locationEnd, 2);
+
         when(edge.getComment()).thenReturn("comment");
         when(edge.getTestCode()).thenReturn("testCode");
 
         var parser = mock(ManualParser.class);
-        when(parser.parseEdge(parent, edge)).thenCallRealMethod();
+        when(parser.parseEdge(parent, edge, locMap)).thenCallRealMethod();
 
         when(parser.parseSelect(any(), any())).thenReturn(selectMock);
         when(parser.parseGuard(any(), any())).thenReturn(guardMock);
         when(parser.parseSync(any(), any())).thenReturn(syncMock);
         when(parser.parseUpdate(any(), any())).thenReturn(updateMock);
 
-        var actual = parser.parseEdge(parent, edge);
+        var actual = parser.parseEdge(parent, edge, locMap);
 
         assertEquals(parent, actual.parent);
         assertNotNull(actual);
         assertEquals(4, actual.getChildCount());
-        assertEquals(actual.locationStartID, Integer.parseInt(locationStart.getName()));
-        assertEquals(actual.locationEndID, Integer.parseInt(locationEnd.getName()));
+        assertEquals(1, actual.locationStartID);
+        assertEquals(2, actual.locationEndID);
         assertEquals(actual.comments, edge.getComment());
         assertEquals(actual.testCode, edge.getTestCode());
     }
@@ -589,20 +607,23 @@ public class ManualParsingTests {
 
         when(edge.getLocationStart()).thenReturn(locationStart);
         when(edge.getLocationEnd()).thenReturn(locationEnd);
-        when(locationStart.getName()).thenReturn("1");
-        when(locationEnd.getName()).thenReturn("2");
+
+        var locMap = new HashMap<ILocation, Integer>();
+        locMap.put(locationStart, 1);
+        locMap.put(locationEnd, 2);
+
         when(edge.getComment()).thenReturn("comment");
         when(edge.getTestCode()).thenReturn("testCode");
 
         var parser = mock(ManualParser.class);
-        when(parser.parseEdge(parent, edge)).thenCallRealMethod();
+        when(parser.parseEdge(parent, edge, locMap)).thenCallRealMethod();
 
         when(parser.parseSelect(any(), any())).thenReturn(null);
         when(parser.parseGuard(any(), any())).thenReturn(guardMock);
         when(parser.parseSync(any(), any())).thenReturn(syncMock);
         when(parser.parseUpdate(any(), any())).thenReturn(updateMock);
 
-        var actual = parser.parseEdge(parent, edge);
+        var actual = parser.parseEdge(parent, edge, locMap);
 
         assertNull(actual);
     }
@@ -620,20 +641,23 @@ public class ManualParsingTests {
 
         when(edge.getLocationStart()).thenReturn(locationStart);
         when(edge.getLocationEnd()).thenReturn(locationEnd);
-        when(locationStart.getName()).thenReturn("1");
-        when(locationEnd.getName()).thenReturn("2");
+
+        var locMap = new HashMap<ILocation, Integer>();
+        locMap.put(locationStart, 1);
+        locMap.put(locationEnd, 2);
+
         when(edge.getComment()).thenReturn("comment");
         when(edge.getTestCode()).thenReturn("testCode");
 
         var parser = mock(ManualParser.class);
-        when(parser.parseEdge(parent, edge)).thenCallRealMethod();
+        when(parser.parseEdge(parent, edge, locMap)).thenCallRealMethod();
 
         when(parser.parseSelect(any(), any())).thenReturn(selectMock);
         when(parser.parseGuard(any(), any())).thenReturn(null);
         when(parser.parseSync(any(), any())).thenReturn(syncMock);
         when(parser.parseUpdate(any(), any())).thenReturn(updateMock);
 
-        var actual = parser.parseEdge(parent, edge);
+        var actual = parser.parseEdge(parent, edge, locMap);
 
         assertNull(actual);
     }
@@ -651,20 +675,23 @@ public class ManualParsingTests {
 
         when(edge.getLocationStart()).thenReturn(locationStart);
         when(edge.getLocationEnd()).thenReturn(locationEnd);
-        when(locationStart.getName()).thenReturn("1");
-        when(locationEnd.getName()).thenReturn("2");
+
+        var locMap = new HashMap<ILocation, Integer>();
+        locMap.put(locationStart, 1);
+        locMap.put(locationEnd, 2);
+
         when(edge.getComment()).thenReturn("comment");
         when(edge.getTestCode()).thenReturn("testCode");
 
         var parser = mock(ManualParser.class);
-        when(parser.parseEdge(parent, edge)).thenCallRealMethod();
+        when(parser.parseEdge(parent, edge, locMap)).thenCallRealMethod();
 
         when(parser.parseSelect(any(), any())).thenReturn(selectMock);
         when(parser.parseGuard(any(), any())).thenReturn(guardMock);
         when(parser.parseSync(any(), any())).thenReturn(null);
         when(parser.parseUpdate(any(), any())).thenReturn(updateMock);
 
-        var actual = parser.parseEdge(parent, edge);
+        var actual = parser.parseEdge(parent, edge, locMap);
 
         assertNull(actual);
     }
@@ -683,20 +710,23 @@ public class ManualParsingTests {
 
         when(edge.getLocationStart()).thenReturn(locationStart);
         when(edge.getLocationEnd()).thenReturn(locationEnd);
-        when(locationStart.getName()).thenReturn("1");
-        when(locationEnd.getName()).thenReturn("2");
+
+        var locMap = new HashMap<ILocation, Integer>();
+        locMap.put(locationStart, 1);
+        locMap.put(locationEnd, 2);
+
         when(edge.getComment()).thenReturn("comment");
         when(edge.getTestCode()).thenReturn("testCode");
 
         var parser = mock(ManualParser.class);
-        when(parser.parseEdge(parent, edge)).thenCallRealMethod();
+        when(parser.parseEdge(parent, edge, locMap)).thenCallRealMethod();
 
         when(parser.parseSelect(any(), any())).thenReturn(selectMock);
         when(parser.parseGuard(any(), any())).thenReturn(guardMock);
         when(parser.parseSync(any(), any())).thenReturn(syncMock);
         when(parser.parseUpdate(any(), any())).thenReturn(null);
 
-        var actual = parser.parseEdge(parent, edge);
+        var actual = parser.parseEdge(parent, edge, locMap);
 
         assertNull(actual);
     }
