@@ -69,6 +69,7 @@ public class ProjectCodeLinker {
 
                 graph.addEdge(edge);
             }
+            template.setGraph(graph);
             project.putTemplate(template);
         }
 

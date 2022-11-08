@@ -116,16 +116,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         var parametersType = visit(ctx.parameters());
         if (parametersType.equals(ERROR_TYPE)) {
             result = ERROR_TYPE;
-        } else if (!parametersType.equals(VOID_TYPE)) {
-            logger.log(new ErrorLog(ctx, "Type error in parameters. Value is not VOID_TYPE"));
-            result = ERROR_TYPE;
-        }
-
-        var graphType = visit(ctx.graph());
-        if (graphType.equals(ERROR_TYPE)) {
-            result = ERROR_TYPE;
-        } else if (!graphType.equals(VOID_TYPE)) {
-            logger.log(new ErrorLog(ctx, "Type error in graph. Value is not VOID_TYPE"));
+        } else if (parametersType.getEvaluationType() != Type.TypeEnum.voidType) {
+            logger.log(new ErrorLog(ctx.parameters(), "Type error in parameters. Value is not VOID_TYPE"));
             result = ERROR_TYPE;
         }
 
@@ -134,6 +126,14 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             result = ERROR_TYPE;
         } else if (!declarationsType.equals(VOID_TYPE)) {
             logger.log(new ErrorLog(ctx, "Type error in declarations. Value is not VOID_TYPE"));
+            result = ERROR_TYPE;
+        }
+
+        var graphType = visit(ctx.graph());
+        if (graphType.equals(ERROR_TYPE)) {
+            result = ERROR_TYPE;
+        } else if (!graphType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Type error in graph. Value is not VOID_TYPE"));
             result = ERROR_TYPE;
         }
 
@@ -355,7 +355,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
                 .forEach(parameter -> parameterTypes.add(visit(parameter)));
 
         Type[] parameterTypesArray = {};
-        parameterTypes.toArray(parameterTypesArray);
+        parameterTypesArray = parameterTypes.toArray(parameterTypesArray);
 
         return new Type(Type.TypeEnum.voidType, parameterTypesArray);
     }
@@ -1105,7 +1105,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type[] argsParams = argsType.getParameters();
 
         if(declParams.length != argsParams.length + 1) {
-            logger.log(new ErrorLog(ctx.arguments(), String.format("Function expected {0} arguments, but got {1}", declParams.length, argsParams.length)));
+            logger.log(new ErrorLog(ctx.arguments(), String.format("Function expected %s arguments, but got %s", declParams.length-1, argsParams.length)));
             return ERROR_TYPE;
         }
 
@@ -1162,14 +1162,22 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type.TypeEnum rightEnum = rightNode.getEvaluationType();
 
         List<Type.TypeEnum> comparableTypes = new ArrayList<>() {{ add(Type.TypeEnum.intType); add(Type.TypeEnum.doubleType);}};
+        List<Type.TypeEnum> comparableClockTypes = new ArrayList<>() {{ add(Type.TypeEnum.intType); add(Type.TypeEnum.clockType);}};
         if (leftEnum == Type.TypeEnum.errorType || rightEnum == Type.TypeEnum.errorType) {
             // Error propagated, no logging
             return ERROR_TYPE;
-        } else if (!(comparableTypes.contains(leftEnum) && comparableTypes.contains(rightEnum)) && leftEnum != rightEnum) {
-            logger.log(new ErrorLog(ctx, leftEnum + " and " + rightEnum + " are unsupported for relation"));
-            return ERROR_TYPE;
-        } else if (isArray(leftNode) || isArray(rightNode)) {
+        }
+
+        if (isArray(leftNode) || isArray(rightNode)) {
             logger.log(new ErrorLog(ctx, "Array types are unsupported for relation"));
+            return ERROR_TYPE;
+        }
+
+        var isIntDoubleComparable = comparableTypes.contains(leftEnum) && comparableTypes.contains(rightEnum);
+        var isIntClockComparable = comparableClockTypes.contains(leftEnum) && comparableClockTypes.contains(rightEnum);
+
+        if (!isIntDoubleComparable && !isIntClockComparable && (leftEnum != rightEnum)) {
+            logger.log(new ErrorLog(ctx, leftEnum + " and " + rightEnum + " are unsupported for relation"));
             return ERROR_TYPE;
         }
 
@@ -1386,6 +1394,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //region Edge
     @Override
     public Type visitEdge(UCELParser.EdgeContext ctx) {
+        enterScope(ctx.scope);
+
         var select = visit(ctx.select());
         var guard = visit(ctx.guard());
         var sync = visit(ctx.sync());
@@ -1405,6 +1415,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return ERROR_TYPE;
         }
 
+        exitScope();
         return VOID_TYPE;
     }
 
@@ -1438,10 +1449,13 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if(expr == null)
             return BOOL_TYPE;
 
-        if(visit(expr).equals(BOOL_TYPE))
+        var exprType = visit(expr);
+        if(exprType.equals(BOOL_TYPE))
             return BOOL_TYPE;
 
-        logger.log(new ErrorLog(ctx, "Guard must be of type bool"));
+        if(!exprType.equals(ERROR_TYPE))
+            logger.log(new ErrorLog(ctx, "Guard must be of type bool"));
+
         return ERROR_TYPE;
     }
 

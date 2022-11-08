@@ -68,13 +68,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         enterScope();
         ctx.scope = currentScope;
 
-        if(!visit(ctx.graph()) || !visit(ctx.parameters())) {
-            //No logging, passing through
-            exitScope();
-            return false;
-        }
-
-        if(!visit(ctx.declarations())) {
+        if(!visit(ctx.parameters()) || !visit(ctx.declarations()) || !visit(ctx.graph())) {
             //No logging, passing through
             exitScope();
             return false;

@@ -26,6 +26,11 @@ public class UcelPlugin implements Plugin {
         ui.addCompileAction(e ->
                 setCurrentProject(CompileCurrentProject())
         );
+
+        ui.addCompileActionX100(e -> {
+            for (int i = 0; i < 100; i++)
+                setCurrentProject(CompileCurrentProject());
+        });
     }
 
     private IProject CompileCurrentProject() {

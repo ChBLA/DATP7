@@ -46,14 +46,17 @@ public class Compiler {
             var typeTree = runVisitor(typeCheckerVisitor, refTree, logger);
             var generatedCode = runVisitor(codeGenVisitor, typeTree, logger);
             var outputProject = new ProjectCodeLinker().generateUppaalProject((ProjectTemplate) generatedCode);
-            System.out.println(generatedCode);
+//            System.out.println(generatedCode);
             return outputProject;
         }
-        catch (ErrorsFoundException ignored) {}
+        catch (ErrorsFoundException e) {
+            throw new RuntimeException(e);
+        }
 
 //        logger.printLogs();
 
-        return generateDummyProject();
+//        return project;
+//        return generateDummyProject();
     }
 
     private IProject generateDummyProject() {

@@ -104,13 +104,15 @@ public class Type {
     }
 
     public boolean equalsOrIsArrayOf(Type t) {
-        if(t.getEvaluationType() != this.evaluationType || t.getPrefix() != prefix) return false;
+        if(t.getEvaluationType() != this.evaluationType) return false;
 
         Type[] tParameters = t.getParameters();
-        if((parameters == null || parameters.length == 0) &&
-                tParameters == null || tParameters.length == 0) return true;
+        var anyParams = parameters == null || parameters.length == 0;
+        var anyTParams = tParameters == null || tParameters.length == 0;
+        if(anyParams && anyTParams)
+            return true;
 
-        if(parameters.length != tParameters.length) return false;
+        if(anyParams != anyTParams || parameters.length != tParameters.length) return false;
         for(int i = 0; i < parameters.length; i++) {
             if(!parameters[i].equals(tParameters[i])) return false;
         }

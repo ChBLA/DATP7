@@ -103,11 +103,14 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     // Edge
     @Override
     public Template visitEdge(UCELParser.EdgeContext ctx) {
+        enterScope(ctx.scope);
+
         Template select = visit(ctx.select());
         Template guard = visit(ctx.guard());
         Template sync = visit(ctx.sync());
         Template update = visit(ctx.update());
 
+        exitScope();
         return new EdgeTemplate(select, guard, sync, update, ctx);
     }
     //endregion
@@ -325,7 +328,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         } else {
             String ID = null;
             try {
-                ID = currentScope.get(ctx.reference).getIdentifier();
+                ID = currentScope.getParent().get(ctx.reference).getIdentifier();
             } catch (Exception e) {
                 throw new RuntimeException("error: could not find function name");
             }
@@ -344,18 +347,26 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitInstantiation(UCELParser.InstantiationContext ctx) {
-        boolean useParenthesis = ctx.LEFTPAR().size() > 1;
-        var paramTemplate = ctx.parameters() != null ? visit(ctx.parameters()) : new ManualTemplate("");
-        var argTemplate = ctx.arguments() != null ? visit(ctx.arguments()) : new ManualTemplate("");
-
         var ID1 = "";
-        var ID2 = "";
         try {
             ID1 = currentScope.get(ctx.instantiatedReference).generateName();
-            ID2 = currentScope.get(ctx.constructorReference).generateName();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
+        enterScope(ctx.scope);
+        var ID2 = "";
+        try {
+            ID2 = currentScope.get(ctx.constructorReference).generateName();
+        } catch (Exception e) {
+            exitScope();
+            throw new RuntimeException(e);
+        }
+
+        boolean useParenthesis = ctx.LEFTPAR().size() > 1;
+        var paramTemplate = ctx.parameters() != null ? visit(ctx.parameters()) : new ManualTemplate("");
+        var argTemplate = ctx.arguments() != null ? visit(ctx.arguments()) : new ManualTemplate("");
+        exitScope();
 
         return new InstantiationTemplate(ID1, ID2, paramTemplate, argTemplate, useParenthesis);
     }
@@ -910,9 +921,12 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
+
+        enterScope(ctx.scope);
         var type = visit(ctx.type());
         var expr = visit(ctx.expression());
 
+        exitScope();
         return new VerificationTemplate(ctx.op.getText(), id, type, expr);
     }
 

@@ -9,6 +9,7 @@ public class UcelEditorUI extends BaseWorkspace {
     public UcelEditorUI() {
         setJPanel(new JPanel());
         this.loadCompileButton();
+        this.loadCompileButtonX100();
     }
 
     @Override
@@ -38,6 +39,20 @@ public class UcelEditorUI extends BaseWorkspace {
     }
     public void addCompileAction(Consumer onCompile) {
         compileButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onCompile.accept(e);
+            }
+        });
+    }
+
+    private JButton compileButtonX100;
+    private void loadCompileButtonX100() {
+        compileButtonX100 = new JButton("Compile x100");
+        jPanel.add(compileButtonX100);
+    }
+    public void addCompileActionX100(Consumer onCompile) {
+        compileButtonX100.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 onCompile.accept(e);
