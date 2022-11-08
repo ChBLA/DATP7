@@ -1256,6 +1256,30 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
 
     @Override
+    public Type visitSelect(UCELParser.SelectContext ctx) {
+
+        boolean errorFound = false;
+
+        int declCount = ctx.type().size();
+        for(int i=0; i<declCount; i++) {
+            var type = visit(ctx.type().get(i));
+            var ref = ctx.references.get(i);
+
+            if(type.equals(ERROR_TYPE))
+                errorFound = true;
+
+            try {
+                currentScope.get(ref).setType(type);
+            } catch (Exception e) {
+                throw new RuntimeException("Compiler error: " + e.getMessage());
+            }
+        }
+
+        if(errorFound) return ERROR_TYPE;
+        else return VOID_TYPE;
+    }
+
+    @Override
     public Type visitGuard(UCELParser.GuardContext ctx) {
         var expr = ctx.expression();
         if(expr == null)

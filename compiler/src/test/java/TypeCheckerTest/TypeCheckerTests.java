@@ -4011,6 +4011,131 @@ public class TypeCheckerTests  {
     //endregion
 
     //region select
+    @Test
+    void selectValid() {
+        var expectedReturn = VOID_TYPE;
+        var expected1 = INT_TYPE;
+        var expected2 = BOOL_TYPE;
+        var expected3 = DOUBLE_TYPE;
+
+        Scope scope = mock(Scope.class);
+
+        var visitor = new TypeCheckerVisitor(scope);
+
+        var node = mock(UCELParser.SelectContext.class);
+        var type1 = mockForVisitorResult(UCELParser.TypeContext.class, expected1, visitor);
+        var type2 = mockForVisitorResult(UCELParser.TypeContext.class, expected2, visitor);
+        var type3 = mockForVisitorResult(UCELParser.TypeContext.class, expected3, visitor);
+        var paramRef1 = mock(DeclarationReference.class);
+        var paramRef2 = mock(DeclarationReference.class);
+        var paramRef3 = mock(DeclarationReference.class);
+        var paramInfo1 = new DeclarationInfo();
+        var paramInfo2 = new DeclarationInfo();
+        var paramInfo3 = new DeclarationInfo();
+
+        node.references = new ArrayList<>() {{
+            add(paramRef1);
+            add(paramRef2);
+            add(paramRef3);
+        }};
+
+        try {
+            when(scope.get(paramRef1)).thenReturn(paramInfo1);
+            when(scope.get(paramRef2)).thenReturn(paramInfo2);
+            when(scope.get(paramRef3)).thenReturn(paramInfo3);
+        } catch (Exception e) {
+            fail("cannot mock scope.get");
+        }
+
+        when(node.type(0)).thenReturn(type1);
+        when(node.type(1)).thenReturn(type2);
+        when(node.type(2)).thenReturn(type3);
+        when(node.type()).thenReturn(new ArrayList<>() {{
+            add(type1);
+            add(type2);
+            add(type3);
+        }});
+
+        var actual = visitor.visitSelect(node);
+
+        assertEquals(expectedReturn, actual);
+        assertEquals(expected1, paramInfo1.getType());
+        assertEquals(expected2, paramInfo2.getType());
+        assertEquals(expected3, paramInfo3.getType());
+    }
+
+    @Test
+    void selectValidEmpty() {
+        var expectedReturn = VOID_TYPE;
+
+        Scope scope = mock(Scope.class);
+
+        var visitor = new TypeCheckerVisitor(scope);
+
+        var node = mock(UCELParser.SelectContext.class);
+
+        node.references = new ArrayList<>();
+
+        when(node.type()).thenReturn(new ArrayList<>());
+
+        var actual = visitor.visitSelect(node);
+
+        assertEquals(expectedReturn, actual);
+    }
+
+    @Test
+    void selectInvalid() {
+        var expectedReturn = ERROR_TYPE;
+        var expected1 = INT_TYPE;
+        var expected2 = ERROR_TYPE;
+        var expected3 = DOUBLE_TYPE;
+
+        Scope scope = mock(Scope.class);
+
+        var visitor = new TypeCheckerVisitor(scope);
+
+        var node = mock(UCELParser.SelectContext.class);
+        var type1 = mockForVisitorResult(UCELParser.TypeContext.class, expected1, visitor);
+        var type2 = mockForVisitorResult(UCELParser.TypeContext.class, expected2, visitor);
+        var type3 = mockForVisitorResult(UCELParser.TypeContext.class, expected3, visitor);
+        var paramRef1 = mock(DeclarationReference.class);
+        var paramRef2 = mock(DeclarationReference.class);
+        var paramRef3 = mock(DeclarationReference.class);
+        var paramInfo1 = new DeclarationInfo();
+        var paramInfo2 = new DeclarationInfo();
+        var paramInfo3 = new DeclarationInfo();
+
+        node.references = new ArrayList<>() {{
+            add(paramRef1);
+            add(paramRef2);
+            add(paramRef3);
+        }};
+
+        try {
+            when(scope.get(paramRef1)).thenReturn(paramInfo1);
+            when(scope.get(paramRef2)).thenReturn(paramInfo2);
+            when(scope.get(paramRef3)).thenReturn(paramInfo3);
+        } catch (Exception e) {
+            fail("cannot mock scope.get");
+        }
+
+        when(node.type(0)).thenReturn(type1);
+        when(node.type(1)).thenReturn(type2);
+        when(node.type(2)).thenReturn(type3);
+        when(node.type()).thenReturn(new ArrayList<>() {{
+            add(type1);
+            add(type2);
+            add(type3);
+        }});
+
+        var actual = visitor.visitSelect(node);
+
+        assertEquals(expectedReturn, actual);
+        assertEquals(expected1, paramInfo1.getType());
+        assertEquals(expected2, paramInfo2.getType());
+        assertEquals(expected3, paramInfo3.getType());
+    }
+
     //endregion
 
     //region guard
