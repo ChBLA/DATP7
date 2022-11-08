@@ -8,4 +8,9 @@ public class ExponentialTemplate extends Template {
         this.template.add("expr1", expr1);
         this.template.add("expr2", expr2);
     }
+
+    public ExponentialTemplate(Template expr1) {
+        this.template = new ST("<expr1>");
+        this.template.add("expr1", expr1);
+    }
 }

@@ -2,6 +2,8 @@ package org.UcelParser;
 
 import org.Ucel.*;
 import org.UcelParser.CodeGeneration.CodeGenVisitor;
+import org.UcelParser.CodeGeneration.ProjectCodeLinker;
+import org.UcelParser.CodeGeneration.templates.ProjectTemplate;
 import org.UcelParser.CodeGeneration.templates.Template;
 import org.UcelParser.ManualParser.ManualParser;
 import org.UcelParser.Util.Exception.ErrorsFoundException;
@@ -42,11 +44,14 @@ public class Compiler {
         try {
             var refTree = runVisitor(referenceVisitor, tree, logger);
             var typeTree = runVisitor(typeCheckerVisitor, refTree, logger);
-            //var generatedCode = runVisitor(codeGenVisitor, typeTree, logger);
-            //System.out.println(generatedCode);
-        } catch (ErrorsFoundException ignored) {}
+            var generatedCode = runVisitor(codeGenVisitor, typeTree, logger);
+            var outputProject = new ProjectCodeLinker().generateUppaalProject((ProjectTemplate) generatedCode);
+            System.out.println(generatedCode);
+            return outputProject;
+        }
+        catch (ErrorsFoundException ignored) {}
 
-        logger.printLogs();
+//        logger.printLogs();
 
         return generateDummyProject();
     }

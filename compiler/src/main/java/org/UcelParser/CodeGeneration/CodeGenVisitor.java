@@ -115,17 +115,21 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     // Exponential
     @Override
     public Template visitExponential(UCELParser.ExponentialContext ctx) {
-        var expr1 = visit(ctx.expression(0));
-        var expr2 = visit(ctx.expression(1));
-        return new ExponentialTemplate(expr1, expr2);
+        int exprCount = ctx.expression().size();
+        return switch (exprCount) {
+            case 1 -> new ExponentialTemplate(visit(ctx.expression(0)));
+            case 2 -> new ExponentialTemplate(visit(ctx.expression(0)), visit(ctx.expression(1)));
+            default -> new ManualTemplate("");
+        };
     }
     //endregion
 
     //Invariant
     @Override
     public Template visitInvariant(UCELParser.InvariantContext ctx) {
-        var expr = visit(ctx.expression());
-        return new InvariantTemplate(expr);
+        return ctx.expression() != null
+                ? new InvariantTemplate(visit(ctx.expression()))
+                : new ManualTemplate("");
     }
     //endregion
 
@@ -161,6 +165,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitProject(UCELParser.ProjectContext ctx) {
+        enterScope(ctx.scope);
         var pDeclTemplate = visit(ctx.pdeclaration());
         var pSystemTemplate = visit(ctx.psystem());
 
@@ -169,6 +174,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
             pTemplateTemplates.add((PTemplateTemplate) visit(pTemp));
         }
 
+        exitScope();
         return new ProjectTemplate(pTemplateTemplates, pDeclTemplate, pSystemTemplate);
     }
 
@@ -362,8 +368,10 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitDeclarations(UCELParser.DeclarationsContext ctx) {
         List<Template> declarations = new ArrayList<>();
 
-        for (var declarationContext : ctx.children) {
-            declarations.add(visit(declarationContext));
+        if(ctx.children != null) {
+            for (var declarationContext : ctx.children) {
+                declarations.add(visit(declarationContext));
+            }
         }
 
         return new DeclarationsTemplate(declarations);

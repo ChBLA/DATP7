@@ -6,6 +6,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.UcelParser.UCELParser_Generated.*;
 
@@ -59,6 +60,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public Type visitProject(UCELParser.ProjectContext ctx) {
         var result = VOID_TYPE;
 
+        enterScope(ctx.scope);
+
         var pdeclarationType = visit(ctx.pdeclaration());
         if (pdeclarationType.equals(ERROR_TYPE)) {
             result = ERROR_TYPE;
@@ -85,6 +88,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             result = ERROR_TYPE;
         }
 
+        exitScope();
         return result;
     }
 
@@ -106,6 +110,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitPtemplate(UCELParser.PtemplateContext ctx) {
         var result = VOID_TYPE;
+
+        enterScope(ctx.scope);
 
         var parametersType = visit(ctx.parameters());
         if (parametersType.equals(ERROR_TYPE)) {
@@ -129,6 +135,21 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         } else if (!declarationsType.equals(VOID_TYPE)) {
             logger.log(new ErrorLog(ctx, "Type error in declarations. Value is not VOID_TYPE"));
             result = ERROR_TYPE;
+        }
+
+        exitScope();
+        try {
+            Type[] paramTypes = parametersType.getParameters();
+            Type[] templateTypes = new Type[paramTypes.length + 1];
+
+            templateTypes[0] = new Type(Type.TypeEnum.processType);
+            for(int i=0; i<paramTypes.length; i++) {
+                templateTypes[i+1] = paramTypes[i];
+            }
+
+            currentScope.get(ctx.reference).setType(new Type(Type.TypeEnum.templateType, templateTypes));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         return result;
@@ -1066,7 +1087,18 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type funcType;
 
         // Get type of function declaration
-        funcType = ctx.originDefinition.getType();
+        var refArgsCount = ctx.arguments().ID().size();
+        if(refArgsCount > 0) {
+            funcType = ctx.originDefinition.getType();
+        }
+        else {
+            try {
+                funcType = currentScope.get(ctx.reference).getType();
+            } catch (Exception e) {
+                logger.log(new ErrorLog(ctx, "Could not find definition for function"));
+                return ERROR_TYPE;
+            }
+        }
 
         // Compare input parameter types
         Type[] declParams = funcType.getParameters();

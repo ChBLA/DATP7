@@ -58,12 +58,14 @@ public class TypeCheckerTests  {
 
     @Test
     void projectReturnsVoidWhenNoErrors() {
+        var scope = mock(Scope.class);
         var visitor = new TypeCheckerVisitor();
         var pDeclNode = mockForVisitorResult(UCELParser.PdeclarationContext.class, VOID_TYPE, visitor);
         var pTempNode =  new ArrayList<UCELParser.PtemplateContext>();
         pTempNode.add(mockForVisitorResult(UCELParser.PtemplateContext.class, VOID_TYPE, visitor));
         var pSystNode = mockForVisitorResult(UCELParser.PsystemContext.class, VOID_TYPE, visitor);
         var node = mock(UCELParser.ProjectContext.class);
+        node.scope = scope;
         when(node.pdeclaration()).thenReturn(pDeclNode);
         when(node.ptemplate()).thenReturn(pTempNode);
         when(node.psystem()).thenReturn(pSystNode);
@@ -75,12 +77,14 @@ public class TypeCheckerTests  {
 
     @Test
     void projectErrorWhenChildNodeError() {
+        var scope = mock(Scope.class);
         var visitor = new TypeCheckerVisitor();
         var pDeclNode = mockForVisitorResult(UCELParser.PdeclarationContext.class, ERROR_TYPE, visitor);
         var pTempNode =  new ArrayList<UCELParser.PtemplateContext>();
         pTempNode.add(mockForVisitorResult(UCELParser.PtemplateContext.class, VOID_TYPE, visitor));
         var pSystNode = mockForVisitorResult(UCELParser.PsystemContext.class, VOID_TYPE, visitor);
         var node = mock(UCELParser.ProjectContext.class);
+        node.scope = scope;
         when(node.pdeclaration()).thenReturn(pDeclNode);
         when(node.ptemplate()).thenReturn(pTempNode);
         when(node.psystem()).thenReturn(pSystNode);
@@ -91,11 +95,14 @@ public class TypeCheckerTests  {
     }
 
     @Test void ptemplateWhenChildIsSuccess() {
-        var visitor = new TypeCheckerVisitor();
+        var globalScope = mock(Scope.class);
+        var localScope = mock(Scope.class);
+        var visitor = new TypeCheckerVisitor(globalScope);
         var node = mock(UCELParser.PtemplateContext.class);
         var parameters = mockForVisitorResult(UCELParser.ParametersContext.class, VOID_TYPE, visitor);
         var graph = mockForVisitorResult(UCELParser.GraphContext.class, VOID_TYPE, visitor);
         var declarations = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
+        node.scope = localScope;
         when(node.parameters()).thenReturn(parameters);
         when(node.graph()).thenReturn(graph);
         when(node.declarations()).thenReturn(declarations);
@@ -107,11 +114,14 @@ public class TypeCheckerTests  {
     }
 
     @Test void ptemplateWhenChildIsError() {
-        var visitor = new TypeCheckerVisitor();
+        var globalScope = mock(Scope.class);
+        var localScope = mock(Scope.class);
+        var visitor = new TypeCheckerVisitor(globalScope);
         var node = mock(UCELParser.PtemplateContext.class);
         var parameters = mockForVisitorResult(UCELParser.ParametersContext.class, VOID_TYPE, visitor);
         var graph = mockForVisitorResult(UCELParser.GraphContext.class, VOID_TYPE, visitor);
         var declarations = mockForVisitorResult(UCELParser.DeclarationsContext.class, ERROR_TYPE, visitor);
+        node.scope = localScope;
         when(node.parameters()).thenReturn(parameters);
         when(node.graph()).thenReturn(graph);
         when(node.declarations()).thenReturn(declarations);
