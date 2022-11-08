@@ -22,12 +22,12 @@ public class SmokeTests {
 
     private static Stream<Arguments> compilerInputPSystem() {
         return Stream.of(
-                Arguments.arguments("int a;\n{bool b = 12 + 7 > 0;}\nsystem;"),
-                Arguments.arguments("int a;\n{int i = x * y % 12;}\nsystem;"),
-                Arguments.arguments("int a;\n{bool b = true && !false;}\nsystem;"),
-                Arguments.arguments("int a;\n{\nint a = 0;\nint i = 0;\nfor (i = 0; i < 10; i++) {\na += i;\n}\n}\nsystem;"),
-                Arguments.arguments("int a;\n{\nbool b = true;\nwhile (b) {\n b = not b;\n}\n}\nsystem;"),
-                Arguments.arguments("int a;\n{\nbool b = true;\ndo {\nb = not b;\n} while (b);\n}\nsystem;")
+                Arguments.arguments("int a;\nbool b = 12 + 7 > 0;\nsystem DummyTemplate();"),
+                Arguments.arguments("int a;\n{int i = x * y % 12;\nsystem DummyTemplate();"),
+                Arguments.arguments("int a;\nbool b = true && !false;\nsystem DummyTemplate();"),
+                Arguments.arguments("int a;\nint a = 0;\nint i = 0; system DummyTemplate();"),
+                Arguments.arguments("int a;\nbool b = true;\n b = not b;\nsystem DummyTemplate();"),
+                Arguments.arguments("int a;\nbool b = true;\nb = not b;\nsystem DummyTemplate();")
         );
     }
 

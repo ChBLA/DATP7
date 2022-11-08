@@ -54,6 +54,125 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public DeclarationInfo currentFunction = null;
 
 
+
+    @Override
+    public Type visitProject(UCELParser.ProjectContext ctx) {
+        var result = VOID_TYPE;
+
+        var pdeclarationType = visit(ctx.pdeclaration());
+        if (pdeclarationType.equals(ERROR_TYPE)) {
+            result = ERROR_TYPE;
+        } else if (!pdeclarationType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Type error in declaration. Value is not VOID_TYPE"));
+            result = ERROR_TYPE;
+        }
+
+        for (var template : ctx.ptemplate()) {
+            var templateType = visit(template);
+            if (templateType.equals(ERROR_TYPE)) {
+                result = ERROR_TYPE;
+            } else if (!templateType.equals(VOID_TYPE)) {
+                logger.log(new ErrorLog(ctx, "Type error in template. Value is not VOID_TYPE"));
+                result = ERROR_TYPE;
+            }
+        }
+
+        var psystemType = visit(ctx.psystem());
+        if (psystemType.equals(ERROR_TYPE)) {
+            result = ERROR_TYPE;
+        } else if (!psystemType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Type error in system. Value is not VOID_TYPE"));
+            result = ERROR_TYPE;
+        }
+
+        return result;
+    }
+
+    @Override
+    public Type visitPdeclaration(UCELParser.PdeclarationContext ctx) {
+        var result = VOID_TYPE;
+
+        var declarationsType = visit(ctx.declarations());
+        if (declarationsType.equals(ERROR_TYPE)) {
+            result = ERROR_TYPE;
+        } else if (!declarationsType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Type error in declarations. Value is not VOID_TYPE"));
+            result = ERROR_TYPE;
+        }
+
+        return result;
+    }
+
+    @Override
+    public Type visitPtemplate(UCELParser.PtemplateContext ctx) {
+        var result = VOID_TYPE;
+
+        var parametersType = visit(ctx.parameters());
+        if (parametersType.equals(ERROR_TYPE)) {
+            result = ERROR_TYPE;
+        } else if (!parametersType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Type error in parameters. Value is not VOID_TYPE"));
+            result = ERROR_TYPE;
+        }
+
+        var graphType = visit(ctx.graph());
+        if (graphType.equals(ERROR_TYPE)) {
+            result = ERROR_TYPE;
+        } else if (!graphType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Type error in graph. Value is not VOID_TYPE"));
+            result = ERROR_TYPE;
+        }
+
+        var declarationsType = visit(ctx.declarations());
+        if (declarationsType.equals(ERROR_TYPE)) {
+            result = ERROR_TYPE;
+        } else if (!declarationsType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Type error in declarations. Value is not VOID_TYPE"));
+            result = ERROR_TYPE;
+        }
+
+        return result;
+    }
+
+    @Override
+    public Type visitPsystem(UCELParser.PsystemContext ctx) {
+        var result = VOID_TYPE;
+
+        var declarationsType = visit(ctx.declarations());
+        if (declarationsType.equals(ERROR_TYPE)) {
+            result = ERROR_TYPE;
+        } else if (!declarationsType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Type error in declarations. Value is not VOID_TYPE"));
+            result = ERROR_TYPE;
+        }
+
+
+        if (ctx.build() != null) {
+            var buildType = visit(ctx.build());
+            if (buildType.equals(ERROR_TYPE)) {
+                logger.log(new ErrorLog(ctx, "Type error in build. Value is ERROR_TYPE"));
+                result = ERROR_TYPE;
+            } else if (!buildType.equals(VOID_TYPE)) {
+                logger.log(new ErrorLog(ctx, "Type error in build. Value is not VOID_TYPE"));
+                result = ERROR_TYPE;
+            }
+        }
+
+        var systemType = visit(ctx.system());
+        if (systemType.equals(ERROR_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Type error in system. Value is ERROR_TYPE"));
+            result = ERROR_TYPE;
+        } else if (!systemType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Type error in system. Value is not VOID_TYPE"));
+            result = ERROR_TYPE;
+        }
+
+
+        return VOID_TYPE;
+    }
+
+
+
     //region Start
 
     @Override
@@ -696,9 +815,11 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         boolean errorFound = false;
         Type errorType = ERROR_TYPE;
 
-        for(ParseTree pt : ctx.children)
-            if(visit(pt).equals(errorType))
-                errorFound = true;
+        if(ctx.children != null) {
+            for(ParseTree pt : ctx.children)
+                if(visit(pt).equals(errorType))
+                    errorFound = true;
+        }
 
         if(errorFound) return errorType;
         else return VOID_TYPE;
@@ -1238,7 +1359,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         var sync = visit(ctx.sync());
         var update = visit(ctx.update());
 
-        if(select.equals(ERROR_TYPE))
+        if(select != null && select.equals(ERROR_TYPE))
             return ERROR_TYPE;
         if(guard.equals(ERROR_TYPE))
             return ERROR_TYPE;

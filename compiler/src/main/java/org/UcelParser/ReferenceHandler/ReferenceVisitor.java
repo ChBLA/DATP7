@@ -93,7 +93,8 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     @Override
     public Boolean visitExponential(UCELParser.ExponentialContext ctx) {
-        return visit(ctx.expression().get(0)) && visit(ctx.expression().get(1));
+        int count = ctx.getChildCount();
+        return (count <= 0 || visit(ctx.expression().get(0))) && (count <= 1 || visit(ctx.expression().get(1)));
     }
 
     @Override

@@ -472,6 +472,8 @@ public class ReferenceHandlerTests {
         UCELParser.ExpressionContext expressionLeft = mock(UCELParser.ExpressionContext.class);
         UCELParser.ExpressionContext expressionRight = mock(UCELParser.ExpressionContext.class);
 
+        when(node.getChildCount()).thenReturn(2);
+
         ArrayList<UCELParser.ExpressionContext> expressions = new ArrayList<>();
         expressions.add(expressionLeft);
         expressions.add(expressionRight);
@@ -494,6 +496,8 @@ public class ReferenceHandlerTests {
         UCELParser.ExponentialContext node = mock(UCELParser.ExponentialContext.class);
         UCELParser.ExpressionContext expressionLeft = mock(UCELParser.ExpressionContext.class);
         UCELParser.ExpressionContext expressionRight = mock(UCELParser.ExpressionContext.class);
+
+        when(node.getChildCount()).thenReturn(2);
 
         ArrayList<UCELParser.ExpressionContext> expressions = new ArrayList<>();
         expressions.add(expressionLeft);

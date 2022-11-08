@@ -28,6 +28,118 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region Update
+
+    @Test
+    void updateOneExpr() {
+        String expected = "x = 0";
+
+        var visitor = new CodeGenVisitor();
+
+        var exprMock = mockForVisitorResult(UCELParser.ExpressionContext.class,
+                new ManualTemplate(expected), visitor);
+
+        List<UCELParser.ExpressionContext> exprs = new ArrayList<>();
+        exprs.add(exprMock);
+
+        var node = mock(UCELParser.UpdateContext.class);
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitUpdate(node).toString();
+        assertEquals(expected, actual);
+    }
+    @Test
+    void updateMultipleExpr() {
+        String expected = "x = 0, y = 1";
+
+        var visitor = new CodeGenVisitor();
+
+        var exprMock1 = mockForVisitorResult(UCELParser.ExpressionContext.class,
+                new ManualTemplate("x = 0"), visitor);
+
+        var exprMock2 = mockForVisitorResult(UCELParser.ExpressionContext.class,
+                new ManualTemplate("y = 1"), visitor);
+
+        List<UCELParser.ExpressionContext> exprs = new ArrayList<>();
+        exprs.add(exprMock1);
+        exprs.add(exprMock2);
+
+        var node = mock(UCELParser.UpdateContext.class);
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitUpdate(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void updateNoExpr() {
+        String expected = "";
+
+        var visitor = new CodeGenVisitor();
+
+        List<UCELParser.ExpressionContext> exprs = new ArrayList<>();
+
+        var node = mock(UCELParser.UpdateContext.class);
+        when(node.expression()).thenReturn(exprs);
+
+        var actual = visitor.visitUpdate(node).toString();
+        assertEquals(expected, actual);
+    }
+
+
+    //endregion
+
+    //region sync
+
+    @Test
+    void syncQuestionMarkCorrect() {
+        var expected = "a[1]?";
+        var visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class,
+                new ManualTemplate("a[1]"), visitor);
+
+        var terminalNodeMock = mock(TerminalNode.class);
+        when(terminalNodeMock.getText()).thenReturn("?");
+
+        var node = mock(UCELParser.SyncContext.class);
+        when(node.expression()).thenReturn(expr);
+        when(node.QUESTIONMARK()).thenReturn(terminalNodeMock);
+
+        var actual = visitor.visitSync(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void syncNegCorrect() {
+        var expected = "a[1]!";
+        var visitor = new CodeGenVisitor();
+
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class,
+                new ManualTemplate("a[1]"), visitor);
+
+        var terminalNodeMock = mock(TerminalNode.class);
+        when(terminalNodeMock.getText()).thenReturn("!");
+
+        var node = mock(UCELParser.SyncContext.class);
+        when(node.expression()).thenReturn(expr);
+        when(node.NEG()).thenReturn(terminalNodeMock);
+
+        var actual = visitor.visitSync(node).toString();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void syncNoExpr() {
+        var visitor = new CodeGenVisitor();
+        var node = mock(UCELParser.SyncContext.class);
+
+        var actual = visitor.visitSync(node);
+        assertEquals("", actual.toString());
+    }
+
+    //endregion
+
     //region Select
 
     @Test
@@ -621,6 +733,20 @@ public class CodeGenTests {
         var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
 
         when(node.expression()).thenReturn(exprNode);
+
+        var actual = visitor.visitGuard(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void guardExpressionNullGeneratedCorrectly() {
+        var expected = "";
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.GuardContext.class);
+
+        when(node.expression()).thenReturn(null);
 
         var actual = visitor.visitGuard(node).toString();
 

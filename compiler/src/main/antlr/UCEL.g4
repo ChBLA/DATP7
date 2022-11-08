@@ -28,9 +28,9 @@ exponential : (expression (COLON expression)?)?;
 invariant : expression?;
 
 edge locals [Scope scope, Integer locationStartID, Integer locationEndID, String comments, String testCode]
-    : select guard sync update;
+    : select COMMA guard sync update;
 select locals [List<DeclarationReference> references]
-    : ID COLON type (COMMA ID COLON type)*;
+    : (ID COLON type (COMMA ID COLON type)*)?;
 guard : expression?;
 sync : (expression (NEG | QUESTIONMARK))?;
 update : (expression (COMMA expression)*)?;
@@ -67,7 +67,7 @@ parameters : ( parameter (COMMA parameter)* )?;
 parameter  locals [DeclarationReference reference]
               : type REF? (BITAND)? ID arrayDecl*;
 
-declarations  : (variableDecl | typeDecl | function | chanPriority | instantiation | component | interfaceDecl)+;
+declarations  : (variableDecl | typeDecl | function | chanPriority | instantiation | component | interfaceDecl)*;
 variableDecl  : type variableID (COMMA variableID)* END;
 
 variableID locals [DeclarationReference reference]
