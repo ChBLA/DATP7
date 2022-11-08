@@ -270,7 +270,12 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             return false;
         }
 
-        if(!visit(ctx.parameters()) || !visit(ctx.arguments())) {
+        var parameters = ctx.parameters();
+        var arguments = ctx.arguments();
+        if(
+            (parameters != null && !visit(parameters)) ||
+            (arguments  != null && !visit(arguments ))
+        ) {
             exitScope();
             return false;
         }

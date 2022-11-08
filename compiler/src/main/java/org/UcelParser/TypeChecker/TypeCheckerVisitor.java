@@ -299,7 +299,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public Type visitInstantiation(UCELParser.InstantiationContext ctx) {
         DeclarationInfo instantiationInfo = null, constructorInfo = null;
 
-        Type[] parameterTypes = visit(ctx.parameters()).getParameters();
+        var parameters = ctx.parameters();
+        Type[] parameterTypes = parameters != null ? visit(parameters).getParameters() : new Type[0];
 
         enterScope(ctx.scope);
 
