@@ -756,6 +756,7 @@ public class TypeCheckerTests  {
 
         Type[][] validPairTypes = new Type[][]{
                 {INT_TYPE, INT_TYPE},
+                {CLOCK_TYPE, INT_TYPE},
                 {CHAR_TYPE, CHAR_TYPE},
                 {BOOL_TYPE, BOOL_TYPE},
                 {STRING_TYPE, STRING_TYPE},
@@ -775,7 +776,7 @@ public class TypeCheckerTests  {
                 Type expectedType = ERROR_TYPE;
                 for (Type[] validPairType : validPairTypes) {
                     if (leftType.equals(validPairType[0]) && rightType.equals(validPairType[1])) {
-                        expectedType = VOID_TYPE;
+                        expectedType = leftType;
                         break;
                     }
                 }
@@ -4009,7 +4010,7 @@ public class TypeCheckerTests  {
     @Test
     void edgeValid() {
         var expected = VOID_TYPE;
-
+        var scopeMock = mock(Scope.class);
         var visitor = new TypeCheckerVisitor();
 
         var node = mock(UCELParser.EdgeContext.class);
@@ -4018,6 +4019,7 @@ public class TypeCheckerTests  {
         var sync = mockForVisitorResult(UCELParser.SyncContext.class, VOID_TYPE, visitor);
         var update = mockForVisitorResult(UCELParser.UpdateContext.class, VOID_TYPE, visitor);
 
+        node.scope = scopeMock;
         when(node.select()).thenReturn(select);
         when(node.guard()).thenReturn(guard);
         when(node.sync()).thenReturn(sync);
@@ -4036,7 +4038,7 @@ public class TypeCheckerTests  {
     @Test
     void edgeInvalidSelect() {
         var expected = ERROR_TYPE;
-
+        var scopeMock = mock(Scope.class);
         var visitor = new TypeCheckerVisitor();
 
         var node = mock(UCELParser.EdgeContext.class);
@@ -4045,6 +4047,7 @@ public class TypeCheckerTests  {
         var sync = mockForVisitorResult(UCELParser.SyncContext.class, VOID_TYPE, visitor);
         var update = mockForVisitorResult(UCELParser.UpdateContext.class, VOID_TYPE, visitor);
 
+        node.scope = scopeMock;
         when(node.select()).thenReturn(select);
         when(node.guard()).thenReturn(guard);
         when(node.sync()).thenReturn(sync);
@@ -4058,7 +4061,7 @@ public class TypeCheckerTests  {
     @Test
     void edgeInvalidGuard() {
         var expected = ERROR_TYPE;
-
+        var scopeMock = mock(Scope.class);
         var visitor = new TypeCheckerVisitor();
 
         var node = mock(UCELParser.EdgeContext.class);
@@ -4067,6 +4070,7 @@ public class TypeCheckerTests  {
         var sync = mockForVisitorResult(UCELParser.SyncContext.class, VOID_TYPE, visitor);
         var update = mockForVisitorResult(UCELParser.UpdateContext.class, VOID_TYPE, visitor);
 
+        node.scope = scopeMock;
         when(node.select()).thenReturn(select);
         when(node.guard()).thenReturn(guard);
         when(node.sync()).thenReturn(sync);
@@ -4080,6 +4084,7 @@ public class TypeCheckerTests  {
     @Test
     void edgeInvalidSync() {
         var expected = ERROR_TYPE;
+        var scopeMock = mock(Scope.class);
 
         var visitor = new TypeCheckerVisitor();
 
@@ -4089,6 +4094,7 @@ public class TypeCheckerTests  {
         var sync = mockForVisitorResult(UCELParser.SyncContext.class, ERROR_TYPE, visitor);
         var update = mockForVisitorResult(UCELParser.UpdateContext.class, VOID_TYPE, visitor);
 
+        node.scope = scopeMock;
         when(node.select()).thenReturn(select);
         when(node.guard()).thenReturn(guard);
         when(node.sync()).thenReturn(sync);
@@ -4102,7 +4108,7 @@ public class TypeCheckerTests  {
     @Test
     void edgeInvalidUpdate() {
         var expected = ERROR_TYPE;
-
+        var scopeMock = mock(Scope.class);
         var visitor = new TypeCheckerVisitor();
 
         var node = mock(UCELParser.EdgeContext.class);
@@ -4111,6 +4117,7 @@ public class TypeCheckerTests  {
         var sync = mockForVisitorResult(UCELParser.SyncContext.class, VOID_TYPE, visitor);
         var update = mockForVisitorResult(UCELParser.UpdateContext.class, ERROR_TYPE, visitor);
 
+        node.scope = scopeMock;
         when(node.select()).thenReturn(select);
         when(node.guard()).thenReturn(guard);
         when(node.sync()).thenReturn(sync);
