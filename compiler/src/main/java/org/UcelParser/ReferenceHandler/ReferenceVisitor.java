@@ -186,16 +186,16 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
         }
 
-        enterScope();
-        ctx.scope = currentScope;
-
-        if(!visit(ctx.type()) || !visit(ctx.parameters())) {
+        if(!visit(ctx.type())) {
             //No logging, passing through
             exitScope();
             return false;
         }
 
-        if(!visit(ctx.block())) {
+        enterScope();
+        ctx.scope = currentScope;
+
+        if(!visit(ctx.parameters()) || !visit(ctx.block())) {
             //No logging, passing through
             exitScope();
             return false;

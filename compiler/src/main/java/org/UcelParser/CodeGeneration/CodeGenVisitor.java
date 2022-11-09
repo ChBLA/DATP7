@@ -1045,9 +1045,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         Template result = new ManualTemplate(";");
         if (ctx.block() != null)
             return visit(ctx.block());
-        else if (ctx.assignment() != null) {
-            result = new ManualTemplate(visit(ctx.assignment()) + ";");
-        } else if (ctx.expression() != null) {
+        else if (ctx.expression() != null) {
             result = new ManualTemplate(visit(ctx.expression()) + ";");
         } else if (ctx.forLoop() != null) {
             result = visit(ctx.forLoop());
@@ -1072,6 +1070,15 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitAssignExpr(UCELParser.AssignExprContext ctx) {
+        var left = visit(ctx.expression(0));
+        var right = visit(ctx.expression(1));
+        var op = new ManualTemplate(ctx.assign().getText());
+
+        return new AssignmentTemplate(left, op, right);
+    }
+
+    @Override
+    public Template visitAssignment(UCELParser.AssignmentContext ctx) {
         var left = visit(ctx.expression(0));
         var right = visit(ctx.expression(1));
         var op = new ManualTemplate(ctx.assign().getText());

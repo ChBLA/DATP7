@@ -3658,23 +3658,6 @@ public class CodeGenTests {
     }
 
     @Test
-    void statementAssignmentGeneratedCorrectly() {
-        var assignResult = generateDefaultAssignmentTemplate(Type.TypeEnum.intType);
-        var expected = String.format("%s;%n", assignResult);
-
-        CodeGenVisitor visitor = new CodeGenVisitor();
-
-        var assignMock = mockForVisitorResult(UCELParser.AssignmentContext.class, assignResult, visitor);
-        var node = mock(UCELParser.StatementContext.class);
-
-        when(node.assignment()).thenReturn(assignMock);
-
-        var actual = visitor.visitStatement(node).toString();
-
-        assertEquals(expected, actual);
-    }
-
-    @Test
     void statementExpressionGeneratedCorrectly() {
         var exprResult = generateDefaultExprTemplate(Type.TypeEnum.intType);
         var expected = String.format("%s;%n", exprResult);

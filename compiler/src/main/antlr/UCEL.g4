@@ -101,7 +101,6 @@ block locals [Scope scope]
     : LEFTCURLYBRACE localDeclaration* statement* RIGHTCURLYBRACE;
 localDeclaration  : typeDecl | variableDecl;
 statement       : block
-                | assignment END
                 | expression? END
                 | forLoop
                 | iteration
@@ -149,11 +148,12 @@ expression locals [DeclarationReference reference, DeclarationInfo originDefinit
             |  expression op=('||' | 'or' | 'imply') expression #LogOr
             |  expression QUESTIONMARK expression COLON expression       #Conditional
             |  verification                                     #VerificationExpr
+            |  <assoc=right> expression assign expression       #AssignExpr
             ;
 
 verification locals [Scope scope, DeclarationReference reference] : op=('forall' | 'exists' | 'sum') LEFTPAR ID COLON type RIGHTPAR expression;
 
-assignment  : <assoc=right> expression assign expression #AssignExpr;
+assignment  : <assoc=right> expression assign expression;
 
 arguments  : ((expression | REF ID) (COMMA (expression | REF ID))*)?;
 

@@ -868,8 +868,41 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
 
         if (leftType.equals(rightType)) {
+            return leftType;
+        }
+        else if ((leftType.getEvaluationType() == Type.TypeEnum.clockType) && (rightType.getEvaluationType() == Type.TypeEnum.intType) ) {
+            return leftType;
+        }
+        else {
+            logger.log(new ErrorLog(ctx, "Type error: cannot assign " + rightType + " to " + leftType));
+            return ERROR_TYPE;
+        }
+    }
+
+    @Override
+    public Type visitAssignment(UCELParser.AssignmentContext ctx) {
+        Type leftType = visit(ctx.expression(0));
+        Type rightType = visit(ctx.expression(1));
+
+        if (leftType.getEvaluationType() == Type.TypeEnum.errorType ||
+                rightType.getEvaluationType() == Type.TypeEnum.errorType ||
+                leftType.getEvaluationType() == Type.TypeEnum.chanType ||
+                rightType.getEvaluationType() == Type.TypeEnum.chanType ||
+                leftType.getEvaluationType() == Type.TypeEnum.voidType ||
+                rightType.getEvaluationType() == Type.TypeEnum.voidType ||
+                leftType.getEvaluationType() == Type.TypeEnum.invalidType ||
+                rightType.getEvaluationType() == Type.TypeEnum.invalidType) {
+            logger.log(new ErrorLog(ctx, "Type error: cannot assign " + rightType + " to " + leftType));
+            return ERROR_TYPE;
+        }
+
+        if (leftType.equals(rightType)) {
             return VOID_TYPE;
-        } else {
+        }
+        else if ((leftType.getEvaluationType() == Type.TypeEnum.clockType) && (rightType.getEvaluationType() == Type.TypeEnum.intType) ) {
+            return VOID_TYPE;
+        }
+        else {
             logger.log(new ErrorLog(ctx, "Type error: cannot assign " + rightType + " to " + leftType));
             return ERROR_TYPE;
         }
@@ -1402,22 +1435,22 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         var sync = visit(ctx.sync());
         var update = visit(ctx.update());
 
+        var hadError = false;
         if(select != null && select.equals(ERROR_TYPE))
-            return ERROR_TYPE;
-        if(guard.equals(ERROR_TYPE))
-            return ERROR_TYPE;
-        if(sync.equals(ERROR_TYPE))
-            return ERROR_TYPE;
-        if(update.equals(ERROR_TYPE))
-            return ERROR_TYPE;
-
-        if(!guard.equals(BOOL_TYPE)) {
+            hadError = true;
+        else if(guard.equals(ERROR_TYPE))
+            hadError = true;
+        else if(sync.equals(ERROR_TYPE))
+            hadError = true;
+        else if(update.equals(ERROR_TYPE))
+            hadError = true;
+        else if(!guard.equals(BOOL_TYPE)) {
             logger.log(new ErrorLog(ctx, "Guard must be of type bool"));
-            return ERROR_TYPE;
+            hadError = true;
         }
 
         exitScope();
-        return VOID_TYPE;
+        return hadError ? ERROR_TYPE : VOID_TYPE;
     }
 
     @Override
