@@ -86,9 +86,10 @@ public class Logger implements ILogger {
         if(log.getLineStart() == log.getLineStop()) {
             int line = (log.getLineStart() + 1), character = (log.getCharStart() + 1), width = log.getCharStop() - log.getCharStart() + 1;
             if (width > 1) width += 1;
-            return "Error at " + line + ":" + character + ": " + log.getMessage() + "\n" + lines[log.getLineStart()] +
-                    "\n" + repeat(" ", log.getCharStart()) +
-                    repeat("^", width);
+            return "Error at " + line + ":" + character + ": " + log.getMessage();
+            //+ "\n" + lines[log.getLineStart()] +
+            //                    "\n" + repeat(" ", log.getCharStart()) +
+            //                    repeat("^", width);
         }
 
         return log.getMessage();

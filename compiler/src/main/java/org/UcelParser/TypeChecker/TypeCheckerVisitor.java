@@ -1233,7 +1233,9 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return ERROR_TYPE;
         } else if (!(comparableTypes.contains(leftEnum) && leftEnum == rightEnum)
                 && !(leftEnum == Type.TypeEnum.intType && rightEnum == Type.TypeEnum.doubleType)
-                && !(leftEnum == Type.TypeEnum.doubleType && rightEnum == Type.TypeEnum.intType)) {
+                && !(leftEnum == Type.TypeEnum.doubleType && rightEnum == Type.TypeEnum.intType)
+                && !(leftEnum == Type.TypeEnum.intType && rightEnum == Type.TypeEnum.clockType)
+                && !(leftEnum == Type.TypeEnum.clockType && rightEnum == Type.TypeEnum.intType)) {
             logger.log(new ErrorLog(ctx, leftEnum + " and " + rightEnum + " are unsupported for equivalence"));
             return ERROR_TYPE;
         } else if (isArray(leftNode) || isArray(rightNode)) {

@@ -47,11 +47,10 @@ public class Compiler {
             var generatedCode = runVisitor(codeGenVisitor, typeTree, logger);
             var outputProject = new ProjectCodeLinker().generateUppaalProject((ProjectTemplate) generatedCode);
 //            System.out.println(generatedCode);
-//            logger.printLogs();
             return outputProject;
         }
         catch (ErrorsFoundException e) {
-//            logger.printLogs();
+            logger.printLogs();
             throw new RuntimeException(e);
         }
 
