@@ -29,9 +29,9 @@ public class UppaalPropertyNames {
     public class Edge {
         public static final String select = "select";
         public static final String guard = "guard";
-        public static final String sync = "sync";
-        public static final String update = "update";
-        public static final String comment = "comment";
-        public static final String testCode = "testCode";
+        public static final String sync = "synchronisation";
+        public static final String update = "assignment";
+        public static final String comment = "comments";
+        public static final String testCode = "testcode";
     }
 }
