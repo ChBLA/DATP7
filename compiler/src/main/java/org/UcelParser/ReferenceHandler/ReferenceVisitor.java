@@ -356,42 +356,14 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         DeclarationReference tableReference = null;
         DeclarationInfo funcInfo = null;
 
-        var refArgs = ctx.arguments().ID();
-        DeclarationInfo[] references = new DeclarationInfo[refArgs.size()];
-
         try {
             tableReference = currentScope.find(identifier, true);
-            funcInfo = currentScope.get(tableReference);
-
-            for (int i = 0; i < refArgs.size(); i++) {
-                references[i] = currentScope.get(currentScope.find(refArgs.get(i).getText(), true));
-            }
-
         } catch (Exception e) {
             logger.log(new ErrorLog(ctx,"Function '" + identifier + "' has not been declared in scope"));
             return false;
         }
 
-        if (refArgs.size() > 0) {
-            var func = (UCELParser.FunctionContext) funcInfo.getNode();
-            var occurrence = new FuncCallOccurrence(ctx, references);
-            func.occurrences.add(occurrence);
-            DeclarationReference newFuncReference = null;
-            try {
-                var builder = new StringBuilder(funcInfo.getIdentifier());
-                for (int i = 0; i < references.length; i++) {
-                    builder.append(String.format("_%s", references[i].getIdentifier()));
-                }
-
-                newFuncReference = currentScope.getScope(tableReference).add(new DeclarationInfo(builder.toString(), funcInfo.getType(), funcInfo.getNode()));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            ctx.reference = newFuncReference;
-            ctx.originDefinition = funcInfo;
-        } else {
-            ctx.reference = tableReference;
-        }
+        ctx.reference = tableReference;
         visit(ctx.arguments());
         return true;
     }
