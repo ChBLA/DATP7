@@ -7,6 +7,10 @@ public class UniquePrefixGenerator {
         return generateStringFromInt(currentNumber++);
     }
 
+    public static void resetCounter() {
+        currentNumber = 0;
+    }
+
     private static String generateStringFromInt(int num) {
         var builder = new StringBuilder("aaaaaa");
         for (int i = 5; i >= 0 && num > 0 ; i--) {

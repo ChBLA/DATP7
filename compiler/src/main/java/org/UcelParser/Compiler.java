@@ -8,6 +8,7 @@ import org.UcelParser.CodeGeneration.templates.Template;
 import org.UcelParser.ManualParser.ManualParser;
 import org.UcelParser.Util.Exception.ErrorsFoundException;
 import org.UcelParser.Util.Logging.ILogger;
+import org.UcelParser.Util.UniquePrefixGenerator;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -37,7 +38,7 @@ public class Compiler {
     }
 
     public IProject compileProject(IProject project) {
-
+        UniquePrefixGenerator.resetCounter();
         ManualParser manualParser = new ManualParser();
         ParserRuleContext tree = manualParser.parseProject(project);
         logger.setSource("");//TODO inject sources
