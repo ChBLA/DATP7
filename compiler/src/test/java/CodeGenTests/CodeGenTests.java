@@ -243,6 +243,8 @@ public class CodeGenTests {
     void edgeCorrect() {
         var visitor = new CodeGenVisitor();
 
+        var scopeMock = mock(Scope.class);
+
         var select = new ManualTemplate("select");
         var guard = new ManualTemplate("guard");
         var sync = new ManualTemplate("sync");
@@ -254,6 +256,7 @@ public class CodeGenTests {
         var updateMock = mockForVisitorResult(UCELParser.UpdateContext.class, update, visitor);
 
         var edgeMock = mock(UCELParser.EdgeContext.class);
+        edgeMock.scope = scopeMock;
         when(edgeMock.select()).thenReturn(selectMock);
         when(edgeMock.guard()).thenReturn(guardMock);
         when(edgeMock.sync()).thenReturn(syncMock);
@@ -383,11 +386,13 @@ public class CodeGenTests {
         var pSystemTemplate = generateDefaultPSystemTemplate();
 
         var visitor = new CodeGenVisitor();
+        var scopeMock = mock(Scope.class);
 
         var node = mock(UCELParser.ProjectContext.class);
         var systemNode = mockForVisitorResult(UCELParser.PsystemContext.class, pSystemTemplate, visitor);
         var declNode = mockForVisitorResult(UCELParser.PdeclarationContext.class, pDeclTemplate, visitor);
 
+        node.scope = scopeMock;
         when(node.psystem()).thenReturn(systemNode);
         when(node.pdeclaration()).thenReturn(declNode);
 
@@ -409,6 +414,8 @@ public class CodeGenTests {
 
         var visitor = new CodeGenVisitor();
 
+        var scopeMock = mock(Scope.class);
+
         var node = mock(UCELParser.ProjectContext.class);
         var systemNode = mockForVisitorResult(UCELParser.PsystemContext.class, pSystemTemplate, visitor);
         var declNode = mockForVisitorResult(UCELParser.PdeclarationContext.class, pDeclTemplate, visitor);
@@ -416,6 +423,7 @@ public class CodeGenTests {
 
         var pTemplateNodes = new ArrayList<UCELParser.PtemplateContext>() {{ add(tempNode1); }};
 
+        node.scope = scopeMock;
         when(node.psystem()).thenReturn(systemNode);
         when(node.pdeclaration()).thenReturn(declNode);
         when(node.ptemplate()).thenReturn(pTemplateNodes);
@@ -440,6 +448,7 @@ public class CodeGenTests {
         var pTemplateTemplates = new ArrayList<PTemplateTemplate>() {{add(pTemplateTemplate1); add(pTemplateTemplate2);}};
 
         var visitor = new CodeGenVisitor();
+        var scopeMock = mock(Scope.class);
 
         var node = mock(UCELParser.ProjectContext.class);
         var systemNode = mockForVisitorResult(UCELParser.PsystemContext.class, pSystemTemplate, visitor);
@@ -449,6 +458,7 @@ public class CodeGenTests {
 
         var pTemplateNodes = new ArrayList<UCELParser.PtemplateContext>() {{ add(tempNode1); add(tempNode2); }};
 
+        node.scope = scopeMock;
         when(node.psystem()).thenReturn(systemNode);
         when(node.pdeclaration()).thenReturn(declNode);
         when(node.ptemplate()).thenReturn(pTemplateNodes);
@@ -916,6 +926,7 @@ public class CodeGenTests {
         String id2Name = "b";
         String expected = String.format("%s = %s();", id1Name, id2Name);
         Scope scopeMock = mock(Scope.class);
+        Scope scopeNodeMock = mock(Scope.class);
         DeclarationReference ref1Mock = mock(DeclarationReference.class);
         DeclarationReference ref2Mock = mock(DeclarationReference.class);
 
@@ -927,7 +938,7 @@ public class CodeGenTests {
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
-            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+            when(scopeNodeMock.get(ref2Mock)).thenReturn(info2Mock);
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
@@ -937,6 +948,7 @@ public class CodeGenTests {
         var node = mock(UCELParser.InstantiationContext.class);
         node.instantiatedReference = ref1Mock;
         node.constructorReference = ref2Mock;
+        node.scope = scopeNodeMock;
 
         String actual = visitor.visitInstantiation(node).toString();
 
@@ -949,6 +961,7 @@ public class CodeGenTests {
         String id2Name = "b";
         String expected = String.format("%s() = %s();", id1Name, id2Name);
         Scope scopeMock = mock(Scope.class);
+        Scope scopeNodeMock = mock(Scope.class);
         DeclarationReference ref1Mock = mock(DeclarationReference.class);
         DeclarationReference ref2Mock = mock(DeclarationReference.class);
 
@@ -960,7 +973,7 @@ public class CodeGenTests {
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
-            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+            when(scopeNodeMock.get(ref2Mock)).thenReturn(info2Mock);
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
@@ -971,6 +984,7 @@ public class CodeGenTests {
         var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
         node.instantiatedReference = ref1Mock;
         node.constructorReference = ref2Mock;
+        node.scope = scopeNodeMock;
         when(node.LEFTPAR()).thenReturn(parMocks);
 
         String actual = visitor.visitInstantiation(node).toString();
@@ -985,6 +999,7 @@ public class CodeGenTests {
         var paramTemplate = generateDefaultParametersTemplate("int", "c");
         String expected = String.format("%s(%s) = %s();", id1Name, paramTemplate, id2Name);
         Scope scopeMock = mock(Scope.class);
+        Scope scopeNodeMock = mock(Scope.class);
         DeclarationReference ref1Mock = mock(DeclarationReference.class);
         DeclarationReference ref2Mock = mock(DeclarationReference.class);
 
@@ -996,7 +1011,7 @@ public class CodeGenTests {
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
-            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+            when(scopeNodeMock.get(ref2Mock)).thenReturn(info2Mock);
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
@@ -1007,6 +1022,7 @@ public class CodeGenTests {
         var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
         node.instantiatedReference = ref1Mock;
         node.constructorReference = ref2Mock;
+        node.scope = scopeNodeMock;
         when(node.LEFTPAR()).thenReturn(parMocks);
         when(node.parameters()).thenReturn(paramMock);
 
@@ -1022,6 +1038,7 @@ public class CodeGenTests {
         var argTemplate = generateDefaultArgumentsTemplate(Type.TypeEnum.intType);
         String expected = String.format("%s = %s(%s);", id1Name, id2Name, argTemplate);
         Scope scopeMock = mock(Scope.class);
+        Scope scopeNodeMock = mock(Scope.class);
         DeclarationReference ref1Mock = mock(DeclarationReference.class);
         DeclarationReference ref2Mock = mock(DeclarationReference.class);
 
@@ -1033,7 +1050,7 @@ public class CodeGenTests {
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
-            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+            when(scopeNodeMock.get(ref2Mock)).thenReturn(info2Mock);
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
@@ -1043,6 +1060,7 @@ public class CodeGenTests {
         var argMock = mockForVisitorResult(UCELParser.ArgumentsContext.class, argTemplate, visitor);
         node.instantiatedReference = ref1Mock;
         node.constructorReference = ref2Mock;
+        node.scope = scopeNodeMock;
         when(node.arguments()).thenReturn(argMock);
 
         String actual = visitor.visitInstantiation(node).toString();
@@ -1057,6 +1075,7 @@ public class CodeGenTests {
         var argTemplate = generateDefaultArgumentsTemplate(Type.TypeEnum.intType);
         String expected = String.format("%s() = %s(%s);", id1Name, id2Name, argTemplate);
         Scope scopeMock = mock(Scope.class);
+        Scope scopeNodeMock = mock(Scope.class);
         DeclarationReference ref1Mock = mock(DeclarationReference.class);
         DeclarationReference ref2Mock = mock(DeclarationReference.class);
 
@@ -1068,7 +1087,7 @@ public class CodeGenTests {
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
-            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+            when(scopeNodeMock.get(ref2Mock)).thenReturn(info2Mock);
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
@@ -1080,6 +1099,7 @@ public class CodeGenTests {
         var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
         node.instantiatedReference = ref1Mock;
         node.constructorReference = ref2Mock;
+        node.scope = scopeNodeMock;
         when(node.LEFTPAR()).thenReturn(parMocks);
         when(node.arguments()).thenReturn(argMock);
 
@@ -1096,6 +1116,7 @@ public class CodeGenTests {
         var argTemplate = generateDefaultArgumentsTemplate(Type.TypeEnum.intType);
         String expected = String.format("%s(%s) = %s(%s);", id1Name, paramTemplate, id2Name, argTemplate);
         Scope scopeMock = mock(Scope.class);
+        Scope scopeNodeMock = mock(Scope.class);
         DeclarationReference ref1Mock = mock(DeclarationReference.class);
         DeclarationReference ref2Mock = mock(DeclarationReference.class);
 
@@ -1107,7 +1128,7 @@ public class CodeGenTests {
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
-            when(scopeMock.get(ref2Mock)).thenReturn(info2Mock);
+            when(scopeNodeMock.get(ref2Mock)).thenReturn(info2Mock);
         } catch (Exception e) {
             fail("error: can't mock scope");
         }
@@ -1119,6 +1140,7 @@ public class CodeGenTests {
         var parMocks = new ArrayList<TerminalNode>() {{add(mock(TerminalNode.class)); add(mock(TerminalNode.class));}};
         node.instantiatedReference = ref1Mock;
         node.constructorReference = ref2Mock;
+        node.scope = scopeNodeMock;
         when(node.LEFTPAR()).thenReturn(parMocks);
         when(node.parameters()).thenReturn(paramMock);
         when(node.arguments()).thenReturn(argMock);
@@ -2956,10 +2978,12 @@ public class CodeGenTests {
         when(variable.generateName()).thenReturn(name);
 
         var scopeMock = mock(Scope.class);
+        var scopeNodeMock = mock(Scope.class);
 
         var node = mock(UCELParser.VerificationContext.class);
         node.reference = ref;
         node.op = opToken;
+        node.scope = scopeNodeMock;
 
         try {
             when(scopeMock.get(ref)).thenReturn(variable);
