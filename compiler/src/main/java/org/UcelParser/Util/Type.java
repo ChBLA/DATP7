@@ -129,6 +129,10 @@ public class Type {
                 t.getArrayDimensions() == this.arrayDimensions;
     }
 
+    public boolean isSameBaseType(Type type) {
+        return this.getEvaluationType() == type.getEvaluationType();
+    }
+
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder((prefix != TypePrefixEnum.noPrefix ? prefix  + " " : "") + evaluationType.toString());

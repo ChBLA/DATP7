@@ -690,17 +690,34 @@ public class CodeGenTests {
 
     //region System
     @Test
-    void systemOneExpressionGeneratedCorrectly() {
-        var exprTemplate = generateDefaultExprTemplate("B");
-        var expected = String.format("system %s;", exprTemplate);
+    void systemOneIDExpressionGeneratedCorrectly() {
+        String name = "B";
+        var exprTemplate = generateDefaultExprTemplate(name);
+        var expected = String.format("system %s;", name);
+        var scopeMock = mock(Scope.class);
+        var declInfo = mock(DeclarationInfo.class);
+        var declRef = mock(DeclarationReference.class);
 
-        var visitor = new CodeGenVisitor();
+        try {
+            when(scopeMock.get(declRef)).thenReturn(declInfo);
+            when(declInfo.generateName()).thenReturn(name);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.SystemContext.class);
         var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, exprTemplate, visitor);
+        var exprInfo = mock(DeclarationInfo.class);
         var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(exprNode); }};
 
         when(node.expression()).thenReturn(exprs);
+        for (int i = 0; i < exprs.size(); i++)
+            when(node.expression(i)).thenReturn(exprs.get(i));
+        exprNode.originDefinition = exprInfo;
+        exprNode.reference = declRef;
+        when(exprInfo.generateName()).thenReturn(name);
 
         var actual = visitor.visitSystem(node).toString();
 
@@ -708,19 +725,81 @@ public class CodeGenTests {
     }
 
     @Test
-    void systemMultipleExpressionsGeneratedCorrectly() {
-        var expr1Template = generateDefaultExprTemplate("B");
-        var expr2Template = generateDefaultExprTemplate("C");
-        var expected = String.format("system %s, %s;", expr1Template, expr2Template);
+    void systemOneFuncCallExpressionGeneratedCorrectly() {
+        String name = "B_0";
+        var exprTemplate = generateDefaultExprTemplate("B()");
+        var expected = String.format("%s = %s;%nsystem %s;", name, exprTemplate, name);
 
-        var visitor = new CodeGenVisitor();
+        var scopeMock = mock(Scope.class);
+        var declInfoFuncCall = mock(DeclarationInfo.class);
+        var declRefFuncCall = mock(DeclarationReference.class);
+
+        try {
+            when(scopeMock.get(declRefFuncCall)).thenReturn(declInfoFuncCall);
+            when(declInfoFuncCall.generateName()).thenReturn("B");
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
+
+        var node = mock(UCELParser.SystemContext.class);
+        var exprNode = mockForVisitorResult(UCELParser.FuncCallContext.class, exprTemplate, visitor);
+        var exprInfo = mock(DeclarationInfo.class);
+        var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(exprNode); }};
+
+        when(node.expression()).thenReturn(exprs);
+        for (int i = 0; i < exprs.size(); i++)
+            when(node.expression(i)).thenReturn(exprs.get(i));
+        exprNode.originDefinition = exprInfo;
+        exprNode.reference = declRefFuncCall;
+        when(exprInfo.generateName()).thenReturn("B");
+
+        var actual = visitor.visitSystem(node).toString();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void systemMultipleIdAndFuncCallExpressionsGeneratedCorrectly() {
+        String name1 = "B", name2 = "C_1";
+        var expr1Template = generateDefaultExprTemplate("B");
+        var expr2Template = generateDefaultExprTemplate("C()");
+        var expected = String.format("%s = %s;%nsystem %s, %s;", name2, expr2Template, name1, name2);
+
+        var scopeMock = mock(Scope.class);
+        var declInfoFuncCall = mock(DeclarationInfo.class);
+        var declInfoID = mock(DeclarationInfo.class);
+        var declRefFuncCall = mock(DeclarationReference.class);
+        var declRefID = mock(DeclarationReference.class);
+
+        try {
+            when(scopeMock.get(declRefID)).thenReturn(declInfoID);
+            when(scopeMock.get(declRefFuncCall)).thenReturn(declInfoFuncCall);
+            when(declInfoID.generateName()).thenReturn(name1);
+            when(declInfoFuncCall.generateName()).thenReturn("C");
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+
+        var visitor = new CodeGenVisitor(scopeMock);
 
         var node = mock(UCELParser.SystemContext.class);
         var expr1Node = mockForVisitorResult(UCELParser.ExpressionContext.class, expr1Template, visitor);
-        var expr2Node = mockForVisitorResult(UCELParser.ExpressionContext.class, expr2Template, visitor);
+        var expr2Node = mockForVisitorResult(UCELParser.FuncCallContext.class, expr2Template, visitor);
+        var expr1Info = mock(DeclarationInfo.class);
+        var expr2Info = mock(DeclarationInfo.class);
         var exprs = new ArrayList<UCELParser.ExpressionContext>() {{ add(expr1Node); add(expr2Node); }};
 
         when(node.expression()).thenReturn(exprs);
+        for (int i = 0; i < exprs.size(); i++)
+            when(node.expression(i)).thenReturn(exprs.get(i));
+        expr1Node.originDefinition = expr1Info;
+        expr2Node.originDefinition = expr2Info;
+        expr1Node.reference = declRefID;
+        expr2Node.reference = declRefFuncCall;
+        when(expr1Info.generateName()).thenReturn("B");
+        when(expr2Info.generateName()).thenReturn("C");
 
         var actual = visitor.visitSystem(node).toString();
 

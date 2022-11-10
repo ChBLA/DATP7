@@ -5,6 +5,7 @@ import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.DeclarationReference;
+import org.UcelParser.Util.Logging.ErrorLog;
 import org.UcelParser.Util.Logging.ILogger;
 import org.UcelParser.Util.Logging.Logger;
 import org.UcelParser.Util.Scope;
@@ -253,13 +254,24 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitSystem(UCELParser.SystemContext ctx) {
-        var exprs = new ArrayList<Template>();
+        var constructions = new ArrayList<Template>();
+        var names = new ArrayList<String>();
 
-        for (var expr : ctx.expression()) {
-            exprs.add(visit(expr));
+        try {
+            for (int i = 0; i < ctx.expression().size(); i++) {
+                if (ctx.expression(i) instanceof UCELParser.FuncCallContext) {
+                    constructions.add(visit(ctx.expression(i)));
+                    String templateName = currentScope.get(ctx.expression(i).reference).generateName();
+                    names.add(templateName + "_" + i);
+                } else {
+                    names.add(visit(ctx.expression(i)).toString());
+                    constructions.add(new ManualTemplate(""));
+                }
+            }
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Could not find id in scope"));
         }
-
-        return new SystemTemplate(exprs);
+        return new SystemTemplate(constructions, names);
     }
 
     //endregion

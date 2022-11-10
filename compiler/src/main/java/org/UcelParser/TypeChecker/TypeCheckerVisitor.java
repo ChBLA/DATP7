@@ -50,6 +50,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private static final Type CHAN_TYPE = new Type(Type.TypeEnum.chanType);
     private static final Type STRUCT_TYPE = new Type(Type.TypeEnum.structType);
     private static final Type PROCESS_TYPE = new Type(Type.TypeEnum.processType);
+    private static final Type TEMPLATE_TYPE = new Type(Type.TypeEnum.templateType);
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
     private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
     public DeclarationInfo currentFunction = null;
@@ -238,7 +239,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         for (var expr : ctx.expression()) {
             var exprRes = visit(expr);
-            if (!exprRes.equals(PROCESS_TYPE)) {
+            if (!exprRes.isSameBaseType(PROCESS_TYPE) && !exprRes.isSameBaseType(TEMPLATE_TYPE)) {
                 success = false;
                 if (!expr.equals(ERROR_TYPE))
                     logger.log(new ErrorLog(ctx, "Expression in system must be of type process"));
