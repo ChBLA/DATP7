@@ -462,7 +462,7 @@ public class TypeCheckerTests  {
         var args = new ArrayList<Arguments>();
 
         for (var type : Type.TypeEnum.values()) {
-            if (type != Type.TypeEnum.processType)
+            if (type != Type.TypeEnum.processType && type != Type.TypeEnum.templateType)
                 args.add(Arguments.of(new Type(type)));
         }
 
