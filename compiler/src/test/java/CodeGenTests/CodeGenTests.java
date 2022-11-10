@@ -855,6 +855,7 @@ public class CodeGenTests {
         String expected = String.format("%s %s(%s)%n%s%n%n", type, ID, parameters, block);
 
         Scope scopeMock = mock(Scope.class);
+        Scope scopeMockNode = mock(Scope.class);
         var visitor = new CodeGenVisitor();
 
         var node = mock(UCELParser.FunctionContext.class);
@@ -866,14 +867,15 @@ public class CodeGenTests {
         var infoMock = mock(DeclarationInfo.class);
 
         node.reference = referenceMock;
-        node.scope = scopeMock;
+        node.scope = scopeMockNode;
         try {
             when(scopeMock.get(node.reference)).thenReturn(infoMock);
+            when(scopeMockNode.getParent()).thenReturn(scopeMock);
         } catch (Exception e) {
             fail("cannot mock scope.get");
         }
 
-        when(infoMock.getIdentifier()).thenReturn(ID.toString());
+        when(infoMock.generateName()).thenReturn(ID.toString());
         when(node.type()).thenReturn(typeMock);
         when(node.block()).thenReturn(blockMock);
         when(node.parameters()).thenReturn(parametersMock);
@@ -892,6 +894,7 @@ public class CodeGenTests {
         String expected = String.format("%s %s(%s)%n%s%n%n", type, ID, parameters, block);
 
         Scope scopeMock = mock(Scope.class);
+        Scope scopeMockNode = mock(Scope.class);
         var visitor = new CodeGenVisitor();
 
         var node = mock(UCELParser.FunctionContext.class);
@@ -903,14 +906,15 @@ public class CodeGenTests {
         var infoMock = mock(DeclarationInfo.class);
 
         node.reference = referenceMock;
-        node.scope = scopeMock;
+        node.scope = scopeMockNode;
         try {
             when(scopeMock.get(node.reference)).thenReturn(infoMock);
+            when(scopeMockNode.getParent()).thenReturn(scopeMock);
         } catch (Exception e) {
             fail("cannot mock scope.get");
         }
 
-        when(infoMock.getIdentifier()).thenReturn(ID.toString());
+        when(infoMock.generateName()).thenReturn(ID.toString());
         when(node.type()).thenReturn(typeMock);
         when(node.block()).thenReturn(blockMock);
         when(node.parameters()).thenReturn(parametersMock);

@@ -340,7 +340,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         } else {
             String ID = null;
             try {
-                ID = currentScope.getParent().get(ctx.reference).getIdentifier();
+                ID = currentScope.getParent().get(ctx.reference).generateName();
             } catch (Exception e) {
                 throw new RuntimeException("error: could not find function name");
             }
