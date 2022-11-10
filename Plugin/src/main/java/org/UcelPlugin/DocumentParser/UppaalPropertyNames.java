@@ -22,8 +22,8 @@ public class UppaalPropertyNames {
         public static final String urgent = "urgent";
         public static final String committed = "committed";
         public static final String comments = "comments";
-        public static final String testCodeOnEnter = "testCodeOnEnter";
-        public static final String testCodeOnExit = "testCodeOnExit";
+        public static final String testCodeOnEnter = "testcodeEnter";
+        public static final String testCodeOnExit = "testcodeExit";
     }
 
     public class Edge {
