@@ -68,8 +68,8 @@ public class UcelToUppaalGraphParser {
         edge.setSource(locationAssoc.get(ucelEdge.getLocationStart()));
         edge.setTarget(locationAssoc.get(ucelEdge.getLocationEnd()));
 
-        var propX = (ucelEdge.getLocationStart().getPosX()+ucelEdge.getLocationStart().getPosX())/2;
-        var propY = (ucelEdge.getLocationStart().getPosY()+ucelEdge.getLocationStart().getPosY())/2;
+        var propX = (ucelEdge.getLocationStart().getPosX()+ucelEdge.getLocationEnd().getPosX())/2;
+        var propY = (ucelEdge.getLocationStart().getPosY()+ucelEdge.getLocationEnd().getPosY())/2;
 
         setValues(edge, propX, propY, new Hashtable<>() {{
             put(UppaalPropertyNames.Edge.select, ucelEdge.getSelect());
