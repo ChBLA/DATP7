@@ -1,6 +1,7 @@
 package org.UcelPlugin.DocumentParser;
 
 import com.uppaal.model.core2.Location;
+import com.uppaal.model.core2.Node;
 import com.uppaal.model.core2.Template;
 import org.Ucel.IEdge;
 import org.Ucel.IGraph;
@@ -67,14 +68,39 @@ public class UcelToUppaalGraphParser {
         edge.setSource(locationAssoc.get(ucelEdge.getLocationStart()));
         edge.setTarget(locationAssoc.get(ucelEdge.getLocationEnd()));
 
-        edge.setProperty(UppaalPropertyNames.Edge.select, ucelEdge.getSelect());
-        edge.setProperty(UppaalPropertyNames.Edge.guard, ucelEdge.getGuard());
-        edge.setProperty(UppaalPropertyNames.Edge.sync, ucelEdge.getSync());
-        edge.setProperty(UppaalPropertyNames.Edge.update, ucelEdge.getUpdate());
-        edge.setProperty(UppaalPropertyNames.Edge.comment, ucelEdge.getComment());
-        edge.setProperty(UppaalPropertyNames.Edge.testCode, ucelEdge.getTestCode());
+        var propX = (ucelEdge.getLocationStart().getPosX()+ucelEdge.getLocationStart().getPosX())/2;
+        var propY = (ucelEdge.getLocationStart().getPosY()+ucelEdge.getLocationStart().getPosY())/2;
+
+        setValues(edge, propX, propY, new Hashtable<>() {{
+            put(UppaalPropertyNames.Edge.select, ucelEdge.getSelect());
+            put(UppaalPropertyNames.Edge.guard, ucelEdge.getGuard());
+            put(UppaalPropertyNames.Edge.sync, ucelEdge.getSync());
+            put(UppaalPropertyNames.Edge.update, ucelEdge.getUpdate());
+            put(UppaalPropertyNames.Edge.comment, ucelEdge.getComment());
+            put(UppaalPropertyNames.Edge.testCode, ucelEdge.getTestCode());
+        }});
     }
 
+
+
+    private void setValues(Node node, int baseX, int baseY, Hashtable<String, Object> values) {
+        int x = baseX;
+        int y = baseY + 10;
+
+        for(var val: values.entrySet()) {
+            if(val.getValue() == null)
+                continue;
+
+            setValueWithPosition(node, val.getKey(), val.getValue(), x, y);
+            y += 10;
+        }
+    }
+
+    private void setValueWithPosition(Node node, String valueId, Object value, int x, int y) {
+        var prop = node.setProperty(valueId, value);
+        prop.setProperty("x", x);
+        prop.setProperty("y", y);
+    }
 
     private Hashtable<ILocation, Location> locationAssoc = new Hashtable<>();
 }
