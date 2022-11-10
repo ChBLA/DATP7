@@ -85,14 +85,14 @@ public class UcelToUppaalGraphParser {
 
     private void setValues(Node node, int baseX, int baseY, Hashtable<String, Object> values) {
         int x = baseX;
-        int y = baseY + 10;
+        int y = baseY + 11;
 
         for(var val: values.entrySet()) {
-            if(val.getValue() == null)
+            if(val.getValue() == null || val.getValue() == "")
                 continue;
 
             setValueWithPosition(node, val.getKey(), val.getValue(), x, y);
-            y += 10;
+            y += 17;
         }
     }
 
