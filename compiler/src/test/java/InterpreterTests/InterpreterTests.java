@@ -31,8 +31,8 @@ public class InterpreterTests {
 
 
     @ParameterizedTest
-    @MethodSource("addValues")
-    void addIntegers(InterpreterValue v1, InterpreterValue v2, InterpreterValue expected, String op) {
+    @MethodSource("addSubValues")
+    void addSubIntegers(InterpreterValue v1, InterpreterValue v2, InterpreterValue expected, String op) {
         Scope scope = mock(Scope.class);
         InterpreterVisitor visitor = new InterpreterVisitor(scope);
 
@@ -56,7 +56,7 @@ public class InterpreterTests {
         assertEquals(expected, actual);
     }
 
-    private static Stream<Arguments> addValues() {
+    private static Stream<Arguments> addSubValues() {
         return Stream.of(
                 Arguments.arguments(new IntegerValue(3) , new IntegerValue(134), new IntegerValue(137), "+"),
                 Arguments.arguments(new IntegerValue(-3) , new IntegerValue(7), new IntegerValue(4), "+"),
