@@ -1,12 +1,13 @@
 package org.UcelParser.Interpreter;
 
+import org.UcelParser.Util.Logging.ErrorLog;
+import org.UcelParser.Util.Logging.ILogger;
 import org.UcelParser.Util.Value.IntegerValue;
 import org.UcelParser.Util.Value.BooleanValue;
 import org.UcelParser.Util.Value.InterpreterValue;
 import org.UcelParser.Util.Value.ParameterValue;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
-import org.UcelParser.Util.Logging.Logger;
 import org.UcelParser.Util.Scope;
 
 import java.util.ArrayList;
@@ -16,13 +17,13 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     //region Header
 
     private Scope currentScope;
-    private Logger logger;
+    private ILogger logger;
 
     public InterpreterVisitor(Scope scope) {
         currentScope = scope;
     }
 
-    public InterpreterVisitor(Logger logger) {
+    public InterpreterVisitor(ILogger logger) {
         this.logger = logger;
     }
 
@@ -93,4 +94,41 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     public InterpreterValue visitParen(UCELParser.ParenContext ctx) {
         return visit(ctx.expression());
     }
+
+    @Override
+    public InterpreterValue visitLiteral(UCELParser.LiteralContext ctx) {
+        // NAT | bool | DOUBLE | DEADLOCK;
+        if(ctx.NAT() != null) {
+            var val = Integer.parseInt(ctx.NAT().getText());
+            return new IntegerValue(val);
+        }
+        else if(ctx.bool() != null) {
+            return visit(ctx.bool());
+        }
+        else if(ctx.DOUBLE() != null) {
+            logger.log(new ErrorLog(ctx, "Doubles are not supported in interpretation"));
+            return null;
+        }
+        else if(ctx.DEADLOCK() != null) {
+            logger.log(new ErrorLog(ctx, "Deadlock is not supported in interpretation"));
+            return null;
+        }
+
+        logger.log(new ErrorLog(ctx, "Unknown literal in interpretation"));
+        return null;
+    }
+
+    @Override
+    public InterpreterValue visitBool(UCELParser.BoolContext ctx) {
+        if(ctx.TRUE() != null)
+            return new BooleanValue(true);
+
+        else if(ctx.FALSE() != null)
+            return new BooleanValue(false);
+        else {
+            logger.log(new ErrorLog(ctx, "Bool is somehow neither true nor false"));
+            return null;
+        }
+    }
+
 }
