@@ -72,6 +72,9 @@ public class DeclarationInfo implements NameGenerator {
     public String generateName() {
         return this.scope.getPrefix() + "_" + this.identifier;
     }
+    public String generateName(String componentPrefix) {
+        return componentPrefix + (componentPrefix.isEmpty() ? "" : "_") + this.scope.getPrefix() + "_" + this.identifier;
+    }
 
     public InterpreterValue getValue() {
         return value;
