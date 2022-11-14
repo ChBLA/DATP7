@@ -6,6 +6,7 @@ import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Value.IntegerValue;
 import org.UcelParser.Util.Value.InterpreterValue;
 import org.antlr.v4.runtime.Token;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -183,6 +184,32 @@ public class InterpreterTests {
         return arguments.stream();
     }
     //endregion
+
+    //region Paren
+    @ParameterizedTest
+    @MethodSource("parenExpressions")
+    public void ParenTestPassThrough(InterpreterValue expected, Class exprType) {
+        var visitor = testVisitor();
+
+        var node = mock(UCELParser.ParenContext.class);
+        var expr = (UCELParser.ExpressionContext) mockForVisitorResult(exprType, expected, visitor);
+        when(node.expression()).thenReturn(expr);
+
+        var actual = visitor.visitParen(node);
+
+        assertEquals(expected, actual);
+    }
+    private static Stream<Arguments> parenExpressions() {
+        return Stream.of(
+                Arguments.of(value(-3), UCELParser.AddSubContext.class),
+                Arguments.of(value(0), UCELParser.AddSubContext.class),
+                Arguments.of(value(5), UCELParser.AddSubContext.class),
+                Arguments.of(value(true), UCELParser.EqExprContext.class),
+                Arguments.of(value(false), UCELParser.EqExprContext.class)
+        );
+    }
+    //endregion
+
 
     //region Helper methods
 

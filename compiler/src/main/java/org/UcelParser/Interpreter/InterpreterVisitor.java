@@ -88,4 +88,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         return new BooleanValue(isEqual);
     }
+
+    @Override
+    public InterpreterValue visitParen(UCELParser.ParenContext ctx) {
+        return visit(ctx.expression());
+    }
 }
