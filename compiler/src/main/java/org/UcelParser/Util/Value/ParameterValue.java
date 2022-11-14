@@ -14,16 +14,6 @@ public class ParameterValue implements InterpreterValue {
     }
 
     @Override
-    public int getInt() {
-        throw new RuntimeException("Not an integer value but a list of parameters");
-    }
-
-    @Override
-    public boolean getBool() {
-        throw new RuntimeException("Not an boolean value but a list of parameters");
-    }
-
-    @Override
     public String generateName() {
         throw new RuntimeException("Not a String value but a list of parameters");
     }

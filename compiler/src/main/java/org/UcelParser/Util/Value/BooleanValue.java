@@ -7,12 +7,6 @@ public class BooleanValue implements InterpreterValue {
         this.value = v;
     }
 
-    @Override
-    public int getInt() {
-        throw new RuntimeException("Not an integer value but a boolean");
-    }
-
-    @Override
     public boolean getBool() {
         return value;
     }

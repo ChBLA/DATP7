@@ -9,14 +9,8 @@ public class IntegerValue implements InterpreterValue {
         this.value = v;
     }
 
-    @Override
     public int getInt() {
         return value;
-    }
-
-    @Override
-    public boolean getBool() {
-        throw new RuntimeException("Not a boolean value but an integer");
     }
 
     @Override
