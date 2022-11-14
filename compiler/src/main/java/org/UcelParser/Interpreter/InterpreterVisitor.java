@@ -36,7 +36,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression().get(0));
         InterpreterValue right = visit(ctx.expression().get(1));
 
-        if(!areIntegerValues(left, right)) return null;
+        if(!isIntegerValue(left) || !isIntegerValue(right)) return null;
         IntegerValue intLeft = (IntegerValue) left;
         IntegerValue intRight = (IntegerValue) right;
         int op = ctx.op.getText().equals("+") ? 1 : -1;
@@ -48,7 +48,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression().get(0));
         InterpreterValue right = visit(ctx.expression().get(1));
 
-        if(!areIntegerValues(left, right)) return null;
+        if(!isIntegerValue(left) || !isIntegerValue(right)) return null;
         IntegerValue intLeft = (IntegerValue) left;
         IntegerValue intRight = (IntegerValue) right;
         String op = ctx.op.getText();
@@ -61,8 +61,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         return null;
     }
 
-    private boolean areIntegerValues(InterpreterValue l, InterpreterValue r) {
-        return l != null && r != null && l instanceof IntegerValue && r instanceof IntegerValue;
+    private boolean isIntegerValue(InterpreterValue v) {
+        return v != null && v instanceof IntegerValue;
     }
 
     public InterpreterValue visitIdExpr(UCELParser.IdExprContext ctx) {
@@ -72,6 +72,19 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public InterpreterValue visitArrayIndex(UCELParser.ArrayIndexContext ctx) {
+        InterpreterValue left = visit(ctx.expression().get(0));
+        InterpreterValue right = visit(ctx.expression().get(1));
+
+        if(!isStringValue(left) || !isIntegerValue(right)) return null;
+        IntegerValue intRight = (IntegerValue) right;
+        return intRight.getInt() < 0 ? null : new StringValue(left.generateName() + "_" + right.generateName());
+    }
+
+    private boolean isStringValue(InterpreterValue v) {
+        return v != null && v instanceof StringValue && ((StringValue) v).generateName() != null;
     }
 
     //region Scope
