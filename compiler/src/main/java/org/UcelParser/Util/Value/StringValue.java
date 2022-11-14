@@ -11,4 +11,9 @@ public class StringValue implements InterpreterValue {
     public String generateName() {
         return value;
     }
+
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof StringValue && ((StringValue) other).equals(value);
+    }
 }

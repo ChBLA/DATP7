@@ -17,4 +17,9 @@ public class IntegerValue implements InterpreterValue {
     public String generateName() {
         throw new RuntimeException("Not a String value but an integer");
     }
+
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof IntegerValue && ((IntegerValue) other).getInt() == value;
+    }
 }

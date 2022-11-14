@@ -15,4 +15,9 @@ public class BooleanValue implements InterpreterValue {
     public String generateName() {
         throw new RuntimeException("Not a String value but an boolean");
     }
+
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof BooleanValue && ((BooleanValue) other).getBool() == value;
+    }
 }
