@@ -30,6 +30,43 @@ import static org.mockito.Mockito.when;
 
 public class InterpreterTests {
 
+    //region ArrayIndex
+
+    @ParameterizedTest
+    @MethodSource("arrayValues")
+    void arrayIndex(InterpreterValue v1, InterpreterValue v2, InterpreterValue expected) {
+        Scope scope = mock(Scope.class);
+        InterpreterVisitor visitor = new InterpreterVisitor(scope);
+
+        UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
+        UCELParser.ExpressionContext expL = mock(UCELParser.ExpressionContext.class);
+        UCELParser.ExpressionContext expR = mock(UCELParser.ExpressionContext.class);
+
+        var exprs = new ArrayList<UCELParser.ExpressionContext>();
+        exprs.add(expL);
+        exprs.add(expR);
+        when(node.expression()).thenReturn(exprs);
+        when(visitor.visit(expL)).thenReturn(v1);
+        when(visitor.visit(expR)).thenReturn(v2);
+
+        var actual = visitor.visitArrayIndex(node);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> arrayValues() {
+        return Stream.of(
+                Arguments.arguments(value("cbuffer") , value(134), value("cbuffer_134")),
+                Arguments.arguments(value("a") , value(3), value("a_3")),
+                Arguments.arguments(value("a") , value(-17), null),
+                Arguments.arguments(value("a") , null, null),
+                Arguments.arguments(value("a") , value("s"), null),
+                Arguments.arguments(null, null, null)
+        );
+    }
+
+    //endregion
+
     //region addSub
 
 
