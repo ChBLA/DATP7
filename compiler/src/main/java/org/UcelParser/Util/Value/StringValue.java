@@ -14,6 +14,17 @@ public class StringValue implements InterpreterValue {
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof StringValue && ((StringValue) other).equals(value);
+        if (!(other instanceof StringValue))
+            return false;
+
+        StringValue otherVal = (StringValue)other;
+
+        return this.value.equals(otherVal.value);
+    }
+
+    @Override
+    public String toString()
+    {
+        return '"' + value +'"';
     }
 }
