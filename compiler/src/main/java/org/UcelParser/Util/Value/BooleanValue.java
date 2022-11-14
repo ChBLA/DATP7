@@ -13,7 +13,12 @@ public class BooleanValue implements InterpreterValue {
 
     @Override
     public String generateName() {
-        throw new RuntimeException("Not a String value but an boolean");
+        return toString();
+    }
+
+    @Override
+    public String toString() {
+        return value ? "true" : "false";
     }
 
     @Override

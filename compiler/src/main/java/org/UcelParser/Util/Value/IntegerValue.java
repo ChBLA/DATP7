@@ -15,7 +15,12 @@ public class IntegerValue implements InterpreterValue {
 
     @Override
     public String generateName() {
-        throw new RuntimeException("Not a String value but an integer");
+        return toString();
+    }
+
+    @Override
+    public String toString() {
+        return Integer.toString(value);
     }
 
     @Override
