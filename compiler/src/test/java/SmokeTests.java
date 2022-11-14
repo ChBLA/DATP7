@@ -23,9 +23,9 @@ public class SmokeTests {
     private static Stream<Arguments> compilerInputPSystem() {
         return Stream.of(
                 Arguments.arguments("int a;\nbool b = 12 + 7 > 0;\nsystem DummyTemplate();"),
-                Arguments.arguments("int a;\nint i = x * y % 12;\nsystem DummyTemplate();"),
+                Arguments.arguments("int a;\nint i = 2 * 6 % 12;\nsystem DummyTemplate();"),
                 Arguments.arguments("int a;\nbool b = true && !false;\nsystem DummyTemplate();"),
-                Arguments.arguments("int a;\nint a = 0;\nint i = 0;\nsystem DummyTemplate();"),
+                Arguments.arguments("int a;\nint i = 0;\nsystem DummyTemplate();"),
                 Arguments.arguments("int a;\nbool b = true;\nsystem DummyTemplate();")
         );
     }

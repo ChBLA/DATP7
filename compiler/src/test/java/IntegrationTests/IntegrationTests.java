@@ -25,12 +25,12 @@ public class IntegrationTests {
                 "smallInt a = 1;\n" +
                 "int[0,100] b = 5;\n" +
                 "\n" +
-                "int f(int ref number) {\n" +
+                "int f(int number) {\n" +
                 "    number += 1;\n" +
                 "    return number;\n" +
                 "}\n" +
                 "\n" +
-                "f(ref b);\n" +
+                "f(b);\n" +
                 "\n" +
                 "for (a = 0; a < 5; a++) {\n" +
                 "    if (a == 3) {\n" +
@@ -42,13 +42,13 @@ public class IntegrationTests {
         var expectedOutput = ("typedef int[0,10] aaaaaa_smallInt;\n" +
                 "aaaaaa_smallInt aaaaaa_a = 1;\n" +
                 "int[0,100] aaaaaa_b = 5;\n" +
-                "int aaaaaa_f_b()\n" +
+                "int aaaaaa_f(int aaaaab_number)\n" +
                 "{\n" +
-                "aaaaaa_b += 1;\n" +
-                "return aaaaaa_b;\n" +
+                "aaaaab_number += 1;\n" +
+                "return aaaaab_number;\n" +
                 "}\n" +
                 "\n" +
-                "aaaaaa_f_b();\n" +
+                "aaaaaa_f(aaaaaa_b);\n" +
                 "\n" +
                 "for (aaaaaa_a = 0;aaaaaa_a < 5;aaaaaa_a++) {\n" +
                 "if (aaaaaa_a == 3) {\n" +
