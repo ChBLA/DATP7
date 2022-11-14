@@ -8,27 +8,60 @@ import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Value.IntegerValue;
 import org.UcelParser.Util.Value.InterpreterValue;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.*;
 
 import java.util.ArrayList;
 import org.UcelParser.Util.Value.BooleanValue;
 import org.UcelParser.Util.Value.StringValue;
-import org.antlr.v4.runtime.RuleContext;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import java.util.stream.Stream;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class InterpreterTests {
+
+
+    //region ArrayIndex
+
+    @ParameterizedTest
+    @MethodSource("structValues")
+    void structIndex(InterpreterValue v, String identifier, InterpreterValue expected) {
+        Scope scope = mock(Scope.class);
+        InterpreterVisitor visitor = new InterpreterVisitor(scope);
+
+        UCELParser.StructAccessContext node = mock(UCELParser.StructAccessContext.class);
+        UCELParser.ExpressionContext exp = mock(UCELParser.ExpressionContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.expression()).thenReturn(exp);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(identifier);
+        when(visitor.visit(exp)).thenReturn(v);
+
+        var actual = visitor.visitStructAccess(node);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> structValues() {
+        return Stream.of(
+                Arguments.arguments(value("cbuffer") , "i", value("cbuffer.i")),
+                Arguments.arguments(value("a") , "s", value("a.s")),
+                Arguments.arguments(value("a") , "chan", value("a.chan")),
+                Arguments.arguments(value("a") , null, null),
+                Arguments.arguments(null , "s", null),
+                Arguments.arguments(null, null, null)
+        );
+    }
+
+    //endregion
 
     //region ArrayIndex
 
@@ -286,10 +319,128 @@ public class InterpreterTests {
     }
     //endregion
 
+    //region Paren
+    @ParameterizedTest
+    @MethodSource("literalNATSource")
+    public void literalNATTest(IntegerValue expected, String literalStr) {
+        var visitor = testVisitor();
+
+        var valMock = mock(TerminalNode.class);
+        when(valMock.getText()).thenReturn(literalStr);
+
+        var node = mock(UCELParser.LiteralContext.class);
+        node.children = new ArrayList<>();
+        when(node.NAT()).thenReturn(valMock);
+
+        var actual = visitor.visitLiteral(node);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> literalNATSource() {
+        return Stream.of(
+            Arguments.of (  value(0), "0"),
+            Arguments.of (value(432), "432"),
+            Arguments.of (  value(5), "5"),
+            Arguments.of (value(-63), "-63")
+        );
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void literalBoolTest(boolean bool) {
+        BooleanValue expected = value(bool);
+
+        var visitor = testVisitor();
+
+        var valMock = mockForVisitorResult(UCELParser.BoolContext.class, expected, visitor);
+
+        var node = mock(UCELParser.LiteralContext.class);
+        node.children = new ArrayList<>();
+        when(node.bool()).thenReturn(valMock);
+
+        var actual = visitor.visitLiteral(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("literalBoolSource")
+    public void literalBoolStringTest(boolean boolVal, String literalStr) {
+        var expected = value(boolVal);
+
+
+        var visitor = testVisitor();
+
+        var valMock = mock(TerminalNode.class);
+        when(valMock.getText()).thenReturn(literalStr);
+
+        var node = mock(UCELParser.BoolContext.class);
+        node.children = new ArrayList<>();
+        if(boolVal == true) {
+            when(node.TRUE()).thenReturn(valMock);
+        }
+        else {
+            when(node.FALSE()).thenReturn(valMock);
+        }
+
+        var actual = visitor.visitBool(node);
+
+        assertEquals(expected, actual);
+    }
+    private static Stream<Arguments> literalBoolSource() {
+        return Stream.of(
+                Arguments.of(true, "true"),
+                Arguments.of(false, "true")
+        );
+    }
+
+    @Test
+    public void literalDoubleTest() {
+        Object expected = null;
+        String literalStr = "54.5";
+
+
+        var visitor = testVisitor();
+
+        var valMock = mock(TerminalNode.class);
+        when(valMock.getText()).thenReturn(literalStr);
+
+        var node = mock(UCELParser.LiteralContext.class);
+        node.children = new ArrayList<>();
+        when(node.DOUBLE()).thenReturn(valMock);
+
+        var actual = visitor.visitLiteral(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void literalDeadlockTest() {
+        Object expected = null;
+        String literalStr = "deadlock";
+
+
+        var visitor = testVisitor();
+
+        var valMock = mock(TerminalNode.class);
+        when(valMock.getText()).thenReturn(literalStr);
+
+        var node = mock(UCELParser.LiteralContext.class);
+        node.children = new ArrayList<>();
+        when(node.DEADLOCK()).thenReturn(valMock);
+
+        var actual = visitor.visitLiteral(node);
+
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
 
     //region Helper methods
 
-    private<T extends RuleContext> T mockForVisitorResult(final Class<T> nodeType, final InterpreterValue visitResult, InterpreterVisitor visitor) {
+    private<T extends ParseTree> T mockForVisitorResult(final Class<T> nodeType, final InterpreterValue visitResult, InterpreterVisitor visitor) {
         final T mock = mock(nodeType);
         when(mock.accept(visitor)).thenReturn(visitResult);
         return mock;
