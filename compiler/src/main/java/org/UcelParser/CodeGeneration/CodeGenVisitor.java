@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     private Scope currentScope;
     private final ILogger logger;
+    public String componentPrefix = "";
 
     public CodeGenVisitor() {
         this.logger = new Logger();
@@ -36,7 +37,61 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         this.logger = logger;
     }
 
-    // Update
+    //region Component Extension
+    //region Component
+
+    @Override
+    public Template visitComponent(UCELParser.ComponentContext ctx) {
+        enterScope(ctx.scope);
+
+        ArrayList<ComponentTemplate> components = new ArrayList<>();
+        if (ctx.occurrences != null) {
+            for (var occurrence : ctx.occurrences) {
+                this.componentPrefix = occurrence.getPrefix();
+
+                ArrayList<Template> parameters = new ArrayList<>();
+                ArrayList<Template> interfaces = new ArrayList<>();
+                Template compBodyTemplate;
+                if (ctx.parameters() != null) {
+                    for (int i = 0; i < ctx.parameters().parameter().size(); i++) {
+                        UCELParser.ParameterContext paramNode = ctx.parameters().parameter().get(i);
+                        if (paramNode.REF() != null) {
+                            //TODO: Implement when component with references
+                        } else {
+                            Template paramTemplate = visit(paramNode);
+                            String actualParameter = occurrence.getParameters()[i].generateName();
+                            ManualTemplate paramDeclaration = new ManualTemplate(String.format("%s = %s", paramTemplate, actualParameter));
+                            parameters.add(paramDeclaration);
+                        }
+                    }
+                }
+                //TODO: handle interfaces
+
+                compBodyTemplate = visit(ctx.compBody());
+
+                components.add(new ComponentTemplate(parameters, interfaces, compBodyTemplate));
+            }
+        }
+
+        componentPrefix = "";
+        exitScope();
+        return new ComponentsTemplate(components);
+    }
+    //endregion
+
+    //region Component body
+
+    @Override
+    public Template visitCompBody(UCELParser.CompBodyContext ctx) {
+        return ctx.declarations() != null ? visit(ctx.declarations()) : new ManualTemplate("");
+    }
+
+
+    //endregion
+
+    //endregion
+
+    //region Update
 
     @Override
     public Template visitUpdate(UCELParser.UpdateContext ctx) {
@@ -49,9 +104,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
         return new UpdateTemplate(expressions);
     }
+    //endregion
 
-
-    // Sync
+    //region Sync
 
     @Override
     public Template visitSync(UCELParser.SyncContext ctx) {
@@ -79,7 +134,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     //endregion
 
-    // Select
+    //region Select
 
     @Override
     public Template visitSelect(UCELParser.SelectContext ctx) {
@@ -101,7 +156,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     //endregion
 
-    // Edge
+    //region Edge
     @Override
     public Template visitEdge(UCELParser.EdgeContext ctx) {
         enterScope(ctx.scope);
@@ -116,7 +171,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
     //endregion
 
-    // Exponential
+    //region Exponential
     @Override
     public Template visitExponential(UCELParser.ExponentialContext ctx) {
         int exprCount = ctx.expression().size();
@@ -128,7 +183,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
     //endregion
 
-    //Invariant
+    //region Invariant
     @Override
     public Template visitInvariant(UCELParser.InvariantContext ctx) {
         return ctx.expression() != null
@@ -137,7 +192,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
     //endregion
 
-    // Location
+    //region Location
     @Override
     public Template visitLocation(UCELParser.LocationContext ctx) {
         Template invariant = visit(ctx.invariant());
@@ -148,7 +203,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     //endregion
 
-    // Graph
+    //region Graph
 
     @Override
     public Template visitGraph(UCELParser.GraphContext ctx) {

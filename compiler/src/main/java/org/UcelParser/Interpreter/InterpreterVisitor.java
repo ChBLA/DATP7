@@ -1,11 +1,9 @@
 package org.UcelParser.Interpreter;
 
+import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.Logging.ErrorLog;
 import org.UcelParser.Util.Logging.ILogger;
-import org.UcelParser.Util.Value.IntegerValue;
-import org.UcelParser.Util.Value.BooleanValue;
-import org.UcelParser.Util.Value.InterpreterValue;
-import org.UcelParser.Util.Value.ParameterValue;
+import org.UcelParser.Util.Value.*;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.Scope;
@@ -39,7 +37,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression().get(0));
         InterpreterValue right = visit(ctx.expression().get(1));
 
-        if(!areIntegerValues(left, right)) return null;
+        if(!isIntegerValue(left) || !isIntegerValue(right)) return null;
         IntegerValue intLeft = (IntegerValue) left;
         IntegerValue intRight = (IntegerValue) right;
         int op = ctx.op.getText().equals("+") ? 1 : -1;
@@ -51,7 +49,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression().get(0));
         InterpreterValue right = visit(ctx.expression().get(1));
 
-        if(!areIntegerValues(left, right)) return null;
+        if(!isIntegerValue(left) || !isIntegerValue(right)) return null;
         IntegerValue intLeft = (IntegerValue) left;
         IntegerValue intRight = (IntegerValue) right;
         String op = ctx.op.getText();
@@ -64,8 +62,42 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         return null;
     }
 
-    private boolean areIntegerValues(InterpreterValue l, InterpreterValue r) {
-        return l != null && r != null && l instanceof IntegerValue && r instanceof IntegerValue;
+    private boolean isIntegerValue(InterpreterValue v) {
+        return v != null && v instanceof IntegerValue;
+    }
+
+    @Override
+    public InterpreterValue visitIdExpr(UCELParser.IdExprContext ctx) {
+        try{
+            DeclarationInfo declInfo = currentScope.get(ctx.reference);
+            return declInfo.getValue() == null ? new StringValue(declInfo.generateName()) : declInfo.getValue();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @Override
+    public InterpreterValue visitArrayIndex(UCELParser.ArrayIndexContext ctx) {
+        InterpreterValue left = visit(ctx.expression().get(0));
+        InterpreterValue right = visit(ctx.expression().get(1));
+
+        if(!isStringValue(left) || !isIntegerValue(right)) return null;
+        IntegerValue intRight = (IntegerValue) right;
+        return intRight.getInt() < 0 ? null : new StringValue(left.generateName() + "_" + right.generateName());
+    }
+
+    @Override
+    public InterpreterValue visitStructAccess(UCELParser.StructAccessContext ctx) {
+        InterpreterValue left = visit(ctx.expression());
+        String id = ctx.ID().getText();
+
+        if(!isStringValue(left) || id == null) return null;
+        return new StringValue(left.generateName() + "." + id);
+    }
+
+
+    private boolean isStringValue(InterpreterValue v) {
+        return v != null && v instanceof StringValue && v.generateName() != null;
     }
 
     //region Scope

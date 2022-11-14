@@ -13,18 +13,12 @@ public class StringValue implements InterpreterValue {
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof StringValue))
-            return false;
-
-        StringValue otherVal = (StringValue)other;
-
-        return this.value.equals(otherVal.value);
+    public String toString() {
+        return value;
     }
 
     @Override
-    public String toString()
-    {
-        return '"' + value +'"';
+    public boolean equals(Object other) {
+        return other instanceof StringValue && ((StringValue) other).generateName().equals(value);
     }
 }

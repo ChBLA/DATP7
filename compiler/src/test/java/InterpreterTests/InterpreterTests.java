@@ -2,6 +2,8 @@ package InterpreterTests;
 
 import org.UcelParser.Interpreter.InterpreterVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
+import org.UcelParser.Util.DeclarationInfo;
+import org.UcelParser.Util.DeclarationReference;
 import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Value.IntegerValue;
 import org.UcelParser.Util.Value.InterpreterValue;
@@ -15,19 +17,88 @@ import org.junit.jupiter.params.provider.*;
 import java.util.ArrayList;
 import org.UcelParser.Util.Value.BooleanValue;
 import org.UcelParser.Util.Value.StringValue;
-import org.antlr.v4.runtime.RuleContext;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import java.util.stream.Stream;
-import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class InterpreterTests {
+
+
+    //region ArrayIndex
+
+    @ParameterizedTest
+    @MethodSource("structValues")
+    void structIndex(InterpreterValue v, String identifier, InterpreterValue expected) {
+        Scope scope = mock(Scope.class);
+        InterpreterVisitor visitor = new InterpreterVisitor(scope);
+
+        UCELParser.StructAccessContext node = mock(UCELParser.StructAccessContext.class);
+        UCELParser.ExpressionContext exp = mock(UCELParser.ExpressionContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.expression()).thenReturn(exp);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(identifier);
+        when(visitor.visit(exp)).thenReturn(v);
+
+        var actual = visitor.visitStructAccess(node);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> structValues() {
+        return Stream.of(
+                Arguments.arguments(value("cbuffer") , "i", value("cbuffer.i")),
+                Arguments.arguments(value("a") , "s", value("a.s")),
+                Arguments.arguments(value("a") , "chan", value("a.chan")),
+                Arguments.arguments(value("a") , null, null),
+                Arguments.arguments(null , "s", null),
+                Arguments.arguments(null, null, null)
+        );
+    }
+
+    //endregion
+
+    //region ArrayIndex
+
+    @ParameterizedTest
+    @MethodSource("arrayValues")
+    void arrayIndex(InterpreterValue v1, InterpreterValue v2, InterpreterValue expected) {
+        Scope scope = mock(Scope.class);
+        InterpreterVisitor visitor = new InterpreterVisitor(scope);
+
+        UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
+        UCELParser.ExpressionContext expL = mock(UCELParser.ExpressionContext.class);
+        UCELParser.ExpressionContext expR = mock(UCELParser.ExpressionContext.class);
+
+        var exprs = new ArrayList<UCELParser.ExpressionContext>();
+        exprs.add(expL);
+        exprs.add(expR);
+        when(node.expression()).thenReturn(exprs);
+        when(visitor.visit(expL)).thenReturn(v1);
+        when(visitor.visit(expR)).thenReturn(v2);
+
+        var actual = visitor.visitArrayIndex(node);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> arrayValues() {
+        return Stream.of(
+                Arguments.arguments(value("cbuffer") , value(134), value("cbuffer_134")),
+                Arguments.arguments(value("a") , value(3), value("a_3")),
+                Arguments.arguments(value("a") , value(-17), null),
+                Arguments.arguments(value("a") , null, null),
+                Arguments.arguments(value("a") , value("s"), null),
+                Arguments.arguments(null, null, null)
+        );
+    }
+
+    //endregion
 
     //region addSub
 
@@ -117,6 +188,44 @@ public class InterpreterTests {
                 Arguments.arguments(null , null, null, "%")
         );
     }
+    //endregion
+
+    //region idExpr
+
+    @ParameterizedTest
+    @MethodSource("idValues")
+    void idValues(InterpreterValue v, InterpreterValue expected) {
+        Scope scope = mock(Scope.class);
+        InterpreterVisitor visitor = new InterpreterVisitor(scope);
+
+        UCELParser.IdExprContext node = mock(UCELParser.IdExprContext.class);
+        DeclarationReference declRef = new DeclarationReference(0,0);
+        DeclarationInfo declInfo = mock(DeclarationInfo.class);
+        node.reference = declRef;
+        when(declInfo.getValue()).thenReturn(v);
+        when(declInfo.generateName()).thenReturn("aaaaaa_id");
+
+        try{
+            when(scope.get(declRef)).thenReturn(declInfo);
+        } catch (Exception e) {fail();}
+
+        var actual = visitor.visitIdExpr(node);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> idValues() {
+        return Stream.of(
+                Arguments.arguments(new IntegerValue(3), new IntegerValue(3)),
+                Arguments.arguments(new IntegerValue(-19), new IntegerValue(-19)),
+                Arguments.arguments(new BooleanValue(true), new BooleanValue(true)),
+                Arguments.arguments(new StringValue("s"), new StringValue("s")),
+                Arguments.arguments(null, new StringValue("aaaaaa_id"))
+
+                );
+    }
+
+
     //endregion
 
     //region eqExpr

@@ -8,7 +8,7 @@ public class ComponentOccurrence {
     private final UCELParser.CompConContext node;
     private final DeclarationInfo[] parameters;
     private final DeclarationInfo[] interfaces;
-    private final String prefix = "";
+    private String prefix = "";
 
     public ComponentOccurrence(UCELParser.CompConContext node, DeclarationInfo[] parameters, DeclarationInfo[] interfaces) {
         this.node = node;
@@ -30,5 +30,9 @@ public class ComponentOccurrence {
 
     public String getPrefix() {
         return this.prefix;
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
     }
 }
