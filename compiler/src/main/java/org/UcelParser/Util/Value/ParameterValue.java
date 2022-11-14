@@ -24,7 +24,7 @@ public class ParameterValue implements InterpreterValue {
     }
 
     @Override
-    public String getString() {
+    public String generateName() {
         throw new RuntimeException("Not a String value but a list of parameters");
     }
 }
