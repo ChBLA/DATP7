@@ -38,11 +38,33 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression().get(0));
         InterpreterValue right = visit(ctx.expression().get(1));
 
-        if(left == null || right == null) return null;
+        if(!areIntegerValues(left, right)) return null;
         IntegerValue intLeft = (IntegerValue) left;
         IntegerValue intRight = (IntegerValue) right;
         int op = ctx.op.getText().equals("+") ? 1 : -1;
         return new IntegerValue(intLeft.getInt() + op * intRight.getInt());
+    }
+
+    @Override
+    public InterpreterValue visitMultDiv(UCELParser.MultDivContext ctx) {
+        InterpreterValue left = visit(ctx.expression().get(0));
+        InterpreterValue right = visit(ctx.expression().get(1));
+
+        if(!areIntegerValues(left, right)) return null;
+        IntegerValue intLeft = (IntegerValue) left;
+        IntegerValue intRight = (IntegerValue) right;
+        String op = ctx.op.getText();
+        if(op.equals("*"))
+                return new IntegerValue(intLeft.getInt() * intRight.getInt());
+        if(op.equals("/"))
+                return new IntegerValue(intLeft.getInt() / intRight.getInt());
+        if(op.equals("%"))
+            return new IntegerValue(intLeft.getInt() % intRight.getInt());
+        return null;
+    }
+
+    private boolean areIntegerValues(InterpreterValue l, InterpreterValue r) {
+        return l != null && r != null && l instanceof IntegerValue && r instanceof IntegerValue;
     }
 
     //region Scope

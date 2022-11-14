@@ -71,6 +71,53 @@ public class InterpreterTests {
     }
     //endregion
 
+    //region MultDiv
+
+    @ParameterizedTest
+    @MethodSource("multDivValues")
+    void multDivIntegers(InterpreterValue v1, InterpreterValue v2, InterpreterValue expected, String op) {
+        Scope scope = mock(Scope.class);
+        InterpreterVisitor visitor = new InterpreterVisitor(scope);
+
+        UCELParser.MultDivContext node = mock(UCELParser.MultDivContext.class);
+        UCELParser.ExpressionContext expL = mock(UCELParser.ExpressionContext.class);
+        UCELParser.ExpressionContext expR = mock(UCELParser.ExpressionContext.class);
+
+        var exprs = new ArrayList<UCELParser.ExpressionContext>();
+        exprs.add(expL);
+        exprs.add(expR);
+        when(node.expression()).thenReturn(exprs);
+        when(visitor.visit(expL)).thenReturn(v1);
+        when(visitor.visit(expR)).thenReturn(v2);
+
+        var operatorToken = mock(Token.class);
+        when(operatorToken.getText()).thenReturn(op);
+        node.op = operatorToken;
+
+        var actual = visitor.visitMultDiv(node);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> multDivValues() {
+        return Stream.of(
+                Arguments.arguments(new IntegerValue(3) , new IntegerValue(14), new IntegerValue(42), "*"),
+                Arguments.arguments(new IntegerValue(3) , new IntegerValue(-14), new IntegerValue(-42), "*"),
+                Arguments.arguments(new IntegerValue(-3) , new IntegerValue(7), new IntegerValue(-21), "*"),
+                Arguments.arguments(null , new IntegerValue(134), null, "*"),
+                Arguments.arguments(null , null, null, "*"),
+                Arguments.arguments(new IntegerValue(3) , new IntegerValue(134), new IntegerValue(0), "/"),
+                Arguments.arguments(new IntegerValue(-27) , new IntegerValue(7), new IntegerValue(-3), "/"),
+                Arguments.arguments(null , new IntegerValue(134), null, "/"),
+                Arguments.arguments(null , null, null, "/"),
+                Arguments.arguments(new IntegerValue(3) , new IntegerValue(134), new IntegerValue(3), "%"),
+                Arguments.arguments(new IntegerValue(-3) , new IntegerValue(7), new IntegerValue(-3), "%"),
+                Arguments.arguments(null , new IntegerValue(134), null, "%"),
+                Arguments.arguments(null , null, null, "%")
+        );
+    }
+    //endregion
+
     //region eqExpr
     @ParameterizedTest
     @MethodSource("equalityTestValues")
