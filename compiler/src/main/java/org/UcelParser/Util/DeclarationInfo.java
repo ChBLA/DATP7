@@ -1,5 +1,6 @@
 package org.UcelParser.Util;
 
+import org.UcelParser.Interpreter.Value.InterpreterValue;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 public class DeclarationInfo {
@@ -8,6 +9,8 @@ public class DeclarationInfo {
     private Scope scope;
     private String identifier;
     private Type type;
+
+    private InterpreterValue value;
 
     //region Only used for testing
     public DeclarationInfo() {
@@ -68,6 +71,14 @@ public class DeclarationInfo {
 
     public String generateName() {
         return this.scope.getPrefix() + "_" + this.identifier;
+    }
+
+    public InterpreterValue getValue() {
+        return value;
+    }
+
+    public void setValue(InterpreterValue value) {
+        this.value = value;
     }
 
 }

@@ -129,6 +129,28 @@ public class TypeCheckerTests  {
         var expected = ERROR_TYPE;
         var actual = visitor.visitPtemplate(node);
         assertEquals(expected, actual);
+
+
+        parameters = mockForVisitorResult(UCELParser.ParametersContext.class, VOID_TYPE, visitor);
+        graph = mockForVisitorResult(UCELParser.GraphContext.class, ERROR_TYPE, visitor);
+        declarations = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.graph()).thenReturn(graph);
+        when(node.declarations()).thenReturn(declarations);
+
+        actual = visitor.visitPtemplate(node);
+        assertEquals(expected, actual);
+
+
+        parameters = mockForVisitorResult(UCELParser.ParametersContext.class, ERROR_TYPE, visitor);
+        graph = mockForVisitorResult(UCELParser.GraphContext.class, VOID_TYPE, visitor);
+        declarations = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
+        when(node.parameters()).thenReturn(parameters);
+        when(node.graph()).thenReturn(graph);
+        when(node.declarations()).thenReturn(declarations);
+
+        actual = visitor.visitPtemplate(node);
+        assertEquals(expected, actual);
     }
 
 
