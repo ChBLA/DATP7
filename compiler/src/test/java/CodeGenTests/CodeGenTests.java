@@ -49,26 +49,28 @@ public class CodeGenTests {
 
     @Test
     void componentOneOccurrenceNoNestedComponentsGeneratedCorrectly() {
-        var expected = "";
+        var expected = String.format("int Component1_aa_p1 = z%n%nint Component1_aa_q = Component1_aa_p1 + 1");
         var paramName = "p1";
-        var interfaceName = "i1";
+        var actualParamName = "z";
 
-        var parameterTemplate = new ManualTemplate("");
+        var parameterTemplate = new ManualTemplate("int Component1_aa_p1");
         var interfaceTemplate = new ManualTemplate("");
-        var compBodyTemplate = new ManualTemplate("");
+        var compBodyTemplate = new ManualTemplate("int Component1_aa_q = Component1_aa_p1 + 1");
 
         var visitor = new CodeGenVisitor();
 
         var scopeCompNode = mock(Scope.class);
 
         var node = mock(UCELParser.ComponentContext.class);
-        var parameterNode = mockForVisitorResult(UCELParser.ParametersContext.class, parameterTemplate, visitor);
+        var parametersNode = mock(UCELParser.ParametersContext.class);
+        var parameterNode = mockForVisitorResult(UCELParser.ParameterContext.class, parameterTemplate, visitor);
         var interfaceNode = mockForVisitorResult(UCELParser.InterfacesContext.class, interfaceTemplate, visitor);
         var compBodyNode = mockForVisitorResult(UCELParser.CompBodyContext.class, compBodyTemplate, visitor);
 
         var constructorCallNode = mock(UCELParser.CompConContext.class);
-
-        when(node.parameters()).thenReturn(parameterNode);
+        var parameterNodes = new ArrayList<UCELParser.ParameterContext>() {{ add(parameterNode); }};
+        when(node.parameters()).thenReturn(parametersNode);
+        when(parametersNode.parameter()).thenReturn(parameterNodes);
         when(node.interfaces()).thenReturn(interfaceNode);
         when(node.compBody()).thenReturn(compBodyNode);
 
@@ -77,12 +79,12 @@ public class CodeGenTests {
         var parameterInfo = mock(DeclarationInfo.class);
         var interfaceInfo = mock(DeclarationInfo.class);
 
-        when(parameterInfo.generateName()).thenReturn(paramName);
-        when(interfaceInfo.generateName()).thenReturn(interfaceName);
+        when(parameterInfo.generateName()).thenReturn(actualParamName);
 
         parameters[0] = parameterInfo;
         interfaces[0] = interfaceInfo;
         var occurrence = new ComponentOccurrence(constructorCallNode, parameters, interfaces);
+        occurrence.setPrefix("Component1");
         node.occurrences = new ArrayList<>() {{ add(occurrence); }};
         node.scope = scopeCompNode;
 
@@ -93,22 +95,73 @@ public class CodeGenTests {
 
     @Test
     void componentMultipleOccurrencesNoNestedComponentsGeneratedCorrectly() {
+        var expected = String.format("int Component1_aa_p1 = z%n%nint Component1_aa_q = Component1_aa_p1 + 1%n" +
+                "int Component2_ab_p1 = x%n%nint Component2_ab_q = Component2_ab_p1 + 1");
+        var paramName = "p1";
+        var actualParamName1 = "z";
+        var actualParamName2 = "x";
 
-    }
+        var parameterTemplate1 = new ManualTemplate("int Component1_aa_p1");
+        var interfaceTemplate1 = new ManualTemplate("");
+        var compBodyTemplate1 = new ManualTemplate("int Component1_aa_q = Component1_aa_p1 + 1");
 
-    @Test
-    void componentNoOccurrenceWithNestedComponentGeneratesNoCode() {
+        var parameterTemplate2 = new ManualTemplate("int Component2_ab_p1");
+        var interfaceTemplate2 = new ManualTemplate("");
+        var compBodyTemplate2 = new ManualTemplate("int Component2_ab_q = Component2_ab_p1 + 1");
 
-    }
+        var visitor = new CodeGenVisitor();
 
-    @Test
-    void componentOneOccurrenceWithNestedComponentsGeneratedCorrectly() {
+        var scopeCompNode = mock(Scope.class);
 
-    }
+        var node = mock(UCELParser.ComponentContext.class);
+        var parametersNode1 = mock(UCELParser.ParametersContext.class);
+        var parameterNode1 = mockForVisitorResult(UCELParser.ParameterContext.class, parameterTemplate1, visitor);
+        var interfaceNode1 = mockForVisitorResult(UCELParser.InterfacesContext.class, interfaceTemplate1, visitor);
+        var compBodyNode1 = mockForVisitorResult(UCELParser.CompBodyContext.class, compBodyTemplate1, visitor);
 
-    @Test
-    void componentMultipleOccurrencesWithNestedComponentsGeneratedCorrectly() {
+        var parametersNode2 = mock(UCELParser.ParametersContext.class);
+        var parameterNode2 = mockForVisitorResult(UCELParser.ParameterContext.class, parameterTemplate2, visitor);
+        var interfaceNode2 = mockForVisitorResult(UCELParser.InterfacesContext.class, interfaceTemplate2, visitor);
+        var compBodyNode2 = mockForVisitorResult(UCELParser.CompBodyContext.class, compBodyTemplate2, visitor);
 
+        var constructorCallNode = mock(UCELParser.CompConContext.class);
+        var parameterNodes1 = new ArrayList<UCELParser.ParameterContext>() {{ add(parameterNode1); }};
+        when(parametersNode1.parameter()).thenReturn(parameterNodes1);
+
+        var parameterNodes2 = new ArrayList<UCELParser.ParameterContext>() {{ add(parameterNode2); }};
+        when(parametersNode2.parameter()).thenReturn(parameterNodes2);
+
+        when(node.parameters()).thenReturn(parametersNode1, parametersNode1, parametersNode1, parametersNode2);
+        when(node.interfaces()).thenReturn(interfaceNode1, interfaceNode2);
+        when(node.compBody()).thenReturn(compBodyNode1, compBodyNode2);
+
+        DeclarationInfo[] parameters1 = new DeclarationInfo[1];
+        DeclarationInfo[] interfaces1 = new DeclarationInfo[1];
+        var parameterInfo1 = mock(DeclarationInfo.class);
+        var interfaceInfo1 = mock(DeclarationInfo.class);
+        when(parameterInfo1.generateName()).thenReturn(actualParamName1);
+        parameters1[0] = parameterInfo1;
+        interfaces1[0] = interfaceInfo1;
+
+        DeclarationInfo[] parameters2 = new DeclarationInfo[1];
+        DeclarationInfo[] interfaces2 = new DeclarationInfo[1];
+        var parameterInfo2 = mock(DeclarationInfo.class);
+        var interfaceInfo2 = mock(DeclarationInfo.class);
+        when(parameterInfo2.generateName()).thenReturn(actualParamName2);
+        parameters2[0] = parameterInfo2;
+        interfaces2[0] = interfaceInfo2;
+
+
+        var occurrence1 = new ComponentOccurrence(constructorCallNode, parameters1, interfaces1);
+        var occurrence2 = new ComponentOccurrence(constructorCallNode, parameters2, interfaces2);
+        occurrence1.setPrefix("Component1");
+        occurrence2.setPrefix("Component2");
+        node.occurrences = new ArrayList<>() {{ add(occurrence1); add(occurrence2); }};
+        node.scope = scopeCompNode;
+
+        var actual = visitor.visitComponent(node);
+
+        assertEquals(expected, actual.toString());
     }
 
     //endregion
