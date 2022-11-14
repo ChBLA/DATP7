@@ -27,5 +27,13 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         return values.getParameters();
     }
 
+    private void enterScope(Scope scope) {
+        currentScope = scope;
+    }
+
+    private void exitScope() {
+        this.currentScope = this.currentScope.getParent();
+    }
+
 
 }
