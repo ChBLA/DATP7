@@ -8,6 +8,7 @@ import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Value.IntegerValue;
 import org.UcelParser.Util.Value.InterpreterValue;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -29,6 +30,42 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class InterpreterTests {
+
+
+    //region ArrayIndex
+
+    @ParameterizedTest
+    @MethodSource("structValues")
+    void structIndex(InterpreterValue v, String identifier, InterpreterValue expected) {
+        Scope scope = mock(Scope.class);
+        InterpreterVisitor visitor = new InterpreterVisitor(scope);
+
+        UCELParser.StructAccessContext node = mock(UCELParser.StructAccessContext.class);
+        UCELParser.ExpressionContext exp = mock(UCELParser.ExpressionContext.class);
+        TerminalNode id = mock(TerminalNode.class);
+
+        when(node.expression()).thenReturn(exp);
+        when(node.ID()).thenReturn(id);
+        when(id.getText()).thenReturn(identifier);
+        when(visitor.visit(exp)).thenReturn(v);
+
+        var actual = visitor.visitStructAccess(node);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> structValues() {
+        return Stream.of(
+                Arguments.arguments(value("cbuffer") , "i", value("cbuffer.i")),
+                Arguments.arguments(value("a") , "s", value("a.s")),
+                Arguments.arguments(value("a") , "chan", value("a.chan")),
+                Arguments.arguments(value("a") , null, null),
+                Arguments.arguments(null , "s", null),
+                Arguments.arguments(null, null, null)
+        );
+    }
+
+    //endregion
 
     //region ArrayIndex
 

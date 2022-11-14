@@ -65,6 +65,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         return v != null && v instanceof IntegerValue;
     }
 
+    @Override
     public InterpreterValue visitIdExpr(UCELParser.IdExprContext ctx) {
         try{
             DeclarationInfo declInfo = currentScope.get(ctx.reference);
@@ -74,6 +75,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         }
     }
 
+    @Override
     public InterpreterValue visitArrayIndex(UCELParser.ArrayIndexContext ctx) {
         InterpreterValue left = visit(ctx.expression().get(0));
         InterpreterValue right = visit(ctx.expression().get(1));
@@ -83,8 +85,18 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         return intRight.getInt() < 0 ? null : new StringValue(left.generateName() + "_" + right.generateName());
     }
 
+    @Override
+    public InterpreterValue visitStructAccess(UCELParser.StructAccessContext ctx) {
+        InterpreterValue left = visit(ctx.expression());
+        String id = ctx.ID().getText();
+
+        if(!isStringValue(left) || id == null) return null;
+        return new StringValue(left.generateName() + "." + id);
+    }
+
+
     private boolean isStringValue(InterpreterValue v) {
-        return v != null && v instanceof StringValue && ((StringValue) v).generateName() != null;
+        return v != null && v instanceof StringValue && v.generateName() != null;
     }
 
     //region Scope
