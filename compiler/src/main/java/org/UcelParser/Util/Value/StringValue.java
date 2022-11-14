@@ -13,7 +13,12 @@ public class StringValue implements InterpreterValue {
     }
 
     @Override
+    public String toString() {
+        return value;
+    }
+
+    @Override
     public boolean equals(Object other) {
-        return other instanceof StringValue && ((StringValue) other).equals(value);
+        return other instanceof StringValue && ((StringValue) other).generateName().equals(value);
     }
 }

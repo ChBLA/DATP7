@@ -2,6 +2,8 @@ package InterpreterTests;
 
 import org.UcelParser.Interpreter.InterpreterVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
+import org.UcelParser.Util.DeclarationInfo;
+import org.UcelParser.Util.DeclarationReference;
 import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Value.IntegerValue;
 import org.UcelParser.Util.Value.InterpreterValue;
@@ -21,8 +23,7 @@ import java.util.stream.Stream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -116,6 +117,44 @@ public class InterpreterTests {
                 Arguments.arguments(null , null, null, "%")
         );
     }
+    //endregion
+
+    //region idExpr
+
+    @ParameterizedTest
+    @MethodSource("idValues")
+    void idValues(InterpreterValue v, InterpreterValue expected) {
+        Scope scope = mock(Scope.class);
+        InterpreterVisitor visitor = new InterpreterVisitor(scope);
+
+        UCELParser.IdExprContext node = mock(UCELParser.IdExprContext.class);
+        DeclarationReference declRef = new DeclarationReference(0,0);
+        DeclarationInfo declInfo = mock(DeclarationInfo.class);
+        node.reference = declRef;
+        when(declInfo.getValue()).thenReturn(v);
+        when(declInfo.generateName()).thenReturn("aaaaaa_id");
+
+        try{
+            when(scope.get(declRef)).thenReturn(declInfo);
+        } catch (Exception e) {fail();}
+
+        var actual = visitor.visitIdExpr(node);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> idValues() {
+        return Stream.of(
+                Arguments.arguments(new IntegerValue(3), new IntegerValue(3)),
+                Arguments.arguments(new IntegerValue(-19), new IntegerValue(-19)),
+                Arguments.arguments(new BooleanValue(true), new BooleanValue(true)),
+                Arguments.arguments(new StringValue("s"), new StringValue("s")),
+                Arguments.arguments(null, new StringValue("aaaaaa_id"))
+
+                );
+    }
+
+
     //endregion
 
     //region eqExpr

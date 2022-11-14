@@ -1,9 +1,7 @@
 package org.UcelParser.Interpreter;
 
-import org.UcelParser.Util.Value.IntegerValue;
-import org.UcelParser.Util.Value.BooleanValue;
-import org.UcelParser.Util.Value.InterpreterValue;
-import org.UcelParser.Util.Value.ParameterValue;
+import org.UcelParser.Util.DeclarationInfo;
+import org.UcelParser.Util.Value.*;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.Logging.Logger;
@@ -65,6 +63,15 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     private boolean areIntegerValues(InterpreterValue l, InterpreterValue r) {
         return l != null && r != null && l instanceof IntegerValue && r instanceof IntegerValue;
+    }
+
+    public InterpreterValue visitIdExpr(UCELParser.IdExprContext ctx) {
+        try{
+            DeclarationInfo declInfo = currentScope.get(ctx.reference);
+            return declInfo.getValue() == null ? new StringValue(declInfo.generateName()) : declInfo.getValue();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     //region Scope
