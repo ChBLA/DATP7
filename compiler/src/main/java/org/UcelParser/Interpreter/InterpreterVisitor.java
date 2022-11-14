@@ -1,6 +1,7 @@
 package org.UcelParser.Interpreter;
 
 import org.UcelParser.Util.Value.IntegerValue;
+import org.UcelParser.Util.Value.BooleanValue;
 import org.UcelParser.Util.Value.InterpreterValue;
 import org.UcelParser.Util.Value.ParameterValue;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
@@ -56,4 +57,13 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     //endregion
 
+    @Override
+    public InterpreterValue visitEqExpr(UCELParser.EqExprContext ctx) {
+        var v0 = visit(ctx.expression(0));
+        var v1 = visit(ctx.expression(1));
+
+        boolean isEqual = v0.equals(v1);
+
+        return new BooleanValue(isEqual);
+    }
 }
