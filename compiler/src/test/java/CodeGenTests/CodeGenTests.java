@@ -34,10 +34,12 @@ public class CodeGenTests {
     @Test
     void componentNoOccurrencesGeneratesNoCode() {
         var expected = "";
-
         var visitor = new CodeGenVisitor();
 
+        var scopeMock = mock(Scope.class);
+
         var node = mock(UCELParser.ComponentContext.class);
+        node.scope = scopeMock;
         when(node.parameters()).thenThrow(new RuntimeException());
         when(node.interfaces()).thenThrow(new RuntimeException());
         when(node.compBody()).thenThrow(new RuntimeException());
@@ -164,6 +166,51 @@ public class CodeGenTests {
         assertEquals(expected, actual.toString());
     }
 
+    //endregion
+
+    //region Component body
+    @Test
+    void compBodyNoDeclarationsNoBuildGeneratesNothing() {
+        var expected = "";
+
+        var node = mock(UCELParser.CompBodyContext.class);
+
+        var visitor = new CodeGenVisitor();
+
+        var actual = visitor.visitCompBody(node);
+
+        assertEquals(expected, actual.toString());
+    }
+
+    @Test
+    void compBodyWithDeclarationsNoBuildGeneratedCorrectly() {
+        var declTemplate = generateDefaultDeclarationTemplate("a", "10");
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.CompBodyContext.class);
+        var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
+
+        when(node.declarations()).thenReturn(declNode);
+
+        var actual = visitor.visitCompBody(node);
+
+        assertEquals(declTemplate.toString(), actual.toString());
+    }
+
+    @Test
+    void compBodyEnsureBuildIsNeverVisited() {
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.CompBodyContext.class);
+        var buildNode = mock(UCELParser.BuildContext.class);
+
+        when(node.build()).thenReturn(buildNode);
+        when(buildNode.accept(visitor)).thenThrow(new RuntimeException());
+
+        assertDoesNotThrow(() -> visitor.visitCompBody(node));
+    }
+    
     //endregion
 
     //region Update

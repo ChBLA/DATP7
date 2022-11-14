@@ -45,30 +45,32 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         enterScope(ctx.scope);
 
         ArrayList<ComponentTemplate> components = new ArrayList<>();
-        for (var occurrence : ctx.occurrences) {
-            this.componentPrefix = occurrence.getPrefix();
+        if (ctx.occurrences != null) {
+            for (var occurrence : ctx.occurrences) {
+                this.componentPrefix = occurrence.getPrefix();
 
-            ArrayList<Template> parameters = new ArrayList<>();
-            ArrayList<Template> interfaces = new ArrayList<>();
-            Template compBodyTemplate;
-            if (ctx.parameters() != null) {
-                for (int i = 0; i < ctx.parameters().parameter().size(); i++) {
-                    UCELParser.ParameterContext paramNode = ctx.parameters().parameter().get(i);
-                    if (paramNode.REF() != null) {
-                        //TODO: Implement when component with references
-                    } else {
-                        Template paramTemplate = visit(paramNode);
-                        String actualParameter = occurrence.getParameters()[i].generateName();
-                        ManualTemplate paramDeclaration = new ManualTemplate(String.format("%s = %s", paramTemplate, actualParameter));
-                        parameters.add(paramDeclaration);
+                ArrayList<Template> parameters = new ArrayList<>();
+                ArrayList<Template> interfaces = new ArrayList<>();
+                Template compBodyTemplate;
+                if (ctx.parameters() != null) {
+                    for (int i = 0; i < ctx.parameters().parameter().size(); i++) {
+                        UCELParser.ParameterContext paramNode = ctx.parameters().parameter().get(i);
+                        if (paramNode.REF() != null) {
+                            //TODO: Implement when component with references
+                        } else {
+                            Template paramTemplate = visit(paramNode);
+                            String actualParameter = occurrence.getParameters()[i].generateName();
+                            ManualTemplate paramDeclaration = new ManualTemplate(String.format("%s = %s", paramTemplate, actualParameter));
+                            parameters.add(paramDeclaration);
+                        }
                     }
                 }
+                //TODO: handle interfaces
+
+                compBodyTemplate = visit(ctx.compBody());
+
+                components.add(new ComponentTemplate(parameters, interfaces, compBodyTemplate));
             }
-            //TODO: handle interfaces
-
-            compBodyTemplate = visit(ctx.compBody());
-
-            components.add(new ComponentTemplate(parameters, interfaces, compBodyTemplate));
         }
 
         componentPrefix = "";
@@ -77,6 +79,15 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
     //endregion
 
+    //region Component body
+
+    @Override
+    public Template visitCompBody(UCELParser.CompBodyContext ctx) {
+        return ctx.declarations() != null ? visit(ctx.declarations()) : new ManualTemplate("");
+    }
+
+
+    //endregion
 
     //endregion
 
