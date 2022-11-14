@@ -3,7 +3,6 @@ package InterpreterTests;
 import org.UcelParser.Interpreter.InterpreterVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.Scope;
-import org.UcelParser.Util.Type;
 import org.UcelParser.Util.Value.IntegerValue;
 import org.UcelParser.Util.Value.InterpreterValue;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,8 +18,9 @@ public class InterpreterTests {
 
     //region addSub
 
+
     @ParameterizedTest
-    @MethodSource("systemFaultyTypes")
+    @MethodSource("addValues")
     void addIntegers(InterpreterValue v1, InterpreterValue v2, InterpreterValue expected) {
         Scope scope = mock(Scope.class);
         InterpreterVisitor visitor = new InterpreterVisitor(scope);
@@ -34,11 +34,14 @@ public class InterpreterTests {
         assertEquals(expected, actual);
     }
 
-    private static Stream<Arguments> prefixes() {
+    private static Stream<Arguments> addValues() {
         return Stream.of(
                 Arguments.arguments(new IntegerValue(3) , new IntegerValue(134), new IntegerValue(137))
         );
     }
+    //endregion
+
+    //region eqExpr
 
     //endregion
 
