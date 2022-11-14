@@ -1,4 +1,4 @@
-package org.UcelParser.Interpreter.Value;
+package org.UcelParser.Util.Value;
 
 public class BooleanValue implements InterpreterValue {
 
@@ -18,7 +18,7 @@ public class BooleanValue implements InterpreterValue {
     }
 
     @Override
-    public String getString() {
+    public String generateName() {
         throw new RuntimeException("Not a String value but an boolean");
     }
 }

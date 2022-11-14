@@ -1,9 +1,9 @@
 package org.UcelParser.Util;
 
-import org.UcelParser.Interpreter.Value.InterpreterValue;
+import org.UcelParser.Util.Value.InterpreterValue;
 import org.antlr.v4.runtime.ParserRuleContext;
 
-public class DeclarationInfo {
+public class DeclarationInfo implements NameGenerator {
 
     private ParserRuleContext node;
     private Scope scope;

@@ -1,6 +1,4 @@
-package org.UcelParser.Interpreter.Value;
-
-import org.UcelParser.Interpreter.Value.InterpreterValue;
+package org.UcelParser.Util.Value;
 
 public class StringValue implements InterpreterValue {
 
@@ -20,7 +18,7 @@ public class StringValue implements InterpreterValue {
     }
 
     @Override
-    public String getString() {
+    public String generateName() {
         return value;
     }
 }

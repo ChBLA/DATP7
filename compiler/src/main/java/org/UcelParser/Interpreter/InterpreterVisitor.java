@@ -1,7 +1,7 @@
 package org.UcelParser.Interpreter;
 
-import org.UcelParser.Interpreter.Value.InterpreterValue;
-import org.UcelParser.Interpreter.Value.ParameterValue;
+import org.UcelParser.Util.Value.InterpreterValue;
+import org.UcelParser.Util.Value.ParameterValue;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.Logging.Logger;

@@ -1,4 +1,6 @@
-package org.UcelParser.Interpreter.Value;
+package org.UcelParser.Util.Value;
+
+import org.UcelParser.Util.NameGenerator;
 
 public class IntegerValue implements InterpreterValue {
 
@@ -18,7 +20,7 @@ public class IntegerValue implements InterpreterValue {
     }
 
     @Override
-    public String getString() {
+    public String generateName() {
         throw new RuntimeException("Not a String value but an integer");
     }
 }
