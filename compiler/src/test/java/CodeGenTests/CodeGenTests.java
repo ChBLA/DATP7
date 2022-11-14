@@ -28,6 +28,91 @@ import static org.mockito.Mockito.when;
 
 public class CodeGenTests {
 
+    //region UCEL
+
+    //region Component
+    @Test
+    void componentNoOccurrencesGeneratesNoCode() {
+        var expected = "";
+
+        var visitor = new CodeGenVisitor();
+
+        var node = mock(UCELParser.ComponentContext.class);
+        when(node.parameters()).thenThrow(new RuntimeException());
+        when(node.interfaces()).thenThrow(new RuntimeException());
+        when(node.compBody()).thenThrow(new RuntimeException());
+
+        var actual = visitor.visitComponent(node);
+
+        assertEquals(expected, actual.toString());
+    }
+
+    @Test
+    void componentOneOccurrenceNoNestedComponentsGeneratedCorrectly() {
+        var expected = "";
+        var paramName = "p1";
+        var interfaceName = "i1";
+
+        var parameterTemplate = new ManualTemplate("");
+        var interfaceTemplate = new ManualTemplate("");
+        var compBodyTemplate = new ManualTemplate("");
+
+        var visitor = new CodeGenVisitor();
+
+        var scopeCompNode = mock(Scope.class);
+
+        var node = mock(UCELParser.ComponentContext.class);
+        var parameterNode = mockForVisitorResult(UCELParser.ParametersContext.class, parameterTemplate, visitor);
+        var interfaceNode = mockForVisitorResult(UCELParser.InterfacesContext.class, interfaceTemplate, visitor);
+        var compBodyNode = mockForVisitorResult(UCELParser.CompBodyContext.class, compBodyTemplate, visitor);
+
+        var constructorCallNode = mock(UCELParser.CompConContext.class);
+
+        when(node.parameters()).thenReturn(parameterNode);
+        when(node.interfaces()).thenReturn(interfaceNode);
+        when(node.compBody()).thenReturn(compBodyNode);
+
+        DeclarationInfo[] parameters = new DeclarationInfo[1];
+        DeclarationInfo[] interfaces = new DeclarationInfo[1];
+        var parameterInfo = mock(DeclarationInfo.class);
+        var interfaceInfo = mock(DeclarationInfo.class);
+
+        when(parameterInfo.generateName()).thenReturn(paramName);
+        when(interfaceInfo.generateName()).thenReturn(interfaceName);
+
+        parameters[0] = parameterInfo;
+        interfaces[0] = interfaceInfo;
+        var occurrence = new ComponentOccurrence(constructorCallNode, parameters, interfaces);
+        node.occurrences = new ArrayList<>() {{ add(occurrence); }};
+        node.scope = scopeCompNode;
+
+        var actual = visitor.visitComponent(node);
+
+        assertEquals(expected, actual.toString());
+    }
+
+    @Test
+    void componentMultipleOccurrencesNoNestedComponentsGeneratedCorrectly() {
+
+    }
+
+    @Test
+    void componentNoOccurrenceWithNestedComponentGeneratesNoCode() {
+
+    }
+
+    @Test
+    void componentOneOccurrenceWithNestedComponentsGeneratedCorrectly() {
+
+    }
+
+    @Test
+    void componentMultipleOccurrencesWithNestedComponentsGeneratedCorrectly() {
+
+    }
+
+    //endregion
+
     //region Update
 
     @Test

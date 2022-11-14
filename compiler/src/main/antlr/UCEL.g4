@@ -7,6 +7,7 @@ grammar UCEL;
     import org.UcelParser.Util.DeclarationReference;
     import org.UcelParser.Util.DeclarationInfo;
     import org.UcelParser.Util.FuncCallOccurrence;
+    import org.UcelParser.Util.ComponentOccurrence;
 }
 
 
@@ -40,11 +41,11 @@ start locals [Scope scope]
     //TODO: Add ? after expression to make the tests run :D
 system : SYSTEM expression ((COMMA | '<') expression)* END;
 
-component locals [Scope scope]
-    : COMP ID LEFTPAR parameters? RIGHTPAR COLON LEFTPAR parameters? RIGHTPAR LEFTCURLYBRACE compBody RIGHTCURLYBRACE;
+component locals [Scope scope, List<ComponentOccurrence> occurrences]
+    : COMP ID LEFTPAR parameters? RIGHTPAR COLON interfaces LEFTCURLYBRACE compBody RIGHTCURLYBRACE;
 compBody locals [Scope scope]
     : declarations? build?;
-
+interfaces : LEFTPAR parameters? RIGHTPAR;
 
 build : BUILD COLON LEFTCURLYBRACE buildDecl* buildStmnt+ RIGHTCURLYBRACE;
 buildStmnt : LINK expression expression END                    #LinkStatement
