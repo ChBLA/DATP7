@@ -533,7 +533,17 @@ public class InterpreterTests {
             Arguments.arguments(value(-7), value(-10), "<", value(false)),
             Arguments.arguments(value(-7), value(-10), "<=", value(false)),
             Arguments.arguments(value(-7), value(-10), ">=", value(true)),
-            Arguments.arguments(value(-7), value(-10), ">", value(true))
+            Arguments.arguments(value(-7), value(-10), ">", value(true)),
+
+            Arguments.arguments(value(-7), value(true), "<", null),
+            Arguments.arguments(value(-7), value(true), "<=", null),
+            Arguments.arguments(value(-7), value(true), ">=", null),
+            Arguments.arguments(value(-7), value(true), ">", null),
+
+            Arguments.arguments(null, value(-10), "<", null),
+            Arguments.arguments(null, value(-10), "<=", null),
+            Arguments.arguments(null, value(-10), ">=", null),
+            Arguments.arguments(null, value(-10), ">", null)
         );
     }
 
