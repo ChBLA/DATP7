@@ -95,62 +95,12 @@ public class TypeCheckerTests  {
     }
 
     @Test void ptemplateWhenChildIsSuccess() {
-        var globalScope = mock(Scope.class);
-        var localScope = mock(Scope.class);
-        var visitor = new TypeCheckerVisitor(globalScope);
-        var node = mock(UCELParser.PtemplateContext.class);
-        var parameters = mockForVisitorResult(UCELParser.ParametersContext.class, VOID_TYPE, visitor);
-        var graph = mockForVisitorResult(UCELParser.GraphContext.class, VOID_TYPE, visitor);
-        var declarations = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
-        node.scope = localScope;
-        when(node.parameters()).thenReturn(parameters);
-        when(node.graph()).thenReturn(graph);
-        when(node.declarations()).thenReturn(declarations);
-
-
-        var expected = VOID_TYPE;
-        var actual = visitor.visitPtemplate(node);
-        assertEquals(expected, actual);
+        var expectedReferenceType = new Type(Type.TypeEnum.templateType, new Type[] {PROCESS_TYPE, INT_TYPE});
+        var expectedReturnType = VOID_TYPE;
     }
 
     @Test void ptemplateWhenChildIsError() {
-        var globalScope = mock(Scope.class);
-        var localScope = mock(Scope.class);
-        var visitor = new TypeCheckerVisitor(globalScope);
-        var node = mock(UCELParser.PtemplateContext.class);
-        var parameters = mockForVisitorResult(UCELParser.ParametersContext.class, VOID_TYPE, visitor);
-        var graph = mockForVisitorResult(UCELParser.GraphContext.class, VOID_TYPE, visitor);
-        var declarations = mockForVisitorResult(UCELParser.DeclarationsContext.class, ERROR_TYPE, visitor);
-        node.scope = localScope;
-        when(node.parameters()).thenReturn(parameters);
-        when(node.graph()).thenReturn(graph);
-        when(node.declarations()).thenReturn(declarations);
 
-        var expected = ERROR_TYPE;
-        var actual = visitor.visitPtemplate(node);
-        assertEquals(expected, actual);
-
-
-        parameters = mockForVisitorResult(UCELParser.ParametersContext.class, VOID_TYPE, visitor);
-        graph = mockForVisitorResult(UCELParser.GraphContext.class, ERROR_TYPE, visitor);
-        declarations = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
-        when(node.parameters()).thenReturn(parameters);
-        when(node.graph()).thenReturn(graph);
-        when(node.declarations()).thenReturn(declarations);
-
-        actual = visitor.visitPtemplate(node);
-        assertEquals(expected, actual);
-
-
-        parameters = mockForVisitorResult(UCELParser.ParametersContext.class, ERROR_TYPE, visitor);
-        graph = mockForVisitorResult(UCELParser.GraphContext.class, VOID_TYPE, visitor);
-        declarations = mockForVisitorResult(UCELParser.DeclarationsContext.class, VOID_TYPE, visitor);
-        when(node.parameters()).thenReturn(parameters);
-        when(node.graph()).thenReturn(graph);
-        when(node.declarations()).thenReturn(declarations);
-
-        actual = visitor.visitPtemplate(node);
-        assertEquals(expected, actual);
     }
 
 
