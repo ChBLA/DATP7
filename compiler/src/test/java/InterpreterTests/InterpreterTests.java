@@ -438,6 +438,59 @@ public class InterpreterTests {
 
     //endregion
 
+    //region Unary expressions
+    @ParameterizedTest
+    @MethodSource("unaryTestSource")
+    void unaryTest(InterpreterValue inputValue, UCELParser.UnaryContext operatorMock, InterpreterValue expectedOutput) {
+        var visitor = testVisitor();
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, inputValue, visitor);
+        var node = mock(UCELParser.UnaryExprContext.class);
+        when(node.expression()).thenReturn(expr);
+        when(node.unary()).thenReturn(operatorMock);
+
+        var actual = visitor.visitUnaryExpr(node);
+
+        assertEquals(expectedOutput, actual);
+    }
+    private static Stream<Arguments> unaryTestSource() {
+        // PLUS | MINUS | NEG | NOT;
+
+        var plus = mock(UCELParser.UnaryContext.class);
+        plus.children = new ArrayList<>();
+        when(plus.PLUS()).thenReturn(mock(TerminalNode.class));
+
+        var minus = mock(UCELParser.UnaryContext.class);
+        minus.children = new ArrayList<>();
+        when(minus.MINUS()).thenReturn(mock(TerminalNode.class));
+
+        var neg = mock(UCELParser.UnaryContext.class);
+        neg.children = new ArrayList<>();
+        when(neg.NEG()).thenReturn(mock(TerminalNode.class));
+
+        var not = mock(UCELParser.UnaryContext.class);
+        not.children = new ArrayList<>();
+        when(not.NOT()).thenReturn(mock(TerminalNode.class));
+
+
+
+        return Stream.of(
+            Arguments.arguments(value(3), plus, value(3)),
+            Arguments.arguments(value(5), plus, value(5)),
+
+            Arguments.arguments(value(3), minus, value(-3)),
+            Arguments.arguments(value(5), minus, value(-5)),
+            Arguments.arguments(value(-3), minus, value(3)),
+            Arguments.arguments(value(-5), minus, value(5)),
+
+            Arguments.arguments(value(true), neg, value(false)),
+            Arguments.arguments(value(false), neg, value(true)),
+
+            Arguments.arguments(value(true), not, value(false)),
+            Arguments.arguments(value(false), not, value(true))
+        );
+    }
+
+    //endregion
 
     //region Helper methods
 

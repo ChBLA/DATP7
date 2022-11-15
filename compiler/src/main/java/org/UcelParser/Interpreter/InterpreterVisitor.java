@@ -100,6 +100,56 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         return new StringValue(left.generateName() + "." + id);
     }
 
+    @Override
+    public InterpreterValue visitUnaryExpr(UCELParser.UnaryExprContext ctx) {
+        // PLUS | MINUS | NEG | NOT;
+
+        var exprVal = visit(ctx.expression());
+        if(exprVal == null)
+            return null;
+
+        var unary = ctx.unary();
+        if(unary.PLUS() != null) {
+            if(!(exprVal instanceof IntegerValue)) {
+                logger.log(new ErrorLog(ctx,"Unary `+` only applicable on integers in the interpreter"));
+                return null;
+            }
+            var intVal = ((IntegerValue) exprVal).getInt();
+            return new IntegerValue(intVal);
+        }
+
+        if(unary.MINUS() != null) {
+            if(!(exprVal instanceof IntegerValue)) {
+                logger.log(new ErrorLog(ctx,"Unary `-` only applicable on integers in the interpreter"));
+                return null;
+            }
+            var intVal = ((IntegerValue) exprVal).getInt();
+            return new IntegerValue(-intVal);
+        }
+
+        if(unary.NEG() != null) {
+            if(!(exprVal instanceof BooleanValue)) {
+                logger.log(new ErrorLog(ctx,"Unary `!` only applicable on booleans in the interpreter"));
+                return null;
+            }
+            var boolVal = ((BooleanValue) exprVal).getBool();
+            return new BooleanValue(!boolVal);
+        }
+
+        if(unary.NOT() != null) {
+            if(!(exprVal instanceof BooleanValue)) {
+                logger.log(new ErrorLog(ctx,"Unary `not` only applicable on booleans in the interpreter"));
+                return null;
+            }
+            var boolVal = ((BooleanValue) exprVal).getBool();
+            return new BooleanValue(!boolVal);
+        }
+
+        logger.log(new ErrorLog(ctx,"Unknown unary operator in interpreter"));
+        return null;
+    }
+
+
 
     private boolean isStringValue(InterpreterValue v) {
         return v != null && v instanceof StringValue && v.generateName() != null;
