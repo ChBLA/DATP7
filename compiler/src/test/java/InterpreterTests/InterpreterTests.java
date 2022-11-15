@@ -320,7 +320,7 @@ public class InterpreterTests {
     }
     //endregion
 
-    //region Paren
+    //region Literals
     @ParameterizedTest
     @MethodSource("literalNATSource")
     public void literalNATTest(IntegerValue expected, String literalStr) {
