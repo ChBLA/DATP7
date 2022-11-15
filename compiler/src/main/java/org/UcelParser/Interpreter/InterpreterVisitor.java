@@ -149,6 +149,33 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         return null;
     }
 
+    @Override
+    public InterpreterValue visitRelExpr(UCELParser.RelExprContext ctx) {
+        var left = visit(ctx.expression(0));
+        var right = visit(ctx.expression(1));
+
+        if(left == null || right == null)
+            return null;
+
+        if(!(left instanceof IntegerValue) || !(right instanceof IntegerValue)) {
+            logger.log(new ErrorLog(ctx, "Relative comparison only supports integers in interpreter"));
+            return null;
+        }
+
+        var leftVal = ((IntegerValue) left).getInt();
+        var rightVal = ((IntegerValue) right).getInt();
+
+        // op=('<' | '<=' | '>=' | '>')
+        switch (ctx.op.getText()) {
+            case "<" : return new BooleanValue(leftVal < rightVal);
+            case "<=": return new BooleanValue(leftVal <= rightVal);
+            case ">=": return new BooleanValue(leftVal >= rightVal);
+            case ">" : return new BooleanValue(leftVal > rightVal);
+            default:
+                logger.log(new ErrorLog(ctx, "Unknown relExpr operator `" + ctx.op.getText() + "` in interpreter"));
+                return null;
+        }
+    }
 
 
     private boolean isStringValue(InterpreterValue v) {

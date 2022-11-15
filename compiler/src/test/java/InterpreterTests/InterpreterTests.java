@@ -492,6 +492,53 @@ public class InterpreterTests {
 
     //endregion
 
+    //region RelExpr
+    @ParameterizedTest
+    @MethodSource("relExprTestSource")
+    void relExprTest(InterpreterValue leftValue, InterpreterValue rightValue, String opStr, InterpreterValue expectedOutput) {
+        var visitor = testVisitor();
+        var exprLeft = mockForVisitorResult(UCELParser.ExpressionContext.class, leftValue, visitor);
+        var exprRight = mockForVisitorResult(UCELParser.ExpressionContext.class, rightValue, visitor);
+        var op = mock(Token.class);
+        when(op.getText()).thenReturn(opStr);
+
+        var node = mock(UCELParser.RelExprContext.class);
+        when(node.expression(0)).thenReturn(exprLeft);
+        when(node.expression(1)).thenReturn(exprRight);
+        node.op = op;
+
+        var actual = visitor.visitRelExpr(node);
+
+        assertEquals(expectedOutput, actual);
+    }
+    private static Stream<Arguments> relExprTestSource() {
+        // op=('<' | '<=' | '>=' | '>')
+
+        return Stream.of(
+            Arguments.arguments(value(3), value(3), "<", value(false)),
+            Arguments.arguments(value(3), value(3), "<=", value(true)),
+            Arguments.arguments(value(3), value(3), ">=", value(true)),
+            Arguments.arguments(value(3), value(3), ">", value(false)),
+
+            Arguments.arguments(value(-5), value(3), "<", value(true)),
+            Arguments.arguments(value(-5), value(3), "<=", value(true)),
+            Arguments.arguments(value(-5), value(3), ">=", value(false)),
+            Arguments.arguments(value(-5), value(3), ">", value(false)),
+
+            Arguments.arguments(value(3), value(-5), "<", value(false)),
+            Arguments.arguments(value(3), value(-5), "<=", value(false)),
+            Arguments.arguments(value(3), value(-5), ">=", value(true)),
+            Arguments.arguments(value(3), value(-5), ">", value(true)),
+
+            Arguments.arguments(value(-7), value(-10), "<", value(false)),
+            Arguments.arguments(value(-7), value(-10), "<=", value(false)),
+            Arguments.arguments(value(-7), value(-10), ">=", value(true)),
+            Arguments.arguments(value(-7), value(-10), ">", value(true))
+        );
+    }
+
+    //endregion
+
     //region Helper methods
 
     private<T extends ParseTree> T mockForVisitorResult(final Class<T> nodeType, final InterpreterValue visitResult, InterpreterVisitor visitor) {
