@@ -201,7 +201,14 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         boolean isEqual = v0.equals(v1);
 
-        return new BooleanValue(isEqual);
+        // op=('==' | '!=')
+        switch (ctx.op.getText()) {
+            case "==": return new BooleanValue(isEqual);
+            case "!=": return new BooleanValue(!isEqual);
+            default:
+                logger.log(new ErrorLog(ctx, "Unknown equality operator `"+ctx.op.getText()+"` in interpreter"));
+                return null;
+        }
     }
 
     @Override

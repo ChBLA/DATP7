@@ -232,16 +232,19 @@ public class InterpreterTests {
     //region eqExpr
     @ParameterizedTest
     @MethodSource("equalityTestValues")
-    void eqExprTests(InterpreterValue v0, InterpreterValue v1, boolean expected) {
+    void eqExprTests(InterpreterValue v0, InterpreterValue v1, String operatorStr, boolean expected) {
         // Arrange
         var visitor = testVisitor();
 
         var val0 = mockForVisitorResult(UCELParser.ExpressionContext.class, v0, visitor);
         var val1 = mockForVisitorResult(UCELParser.ExpressionContext.class, v1, visitor);
+        var op = mock(Token.class);
+        when(op.getText()).thenReturn(operatorStr);
 
         var node = mock(UCELParser.EqExprContext.class);
         when(node.expression(0)).thenReturn(val0);
         when(node.expression(1)).thenReturn(val1);
+        node.op = op;
 
         // Act
         var result = visitor.visitEqExpr(node);
@@ -257,38 +260,58 @@ public class InterpreterTests {
 
         //region Ints
         for(int i = -3; i<3; i++) {
-            arguments.add(Arguments.of(value(i), value(i), true));
+            arguments.add(Arguments.of(value(i), value(i), "==", true));
+            arguments.add(Arguments.of(value(i), value(i), "!=", false));
         }
 
-        arguments.add(Arguments.of(value(0),value(1), false));
-        arguments.add(Arguments.of(value(1),value(0), false));
-        arguments.add(Arguments.of(value(-1),value(1), false));
-        arguments.add(Arguments.of(value(1),value(-1), false));
+        arguments.add(Arguments.of(value(0),value(1), "==", false));
+        arguments.add(Arguments.of(value(0),value(1), "!=", true));
+        arguments.add(Arguments.of(value(1),value(0), "==", false));
+        arguments.add(Arguments.of(value(1),value(0), "!=", true));
+        arguments.add(Arguments.of(value(-1),value(1), "==", false));
+        arguments.add(Arguments.of(value(-1),value(1), "!=", true));
+        arguments.add(Arguments.of(value(1),value(-1), "==", false));
+        arguments.add(Arguments.of(value(1),value(-1), "!=", true));
         //endregion
 
         //region Strings
-        arguments.add(Arguments.of(value(""),value(""), true));
-        arguments.add(Arguments.of(value("abc"),value("abc"), true));
-        arguments.add(Arguments.of(value("def"),value("def"), true));
+        arguments.add(Arguments.of(value(""),value(""), "==", true));
+        arguments.add(Arguments.of(value(""),value(""), "!=", false));
+        arguments.add(Arguments.of(value("abc"),value("abc"), "==", true));
+        arguments.add(Arguments.of(value("abc"),value("abc"), "!=", false));
+        arguments.add(Arguments.of(value("def"),value("def"), "==", true));
+        arguments.add(Arguments.of(value("def"),value("def"), "!=", false));
 
-        arguments.add(Arguments.of(value(" "),value(""), false));
-        arguments.add(Arguments.of(value("def "),value("def"), false));
-        arguments.add(Arguments.of(value("abc"),value("def"), false));
-        arguments.add(Arguments.of(value("def"),value("abc"), false));
+        arguments.add(Arguments.of(value(" "),value(""), "==", false));
+        arguments.add(Arguments.of(value(" "),value(""), "!=", true));
+        arguments.add(Arguments.of(value("def "),value("def"), "==", false));
+        arguments.add(Arguments.of(value("def "),value("def"), "!=", true));
+        arguments.add(Arguments.of(value("abc"),value("def"), "==", false));
+        arguments.add(Arguments.of(value("abc"),value("def"), "!=", true));
+        arguments.add(Arguments.of(value("def"),value("abc"), "==", false));
+        arguments.add(Arguments.of(value("def"),value("abc"), "!=", true));
         //endregion
 
         //region Bools
-        arguments.add(Arguments.of(value(true),value(true), true));
-        arguments.add(Arguments.of(value(false),value(false), true));
-        arguments.add(Arguments.of(value(true),value(false), false));
-        arguments.add(Arguments.of(value(false),value(true), false));
+        arguments.add(Arguments.of(value(true),value(true), "==", true));
+        arguments.add(Arguments.of(value(true),value(true), "!=", false));
+        arguments.add(Arguments.of(value(false),value(false), "==", true));
+        arguments.add(Arguments.of(value(false),value(false), "!=", false));
+        arguments.add(Arguments.of(value(true),value(false), "==", false));
+        arguments.add(Arguments.of(value(true),value(false), "!=", true));
+        arguments.add(Arguments.of(value(false),value(true), "==", false));
+        arguments.add(Arguments.of(value(false),value(true), "!=", true));
         //endregion
 
         //region Mixed types
-        arguments.add(Arguments.of(value(0),value(""), false));
-        arguments.add(Arguments.of(value(0),value("0"), false));
-        arguments.add(Arguments.of(value(0),value(false), false));
-        arguments.add(Arguments.of(value(1),value(true), false));
+        arguments.add(Arguments.of(value(0),value(""), "==", false));
+        arguments.add(Arguments.of(value(0),value(""), "!=", true));
+        arguments.add(Arguments.of(value(0),value("0"), "==", false));
+        arguments.add(Arguments.of(value(0),value("0"), "!=", true));
+        arguments.add(Arguments.of(value(0),value(false), "==", false));
+        arguments.add(Arguments.of(value(0),value(false), "!=", true));
+        arguments.add(Arguments.of(value(1),value(true), "==", false));
+        arguments.add(Arguments.of(value(1),value(true), "!=", true));
         //endregion
 
         return arguments.stream();
