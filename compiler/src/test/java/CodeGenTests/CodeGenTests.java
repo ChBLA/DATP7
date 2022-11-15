@@ -22,6 +22,8 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -81,7 +83,7 @@ public class CodeGenTests {
         var parameterInfo = mock(DeclarationInfo.class);
         var interfaceInfo = mock(DeclarationInfo.class);
 
-        when(parameterInfo.generateName()).thenReturn(actualParamName);
+        when(parameterInfo.generateName(anyString())).thenReturn(actualParamName);
 
         parameters[0] = parameterInfo;
         interfaces[0] = interfaceInfo;
@@ -141,7 +143,7 @@ public class CodeGenTests {
         DeclarationInfo[] interfaces1 = new DeclarationInfo[1];
         var parameterInfo1 = mock(DeclarationInfo.class);
         var interfaceInfo1 = mock(DeclarationInfo.class);
-        when(parameterInfo1.generateName()).thenReturn(actualParamName1);
+        when(parameterInfo1.generateName(anyString())).thenReturn(actualParamName1);
         parameters1[0] = parameterInfo1;
         interfaces1[0] = interfaceInfo1;
 
@@ -149,7 +151,7 @@ public class CodeGenTests {
         DeclarationInfo[] interfaces2 = new DeclarationInfo[1];
         var parameterInfo2 = mock(DeclarationInfo.class);
         var interfaceInfo2 = mock(DeclarationInfo.class);
-        when(parameterInfo2.generateName()).thenReturn(actualParamName2);
+        when(parameterInfo2.generateName(anyString())).thenReturn(actualParamName2);
         parameters2[0] = parameterInfo2;
         interfaces2[0] = interfaceInfo2;
 
@@ -1060,7 +1062,7 @@ public class CodeGenTests {
             fail("cannot mock scope.get");
         }
 
-        when(infoMock.generateName()).thenReturn(ID.toString());
+        when(infoMock.generateName(anyString())).thenReturn(ID.toString());
         when(node.type()).thenReturn(typeMock);
         when(node.block()).thenReturn(blockMock);
         when(node.parameters()).thenReturn(parametersMock);
@@ -1099,7 +1101,7 @@ public class CodeGenTests {
             fail("cannot mock scope.get");
         }
 
-        when(infoMock.generateName()).thenReturn(ID.toString());
+        when(infoMock.generateName(anyString())).thenReturn(ID.toString());
         when(node.type()).thenReturn(typeMock);
         when(node.block()).thenReturn(blockMock);
         when(node.parameters()).thenReturn(parametersMock);
@@ -1152,7 +1154,7 @@ public class CodeGenTests {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        when(FuncCallInfoMock1.generateName()).thenReturn("functionName1");
+        when(FuncCallInfoMock1.generateName(anyString())).thenReturn("functionName1");
 
         var FuncCallCtxMock2 = mock(UCELParser.FuncCallContext.class);
         FuncCallCtxMock2.reference = mock(DeclarationReference.class);
@@ -1162,7 +1164,7 @@ public class CodeGenTests {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        when(FuncCallInfoMock2.generateName()).thenReturn("functionName2");
+        when(FuncCallInfoMock2.generateName(anyString())).thenReturn("functionName2");
 
         var occurrenceMock1 = mock(FuncCallOccurrence.class);
         when(occurrenceMock1.getFuncCallContext()).thenReturn(FuncCallCtxMock1);
@@ -1201,8 +1203,8 @@ public class CodeGenTests {
         DeclarationInfo info1Mock = mock(DeclarationInfo.class);
         DeclarationInfo info2Mock = mock(DeclarationInfo.class);
 
-        when(info1Mock.generateName()).thenReturn(id1Name);
-        when(info2Mock.generateName()).thenReturn(id2Name);
+        when(info1Mock.generateName(anyString())).thenReturn(id1Name);
+        when(info2Mock.generateName(anyString())).thenReturn(id2Name);
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
@@ -1236,8 +1238,8 @@ public class CodeGenTests {
         DeclarationInfo info1Mock = mock(DeclarationInfo.class);
         DeclarationInfo info2Mock = mock(DeclarationInfo.class);
 
-        when(info1Mock.generateName()).thenReturn(id1Name);
-        when(info2Mock.generateName()).thenReturn(id2Name);
+        when(info1Mock.generateName(anyString())).thenReturn(id1Name);
+        when(info2Mock.generateName(anyString())).thenReturn(id2Name);
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
@@ -1274,8 +1276,8 @@ public class CodeGenTests {
         DeclarationInfo info1Mock = mock(DeclarationInfo.class);
         DeclarationInfo info2Mock = mock(DeclarationInfo.class);
 
-        when(info1Mock.generateName()).thenReturn(id1Name);
-        when(info2Mock.generateName()).thenReturn(id2Name);
+        when(info1Mock.generateName(anyString())).thenReturn(id1Name);
+        when(info2Mock.generateName(anyString())).thenReturn(id2Name);
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
@@ -1313,8 +1315,8 @@ public class CodeGenTests {
         DeclarationInfo info1Mock = mock(DeclarationInfo.class);
         DeclarationInfo info2Mock = mock(DeclarationInfo.class);
 
-        when(info1Mock.generateName()).thenReturn(id1Name);
-        when(info2Mock.generateName()).thenReturn(id2Name);
+        when(info1Mock.generateName(anyString())).thenReturn(id1Name);
+        when(info2Mock.generateName(anyString())).thenReturn(id2Name);
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
@@ -1350,8 +1352,8 @@ public class CodeGenTests {
         DeclarationInfo info1Mock = mock(DeclarationInfo.class);
         DeclarationInfo info2Mock = mock(DeclarationInfo.class);
 
-        when(info1Mock.generateName()).thenReturn(id1Name);
-        when(info2Mock.generateName()).thenReturn(id2Name);
+        when(info1Mock.generateName(anyString())).thenReturn(id1Name);
+        when(info2Mock.generateName(anyString())).thenReturn(id2Name);
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
@@ -1391,8 +1393,8 @@ public class CodeGenTests {
         DeclarationInfo info1Mock = mock(DeclarationInfo.class);
         DeclarationInfo info2Mock = mock(DeclarationInfo.class);
 
-        when(info1Mock.generateName()).thenReturn(id1Name);
-        when(info2Mock.generateName()).thenReturn(id2Name);
+        when(info1Mock.generateName(anyString())).thenReturn(id1Name);
+        when(info2Mock.generateName(anyString())).thenReturn(id2Name);
 
         try {
             when(scopeMock.get(ref1Mock)).thenReturn(info1Mock);
@@ -1508,7 +1510,7 @@ public class CodeGenTests {
         var variable = mock(DeclarationInfo.class);
         var ref = mock(DeclarationReference.class);
 
-        when(variable.generateName()).thenReturn(id);
+        when(variable.generateName(anyString())).thenReturn(id);
 
         var scopeMock = mock(Scope.class);
 
@@ -1538,7 +1540,7 @@ public class CodeGenTests {
         var variable = mock(DeclarationInfo.class);
         var ref = mock(DeclarationReference.class);
 
-        when(variable.generateName()).thenReturn(id);
+        when(variable.generateName(anyString())).thenReturn(id);
 
         var scopeMock = mock(Scope.class);
 
@@ -1572,7 +1574,7 @@ public class CodeGenTests {
         var variable = mock(DeclarationInfo.class);
         var ref = mock(DeclarationReference.class);
 
-        when(variable.generateName()).thenReturn(id);
+        when(variable.generateName(anyString())).thenReturn(id);
 
         var scopeMock = mock(Scope.class);
 
@@ -1609,7 +1611,7 @@ public class CodeGenTests {
         var variable = mock(DeclarationInfo.class);
         var ref = mock(DeclarationReference.class);
 
-        when(variable.generateName()).thenReturn(id);
+        when(variable.generateName(anyString())).thenReturn(id);
 
         var scopeMock = mock(Scope.class);
 
@@ -1645,7 +1647,7 @@ public class CodeGenTests {
         DeclarationReference declarationReferenceMock = mock(DeclarationReference.class);
         DeclarationInfo declarationInfoMock = mock(DeclarationInfo.class);
 
-        when(declarationInfoMock.generateName()).thenReturn("a");
+        when(declarationInfoMock.generateName(anyString())).thenReturn("a");
 
         try {
             when(scopeMock.get(declarationReferenceMock)).thenReturn(declarationInfoMock);
@@ -1989,7 +1991,7 @@ public class CodeGenTests {
         List<DeclarationReference> declarationReferences = new ArrayList<>();
         declarationReferences.add(declarationReferenceMock);
 
-        when(declarationInfoMock.generateName()).thenReturn("list");
+        when(declarationInfoMock.generateName(anyString())).thenReturn("list");
 
         try {
             when(scopeMock.get(declarationReferenceMock)).thenReturn(declarationInfoMock);
@@ -2039,8 +2041,8 @@ public class CodeGenTests {
         declarationReferences.add(declarationReferenceMock2);
 
 
-        when(declarationInfoMock1.generateName()).thenReturn("list");
-        when(declarationInfoMock2.generateName()).thenReturn("betterInt");
+        when(declarationInfoMock1.generateName(anyString())).thenReturn("list");
+        when(declarationInfoMock2.generateName(anyString())).thenReturn("betterInt");
 
         try {
             when(scopeMock.get(declarationReferenceMock1)).thenReturn(declarationInfoMock1);
@@ -2165,7 +2167,7 @@ public class CodeGenTests {
         var node = mock(UCELParser.TypeIDIDContext.class);
         node.reference = ref;
 
-        when(variable.generateName()).thenReturn(variableID);
+        when(variable.generateName(anyString())).thenReturn(variableID);
         try {
             when(scopeMock.get(ref)).thenReturn(variable);
         } catch (Exception e) {
@@ -2426,7 +2428,7 @@ public class CodeGenTests {
         DeclarationInfo variable = mock(DeclarationInfo.class);
         DeclarationReference ref = mock(DeclarationReference.class);
 
-        when(variable.generateName()).thenReturn(variableID);
+        when(variable.generateName(anyString())).thenReturn(variableID);
 
         Scope scopeMock = mock(Scope.class);
         var visitor = new CodeGenVisitor(scopeMock);
@@ -2458,7 +2460,7 @@ public class CodeGenTests {
         DeclarationInfo variable = mock(DeclarationInfo.class);
         DeclarationReference ref = mock(DeclarationReference.class);
 
-        when(variable.generateName()).thenReturn(variableID);
+        when(variable.generateName(anyString())).thenReturn(variableID);
 
         Scope scopeMock = mock(Scope.class);
         var visitor = new CodeGenVisitor(scopeMock);
@@ -2489,7 +2491,7 @@ public class CodeGenTests {
         DeclarationInfo variable = mock(DeclarationInfo.class);
         DeclarationReference ref = mock(DeclarationReference.class);
 
-        when(variable.generateName()).thenReturn(variableID);
+        when(variable.generateName(anyString())).thenReturn(variableID);
 
         Scope scopeMock = mock(Scope.class);
         var visitor = new CodeGenVisitor(scopeMock);
@@ -2527,7 +2529,7 @@ public class CodeGenTests {
         DeclarationInfo variable = mock(DeclarationInfo.class);
         DeclarationReference ref = mock(DeclarationReference.class);
 
-        when(variable.generateName()).thenReturn(variableID);
+        when(variable.generateName(anyString())).thenReturn(variableID);
 
         Scope scopeMock = mock(Scope.class);
         var visitor = new CodeGenVisitor(scopeMock);
@@ -2665,7 +2667,7 @@ public class CodeGenTests {
         DeclarationInfo variable = mock(DeclarationInfo.class);
         DeclarationReference ref = mock(DeclarationReference.class);
 
-        when(variable.generateName()).thenReturn(name);
+        when(variable.generateName(anyString())).thenReturn(name);
 
         var scopeMock = mock(Scope.class);
 
@@ -3243,7 +3245,7 @@ public class CodeGenTests {
         DeclarationInfo variable = mock(DeclarationInfo.class);
         DeclarationReference ref = mock(DeclarationReference.class);
 
-        when(variable.generateName()).thenReturn(name);
+        when(variable.generateName(anyString())).thenReturn(name);
 
         var scopeMock = mock(Scope.class);
         var scopeNodeMock = mock(Scope.class);
@@ -3565,7 +3567,7 @@ public class CodeGenTests {
         DeclarationInfo variable = mock(DeclarationInfo.class);
         DeclarationReference ref = mock(DeclarationReference.class);
         
-        when(variable.generateName()).thenReturn(idResult.toString());
+        when(variable.generateName(anyString())).thenReturn(idResult.toString());
 
         var scopeMock = mock(Scope.class);
 
