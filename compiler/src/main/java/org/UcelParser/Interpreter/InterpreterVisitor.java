@@ -25,6 +25,11 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         this.logger = logger;
     }
 
+    public InterpreterVisitor(ILogger logger, Scope scope) {
+        this.logger = logger;
+        this.currentScope = scope;
+    }
+
     //endregion
 
     public ArrayList<InterpreterValue> interpret(UCELParser.ProjectContext ctx) {

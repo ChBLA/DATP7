@@ -4,6 +4,7 @@ import org.UcelParser.Interpreter.InterpreterVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.DeclarationReference;
+import org.UcelParser.Util.Logging.ILogger;
 import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Value.IntegerValue;
 import org.UcelParser.Util.Value.InterpreterValue;
@@ -447,8 +448,9 @@ public class InterpreterTests {
     }
 
     private InterpreterVisitor testVisitor() {
+        var logger = mock(ILogger.class);
         var scope = mock(Scope.class);
-        return new InterpreterVisitor(scope);
+        return new InterpreterVisitor(logger, scope);
     }
 
     //region Value
