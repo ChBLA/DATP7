@@ -139,15 +139,13 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
 
         exitScope();
+
+        Type[] paramTypes = parametersType.getParameters();
+        Type[] templateTypes = new Type[paramTypes != null ? paramTypes.length + 1 : 1];
+        templateTypes[0] = new Type(Type.TypeEnum.processType);
+        if (paramTypes != null)
+            System.arraycopy(paramTypes, 0, templateTypes, 1, paramTypes.length);
         try {
-            Type[] paramTypes = parametersType.getParameters();
-            Type[] templateTypes = new Type[paramTypes.length + 1];
-
-            templateTypes[0] = new Type(Type.TypeEnum.processType);
-            for(int i=0; i<paramTypes.length; i++) {
-                templateTypes[i+1] = paramTypes[i];
-            }
-
             currentScope.get(ctx.reference).setType(new Type(Type.TypeEnum.templateType, templateTypes));
         } catch (Exception e) {
             throw new RuntimeException(e);
