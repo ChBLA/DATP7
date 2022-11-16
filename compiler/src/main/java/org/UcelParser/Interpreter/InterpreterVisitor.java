@@ -246,6 +246,29 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     //endregion
 
     //region Control Flow
+    @Override
+    public InterpreterValue visitBuildIf(UCELParser.BuildIfContext ctx) {
+        // | IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?  #BuildIf
+        var predicate = visit(ctx.expression());
+        if(predicate == null)
+            return null;
+        if(!isBoolValue(predicate)) {
+            logger.log(new ErrorLog(ctx, "Predicate must be of type boolean"));
+            return null;
+        }
+
+        var predicateVal = ((BooleanValue)predicate).getBool();
+        if(predicateVal)
+            visit(ctx.buildStmnt(0));
+
+        else {
+            var elseStmt = ctx.buildStmnt(1);
+            if(elseStmt != null)
+                visit(elseStmt);
+        }
+
+        return null;
+    }
 
     //endregion
 
@@ -260,6 +283,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     private boolean isStringValue(InterpreterValue v) {
         return v != null && v instanceof StringValue && v.generateName() != null;
+    }
+
+    private boolean isBoolValue(InterpreterValue v) {
+        return v != null && v instanceof BooleanValue;
     }
     //endregion
 }
