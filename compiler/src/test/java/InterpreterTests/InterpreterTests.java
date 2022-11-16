@@ -28,8 +28,9 @@ import static org.mockito.Mockito.*;
 
 public class InterpreterTests {
 
+    //region Expressions
 
-    //region ArrayIndex
+    //region StructAccess
 
     @ParameterizedTest
     @MethodSource("structValues")
@@ -569,6 +570,19 @@ public class InterpreterTests {
             Arguments.arguments(null, value(-10), ">", null)
         );
     }
+
+    //endregion
+
+    //endregion
+
+    //region Control Flow
+    //region BuildIf
+
+    //endregion
+
+    //endregion
+
+    //region Build / Linker
 
     //endregion
 
