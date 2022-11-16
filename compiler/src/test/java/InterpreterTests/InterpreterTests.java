@@ -6,8 +6,7 @@ import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.DeclarationReference;
 import org.UcelParser.Util.Logging.ILogger;
 import org.UcelParser.Util.Scope;
-import org.UcelParser.Util.Value.IntegerValue;
-import org.UcelParser.Util.Value.InterpreterValue;
+import org.UcelParser.Util.Value.*;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -16,8 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 
 import java.util.ArrayList;
-import org.UcelParser.Util.Value.BooleanValue;
-import org.UcelParser.Util.Value.StringValue;
+
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import java.util.stream.Stream;
@@ -583,15 +581,16 @@ public class InterpreterTests {
         var visitor = testVisitor();
 
         var predicate = mockForVisitorResult(UCELParser.ExpressionContext.class, value(predicateValue), visitor);
-        var stmtTrue = mock(UCELParser.BuildStmntContext.class);
-        var stmtFalse = mock(UCELParser.BuildStmntContext.class);
+        var stmtTrue = mockForVisitorResult(UCELParser.BuildStmntContext.class, value(), visitor);
+        var stmtFalse = mockForVisitorResult(UCELParser.BuildStmntContext.class, value(), visitor);
+
 
         var node = mock(UCELParser.BuildIfContext.class);
         when(node.expression()).thenReturn(predicate);
         when(node.buildStmnt(0)).thenReturn(stmtTrue);
         when(node.buildStmnt(1)).thenReturn(stmtFalse);
 
-        visitor.visitBuildIf(node);
+        var actual = visitor.visitBuildIf(node);
 
         if(predicateValue) {
             verify(stmtTrue, times(1)).accept(any());
@@ -601,6 +600,8 @@ public class InterpreterTests {
             verify(stmtTrue, times(0)).accept(any());
             verify(stmtFalse, times(1)).accept(any());
         }
+
+        assertInstanceOf(VoidValue.class, actual);
     }
 
     @ParameterizedTest
@@ -609,13 +610,13 @@ public class InterpreterTests {
         var visitor = testVisitor();
 
         var predicate = mockForVisitorResult(UCELParser.ExpressionContext.class, value(predicateValue), visitor);
-        var stmtTrue = mock(UCELParser.BuildStmntContext.class);
+        var stmtTrue = mockForVisitorResult(UCELParser.BuildStmntContext.class, value(), visitor);
 
         var node = mock(UCELParser.BuildIfContext.class);
         when(node.expression()).thenReturn(predicate);
         when(node.buildStmnt(0)).thenReturn(stmtTrue);
 
-        visitor.visitBuildIf(node);
+        var actual = visitor.visitBuildIf(node);
 
         if(predicateValue) {
             verify(stmtTrue, times(1)).accept(any());
@@ -623,6 +624,8 @@ public class InterpreterTests {
         else {
             verify(stmtTrue, times(0)).accept(any());
         }
+
+        assertInstanceOf(VoidValue.class, actual);
     }
 
     @Test
@@ -633,19 +636,39 @@ public class InterpreterTests {
         var predVal = value(28);
 
         var predicate = mockForVisitorResult(UCELParser.ExpressionContext.class, predVal, visitor);
-        var stmtTrue = mock(UCELParser.BuildStmntContext.class);
-        var stmtFalse = mock(UCELParser.BuildStmntContext.class);
+        var stmtTrue = mockForVisitorResult(UCELParser.BuildStmntContext.class, value(), visitor);
+        var stmtFalse = mockForVisitorResult(UCELParser.BuildStmntContext.class, value(), visitor);
 
         var node = mock(UCELParser.BuildIfContext.class);
         when(node.expression()).thenReturn(predicate);
         when(node.buildStmnt(0)).thenReturn(stmtTrue);
         when(node.buildStmnt(1)).thenReturn(stmtFalse);
 
-        visitor.visitBuildIf(node);
+        var actual = visitor.visitBuildIf(node);
 
         verify(stmtTrue, times(0)).accept(any());
         verify(stmtFalse, times(0)).accept(any());
         verify(logger, atLeast(1)).log(any());
+        assertNull(actual);
+    }
+
+    @Test
+    void buildIfTestInvalidStmt() {
+        var visitor = testVisitor();
+
+        var predVal = value(true);
+
+        var predicate = mockForVisitorResult(UCELParser.ExpressionContext.class, predVal, visitor);
+        var stmtTrue = mockForVisitorResult(UCELParser.BuildStmntContext.class, null, visitor);
+
+        var node = mock(UCELParser.BuildIfContext.class);
+        when(node.expression()).thenReturn(predicate);
+        when(node.buildStmnt(0)).thenReturn(stmtTrue);
+
+        var actual = visitor.visitBuildIf(node);
+
+        verify(stmtTrue, times(1)).accept(any());
+        assertNull(actual);
     }
     //endregion
 
@@ -675,6 +698,10 @@ public class InterpreterTests {
     }
 
     //region Value
+    private static VoidValue value() {
+        return new VoidValue();
+    }
+
     private static IntegerValue value(int val) {
         return new IntegerValue(val);
     }

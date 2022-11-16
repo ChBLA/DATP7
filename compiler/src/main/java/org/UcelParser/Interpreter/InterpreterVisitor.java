@@ -258,15 +258,24 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         }
 
         var predicateVal = ((BooleanValue)predicate).getBool();
-        if(predicateVal)
-            visit(ctx.buildStmnt(0));
+
+        if(predicateVal) {
+            var stmtReturn = visit(ctx.buildStmnt(0));
+            if(stmtReturn == null)
+                return null;
+        }
 
         else {
             var elseStmt = ctx.buildStmnt(1);
-            if(elseStmt != null)
-                visit(elseStmt);
+            if(elseStmt != null) {
+                var stmtReturn = visit(elseStmt);
+                if(stmtReturn == null)
+                    return null;
+            }
         }
 
+        return new VoidValue();
+    }
         return null;
     }
 
