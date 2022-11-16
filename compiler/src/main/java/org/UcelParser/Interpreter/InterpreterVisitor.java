@@ -37,6 +37,17 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         return values.getParameters();
     }
 
+    //region Scope
+    private void enterScope(Scope scope) {
+        currentScope = scope;
+    }
+
+    private void exitScope() {
+        this.currentScope = this.currentScope.getParent();
+    }
+    //endregion
+
+    //region Expressions
     @Override
     public InterpreterValue visitAddSub(UCELParser.AddSubContext ctx) {
         InterpreterValue left = visit(ctx.expression().get(0));
@@ -65,10 +76,6 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         if(op.equals("%"))
             return new IntegerValue(intLeft.getInt() % intRight.getInt());
         return null;
-    }
-
-    private boolean isIntegerValue(InterpreterValue v) {
-        return v != null && v instanceof IntegerValue;
     }
 
     @Override
@@ -177,23 +184,6 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         }
     }
 
-
-    private boolean isStringValue(InterpreterValue v) {
-        return v != null && v instanceof StringValue && v.generateName() != null;
-    }
-
-    //region Scope
-
-    private void enterScope(Scope scope) {
-        currentScope = scope;
-    }
-
-    private void exitScope() {
-        this.currentScope = this.currentScope.getParent();
-    }
-
-    //endregion
-
     @Override
     public InterpreterValue visitEqExpr(UCELParser.EqExprContext ctx) {
         var v0 = visit(ctx.expression(0));
@@ -252,4 +242,24 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         }
     }
 
+
+    //endregion
+
+    //region Control Flow
+
+    //endregion
+
+    //region Build / Linker
+
+    //endregion
+
+    //region Helper Functions
+    private boolean isIntegerValue(InterpreterValue v) {
+        return v != null && v instanceof IntegerValue;
+    }
+
+    private boolean isStringValue(InterpreterValue v) {
+        return v != null && v instanceof StringValue && v.generateName() != null;
+    }
+    //endregion
 }
