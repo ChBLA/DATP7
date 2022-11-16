@@ -191,6 +191,24 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         return VOID_TYPE;
     }
 
+    //region Component
+    @Override
+    public Type visitComponent(UCELParser.ComponentContext ctx) {
+        return INT_TYPE;
+    }
+
+    @Override
+    public Type visitCompBody(UCELParser.CompBodyContext ctx) {
+        return INT_TYPE;
+    }
+
+
+
+    //endregion
+
+
+
+
 
 
     //region Start
