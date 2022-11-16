@@ -37,6 +37,17 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         return values.getParameters();
     }
 
+    //region Scope
+    private void enterScope(Scope scope) {
+        currentScope = scope;
+    }
+
+    private void exitScope() {
+        this.currentScope = this.currentScope.getParent();
+    }
+    //endregion
+
+    //region Expressions
     @Override
     public InterpreterValue visitAddSub(UCELParser.AddSubContext ctx) {
         InterpreterValue left = visit(ctx.expression().get(0));
@@ -65,10 +76,6 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         if(op.equals("%"))
             return new IntegerValue(intLeft.getInt() % intRight.getInt());
         return null;
-    }
-
-    private boolean isIntegerValue(InterpreterValue v) {
-        return v != null && v instanceof IntegerValue;
     }
 
     @Override
@@ -100,22 +107,82 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         return new StringValue(left.generateName() + "." + id);
     }
 
+    @Override
+    public InterpreterValue visitUnaryExpr(UCELParser.UnaryExprContext ctx) {
+        // PLUS | MINUS | NEG | NOT;
 
-    private boolean isStringValue(InterpreterValue v) {
-        return v != null && v instanceof StringValue && v.generateName() != null;
+        var exprVal = visit(ctx.expression());
+        if(exprVal == null)
+            return null;
+
+        var unary = ctx.unary();
+        if(unary.PLUS() != null) {
+            if(!(exprVal instanceof IntegerValue)) {
+                logger.log(new ErrorLog(ctx,"Unary `+` only applicable on integers in the interpreter"));
+                return null;
+            }
+            var intVal = ((IntegerValue) exprVal).getInt();
+            return new IntegerValue(intVal);
+        }
+
+        if(unary.MINUS() != null) {
+            if(!(exprVal instanceof IntegerValue)) {
+                logger.log(new ErrorLog(ctx,"Unary `-` only applicable on integers in the interpreter"));
+                return null;
+            }
+            var intVal = ((IntegerValue) exprVal).getInt();
+            return new IntegerValue(-intVal);
+        }
+
+        if(unary.NEG() != null) {
+            if(!(exprVal instanceof BooleanValue)) {
+                logger.log(new ErrorLog(ctx,"Unary `!` only applicable on booleans in the interpreter"));
+                return null;
+            }
+            var boolVal = ((BooleanValue) exprVal).getBool();
+            return new BooleanValue(!boolVal);
+        }
+
+        if(unary.NOT() != null) {
+            if(!(exprVal instanceof BooleanValue)) {
+                logger.log(new ErrorLog(ctx,"Unary `not` only applicable on booleans in the interpreter"));
+                return null;
+            }
+            var boolVal = ((BooleanValue) exprVal).getBool();
+            return new BooleanValue(!boolVal);
+        }
+
+        logger.log(new ErrorLog(ctx,"Unknown unary operator in interpreter"));
+        return null;
     }
 
-    //region Scope
+    @Override
+    public InterpreterValue visitRelExpr(UCELParser.RelExprContext ctx) {
+        var left = visit(ctx.expression(0));
+        var right = visit(ctx.expression(1));
 
-    private void enterScope(Scope scope) {
-        currentScope = scope;
+        if(left == null || right == null)
+            return null;
+
+        if(!(left instanceof IntegerValue) || !(right instanceof IntegerValue)) {
+            logger.log(new ErrorLog(ctx, "Relative comparison only supports integers in interpreter"));
+            return null;
+        }
+
+        var leftVal = ((IntegerValue) left).getInt();
+        var rightVal = ((IntegerValue) right).getInt();
+
+        // op=('<' | '<=' | '>=' | '>')
+        switch (ctx.op.getText()) {
+            case "<" : return new BooleanValue(leftVal < rightVal);
+            case "<=": return new BooleanValue(leftVal <= rightVal);
+            case ">=": return new BooleanValue(leftVal >= rightVal);
+            case ">" : return new BooleanValue(leftVal > rightVal);
+            default:
+                logger.log(new ErrorLog(ctx, "Unknown relExpr operator `" + ctx.op.getText() + "` in interpreter"));
+                return null;
+        }
     }
-
-    private void exitScope() {
-        this.currentScope = this.currentScope.getParent();
-    }
-
-    //endregion
 
     @Override
     public InterpreterValue visitEqExpr(UCELParser.EqExprContext ctx) {
@@ -124,7 +191,14 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         boolean isEqual = v0.equals(v1);
 
-        return new BooleanValue(isEqual);
+        // op=('==' | '!=')
+        switch (ctx.op.getText()) {
+            case "==": return new BooleanValue(isEqual);
+            case "!=": return new BooleanValue(!isEqual);
+            default:
+                logger.log(new ErrorLog(ctx, "Unknown equality operator `"+ctx.op.getText()+"` in interpreter"));
+                return null;
+        }
     }
 
     @Override
@@ -168,4 +242,24 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         }
     }
 
+
+    //endregion
+
+    //region Control Flow
+
+    //endregion
+
+    //region Build / Linker
+
+    //endregion
+
+    //region Helper Functions
+    private boolean isIntegerValue(InterpreterValue v) {
+        return v != null && v instanceof IntegerValue;
+    }
+
+    private boolean isStringValue(InterpreterValue v) {
+        return v != null && v instanceof StringValue && v.generateName() != null;
+    }
+    //endregion
 }

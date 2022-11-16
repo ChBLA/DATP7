@@ -232,16 +232,19 @@ public class InterpreterTests {
     //region eqExpr
     @ParameterizedTest
     @MethodSource("equalityTestValues")
-    void eqExprTests(InterpreterValue v0, InterpreterValue v1, boolean expected) {
+    void eqExprTests(InterpreterValue v0, InterpreterValue v1, String operatorStr, boolean expected) {
         // Arrange
         var visitor = testVisitor();
 
         var val0 = mockForVisitorResult(UCELParser.ExpressionContext.class, v0, visitor);
         var val1 = mockForVisitorResult(UCELParser.ExpressionContext.class, v1, visitor);
+        var op = mock(Token.class);
+        when(op.getText()).thenReturn(operatorStr);
 
         var node = mock(UCELParser.EqExprContext.class);
         when(node.expression(0)).thenReturn(val0);
         when(node.expression(1)).thenReturn(val1);
+        node.op = op;
 
         // Act
         var result = visitor.visitEqExpr(node);
@@ -257,38 +260,58 @@ public class InterpreterTests {
 
         //region Ints
         for(int i = -3; i<3; i++) {
-            arguments.add(Arguments.of(value(i), value(i), true));
+            arguments.add(Arguments.of(value(i), value(i), "==", true));
+            arguments.add(Arguments.of(value(i), value(i), "!=", false));
         }
 
-        arguments.add(Arguments.of(value(0),value(1), false));
-        arguments.add(Arguments.of(value(1),value(0), false));
-        arguments.add(Arguments.of(value(-1),value(1), false));
-        arguments.add(Arguments.of(value(1),value(-1), false));
+        arguments.add(Arguments.of(value(0),value(1), "==", false));
+        arguments.add(Arguments.of(value(0),value(1), "!=", true));
+        arguments.add(Arguments.of(value(1),value(0), "==", false));
+        arguments.add(Arguments.of(value(1),value(0), "!=", true));
+        arguments.add(Arguments.of(value(-1),value(1), "==", false));
+        arguments.add(Arguments.of(value(-1),value(1), "!=", true));
+        arguments.add(Arguments.of(value(1),value(-1), "==", false));
+        arguments.add(Arguments.of(value(1),value(-1), "!=", true));
         //endregion
 
         //region Strings
-        arguments.add(Arguments.of(value(""),value(""), true));
-        arguments.add(Arguments.of(value("abc"),value("abc"), true));
-        arguments.add(Arguments.of(value("def"),value("def"), true));
+        arguments.add(Arguments.of(value(""),value(""), "==", true));
+        arguments.add(Arguments.of(value(""),value(""), "!=", false));
+        arguments.add(Arguments.of(value("abc"),value("abc"), "==", true));
+        arguments.add(Arguments.of(value("abc"),value("abc"), "!=", false));
+        arguments.add(Arguments.of(value("def"),value("def"), "==", true));
+        arguments.add(Arguments.of(value("def"),value("def"), "!=", false));
 
-        arguments.add(Arguments.of(value(" "),value(""), false));
-        arguments.add(Arguments.of(value("def "),value("def"), false));
-        arguments.add(Arguments.of(value("abc"),value("def"), false));
-        arguments.add(Arguments.of(value("def"),value("abc"), false));
+        arguments.add(Arguments.of(value(" "),value(""), "==", false));
+        arguments.add(Arguments.of(value(" "),value(""), "!=", true));
+        arguments.add(Arguments.of(value("def "),value("def"), "==", false));
+        arguments.add(Arguments.of(value("def "),value("def"), "!=", true));
+        arguments.add(Arguments.of(value("abc"),value("def"), "==", false));
+        arguments.add(Arguments.of(value("abc"),value("def"), "!=", true));
+        arguments.add(Arguments.of(value("def"),value("abc"), "==", false));
+        arguments.add(Arguments.of(value("def"),value("abc"), "!=", true));
         //endregion
 
         //region Bools
-        arguments.add(Arguments.of(value(true),value(true), true));
-        arguments.add(Arguments.of(value(false),value(false), true));
-        arguments.add(Arguments.of(value(true),value(false), false));
-        arguments.add(Arguments.of(value(false),value(true), false));
+        arguments.add(Arguments.of(value(true),value(true), "==", true));
+        arguments.add(Arguments.of(value(true),value(true), "!=", false));
+        arguments.add(Arguments.of(value(false),value(false), "==", true));
+        arguments.add(Arguments.of(value(false),value(false), "!=", false));
+        arguments.add(Arguments.of(value(true),value(false), "==", false));
+        arguments.add(Arguments.of(value(true),value(false), "!=", true));
+        arguments.add(Arguments.of(value(false),value(true), "==", false));
+        arguments.add(Arguments.of(value(false),value(true), "!=", true));
         //endregion
 
         //region Mixed types
-        arguments.add(Arguments.of(value(0),value(""), false));
-        arguments.add(Arguments.of(value(0),value("0"), false));
-        arguments.add(Arguments.of(value(0),value(false), false));
-        arguments.add(Arguments.of(value(1),value(true), false));
+        arguments.add(Arguments.of(value(0),value(""), "==", false));
+        arguments.add(Arguments.of(value(0),value(""), "!=", true));
+        arguments.add(Arguments.of(value(0),value("0"), "==", false));
+        arguments.add(Arguments.of(value(0),value("0"), "!=", true));
+        arguments.add(Arguments.of(value(0),value(false), "==", false));
+        arguments.add(Arguments.of(value(0),value(false), "!=", true));
+        arguments.add(Arguments.of(value(1),value(true), "==", false));
+        arguments.add(Arguments.of(value(1),value(true), "!=", true));
         //endregion
 
         return arguments.stream();
@@ -320,7 +343,7 @@ public class InterpreterTests {
     }
     //endregion
 
-    //region Paren
+    //region Literals
     @ParameterizedTest
     @MethodSource("literalNATSource")
     public void literalNATTest(IntegerValue expected, String literalStr) {
@@ -438,6 +461,116 @@ public class InterpreterTests {
 
     //endregion
 
+    //region Unary expressions
+    @ParameterizedTest
+    @MethodSource("unaryTestSource")
+    void unaryTest(InterpreterValue inputValue, UCELParser.UnaryContext operatorMock, InterpreterValue expectedOutput) {
+        var visitor = testVisitor();
+        var expr = mockForVisitorResult(UCELParser.ExpressionContext.class, inputValue, visitor);
+        var node = mock(UCELParser.UnaryExprContext.class);
+        when(node.expression()).thenReturn(expr);
+        when(node.unary()).thenReturn(operatorMock);
+
+        var actual = visitor.visitUnaryExpr(node);
+
+        assertEquals(expectedOutput, actual);
+    }
+    private static Stream<Arguments> unaryTestSource() {
+        // PLUS | MINUS | NEG | NOT;
+
+        var plus = mock(UCELParser.UnaryContext.class);
+        plus.children = new ArrayList<>();
+        when(plus.PLUS()).thenReturn(mock(TerminalNode.class));
+
+        var minus = mock(UCELParser.UnaryContext.class);
+        minus.children = new ArrayList<>();
+        when(minus.MINUS()).thenReturn(mock(TerminalNode.class));
+
+        var neg = mock(UCELParser.UnaryContext.class);
+        neg.children = new ArrayList<>();
+        when(neg.NEG()).thenReturn(mock(TerminalNode.class));
+
+        var not = mock(UCELParser.UnaryContext.class);
+        not.children = new ArrayList<>();
+        when(not.NOT()).thenReturn(mock(TerminalNode.class));
+
+
+
+        return Stream.of(
+            Arguments.arguments(value(3), plus, value(3)),
+            Arguments.arguments(value(5), plus, value(5)),
+
+            Arguments.arguments(value(3), minus, value(-3)),
+            Arguments.arguments(value(5), minus, value(-5)),
+            Arguments.arguments(value(-3), minus, value(3)),
+            Arguments.arguments(value(-5), minus, value(5)),
+
+            Arguments.arguments(value(true), neg, value(false)),
+            Arguments.arguments(value(false), neg, value(true)),
+
+            Arguments.arguments(value(true), not, value(false)),
+            Arguments.arguments(value(false), not, value(true))
+        );
+    }
+
+    //endregion
+
+    //region RelExpr
+    @ParameterizedTest
+    @MethodSource("relExprTestSource")
+    void relExprTest(InterpreterValue leftValue, InterpreterValue rightValue, String opStr, InterpreterValue expectedOutput) {
+        var visitor = testVisitor();
+        var exprLeft = mockForVisitorResult(UCELParser.ExpressionContext.class, leftValue, visitor);
+        var exprRight = mockForVisitorResult(UCELParser.ExpressionContext.class, rightValue, visitor);
+        var op = mock(Token.class);
+        when(op.getText()).thenReturn(opStr);
+
+        var node = mock(UCELParser.RelExprContext.class);
+        when(node.expression(0)).thenReturn(exprLeft);
+        when(node.expression(1)).thenReturn(exprRight);
+        node.op = op;
+
+        var actual = visitor.visitRelExpr(node);
+
+        assertEquals(expectedOutput, actual);
+    }
+    private static Stream<Arguments> relExprTestSource() {
+        // op=('<' | '<=' | '>=' | '>')
+
+        return Stream.of(
+            Arguments.arguments(value(3), value(3), "<", value(false)),
+            Arguments.arguments(value(3), value(3), "<=", value(true)),
+            Arguments.arguments(value(3), value(3), ">=", value(true)),
+            Arguments.arguments(value(3), value(3), ">", value(false)),
+
+            Arguments.arguments(value(-5), value(3), "<", value(true)),
+            Arguments.arguments(value(-5), value(3), "<=", value(true)),
+            Arguments.arguments(value(-5), value(3), ">=", value(false)),
+            Arguments.arguments(value(-5), value(3), ">", value(false)),
+
+            Arguments.arguments(value(3), value(-5), "<", value(false)),
+            Arguments.arguments(value(3), value(-5), "<=", value(false)),
+            Arguments.arguments(value(3), value(-5), ">=", value(true)),
+            Arguments.arguments(value(3), value(-5), ">", value(true)),
+
+            Arguments.arguments(value(-7), value(-10), "<", value(false)),
+            Arguments.arguments(value(-7), value(-10), "<=", value(false)),
+            Arguments.arguments(value(-7), value(-10), ">=", value(true)),
+            Arguments.arguments(value(-7), value(-10), ">", value(true)),
+
+            Arguments.arguments(value(-7), value(true), "<", null),
+            Arguments.arguments(value(-7), value(true), "<=", null),
+            Arguments.arguments(value(-7), value(true), ">=", null),
+            Arguments.arguments(value(-7), value(true), ">", null),
+
+            Arguments.arguments(null, value(-10), "<", null),
+            Arguments.arguments(null, value(-10), "<=", null),
+            Arguments.arguments(null, value(-10), ">=", null),
+            Arguments.arguments(null, value(-10), ">", null)
+        );
+    }
+
+    //endregion
 
     //region Helper methods
 
