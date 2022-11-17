@@ -171,6 +171,70 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     //endregion
 
+
+    //region Component
+
+    @Override
+    public Boolean visitComponent(UCELParser.ComponentContext ctx) {
+        var componentName = ctx.ID().getText();
+        try {
+            if(!currentScope.isUnique(componentName, false)) {
+                logger.log(new ErrorLog(ctx, "Component '" + componentName + "' is already declared"));
+                return false;
+            }
+            DeclarationReference declRef = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
+            ctx.reference = declRef;
+
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+        }
+
+
+        enterScope();
+        ctx.scope = currentScope;
+
+        var parametersRes = false;
+        if (ctx.parameters() != null) {
+            parametersRes = visit(ctx.parameters());
+        }
+
+        var interfaceRes = visit(ctx.interface());
+        var compBodyRes = visit(ctx.compBody());
+
+
+        ctx.occurrences = new ArrayList<>();
+        exitScope();
+
+        return parametersRes && interfaceRes && compBodyRes;
+    }
+
+
+
+    @Override
+    public Boolean visitInterfaces(UCELParser.InterfacesContext ctx) {
+        if (ctx.parameters() != null) {
+            return visit(ctx.parameters());
+        } else {
+            return true;
+        }
+    }
+
+    public Boolean visitCompBody(UCELParser.CompBodyContext ctx) {
+        Boolean declRes = null;
+        if (ctx.declarations() != null) declRes = visit(ctx.declarations());
+        Boolean buildRes = null;
+        if (ctx.build() != null) buildRes = visit(ctx.build());
+        return (declRes != null && buildRes != null && declRes && buildRes)
+                || (declRes == null && buildRes != null && buildRes)
+                || (declRes != null && declRes && buildRes == null);
+    }
+
+
+
+    //endregion
+
+
+
     @Override
     public Boolean visitFunction(UCELParser.FunctionContext ctx) {
         String funcName = ctx.ID().getText();

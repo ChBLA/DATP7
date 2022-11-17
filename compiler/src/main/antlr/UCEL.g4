@@ -41,7 +41,7 @@ start locals [Scope scope]
     //TODO: Add ? after expression to make the tests run :D
 system : SYSTEM expression ((COMMA | '<') expression)* END;
 
-component locals [Scope scope, List<ComponentOccurrence> occurrences]
+component locals [Scope scope, List<ComponentOccurrence> occurrences, DeclarationReference reference]
     : COMP ID LEFTPAR parameters? RIGHTPAR COLON interfaces LEFTCURLYBRACE compBody RIGHTCURLYBRACE;
 compBody locals [Scope scope]
     : declarations? build?;

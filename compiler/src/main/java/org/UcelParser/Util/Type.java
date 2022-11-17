@@ -20,6 +20,8 @@ public class Type {
         voidType,
         errorType, invalidType,
         functionType,
+        interfaceType,
+        componentType,
     }
 
     private TypeEnum evaluationType;
@@ -54,6 +56,10 @@ public class Type {
 
     public TypeEnum getEvaluationType() {
         return evaluationType;
+    }
+
+    public void setEvaluationType(TypeEnum type) {
+        evaluationType = type;
     }
 
     public boolean hasParameters() {

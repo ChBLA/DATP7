@@ -135,7 +135,25 @@ public class TypeCheckerTests  {
 
 
 
+    //region Component
 
+    @Test void componentInterfaceParametersMatch() {
+        var visitor = new TypeCheckerVisitor();
+        var node = mock(UCELParser.InterfacesContext.class);
+        var parametersResultType = new Type(Type.TypeEnum.voidType, new Type[] {INT_TYPE, INT_TYPE});
+        var parametersNode  = mockForVisitorResult(UCELParser.ParametersContext.class, parametersResultType, visitor);
+        when(node.parameters()).thenReturn(parametersNode);
+
+        var expected = parametersResultType.deepCopy();
+        expected.setEvaluationType(Type.TypeEnum.interfaceType);
+        var actual = visitor.visitInterfaces(node);
+        assertEquals(expected, actual);
+    }
+
+
+
+
+    //endregion
 
 
     //region Parameter
