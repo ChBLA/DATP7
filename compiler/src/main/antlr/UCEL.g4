@@ -48,13 +48,21 @@ compBody locals [Scope scope]
 interfaces : LEFTPAR parameters? RIGHTPAR;
 
 build : BUILD COLON LEFTCURLYBRACE buildDecl* buildStmnt+ RIGHTCURLYBRACE;
-buildStmnt : LINK expression expression END                    #LinkStatement
-           | FOR LEFTPAR ID? COLON type? RIGHTPAR buildBlock   #BuildIteration
-           | IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?  #BuildIf
-           | ID (LEFTBRACKET expression RIGHTBRACKET)* '=' ID LEFTPAR arguments RIGHTPAR END  #CompCon
+buildStmnt : linkStatement
+           | buildIteration
+           | buildIf
+           | compCon
            ;
-buildBlock : LEFTCURLYBRACE buildStmnt+ RIGHTCURLYBRACE;
-buildDecl : ID ID (arrayDecl)* END;
+compCon locals [DeclarationReference instantiatedReference, DeclarationReference constructorReference]
+    : ID (LEFTBRACKET expression RIGHTBRACKET)* '=' ID LEFTPAR arguments RIGHTPAR END;
+buildIf : IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?;
+linkStatement : LINK expression expression END;
+buildIteration locals [DeclarationReference reference]
+    : FOR LEFTPAR ID COLON type RIGHTPAR buildBlock;
+buildBlock locals [Scope scope]
+    : LEFTCURLYBRACE buildStmnt+ RIGHTCURLYBRACE;
+buildDecl locals [DeclarationReference typeReference, DeclarationReference reference]
+    : ID ID (arrayDecl)* END;
 
 interfaceDecl : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;
 interfaceVarDecl : type arrayDeclID (COMMA type arrayDeclID)*;
