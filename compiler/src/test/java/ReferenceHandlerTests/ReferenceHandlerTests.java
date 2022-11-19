@@ -25,6 +25,204 @@ import static org.mockito.Mockito.*;
 public class ReferenceHandlerTests {
 
 
+    //region Component Extension
+    //region Component
+    @Test
+    void componentSetsScopeAndAddsItselfToParentScope() {
+        String name = "Example";
+
+        var parentScope = mock(Scope.class);
+
+        ReferenceVisitor visitor = new ReferenceVisitor(parentScope);
+        var node = mock(UCELParser.ComponentContext.class);
+        var paramNode = mock(UCELParser.ParametersContext.class);
+        var interfaceNode = mock(UCELParser.InterfacesContext.class);
+        var compBodyNode = mock(UCELParser.CompBodyContext.class);
+
+        var idNode = mock(TerminalNode.class);
+        var declRef = mock(DeclarationReference.class);
+
+        when(node.parameters()).thenReturn(paramNode);
+        when(node.interfaces()).thenReturn(interfaceNode);
+        when(node.compBody()).thenReturn(compBodyNode);
+        when(idNode.getText()).thenReturn(name);
+        when(node.ID()).thenReturn(idNode);
+        when(parentScope.add(any())).thenReturn(declRef);
+        when(parentScope.isUnique(name, false)).thenReturn(true);
+
+        when(paramNode.accept(visitor)).thenReturn(true);
+        when(interfaceNode.accept(visitor)).thenReturn(true);
+        when(compBodyNode.accept(visitor)).thenReturn(true);
+        var actual = visitor.visitComponent(node);
+
+        assertTrue(actual);
+        assertEquals(declRef, node.reference);
+        assertNotNull(node.scope);
+    }
+
+    @Test
+    void componentNoParametersStillSuccess() {
+        String name = "Example";
+
+        var parentScope = mock(Scope.class);
+
+        ReferenceVisitor visitor = new ReferenceVisitor(parentScope);
+        var node = mock(UCELParser.ComponentContext.class);
+        var interfaceNode = mock(UCELParser.InterfacesContext.class);
+        var compBodyNode = mock(UCELParser.CompBodyContext.class);
+
+        var idNode = mock(TerminalNode.class);
+        var declRef = mock(DeclarationReference.class);
+
+        when(node.interfaces()).thenReturn(interfaceNode);
+        when(node.compBody()).thenReturn(compBodyNode);
+        when(idNode.getText()).thenReturn(name);
+        when(node.ID()).thenReturn(idNode);
+        when(parentScope.add(any())).thenReturn(declRef);
+        when(parentScope.isUnique(name, false)).thenReturn(true);
+
+        when(interfaceNode.accept(visitor)).thenReturn(true);
+        when(compBodyNode.accept(visitor)).thenReturn(true);
+        var actual = visitor.visitComponent(node);
+
+        assertTrue(actual);
+        assertEquals(declRef, node.reference);
+        assertNotNull(node.scope);
+    }
+
+    @Test
+    void componentNotUnique() {
+        String name = "Example";
+
+        var parentScope = mock(Scope.class);
+
+        ReferenceVisitor visitor = new ReferenceVisitor(parentScope);
+        var node = mock(UCELParser.ComponentContext.class);
+        var paramNode = mock(UCELParser.ParametersContext.class);
+        var interfaceNode = mock(UCELParser.InterfacesContext.class);
+        var compBodyNode = mock(UCELParser.CompBodyContext.class);
+
+        var idNode = mock(TerminalNode.class);
+        var declRef = mock(DeclarationReference.class);
+
+        when(node.parameters()).thenReturn(paramNode);
+        when(node.interfaces()).thenReturn(interfaceNode);
+        when(node.compBody()).thenReturn(compBodyNode);
+        when(idNode.getText()).thenReturn(name);
+        when(node.ID()).thenReturn(idNode);
+        when(parentScope.add(any())).thenReturn(declRef);
+        when(parentScope.isUnique(name, false)).thenReturn(false);
+
+        when(paramNode.accept(visitor)).thenReturn(false);
+        when(interfaceNode.accept(visitor)).thenReturn(true);
+        when(compBodyNode.accept(visitor)).thenReturn(true);
+        var actual = visitor.visitComponent(node);
+
+        assertFalse(actual);
+        verify(paramNode, never()).accept(visitor);
+        verify(interfaceNode, never()).accept(visitor);
+        verify(compBodyNode, never()).accept(visitor);
+    }
+
+    @Test
+    void componentParametersFails() {
+        String name = "Example";
+
+        var parentScope = mock(Scope.class);
+
+        ReferenceVisitor visitor = new ReferenceVisitor(parentScope);
+        var node = mock(UCELParser.ComponentContext.class);
+        var paramNode = mock(UCELParser.ParametersContext.class);
+        var interfaceNode = mock(UCELParser.InterfacesContext.class);
+        var compBodyNode = mock(UCELParser.CompBodyContext.class);
+
+        var idNode = mock(TerminalNode.class);
+        var declRef = mock(DeclarationReference.class);
+
+        when(node.parameters()).thenReturn(paramNode);
+        when(node.interfaces()).thenReturn(interfaceNode);
+        when(node.compBody()).thenReturn(compBodyNode);
+        when(idNode.getText()).thenReturn(name);
+        when(node.ID()).thenReturn(idNode);
+        when(parentScope.add(any())).thenReturn(declRef);
+        when(parentScope.isUnique(name, false)).thenReturn(true);
+
+        when(paramNode.accept(visitor)).thenReturn(false);
+        when(interfaceNode.accept(visitor)).thenReturn(true);
+        when(compBodyNode.accept(visitor)).thenReturn(true);
+        var actual = visitor.visitComponent(node);
+
+        assertFalse(actual);
+        verify(interfaceNode, never()).accept(visitor);
+        verify(compBodyNode, never()).accept(visitor);
+    }
+    @Test
+    void componentInterfacesFails() {
+        String name = "Example";
+
+        var parentScope = mock(Scope.class);
+
+        ReferenceVisitor visitor = new ReferenceVisitor(parentScope);
+        var node = mock(UCELParser.ComponentContext.class);
+        var paramNode = mock(UCELParser.ParametersContext.class);
+        var interfaceNode = mock(UCELParser.InterfacesContext.class);
+        var compBodyNode = mock(UCELParser.CompBodyContext.class);
+
+        var idNode = mock(TerminalNode.class);
+        var declRef = mock(DeclarationReference.class);
+
+        when(node.parameters()).thenReturn(paramNode);
+        when(node.interfaces()).thenReturn(interfaceNode);
+        when(node.compBody()).thenReturn(compBodyNode);
+        when(idNode.getText()).thenReturn(name);
+        when(node.ID()).thenReturn(idNode);
+        when(parentScope.add(any())).thenReturn(declRef);
+        when(parentScope.isUnique(name, false)).thenReturn(true);
+
+        when(paramNode.accept(visitor)).thenReturn(true);
+        when(interfaceNode.accept(visitor)).thenReturn(false);
+        when(compBodyNode.accept(visitor)).thenReturn(true);
+        var actual = visitor.visitComponent(node);
+
+        assertFalse(actual);
+        verify(compBodyNode, never()).accept(visitor);
+    }
+
+    @Test
+    void componentCompBodyFails() {
+        String name = "Example";
+
+        var parentScope = mock(Scope.class);
+
+        ReferenceVisitor visitor = new ReferenceVisitor(parentScope);
+        var node = mock(UCELParser.ComponentContext.class);
+        var paramNode = mock(UCELParser.ParametersContext.class);
+        var interfaceNode = mock(UCELParser.InterfacesContext.class);
+        var compBodyNode = mock(UCELParser.CompBodyContext.class);
+
+        var idNode = mock(TerminalNode.class);
+        var declRef = mock(DeclarationReference.class);
+
+        when(node.parameters()).thenReturn(paramNode);
+        when(node.interfaces()).thenReturn(interfaceNode);
+        when(node.compBody()).thenReturn(compBodyNode);
+        when(idNode.getText()).thenReturn(name);
+        when(node.ID()).thenReturn(idNode);
+        when(parentScope.add(any())).thenReturn(declRef);
+        when(parentScope.isUnique(name, false)).thenReturn(true);
+
+        when(paramNode.accept(visitor)).thenReturn(true);
+        when(interfaceNode.accept(visitor)).thenReturn(true);
+        when(compBodyNode.accept(visitor)).thenReturn(false);
+        var actual = visitor.visitComponent(node);
+
+        assertFalse(actual);
+    }
+    //endregion
+
+
+    //endregion
+
     //region Project
 
     @Test
