@@ -28,8 +28,9 @@ import static org.mockito.Mockito.*;
 
 public class InterpreterTests {
 
+    //region Expressions
 
-    //region ArrayIndex
+    //region StructAccess
 
     @ParameterizedTest
     @MethodSource("structValues")
@@ -572,6 +573,88 @@ public class InterpreterTests {
 
     //endregion
 
+    //endregion
+
+    //region Control Flow
+    //region BuildIf
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void buildIfTestSuccess(boolean predicateValue) {
+        var visitor = testVisitor();
+
+        var predicate = mockForVisitorResult(UCELParser.ExpressionContext.class, value(predicateValue), visitor);
+        var stmtTrue = mock(UCELParser.BuildStmntContext.class);
+        var stmtFalse = mock(UCELParser.BuildStmntContext.class);
+
+        var node = mock(UCELParser.BuildIfContext.class);
+        when(node.expression()).thenReturn(predicate);
+        when(node.buildStmnt(0)).thenReturn(stmtTrue);
+        when(node.buildStmnt(1)).thenReturn(stmtFalse);
+
+        visitor.visitBuildIf(node);
+
+        if(predicateValue) {
+            verify(stmtTrue, times(1)).accept(any());
+            verify(stmtFalse, times(0)).accept(any());
+        }
+        else {
+            verify(stmtTrue, times(0)).accept(any());
+            verify(stmtFalse, times(1)).accept(any());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void buildIfTestSuccessNoElse(boolean predicateValue) {
+        var visitor = testVisitor();
+
+        var predicate = mockForVisitorResult(UCELParser.ExpressionContext.class, value(predicateValue), visitor);
+        var stmtTrue = mock(UCELParser.BuildStmntContext.class);
+
+        var node = mock(UCELParser.BuildIfContext.class);
+        when(node.expression()).thenReturn(predicate);
+        when(node.buildStmnt(0)).thenReturn(stmtTrue);
+
+        visitor.visitBuildIf(node);
+
+        if(predicateValue) {
+            verify(stmtTrue, times(1)).accept(any());
+        }
+        else {
+            verify(stmtTrue, times(0)).accept(any());
+        }
+    }
+
+    @Test
+    void buildIfTestInvalidPredicate() {
+        var logger = mock(ILogger.class);
+        var visitor = testVisitor(logger);
+
+        var predVal = value(28);
+
+        var predicate = mockForVisitorResult(UCELParser.ExpressionContext.class, predVal, visitor);
+        var stmtTrue = mock(UCELParser.BuildStmntContext.class);
+        var stmtFalse = mock(UCELParser.BuildStmntContext.class);
+
+        var node = mock(UCELParser.BuildIfContext.class);
+        when(node.expression()).thenReturn(predicate);
+        when(node.buildStmnt(0)).thenReturn(stmtTrue);
+        when(node.buildStmnt(1)).thenReturn(stmtFalse);
+
+        visitor.visitBuildIf(node);
+
+        verify(stmtTrue, times(0)).accept(any());
+        verify(stmtFalse, times(0)).accept(any());
+        verify(logger, atLeast(1)).log(any());
+    }
+    //endregion
+
+    //endregion
+
+    //region Build / Linker
+
+    //endregion
+
     //region Helper methods
 
     private<T extends ParseTree> T mockForVisitorResult(final Class<T> nodeType, final InterpreterValue visitResult, InterpreterVisitor visitor) {
@@ -582,6 +665,11 @@ public class InterpreterTests {
 
     private InterpreterVisitor testVisitor() {
         var logger = mock(ILogger.class);
+        var scope = mock(Scope.class);
+        return new InterpreterVisitor(logger, scope);
+    }
+
+    private InterpreterVisitor testVisitor(ILogger logger) {
         var scope = mock(Scope.class);
         return new InterpreterVisitor(logger, scope);
     }
