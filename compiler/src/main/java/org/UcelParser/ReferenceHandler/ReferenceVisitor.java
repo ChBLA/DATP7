@@ -83,6 +83,38 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     //endregion
 
+    //region Build declaration
+
+    @Override
+    public Boolean visitBuildDecl(UCELParser.BuildDeclContext ctx) {
+        String typeIdentifier = ctx.ID(0).getText();
+        String identifier = ctx.ID(1).getText();
+
+        try {
+            ctx.typeReference = currentScope.find(typeIdentifier, false);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Type " + typeIdentifier + " is not defined"));
+            return false;
+        }
+
+        if(!currentScope.isUnique(identifier, true)) {
+            logger.log(new ErrorLog(ctx, "The variable name '" + identifier + "' already defined in scope"));
+            return false;
+        }
+
+        boolean valid = true;
+
+        for (UCELParser.ArrayDeclContext arrayDecl : ctx.arrayDecl()) {
+            valid = valid && visit(arrayDecl);
+        }
+
+        ctx.reference = currentScope.add(new DeclarationInfo(identifier, ctx));
+
+        return valid;
+    }
+
+
+    //endregion
 
     //endregion
 
