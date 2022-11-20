@@ -220,6 +220,88 @@ public class ReferenceHandlerTests {
     }
     //endregion
 
+    //region Build block
+    @Test
+    void buildBlockSetsScope() {
+        var visitor = new ReferenceVisitor((Scope)null);
+
+        var buildStmntNode = mock(UCELParser.BuildStmntContext.class);
+        var node = mock(UCELParser.BuildBlockContext.class);
+
+        var buildStmnts = new ArrayList<UCELParser.BuildStmntContext>() {{ add(buildStmntNode); }};
+
+        when(node.buildStmnt()).thenReturn(buildStmnts);
+        when(buildStmntNode.accept(visitor)).thenReturn(true);
+
+        var actual = visitor.visitBuildBlock(node);
+
+        assertTrue(actual);
+        assertNotNull(node.scope);
+    }
+
+    @Test
+    void buildBlockSeveralBuildStatements() {
+        var visitor = new ReferenceVisitor((Scope)null);
+
+        var buildStmntNode1 = mock(UCELParser.BuildStmntContext.class);
+        var buildStmntNode2 = mock(UCELParser.BuildStmntContext.class);
+        var node = mock(UCELParser.BuildBlockContext.class);
+
+        var buildStmnts = new ArrayList<UCELParser.BuildStmntContext>() {{ add(buildStmntNode1); add(buildStmntNode2); }};
+
+        when(node.buildStmnt()).thenReturn(buildStmnts);
+        when(buildStmntNode1.accept(visitor)).thenReturn(true);
+        when(buildStmntNode2.accept(visitor)).thenReturn(true);
+
+        var actual = visitor.visitBuildBlock(node);
+
+        assertTrue(actual);
+        verify(buildStmntNode1, times(1)).accept(visitor);
+        verify(buildStmntNode2, times(1)).accept(visitor);
+    }
+
+    @Test
+    void buildBlockOneFailsAllAfterNeverVisited() {
+        var visitor = new ReferenceVisitor((Scope)null);
+
+        var buildStmntNode1 = mock(UCELParser.BuildStmntContext.class);
+        var buildStmntNode2 = mock(UCELParser.BuildStmntContext.class);
+        var node = mock(UCELParser.BuildBlockContext.class);
+
+        var buildStmnts = new ArrayList<UCELParser.BuildStmntContext>() {{ add(buildStmntNode1); add(buildStmntNode2); }};
+
+        when(node.buildStmnt()).thenReturn(buildStmnts);
+        when(buildStmntNode1.accept(visitor)).thenReturn(false);
+        when(buildStmntNode2.accept(visitor)).thenReturn(true);
+
+        var actual = visitor.visitBuildBlock(node);
+
+        assertFalse(actual);
+        verify(buildStmntNode1, times(1)).accept(visitor);
+        verify(buildStmntNode2, never()).accept(visitor);
+    }
+
+    @Test
+    void buildBlockLastFailsAllAreVisited() {
+        var visitor = new ReferenceVisitor((Scope)null);
+
+        var buildStmntNode1 = mock(UCELParser.BuildStmntContext.class);
+        var buildStmntNode2 = mock(UCELParser.BuildStmntContext.class);
+        var node = mock(UCELParser.BuildBlockContext.class);
+
+        var buildStmnts = new ArrayList<UCELParser.BuildStmntContext>() {{ add(buildStmntNode1); add(buildStmntNode2); }};
+
+        when(node.buildStmnt()).thenReturn(buildStmnts);
+        when(buildStmntNode1.accept(visitor)).thenReturn(true);
+        when(buildStmntNode2.accept(visitor)).thenReturn(false);
+
+        var actual = visitor.visitBuildBlock(node);
+
+        assertFalse(actual);
+        verify(buildStmntNode1, times(1)).accept(visitor);
+        verify(buildStmntNode2, times(1)).accept(visitor);
+    }
+    //endregion
 
     //endregion
 

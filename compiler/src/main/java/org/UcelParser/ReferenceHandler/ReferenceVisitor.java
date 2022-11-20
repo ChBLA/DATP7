@@ -63,6 +63,25 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     //endregion
 
+    //region Build block
+
+    @Override
+    public Boolean visitBuildBlock(UCELParser.BuildBlockContext ctx) {
+        enterScope();
+        ctx.scope = currentScope;
+
+        boolean success = true;
+
+        for (var stmnt : ctx.buildStmnt()) {
+            success = (success && visit(stmnt));
+        }
+
+        exitScope();
+        return success;
+    }
+
+
+    //endregion
 
 
     //endregion
