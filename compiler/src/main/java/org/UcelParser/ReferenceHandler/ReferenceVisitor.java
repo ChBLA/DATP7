@@ -40,26 +40,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     //region Component
 
-    @Override
-    public Boolean visitComponent(UCELParser.ComponentContext ctx) {
-        String compName = ctx.ID().getText();
-        try {
-            if(!currentScope.isUnique(compName, false)) {
-                logger.log(new ErrorLog(ctx, "Component name '" + compName + "' is already declared"));
-                return false;
-            }
-            ctx.reference = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
-        } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
-        }
 
-        enterScope();
-        ctx.scope = currentScope;
-        boolean success = (ctx.parameters() == null || visit(ctx.parameters())) && visit(ctx.interfaces()) && visit(ctx.compBody());
-
-        exitScope();
-        return success;
-    }
 
     //endregion
 
@@ -270,6 +251,68 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     }
 
     //endregion
+
+
+    //region Component
+    @Override
+    public Boolean visitComponent(UCELParser.ComponentContext ctx) {
+        String compName = ctx.ID().getText();
+        try {
+            if(!currentScope.isUnique(compName, false)) {
+                logger.log(new ErrorLog(ctx, "Component name '" + compName + "' is already declared"));
+                return false;
+            }
+            ctx.reference = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+        }
+
+        enterScope();
+        ctx.scope = currentScope;
+        boolean success = (ctx.parameters() == null || visit(ctx.parameters())) && visit(ctx.interfaces()) && visit(ctx.compBody());
+
+        exitScope();
+        return success;
+    }
+
+
+
+    @Override
+    public Boolean visitInterfaces(UCELParser.InterfacesContext ctx) {
+        if (ctx.parameters() != null) {
+            return visit(ctx.parameters());
+        } else {
+            return true;
+        }
+    }
+
+    public Boolean visitCompBody(UCELParser.CompBodyContext ctx) {
+        enterScope();
+        currentScope = ctx.scope;
+        Boolean declRes = null;
+        if (ctx.declarations() != null) declRes = visit(ctx.declarations());
+        Boolean buildRes = null;
+        if (ctx.build() != null) buildRes = visit(ctx.build());
+        exitScope();
+        return (declRes != null && buildRes != null && declRes && buildRes)
+                || (declRes == null && buildRes != null && buildRes)
+                || (declRes != null && declRes && buildRes == null);
+    }
+
+    public Boolean visitBuild(UCELParser.BuildContext ctx) {
+        List<Boolean> declRes = null;
+        if (ctx.buildDecl() != null) declRes = ctx.buildDecl().stream().map(this::visit).collect(Collectors.toList());
+        List<Boolean> stmntRes = null;
+        if (ctx.buildStmnt() != null) stmntRes = ctx.buildStmnt().stream().map(this::visit).collect(Collectors.toList());
+        return (declRes == null && stmntRes != null && stmntRes.stream().allMatch(b -> b))
+                || (declRes != null && declRes.stream().allMatch(b -> b) && stmntRes != null && stmntRes.stream().allMatch(b -> b));
+    }
+
+
+
+    //endregion
+
+
 
     @Override
     public Boolean visitFunction(UCELParser.FunctionContext ctx) {
