@@ -802,29 +802,6 @@ public class InterpreterTests {
         return new InterpreterVisitor(logger, scope);
     }
 
-    private UCELParser.TypeIDIntContext mockForBoundedIntType(InterpreterVisitor visitor, Integer min, Integer max) {
-
-        var typeId = mock(UCELParser.TypeIDIntContext.class);
-
-        if(min != null) {
-            var minBound = mockForVisitorResult(UCELParser.ExpressionContext.class, value(min), visitor);
-            when(typeId.expression(0)).thenReturn(minBound);
-        }
-        else {
-            when(typeId.expression(0)).thenReturn(null);
-        }
-
-        if(max != null) {
-            var maxBound = mockForVisitorResult(UCELParser.ExpressionContext.class, value(max), visitor);
-            when(typeId.expression(1)).thenReturn(maxBound);
-        }
-        else {
-            when(typeId.expression(1)).thenReturn(null);
-        }
-
-        return typeId;
-    }
-
     //region Value
     private static VoidValue value() {
         return new VoidValue();
