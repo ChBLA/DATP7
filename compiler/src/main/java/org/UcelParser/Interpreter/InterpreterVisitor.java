@@ -342,7 +342,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             v.getValues().add(occurrenceValue);
         } catch (Exception e) {return null;}
 
-        return occurrenceValue;
+        return new VoidValue();
     }
 
     //endregion

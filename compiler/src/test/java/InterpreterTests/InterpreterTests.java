@@ -37,7 +37,7 @@ public class InterpreterTests {
     the left hand side of the compCon to it
     the interpreter sets a ListValue on the declInfo
     visitCompCon in the interpreter adds a CompOccurrenceValue to the ListValue on declInfo for the buildDecl
-    visitCompCon returns a successValue or null
+    visitCompCon returns a voidValue or null
     at the end of visitBuild the occurrences on the comp node are set before that node is visited by the interpreter.
     visiting must be done last as all linking must have taken place.
     it must be checked by the end of build that all indices for buildDecls are used, that there are no duplicates and that all
