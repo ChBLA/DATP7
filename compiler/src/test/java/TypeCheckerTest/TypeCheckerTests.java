@@ -17,6 +17,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.lang.ref.Reference;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -47,6 +48,7 @@ public class TypeCheckerTests  {
     private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
     private static final Type CONSTANT_INT_TYPE = new Type(Type.TypeEnum.intType, Type.TypePrefixEnum.constant);
+    private static final Type INTERFACE_TYPE = new Type(Type.TypeEnum.interfaceType);
     //endregion
 
 
@@ -230,7 +232,113 @@ public class TypeCheckerTests  {
     //endregion
 
     //region BuildIf
+    @ParameterizedTest
+    @MethodSource("buildIfFaultyTypes")
+    void buildIfExpressionFaultyTypesReturnsErrorType(Type inputType) {
+        var expected = ERROR_TYPE;
+        
+        var visitor = new TypeCheckerVisitor();
 
+        var node = mock(UCELParser.BuildIfContext.class);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, inputType, visitor);
+        var buildStmntNode = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+
+        var buildStmnts = new ArrayList<UCELParser.BuildStmntContext>() {{ add(buildStmntNode); }};
+
+        when(node.expression()).thenReturn(exprNode);
+        when(node.buildStmnt()).thenReturn(buildStmnts);
+
+        var actual = visitor.visitBuildIf(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("nonVoidTypes")
+    void buildIfInvalidFirstStatementReturnsErrorType(Type inputType) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.BuildIfContext.class);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var buildStmntNode1 = mockForVisitorResult(UCELParser.BuildStmntContext.class, inputType, visitor);
+        var buildStmntNode2 = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+
+        var buildStmnts = new ArrayList<UCELParser.BuildStmntContext>() {{ add(buildStmntNode1); add(buildStmntNode2); }};
+
+        when(node.expression()).thenReturn(exprNode);
+        when(node.buildStmnt()).thenReturn(buildStmnts);
+
+        var actual = visitor.visitBuildIf(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("nonVoidTypes")
+    void buildIfInvalidSecondStatementReturnsErrorType(Type inputType) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.BuildIfContext.class);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var buildStmntNode1 = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+        var buildStmntNode2 = mockForVisitorResult(UCELParser.BuildStmntContext.class, inputType, visitor);
+
+        var buildStmnts = new ArrayList<UCELParser.BuildStmntContext>() {{ add(buildStmntNode1); add(buildStmntNode2); }};
+
+        when(node.expression()).thenReturn(exprNode);
+        when(node.buildStmnt()).thenReturn(buildStmnts);
+
+        var actual = visitor.visitBuildIf(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void buildIfCorrect() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.BuildIfContext.class);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var buildStmntNode1 = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+        var buildStmntNode2 = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+
+        var buildStmnts = new ArrayList<UCELParser.BuildStmntContext>() {{ add(buildStmntNode1); add(buildStmntNode2); }};
+
+        when(node.expression()).thenReturn(exprNode);
+        when(node.buildStmnt()).thenReturn(buildStmnts);
+
+        var actual = visitor.visitBuildIf(node);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> buildIfFaultyTypes() {
+        var args = new ArrayList<Arguments>();
+
+        for (var type : Type.TypeEnum.values()) {
+            if (type != Type.TypeEnum.boolType)
+                args.add(Arguments.of(new Type(type)));
+        }
+
+        return args.stream();
+    }
+
+    private static Stream<Arguments> nonVoidTypes() {
+        var args = new ArrayList<Arguments>();
+
+        for (var type : Type.TypeEnum.values()) {
+            if (type != Type.TypeEnum.voidType)
+                args.add(Arguments.of(new Type(type)));
+        }
+
+        return args.stream();
+    }
     //endregion
 
     //region CompCon
@@ -242,6 +350,39 @@ public class TypeCheckerTests  {
     //endregion
 
     //region InterfaceDecl
+
+    @Test
+    void interfaceDeclGetsCorrectTypes() {
+        var expected = INTERFACE_TYPE;
+
+        var scopeMock = mock(Scope.class);
+
+        var expectedVarDeclsType = new Type(Type.TypeEnum.voidType, new String[] {"var1"}, new Type[] {INT_TYPE} );
+        var referenceMock = mock(DeclarationReference.class);
+        var declarationMock = mock(DeclarationInfo.class);
+
+        try {
+            when(scopeMock.get(referenceMock)).thenReturn(declarationMock);
+        } catch (Exception e) {
+            fail("error: unable to mock scope");
+        }
+
+        var visitor = new TypeCheckerVisitor(scopeMock);
+
+        var interfaceVarDeclContext = mockForVisitorResult(
+                UCELParser.InterfaceVarDeclContext.class,
+                expectedVarDeclsType, visitor);
+
+
+        var node = mock(UCELParser.InterfaceDeclContext.class);
+        node.reference = referenceMock;
+        when(node.interfaceVarDecl()).thenReturn(interfaceVarDeclContext);
+
+        var actual = visitor.visitInterfaceDecl(node);
+        assertEquals(expected.getEvaluationType(), actual.getEvaluationType());
+        assertEquals(expectedVarDeclsType.getParameters().length, actual.getParameters().length);
+        assertEquals(expectedVarDeclsType.getParameters()[0], actual.getParameters()[0]);
+    }
 
     //endregion
 
@@ -1482,7 +1623,7 @@ public class TypeCheckerTests  {
 
         Type result = visitor.visitIfstatement(node);
 
-        assertEquals(CHAR_TYPE, result);
+        assertEquals(ERROR_TYPE, result);
     }
 
     @Test
@@ -1500,7 +1641,7 @@ public class TypeCheckerTests  {
 
         Type result = visitor.visitIfstatement(node);
 
-        assertEquals(CHAR_TYPE, result);
+        assertEquals(ERROR_TYPE, result);
     }
 
     @Test
@@ -1536,7 +1677,7 @@ public class TypeCheckerTests  {
 
         Type result = visitor.visitIfstatement(node);
 
-        assertEquals(VOID_TYPE, result);
+        assertEquals(ERROR_TYPE, result);
     }
     //endregion
 

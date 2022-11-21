@@ -54,9 +54,29 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
     private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
     public DeclarationInfo currentFunction = null;
+    //endregion
 
 
-    // interfaceVarDecl
+    // region interfaceDecl
+    
+    // Passes along the type and names of var decls
+    // inside the returned Type object
+    @Override
+    public Type visitInterfaceDecl(UCELParser.InterfaceDeclContext ctx) {
+        Type interfaceType = visit(ctx.interfaceVarDecl());
+        interfaceType.setEvaluationType(Type.TypeEnum.interfaceType);
+        try {
+            currentScope.get(ctx.reference).setType(interfaceType);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx,"internal error: could not find reference to interface"));
+            interfaceType.setEvaluationType(Type.TypeEnum.errorType);
+        }
+        return interfaceType;
+    }
+
+    //endregion
+
+    //region interfaceVarDecl
 
     @Override
     public Type visitInterfaceVarDecl(UCELParser.InterfaceVarDeclContext ctx) {
@@ -276,10 +296,32 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //endregion
 
+    //region Build If
+    @Override
+    public Type visitBuildIf(UCELParser.BuildIfContext ctx) {
+        var exprType = visit(ctx.expression());
+        if (!exprType.equals(BOOL_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Expression in if-statement must be type bool, got type: " + exprType));
+            return ERROR_TYPE;
+        }
 
+        for (var stmnt : ctx.buildStmnt()) {
+            var stmntType = visit(stmnt);
+            if (stmntType.equals(ERROR_TYPE))
+                return ERROR_TYPE;
+            else if (!stmntType.equals(VOID_TYPE)) {
+                logger.log(new ErrorLog(ctx.buildStmnt(0), "Statement must be void-type, got: " + stmntType));
+                return ERROR_TYPE;
+            }
+        }
 
+        return VOID_TYPE;
+    }
 
+    //endregion
 
+    //region Interpreter things
+    //endregion
 
     //region Start
 
@@ -618,14 +660,24 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return ERROR_TYPE;
         }
 
-        if (ctx.statement(1) != null) {
-            if (visit(ctx.statement(1)).equals(ERROR_TYPE)) {
-                //No logging passing through
-                return ERROR_TYPE;
-            } else if (visit(ctx.statement(1)).equals(VOID_TYPE))
-                return VOID_TYPE;
+        var firstStmnt = visit(ctx.statement(0));
+        var secondStmnt = ctx.statement(1) != null ? visit(ctx.statement(1)) : VOID_TYPE;
+
+        if (firstStmnt.equals(ERROR_TYPE))
+            return ERROR_TYPE;
+        else if (!firstStmnt.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx.statement(0), "Statement must be void-type, got: " + firstStmnt));
+            return ERROR_TYPE;
         }
-        return visit(ctx.statement(0));
+
+        if (secondStmnt.equals(ERROR_TYPE))
+            return ERROR_TYPE;
+        else if (!secondStmnt.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx.statement(1), "Statement must be void-type, got: " + secondStmnt));
+            return ERROR_TYPE;
+        }
+
+        return VOID_TYPE;
     }
 
     //endregion
