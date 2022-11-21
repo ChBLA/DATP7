@@ -59,7 +59,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                             //TODO: Implement when component with references
                         } else {
                             Template paramTemplate = visit(paramNode);
-                            String actualParameter = occurrence.getParameters()[i].generateName(componentPrefix);
+                            String actualParameter = occurrence.getParameters()[i].generateName(); //componentPrefix
                             ManualTemplate paramDeclaration = new ManualTemplate(String.format("%s = %s", paramTemplate, actualParameter));
                             parameters.add(paramDeclaration);
                         }

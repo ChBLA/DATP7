@@ -17,6 +17,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.lang.ref.Reference;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -47,6 +48,7 @@ public class TypeCheckerTests  {
     private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
     private static final Type CONSTANT_INT_TYPE = new Type(Type.TypeEnum.intType, Type.TypePrefixEnum.constant);
+    private static final Type INTERFACE_TYPE = new Type(Type.TypeEnum.interfaceType);
     //endregion
 
 
@@ -348,6 +350,39 @@ public class TypeCheckerTests  {
     //endregion
 
     //region InterfaceDecl
+
+    @Test
+    void interfaceDeclGetsCorrectTypes() {
+        var expected = INTERFACE_TYPE;
+
+        var scopeMock = mock(Scope.class);
+
+        var expectedVarDeclsType = new Type(Type.TypeEnum.voidType, new String[] {"var1"}, new Type[] {INT_TYPE} );
+        var referenceMock = mock(DeclarationReference.class);
+        var declarationMock = mock(DeclarationInfo.class);
+
+        try {
+            when(scopeMock.get(referenceMock)).thenReturn(declarationMock);
+        } catch (Exception e) {
+            fail("error: unable to mock scope");
+        }
+
+        var visitor = new TypeCheckerVisitor(scopeMock);
+
+        var interfaceVarDeclContext = mockForVisitorResult(
+                UCELParser.InterfaceVarDeclContext.class,
+                expectedVarDeclsType, visitor);
+
+
+        var node = mock(UCELParser.InterfaceDeclContext.class);
+        node.reference = referenceMock;
+        when(node.interfaceVarDecl()).thenReturn(interfaceVarDeclContext);
+
+        var actual = visitor.visitInterfaceDecl(node);
+        assertEquals(expected.getEvaluationType(), actual.getEvaluationType());
+        assertEquals(expectedVarDeclsType.getParameters().length, actual.getParameters().length);
+        assertEquals(expectedVarDeclsType.getParameters()[0], actual.getParameters()[0]);
+    }
 
     //endregion
 

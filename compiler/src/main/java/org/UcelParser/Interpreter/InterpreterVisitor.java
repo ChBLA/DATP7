@@ -1,5 +1,6 @@
 package org.UcelParser.Interpreter;
 
+import org.UcelParser.Util.ComponentOccurrence;
 import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.Logging.ErrorLog;
 import org.UcelParser.Util.Logging.ILogger;
@@ -34,8 +35,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     //endregion
 
     public ArrayList<InterpreterValue> interpret(UCELParser.ProjectContext ctx) {
-        ParameterValue values = (ParameterValue) visitProject(ctx);
-        return values.getParameters();
+        ListValue values = (ListValue) visitProject(ctx);
+        return values.getValues();
     }
 
     //region Scope
@@ -104,7 +105,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression());
         String id = ctx.ID().getText();
 
-        if(!isStringValue(left) || id == null) return null;
+        if(!isStringValue(left) || id == null/**/) return null;
         return new StringValue(left.generateName() + "." + id);
     }
 
@@ -307,6 +308,55 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     //endregion
 
     //region Build / Linker
+    /*
+
+    DESIGN OF BUILD:
+     -  Reference handler sets a declInfo on scope for the buildDecl (comp or template variable) and points
+        the left hand side of the compCon to it
+     -  The interpreter sets a ListValue on the declInfo
+     -  visitCompCon in the interpreter adds a CompOccurrenceValue to the ListValue on declInfo for the buildDecl
+     -  visitCompCon returns a voidValue or null
+     -  at the end of visitBuild the occurrences on the comp node are set before that node is
+        visited by the interpreter. visiting must be done last as all linking must have taken place.
+     -  it must be checked by the end of build that all indices for buildDecls are used,
+        that there are no duplicates and that all interfaces have been set.
+
+    */
+    @Override
+    public InterpreterValue visitCompCon(UCELParser.CompConContext ctx) {
+        int[] indices = new int[ctx.expression().size()];
+
+        for(int i = 0; i < ctx.expression().size(); i++) {
+            InterpreterValue v = visit(ctx.expression().get(i));
+            if(isIntegerValue(v)) indices[i] = ((IntegerValue) v).getInt();
+            else return null;
+        }
+
+        int argCount = ctx.arguments() == null ? 0 : ctx.arguments().expression().size();
+        InterpreterValue[] arguments = new InterpreterValue[argCount];
+
+        for(int i = 0; i < argCount; i++) {
+            InterpreterValue v = visit(ctx.arguments().expression().get(i));
+            if(v != null) arguments[i] = v;
+            else return null;
+        }
+
+        String id = "";
+
+        try {
+            id = currentScope.get(ctx.variableReference).getIdentifier();
+        } catch (Exception e) {return null;}
+
+        ComponentOccurrence occurrence = new ComponentOccurrence(ctx, arguments);
+        CompOccurrenceValue occurrenceValue = new CompOccurrenceValue(id, indices, occurrence);
+
+        try {
+            ListValue v = (ListValue) currentScope.get(ctx.variableReference).getValue();
+            v.getValues().add(occurrenceValue);
+        } catch (Exception e) {return null;}
+
+        return new VoidValue();
+    }
 
     //endregion
 
