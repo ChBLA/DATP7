@@ -14,5 +14,9 @@ public class VoidValue implements InterpreterValue {
     public String toString() {
         return "void";
     }
-    
+
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof VoidValue;
+    }
 }

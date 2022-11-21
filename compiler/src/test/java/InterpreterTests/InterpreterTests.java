@@ -672,6 +672,95 @@ public class InterpreterTests {
     }
     //endregion
 
+    //region BuildIteration
+    @ParameterizedTest
+    @MethodSource("buildIterationTestSuccessSource")
+    void buildIterationTestSuccess(int lowerBound, int upperBound) {
+        var expected = value(); // void
+        int expectedItrCount = upperBound - lowerBound + 1; // bounds are inclusive
+
+        var visitor = testVisitor();
+
+        var lowerBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(lowerBound), visitor);
+        var upperBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(upperBound), visitor);
+        var stmt = mockForVisitorResult(UCELParser.BuildStmntContext.class, value(), visitor);
+
+        var node = mock(UCELParser.BuildIterationContext.class);
+        when(node.expression(0)).thenReturn(lowerBoundExpr);
+        when(node.expression(1)).thenReturn(upperBoundExpr);
+        when(node.buildStmnt()).thenReturn(stmt);
+
+        var actual = visitor.visitBuildIteration(node);
+
+        verify(stmt, times(expectedItrCount)).accept(any());
+        assertEquals(expected, actual);
+    }
+    private static Stream<Arguments> buildIterationTestSuccessSource() {
+        // int lowerBound, int upperBound
+        return Stream.of(
+            Arguments.of(0, 4),
+            Arguments.of(8, 12),
+            Arguments.of(-12, -5)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("buildIterationTestMalformedBoundsSource")
+    void buildIterationTestMalformedBounds(int lowerBound, int upperBound) {
+        InterpreterValue expected = null; // error
+        int expectedItrCount = 0;
+
+        var visitor = testVisitor();
+
+        var lowerBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(lowerBound), visitor);
+        var upperBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(upperBound), visitor);
+        var stmt = mockForVisitorResult(UCELParser.BuildStmntContext.class, value(), visitor);
+
+        var node = mock(UCELParser.BuildIterationContext.class);
+        when(node.expression(0)).thenReturn(lowerBoundExpr);
+        when(node.expression(1)).thenReturn(upperBoundExpr);
+        when(node.buildStmnt()).thenReturn(stmt);
+
+        var actual = visitor.visitBuildIteration(node);
+
+        verify(stmt, times(expectedItrCount)).accept(any());
+        assertEquals(expected, actual);
+    }
+    private static Stream<Arguments> buildIterationTestMalformedBoundsSource() {
+        // int lowerBound, int upperBound
+        return Stream.of(
+                Arguments.of(4, 0),
+                Arguments.of(12, 8),
+                Arguments.of(-5, -12)
+        );
+    }
+
+    @Test
+    void buildIterationTestStmtError() {
+        int lowerBound = 0;
+        int upperBound = 4;
+        InterpreterValue expected = null; // error
+        int expectedItrCount = 1;
+
+        var visitor = testVisitor();
+
+        var lowerBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(lowerBound), visitor);
+        var upperBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(upperBound), visitor);
+        var errorStmt = mockForVisitorResult(UCELParser.BuildStmntContext.class, null, visitor);
+
+        var node = mock(UCELParser.BuildIterationContext.class);
+        when(node.expression(0)).thenReturn(lowerBoundExpr);
+        when(node.expression(1)).thenReturn(upperBoundExpr);
+        when(node.buildStmnt()).thenReturn(errorStmt);
+
+        var actual = visitor.visitBuildIteration(node);
+
+        verify(errorStmt, times(expectedItrCount)).accept(any());
+        assertEquals(expected, actual);
+    }
+
+    //endregion
+
     //endregion
 
     //region Build / Linker
@@ -695,6 +784,29 @@ public class InterpreterTests {
     private InterpreterVisitor testVisitor(ILogger logger) {
         var scope = mock(Scope.class);
         return new InterpreterVisitor(logger, scope);
+    }
+
+    private UCELParser.TypeIDIntContext mockForBoundedIntType(InterpreterVisitor visitor, Integer min, Integer max) {
+
+        var typeId = mock(UCELParser.TypeIDIntContext.class);
+
+        if(min != null) {
+            var minBound = mockForVisitorResult(UCELParser.ExpressionContext.class, value(min), visitor);
+            when(typeId.expression(0)).thenReturn(minBound);
+        }
+        else {
+            when(typeId.expression(0)).thenReturn(null);
+        }
+
+        if(max != null) {
+            var maxBound = mockForVisitorResult(UCELParser.ExpressionContext.class, value(max), visitor);
+            when(typeId.expression(1)).thenReturn(maxBound);
+        }
+        else {
+            when(typeId.expression(1)).thenReturn(null);
+        }
+
+        return typeId;
     }
 
     //region Value

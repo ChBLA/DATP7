@@ -48,7 +48,8 @@ compBody locals [Scope scope]
 interfaces : LEFTPAR parameters? RIGHTPAR;
 
 build : BUILD COLON LEFTCURLYBRACE buildDecl* buildStmnt+ RIGHTCURLYBRACE;
-buildStmnt : linkStatement
+buildStmnt : buildBlock
+           | linkStatement
            | buildIteration
            | buildIf
            | compCon
@@ -58,7 +59,7 @@ compCon locals [DeclarationReference instantiatedReference, DeclarationReference
 buildIf : IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?;
 linkStatement : LINK expression expression END;
 buildIteration locals [DeclarationReference reference]
-    : FOR LEFTPAR ID COLON type RIGHTPAR buildBlock;
+    : FOR LEFTPAR ID COLON LEFTBRACKET expression COMMA expression RIGHTBRACKET RIGHTPAR buildStmnt;
 buildBlock locals [Scope scope]
     : LEFTCURLYBRACE buildStmnt+ RIGHTCURLYBRACE;
 buildDecl locals [DeclarationReference typeReference, DeclarationReference reference]

@@ -3,6 +3,7 @@ package org.UcelParser.Interpreter;
 import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.Logging.ErrorLog;
 import org.UcelParser.Util.Logging.ILogger;
+import org.UcelParser.Util.Logging.Log;
 import org.UcelParser.Util.Value.*;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
@@ -276,8 +277,32 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         return new VoidValue();
     }
-        return null;
+
+    @Override
+    public InterpreterValue visitBuildIteration(UCELParser.BuildIterationContext ctx) {
+        int rangeStart = ((IntegerValue)visit(ctx.expression(0))).getInt();
+        int rangeEnd   = ((IntegerValue)visit(ctx.expression(1))).getInt();
+
+        if(rangeStart > rangeEnd) {
+            logger.log(new ErrorLog(ctx, "Lower bound must not be greater than upper bound"));
+            return null;
+        };
+
+        for(int i=rangeStart; i<=rangeEnd; i++) {
+            try {
+                currentScope.get(ctx.reference).setValue(new IntegerValue(i));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            var stmtReturn = visit(ctx.buildStmnt());
+            if(stmtReturn == null)
+                return null;
+        }
+
+        return new VoidValue();
     }
+
 
     //endregion
 
