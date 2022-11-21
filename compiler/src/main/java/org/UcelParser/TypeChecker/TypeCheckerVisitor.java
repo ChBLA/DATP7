@@ -929,7 +929,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if (leftType.equals(rightType)) {
             return leftType;
         }
-        else if ((leftType.getEvaluationType() == Type.TypeEnum.clockType) && (rightType.getEvaluationType() == Type.TypeEnum.intType) ) {
+        else if ((leftType.getEvaluationType() == Type.TypeEnum.clockType) && (rightType.getEvaluationType() == Type.TypeEnum.intType)
+                && (rightType.getArrayDimensions() == 0)) {
             return leftType;
         }
         else {
@@ -958,7 +959,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if (leftType.equals(rightType)) {
             return VOID_TYPE;
         }
-        else if ((leftType.getEvaluationType() == Type.TypeEnum.clockType) && (rightType.getEvaluationType() == Type.TypeEnum.intType) ) {
+        else if ((leftType.getEvaluationType() == Type.TypeEnum.clockType) && (rightType.getEvaluationType() == Type.TypeEnum.intType)
+                && (rightType.getArrayDimensions() == 0)) {
             return VOID_TYPE;
         }
         else {
