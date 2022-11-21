@@ -194,14 +194,53 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //region Component
     @Override
     public Type visitComponent(UCELParser.ComponentContext ctx) {
-        return INT_TYPE;
+        enterScope(ctx.scope);
+
+        Type parametersType = null;
+        if (ctx.parameters() != null) parametersType = visit(ctx.parameters());
+        Type interfacesType = visit(ctx.interfaces());
+        Type compBodyType = visit(ctx.compBody());
+
+        exitScope();
+        Type[] paramTypes = parametersType.getParameters();
+        var templateTypes = new ArrayList<Type>();
+        if (paramTypes != null) templateTypes.addAll(Arrays.asList(paramTypes));
+        templateTypes.add(interfacesType);
+        var componentType = new Type(Type.TypeEnum.componentType, templateTypes.toArray(new Type[0]));
+        try {
+            currentScope.get(ctx.reference).setType(componentType);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
+        return componentType;
     }
 
     @Override
     public Type visitCompBody(UCELParser.CompBodyContext ctx) {
+        enterScope(ctx.scope);
+
+
+
+
+        exitScope();
+
+
         return INT_TYPE;
     }
 
+    @Override
+    public Type visitInterfaces(UCELParser.InterfacesContext ctx) {
+        Type parametersType = null;
+        if (ctx.parameters() != null) parametersType = visit(ctx.parameters());
+
+        Type interfacesType = null;
+        if (parametersType != null) interfacesType = new Type(Type.TypeEnum.interfaceType, parametersType.getParameters());
+        else interfacesType = new Type(Type.TypeEnum.interfaceType, new Type[0]);
+
+        return interfacesType;
+    }
 
 
     //endregion
@@ -887,7 +926,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if (leftType.equals(rightType)) {
             return leftType;
         }
-        else if ((leftType.getEvaluationType() == Type.TypeEnum.clockType) && (rightType.getEvaluationType() == Type.TypeEnum.intType) ) {
+        else if ((leftType.getEvaluationType() == Type.TypeEnum.clockType) && (rightType.getEvaluationType() == Type.TypeEnum.intType)
+                && (rightType.getArrayDimensions() == 0)) {
             return leftType;
         }
         else {
@@ -916,7 +956,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if (leftType.equals(rightType)) {
             return VOID_TYPE;
         }
-        else if ((leftType.getEvaluationType() == Type.TypeEnum.clockType) && (rightType.getEvaluationType() == Type.TypeEnum.intType) ) {
+        else if ((leftType.getEvaluationType() == Type.TypeEnum.clockType) && (rightType.getEvaluationType() == Type.TypeEnum.intType)
+                && (rightType.getArrayDimensions() == 0)) {
             return VOID_TYPE;
         }
         else {
