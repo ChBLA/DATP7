@@ -58,7 +58,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
 
     // region interfaceDecl
-    
+
     // Passes along the type and names of var decls
     // inside the returned Type object
     @Override
@@ -296,6 +296,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //endregion
 
+    //region Build Region
+
     //region Build If
     @Override
     public Type visitBuildIf(UCELParser.BuildIfContext ctx) {
@@ -320,7 +322,48 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //endregion
 
-    //region Interpreter things
+    @Override
+    public Type visitBuildIteration(UCELParser.BuildIterationContext ctx) {
+        DeclarationInfo iteratorInfo;
+        try {
+            iteratorInfo = currentScope.get(ctx.reference);
+        } catch (Exception e) {
+            throw new RuntimeException(e); // Should be no way this isn't set by the reference handler
+        }
+        var lowerBound = visit(ctx.expression(0));
+        var upperBound = visit(ctx.expression(1));
+        var stmt = visit(ctx.buildStmnt());
+
+        boolean hadError = false;
+        if(!iteratorInfo.getType().equals(INT_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Compiler error, iterator should have been automatically set to an integer."));
+            hadError = true;
+        }
+
+        if(!lowerBound.equals(INT_TYPE)) {
+            if(!lowerBound.equals(ERROR_TYPE))
+                logger.log(new ErrorLog(ctx.expression(0), "Lower bound must be an integer"));
+            hadError = true;
+        }
+
+        if(!upperBound.equals(INT_TYPE)) {
+            if(!upperBound.equals(ERROR_TYPE))
+                logger.log(new ErrorLog(ctx.expression(1), "Upper bound must be an integer"));
+            hadError = true;
+        }
+
+        if(!stmt.equals(VOID_TYPE)) {
+            if(!stmt.equals(ERROR_TYPE))
+                logger.log(new ErrorLog(ctx.buildStmnt(), "Compiler error: Statements should always return error or void"));
+            hadError = true;
+        }
+
+        if(hadError)
+            return ERROR_TYPE;
+
+        return VOID_TYPE;
+    }
+
     //endregion
 
     //region Start
@@ -660,24 +703,14 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return ERROR_TYPE;
         }
 
-        var firstStmnt = visit(ctx.statement(0));
-        var secondStmnt = ctx.statement(1) != null ? visit(ctx.statement(1)) : VOID_TYPE;
-
-        if (firstStmnt.equals(ERROR_TYPE))
-            return ERROR_TYPE;
-        else if (!firstStmnt.equals(VOID_TYPE)) {
-            logger.log(new ErrorLog(ctx.statement(0), "Statement must be void-type, got: " + firstStmnt));
-            return ERROR_TYPE;
+        if (ctx.statement(1) != null) {
+            if (visit(ctx.statement(1)).equals(ERROR_TYPE)) {
+                //No logging passing through
+                return ERROR_TYPE;
+            } else if (visit(ctx.statement(1)).equals(VOID_TYPE))
+                return VOID_TYPE;
         }
-
-        if (secondStmnt.equals(ERROR_TYPE))
-            return ERROR_TYPE;
-        else if (!secondStmnt.equals(VOID_TYPE)) {
-            logger.log(new ErrorLog(ctx.statement(1), "Statement must be void-type, got: " + secondStmnt));
-            return ERROR_TYPE;
-        }
-
-        return VOID_TYPE;
+        return visit(ctx.statement(0));
     }
 
     //endregion

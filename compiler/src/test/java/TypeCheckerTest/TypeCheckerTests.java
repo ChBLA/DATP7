@@ -18,6 +18,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.lang.ref.Reference;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -229,6 +230,98 @@ public class TypeCheckerTests  {
 
     //region LinkStatement
 
+    //endregion
+
+    //region BuildIteration
+    @Test
+    public void TestBuildIterationSuccess() throws Exception {
+        var scope = mock(Scope.class);
+        var visitor = new TypeCheckerVisitor(scope);
+
+        var ref = mock(DeclarationReference.class);
+        var decl = mock(DeclarationInfo.class);
+        when(decl.getType()).thenReturn(INT_TYPE);
+        when(scope.get(ref)).thenReturn(decl);
+
+        var lowerBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        var upperBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        var buildStmt = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+
+        var node = mock(UCELParser.BuildIterationContext.class);
+        node.reference = ref;
+        when(node.expression(0)).thenReturn(lowerBoundExpr);
+        when(node.expression(1)).thenReturn(upperBoundExpr);
+        when(node.buildStmnt()).thenReturn(buildStmt);
+
+        var actual = visitor.visitBuildIteration(node);
+
+        assertEquals(VOID_TYPE, actual);
+        verify(node.expression(0), times(1)).accept(any());
+        verify(node.expression(1), times(1)).accept(any());
+        verify(node.buildStmnt(), times(1)).accept(any());
+    }
+
+    @ParameterizedTest
+    @MethodSource("testBuildIterationSource")
+    public void testBuildIteration(Type expected, Type iteratorType, Type lowerBoundType, Type upperBoundType, Type stmtType) throws Exception {
+        var scope = mock(Scope.class);
+        var visitor = new TypeCheckerVisitor(scope);
+
+        var ref = mock(DeclarationReference.class);
+        var decl = mock(DeclarationInfo.class);
+        when(decl.getType()).thenReturn(INT_TYPE);
+        when(scope.get(ref)).thenReturn(decl);
+
+        var lowerBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        var upperBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+        var buildStmt = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+
+        var node = mock(UCELParser.BuildIterationContext.class);
+        node.reference = ref;
+        when(node.expression(0)).thenReturn(lowerBoundExpr);
+        when(node.expression(1)).thenReturn(upperBoundExpr);
+        when(node.buildStmnt()).thenReturn(buildStmt);
+
+        var actual = visitor.visitBuildIteration(node);
+
+        assertEquals(VOID_TYPE, actual);
+        verify(node.expression(0), times(1)).accept(any());
+        verify(node.expression(1), times(1)).accept(any());
+        verify(node.buildStmnt(), times(1)).accept(any());
+    }
+    private static ArrayList<Arguments> testBuildIterationSource() {
+        // Type expected, Type iteratorType, Type lowerBoundType, Type upperBoundType, Type stmtType
+
+        var allTypesButInt = allTypesBut(INT_TYPE);
+        var allTypesButVoid = allTypesBut(VOID_TYPE);
+
+        var cases = new ArrayList<Arguments>() {{
+            // Valid
+            Arguments.of(VOID_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, VOID_TYPE);
+        }};
+
+        // Invalid iterator type
+        for(var type: allTypesButInt) {
+            cases.add(Arguments.of(ERROR_TYPE, type, INT_TYPE, INT_TYPE, VOID_TYPE));
+        }
+
+        // Invalid lower bound type
+        for(var type: allTypesButInt) {
+            cases.add(Arguments.of(ERROR_TYPE, INT_TYPE, type, INT_TYPE, VOID_TYPE));
+        }
+
+        // Invalid upper bound type
+        for(var type: allTypesButInt) {
+            cases.add(Arguments.of(ERROR_TYPE, INT_TYPE, INT_TYPE, type, VOID_TYPE));
+        }
+
+        // Invalid statement type
+        for(var type: allTypesButVoid) {
+            cases.add(Arguments.of(ERROR_TYPE, INT_TYPE, INT_TYPE, INT_TYPE, type));
+        }
+
+        return cases;
+    }
     //endregion
 
     //region BuildIf
@@ -4713,7 +4806,7 @@ public class TypeCheckerTests  {
     }
 
     @ParameterizedTest
-    @MethodSource("notChanTypes")
+    @MethodSource("syncInvalidSource")
     void syncInvalid(Type type) {
         var expected = ERROR_TYPE;
 
@@ -4727,6 +4820,15 @@ public class TypeCheckerTests  {
         var actual = visitor.visitSync(node);
 
         assertEquals(expected, actual);
+    }
+    private static Stream<Arguments> syncInvalidSource() {
+        var args = new ArrayList<Arguments>();
+
+        for (var type : allTypesBut(CHAN_TYPE)) {
+            args.add(Arguments.of(type));
+        }
+
+        return args.stream();
     }
     //endregion
 
@@ -4804,44 +4906,31 @@ public class TypeCheckerTests  {
 
     //region Arguments for parameterized tests
 
-    private static Stream<Arguments> notBoolTypes() {
-        var args = new ArrayList<Arguments>();
-
-        for (var type : Type.TypeEnum.values()) {
-            if (type != Type.TypeEnum.boolType)
-                args.add(Arguments.of(new Type(type)));
-        }
-
-        return args.stream();
+    private static List<Type> notBoolTypes() {
+        return allTypesBut(BOOL_TYPE);
     }
 
-    private static Stream<Arguments> notChanTypes() {
-        var args = new ArrayList<Arguments>();
-
-        for (var type : Type.TypeEnum.values()) {
-            if (type != Type.TypeEnum.chanType)
-                args.add(Arguments.of(new Type(type)));
-        }
-
-        return args.stream();
-    }
-
-    private static Stream<Arguments> allTypes() {
-
-        ArrayList<Arguments> args = new ArrayList<Arguments>();
+    private static ArrayList<Type> allTypes() {
+        ArrayList<Type> types = new ArrayList<Type>();
 
         // One of each
         for(Type.TypeEnum t : Type.TypeEnum.values()) {
-            args.add(Arguments.arguments(new Type(t)));
+            types.add(new Type(t));
         }
 
         // A couple of array types
-        args.add(Arguments.arguments(BOOL_TYPE, 1));
-        args.add(Arguments.arguments(INT_TYPE, 2));
-        args.add(Arguments.arguments(DOUBLE_TYPE, 3));
-        args.add(Arguments.arguments(STRUCT_TYPE, 4));
+        types.add(new Type(Type.TypeEnum.boolType, 1));
+        types.add(new Type(Type.TypeEnum.intType, 2));
+        types.add(new Type(Type.TypeEnum.doubleType, 3));
+        types.add(new Type(Type.TypeEnum.structType, 4));
 
-        return args.stream();
+        return types;
     }
+
+    private static List<Type> allTypesBut(Type unwantedType) {
+        return allTypes().stream().filter(i -> !i.equals(unwantedType)).toList();
+    }
+
+
     //endregion
 }
