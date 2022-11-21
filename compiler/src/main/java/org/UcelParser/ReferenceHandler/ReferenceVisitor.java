@@ -40,26 +40,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     //region Component
 
-    @Override
-    public Boolean visitComponent(UCELParser.ComponentContext ctx) {
-        String compName = ctx.ID().getText();
-        try {
-            if(!currentScope.isUnique(compName, false)) {
-                logger.log(new ErrorLog(ctx, "Component name '" + compName + "' is already declared"));
-                return false;
-            }
-            ctx.reference = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
-        } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
-        }
 
-        enterScope();
-        ctx.scope = currentScope;
-        boolean success = (ctx.parameters() == null || visit(ctx.parameters())) && visit(ctx.interfaces()) && visit(ctx.compBody());
-
-        exitScope();
-        return success;
-    }
 
     //endregion
 
@@ -255,39 +236,25 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
 
     //region Component
-
     @Override
     public Boolean visitComponent(UCELParser.ComponentContext ctx) {
-        var componentName = ctx.ID().getText();
+        String compName = ctx.ID().getText();
         try {
-            if(!currentScope.isUnique(componentName, false)) {
-                logger.log(new ErrorLog(ctx, "Component '" + componentName + "' is already declared"));
+            if(!currentScope.isUnique(compName, false)) {
+                logger.log(new ErrorLog(ctx, "Component name '" + compName + "' is already declared"));
                 return false;
             }
-            DeclarationReference declRef = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
-            ctx.reference = declRef;
-
+            ctx.reference = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
         } catch (Exception e) {
             logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
         }
 
-
         enterScope();
         ctx.scope = currentScope;
+        boolean success = (ctx.parameters() == null || visit(ctx.parameters())) && visit(ctx.interfaces()) && visit(ctx.compBody());
 
-        var parametersRes = false;
-        if (ctx.parameters() != null) {
-            parametersRes = visit(ctx.parameters());
-        }
-
-        var interfaceRes = visit(ctx.interface());
-        var compBodyRes = visit(ctx.compBody());
-
-
-        ctx.occurrences = new ArrayList<>();
         exitScope();
-
-        return parametersRes && interfaceRes && compBodyRes;
+        return success;
     }
 
 
