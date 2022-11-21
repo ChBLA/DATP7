@@ -703,14 +703,17 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return ERROR_TYPE;
         }
 
-        if (ctx.statement(1) != null) {
-            if (visit(ctx.statement(1)).equals(ERROR_TYPE)) {
-                //No logging passing through
+        for (var stmnt : ctx.statement()) {
+            var stmntType = visit(stmnt);
+            if (stmntType.equals(ERROR_TYPE))
                 return ERROR_TYPE;
-            } else if (visit(ctx.statement(1)).equals(VOID_TYPE))
-                return VOID_TYPE;
+            else if (!stmntType.equals(VOID_TYPE)) {
+                logger.log(new ErrorLog(ctx.statement(0), "Statement must be void-type, got: " + stmntType));
+                return ERROR_TYPE;
+            }
         }
-        return visit(ctx.statement(0));
+
+        return VOID_TYPE;
     }
 
     //endregion

@@ -1695,7 +1695,9 @@ public class TypeCheckerTests  {
         UCELParser.IfstatementContext node = mock(UCELParser.IfstatementContext.class);
         var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, STRING_TYPE, visitor);
         var statementType = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+        var statements = new ArrayList<UCELParser.StatementContext>() {{ add(statementType); }};
 
+        when(node.statement()).thenReturn(statements);
         when(node.expression()).thenReturn(condType);
         when(node.statement(0)).thenReturn(statementType);
 
@@ -1711,7 +1713,9 @@ public class TypeCheckerTests  {
         UCELParser.IfstatementContext node = mock(UCELParser.IfstatementContext.class);
         var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
         var statementType = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+        var statements = new ArrayList<UCELParser.StatementContext>() {{ add(statementType); }};
 
+        when(node.statement()).thenReturn(statements);
         when(node.expression()).thenReturn(condType);
         when(node.statement(0)).thenReturn(statementType);
 
@@ -1728,7 +1732,9 @@ public class TypeCheckerTests  {
         var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
         var statementType1 = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
         var statementType2 = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
+        var statements = new ArrayList<UCELParser.StatementContext>() {{ add(statementType1); add(statementType2); }};
 
+        when(node.statement()).thenReturn(statements);
         when(node.expression()).thenReturn(condType);
         when(node.statement(0)).thenReturn(statementType1);
         when(node.statement(1)).thenReturn(statementType2);
@@ -1747,7 +1753,10 @@ public class TypeCheckerTests  {
         var statementType1 = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
         var statementType2 = mockForVisitorResult(UCELParser.StatementContext.class, ERROR_TYPE, visitor);
 
+        var statements = new ArrayList<UCELParser.StatementContext>() {{ add(statementType1); add(statementType2); }};
+
         when(node.expression()).thenReturn(condType);
+        when(node.statement()).thenReturn(statements);
         when(node.statement(0)).thenReturn(statementType1);
         when(node.statement(1)).thenReturn(statementType2);
 
@@ -1764,7 +1773,9 @@ public class TypeCheckerTests  {
         var condType = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
         var statementType1 = mockForVisitorResult(UCELParser.StatementContext.class, CHAR_TYPE, visitor);
         var statementType2 = mockForVisitorResult(UCELParser.StatementContext.class, VOID_TYPE, visitor);
+        var statements = new ArrayList<UCELParser.StatementContext>() {{ add(statementType1); add(statementType2); }};
 
+        when(node.statement()).thenReturn(statements);
         when(node.expression()).thenReturn(condType);
         when(node.statement(0)).thenReturn(statementType1);
         when(node.statement(1)).thenReturn(statementType2);
