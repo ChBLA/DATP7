@@ -1,12 +1,9 @@
 package TypeCheckerTest;
 
-import org.UcelParser.CodeGeneration.CodeGenVisitor;
-import org.UcelParser.ReferenceHandler.ReferenceVisitor;
 import org.UcelParser.TypeChecker.TypeCheckerVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.DeclarationReference;
-import org.UcelParser.Util.Logging.Logger;
 import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Type;
 
@@ -20,8 +17,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import javax.lang.model.element.TypeElement;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -51,6 +46,7 @@ public class TypeCheckerTests  {
     private static final Type BOOL_TYPE = new Type(Type.TypeEnum.boolType);
     private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
+    private static final Type CONSTANT_INT_TYPE = new Type(Type.TypeEnum.intType, Type.TypePrefixEnum.constant);
     //endregion
 
 
@@ -693,8 +689,8 @@ public class TypeCheckerTests  {
     }
 
     @ParameterizedTest
-    @MethodSource("assignmentTestSource")
-    void assignmentTests(Type leftType, Type rightType, Type expectedType) {
+    @MethodSource("assignmentExprTestSource")
+    void assignmentExprTests(Type leftType, Type rightType, Type expectedType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         var mockLeft = mockForVisitorResult(UCELParser.ExpressionContext.class, leftType, visitor);
@@ -710,8 +706,82 @@ public class TypeCheckerTests  {
         assertEquals(expectedType, actual);
     }
 
-    // TODO: Possibly refactor this to not use for loops as it is prone to mistakes
+    @ParameterizedTest
+    @MethodSource("assignmentTestSource")
+    void assignmentTests(Type leftType, Type rightType, Type expectedType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        var mockLeft = mockForVisitorResult(UCELParser.ExpressionContext.class, leftType, visitor);
+        var mockRight = mockForVisitorResult(UCELParser.ExpressionContext.class, rightType, visitor);
+
+        var node = mock(UCELParser.AssignmentContext.class);
+
+        when(node.expression(0)).thenReturn(mockLeft);
+        when(node.expression(1)).thenReturn(mockRight);
+
+        Type actual = visitor.visitAssignment(node);
+
+        assertEquals(expectedType, actual);
+    }
+
     private static Stream<Arguments> assignmentTestSource() {
+        Type[] types = new Type[]{INT_TYPE,
+                CHAR_TYPE,
+                BOOL_TYPE,
+                STRING_TYPE,
+                SCALAR_TYPE,
+                STRUCT_TYPE,
+                DOUBLE_TYPE,
+                INT_ARRAY_TYPE,
+                CHAR_ARRAY_TYPE,
+                BOOL_ARRAY_TYPE,
+                INT_2D_ARRAY_TYPE,
+                DOUBLE_ARRAY_TYPE,
+                CONSTANT_INT_TYPE
+        };
+
+        Type[][] validPairTypes = new Type[][]{
+                {INT_TYPE, INT_TYPE},
+                {CLOCK_TYPE, INT_TYPE},
+                {CHAR_TYPE, CHAR_TYPE},
+                {BOOL_TYPE, BOOL_TYPE},
+                {STRING_TYPE, STRING_TYPE},
+                {SCALAR_TYPE, SCALAR_TYPE},
+                {STRUCT_TYPE, STRUCT_TYPE},
+                {DOUBLE_TYPE, DOUBLE_TYPE},
+                {INT_ARRAY_TYPE, INT_ARRAY_TYPE},
+                {CHAR_ARRAY_TYPE, CHAR_ARRAY_TYPE},
+                {BOOL_ARRAY_TYPE, BOOL_ARRAY_TYPE},
+                {INT_2D_ARRAY_TYPE, INT_2D_ARRAY_TYPE},
+                {DOUBLE_ARRAY_TYPE, DOUBLE_ARRAY_TYPE}
+        };
+
+        List<Arguments> arguments = new ArrayList<>();
+        for (Type leftType : types) {
+            for (Type rightType : types) {
+                Type expectedType = ERROR_TYPE;
+                for (Type[] validPairType : validPairTypes) {
+                    if (leftType.equals(validPairType[0]) && rightType.equals(validPairType[1])) {
+                        expectedType = VOID_TYPE;
+                        break;
+                    }
+                }
+                arguments.add(Arguments.of(leftType, rightType, expectedType));
+            }
+        }
+
+        Type[] invalidAssignmentTypes = new Type[]{VOID_TYPE, CHAN_TYPE, INVALID_TYPE, ERROR_TYPE};
+        for (Type leftType : types) {
+            for (Type rightType : invalidAssignmentTypes) {
+                arguments.add(Arguments.of(leftType, rightType, ERROR_TYPE));
+            }
+        }
+
+        return arguments.stream();
+    }
+
+    // TODO: Possibly refactor this to not use for loops as it is prone to mistakes
+    private static Stream<Arguments> assignmentExprTestSource() {
         Type[] types = new Type[]{INT_TYPE,
                 CHAR_TYPE,
                 BOOL_TYPE,

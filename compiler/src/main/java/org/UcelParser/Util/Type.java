@@ -48,6 +48,11 @@ public class Type {
         this.prefix = TypePrefixEnum.noPrefix;
     }
 
+    public Type(TypeEnum type, TypePrefixEnum prefix) {
+        this(type, 0);
+        setPrefix(prefix);
+    }
+
     public Type(TypeEnum evaluationType, Type[] parameters) {
         this(evaluationType, null, parameters, 0);
     }
