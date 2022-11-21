@@ -38,7 +38,6 @@ update : (expression (COMMA expression)*)?;
 
 start locals [Scope scope]
     : declarations statement* system;
-    //TODO: Add ? after expression to make the tests run :D
 system : SYSTEM expression ((COMMA | '<') expression)* END;
 
 component locals [Scope scope, DeclarationReference reference, List<ComponentOccurrence> occurrences]
