@@ -501,6 +501,134 @@ public class ReferenceHandlerTests {
 
     //endregion
 
+    //region Build iteration
+    @Test
+    void buildIterationCorrect() {
+        String name = "tester";
+
+        var scope = mock(Scope.class);
+
+        var visitor = new ReferenceVisitor(scope);
+
+        var idNode = mock(TerminalNode.class);
+        var node = mock(UCELParser.BuildIterationContext.class);
+        var typeNode = mock(UCELParser.TypeContext.class);
+        var buildBlockNode = mock(UCELParser.BuildBlockContext.class);
+        var declRef = mock(DeclarationReference.class);
+
+        when(node.ID()).thenReturn(idNode);
+        when(node.type()).thenReturn(typeNode);
+        when(node.buildBlock()).thenReturn(buildBlockNode);
+        when(idNode.getText()).thenReturn(name);
+
+        when(typeNode.accept(visitor)).thenReturn(true);
+        when(buildBlockNode.accept(visitor)).thenReturn(true);
+
+        when(scope.isUnique(name, true)).thenReturn(true);
+        when(scope.add(any())).thenReturn(declRef);
+
+        var actual = visitor.visitBuildIteration(node);
+
+        assertTrue(actual);
+        assertEquals(declRef, node.reference);
+    }
+
+    @Test
+    void buildIterationNonUniqueIDFails() {
+        String name = "tester";
+
+        var scope = mock(Scope.class);
+
+        var visitor = new ReferenceVisitor(scope);
+
+        var idNode = mock(TerminalNode.class);
+        var node = mock(UCELParser.BuildIterationContext.class);
+        var typeNode = mock(UCELParser.TypeContext.class);
+        var buildBlockNode = mock(UCELParser.BuildBlockContext.class);
+        var declRef = mock(DeclarationReference.class);
+
+        when(node.ID()).thenReturn(idNode);
+        when(node.type()).thenReturn(typeNode);
+        when(node.buildBlock()).thenReturn(buildBlockNode);
+        when(idNode.getText()).thenReturn(name);
+
+        when(typeNode.accept(visitor)).thenReturn(true);
+        when(buildBlockNode.accept(visitor)).thenReturn(true);
+
+        when(scope.isUnique(name, true)).thenReturn(false);
+        when(scope.add(any())).thenReturn(declRef);
+
+        var actual = visitor.visitBuildIteration(node);
+
+        assertFalse(actual);
+    }
+
+    @Test
+    void buildIterationTypeFails() {
+        String name = "tester";
+
+        var scope = mock(Scope.class);
+
+        var visitor = new ReferenceVisitor(scope);
+
+        var idNode = mock(TerminalNode.class);
+        var node = mock(UCELParser.BuildIterationContext.class);
+        var typeNode = mock(UCELParser.TypeContext.class);
+        var buildBlockNode = mock(UCELParser.BuildBlockContext.class);
+        var declRef = mock(DeclarationReference.class);
+
+        when(node.ID()).thenReturn(idNode);
+        when(node.type()).thenReturn(typeNode);
+        when(node.buildBlock()).thenReturn(buildBlockNode);
+        when(idNode.getText()).thenReturn(name);
+
+        when(typeNode.accept(visitor)).thenReturn(false);
+        when(buildBlockNode.accept(visitor)).thenReturn(true);
+
+        when(scope.isUnique(name, true)).thenReturn(true);
+        when(scope.add(any())).thenReturn(declRef);
+
+        var actual = visitor.visitBuildIteration(node);
+
+        assertFalse(actual);
+        verify(typeNode, times(1)).accept(visitor);
+        verify(buildBlockNode, never()).accept(visitor);
+    }
+
+    @Test
+    void buildIterationBodyFails() {
+        String name = "tester";
+
+        var scope = mock(Scope.class);
+
+        var visitor = new ReferenceVisitor(scope);
+
+        var idNode = mock(TerminalNode.class);
+        var node = mock(UCELParser.BuildIterationContext.class);
+        var typeNode = mock(UCELParser.TypeContext.class);
+        var buildBlockNode = mock(UCELParser.BuildBlockContext.class);
+        var declRef = mock(DeclarationReference.class);
+
+        when(node.ID()).thenReturn(idNode);
+        when(node.type()).thenReturn(typeNode);
+        when(node.buildBlock()).thenReturn(buildBlockNode);
+        when(idNode.getText()).thenReturn(name);
+
+        when(typeNode.accept(visitor)).thenReturn(true);
+        when(buildBlockNode.accept(visitor)).thenReturn(false);
+
+        when(scope.isUnique(name, true)).thenReturn(true);
+        when(scope.add(any())).thenReturn(declRef);
+
+        var actual = visitor.visitBuildIteration(node);
+
+        assertFalse(actual);
+        verify(typeNode, times(1)).accept(visitor);
+        verify(buildBlockNode, times(1)).accept(visitor);
+    }
+
+    //endregion
+
     //endregion
 
     //region Project
