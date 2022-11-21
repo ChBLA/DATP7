@@ -54,9 +54,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
     private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
     public DeclarationInfo currentFunction = null;
+    //endregion
 
 
-    // interfaceVarDecl
+    //region interfaceVarDecl
 
     @Override
     public Type visitInterfaceVarDecl(UCELParser.InterfaceVarDeclContext ctx) {
@@ -276,10 +277,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //endregion
 
+    //region Interpreter things
 
-
-
-
+    //endregion
+    
 
     //region Start
 
