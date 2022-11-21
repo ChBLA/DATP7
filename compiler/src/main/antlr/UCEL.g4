@@ -53,7 +53,7 @@ buildStmnt : linkStatement
            | buildIf
            | compCon
            ;
-compCon locals [DeclarationReference instantiatedReference, DeclarationReference constructorReference]
+compCon locals [DeclarationReference variableReference, DeclarationReference constructorReference]
     : ID (LEFTBRACKET expression RIGHTBRACKET)* '=' ID LEFTPAR arguments RIGHTPAR END;
 buildIf : IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?;
 linkStatement : LINK expression expression END;
