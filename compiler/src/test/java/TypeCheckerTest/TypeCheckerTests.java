@@ -20,6 +20,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.lang.ref.Reference;
 import java.lang.reflect.Array;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -4928,7 +4929,8 @@ public class TypeCheckerTests  {
     }
 
     private static List<Type> allTypesBut(Type unwantedType) {
-        return allTypes().stream().filter(i -> !i.equals(unwantedType)).toList();
+        //TODO toList instead of collect was not recognised
+        return allTypes().stream().filter(i -> !i.equals(unwantedType)).collect(Collectors.toList());
     }
 
 
