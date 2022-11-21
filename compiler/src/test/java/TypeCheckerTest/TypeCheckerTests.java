@@ -50,136 +50,6 @@ public class TypeCheckerTests  {
     //endregion
 
 
-    // region interfaceVarDecl
-
-    @Test
-    void interfaceVarDeclCorrect1() {
-        var expected = VOID_TYPE;
-        var declType = INT_TYPE;
-
-        var visitor = new TypeCheckerVisitor();
-
-        var declID = mock(UCELParser.ArrayDeclIDContext.class);
-        var nameMock = mock(TerminalNodeImpl.class);
-        when(nameMock.getText()).thenReturn("varName1");
-        when(declID.ID()).thenReturn(nameMock);
-
-        var declTypeNode = mockForVisitorResult(UCELParser.TypeContext.class, declType, visitor);
-        var node = mock(UCELParser.InterfaceVarDeclContext.class);
-
-        List<UCELParser.TypeContext> types = new ArrayList<>();
-        List<UCELParser.ArrayDeclIDContext> declsNameCtxs = new ArrayList<>();
-
-        types.add(declTypeNode);
-        when(node.type()).thenReturn(types);
-        when(node.type(0)).thenReturn(declTypeNode);
-
-        declsNameCtxs.add(declID);
-        when(node.arrayDeclID()).thenReturn(declsNameCtxs);
-        when(node.arrayDeclID(0)).thenReturn(declID);
-
-
-        var actual = visitor.visitInterfaceVarDecl(node);
-        assertEquals(expected.getEvaluationType(), actual.getEvaluationType());
-        assertEquals(declType, actual.getParameters()[0]);
-        assertEquals("varName1", actual.getParameterNames()[0]);
-    }
-
-    @Test
-    void interfaceVarDeclCorrect2() {
-        var expected = VOID_TYPE;
-        var declType1 = INT_TYPE;
-        var declType2 = DOUBLE_TYPE;
-
-        var visitor = new TypeCheckerVisitor();
-
-        var decl1ID = mock(UCELParser.ArrayDeclIDContext.class);
-        var name1Mock = mock(TerminalNodeImpl.class);
-        when(name1Mock.getText()).thenReturn("varName1");
-        when(decl1ID.ID()).thenReturn(name1Mock);
-
-        var decl2ID = mock(UCELParser.ArrayDeclIDContext.class);
-        var name2Mock = mock(TerminalNodeImpl.class);
-        when(name2Mock.getText()).thenReturn("varName2");
-        when(decl2ID.ID()).thenReturn(name2Mock);
-
-        var decl1TypeNode = mockForVisitorResult(UCELParser.TypeContext.class, declType1, visitor);
-        var decl2TypeNode = mockForVisitorResult(UCELParser.TypeContext.class, declType2, visitor);
-        var node = mock(UCELParser.InterfaceVarDeclContext.class);
-
-        List<UCELParser.TypeContext> types = new ArrayList<>();
-        List<UCELParser.ArrayDeclIDContext> declsNameCtxs = new ArrayList<>();
-
-        types.add(decl1TypeNode);
-        types.add(decl2TypeNode);
-
-        when(node.type()).thenReturn(types);
-        when(node.type(0)).thenReturn(decl1TypeNode);
-        when(node.type(1)).thenReturn(decl2TypeNode);
-
-        declsNameCtxs.add(decl1ID);
-        declsNameCtxs.add(decl2ID);
-
-        when(node.arrayDeclID()).thenReturn(declsNameCtxs);
-        when(node.arrayDeclID(0)).thenReturn(decl1ID);
-        when(node.arrayDeclID(1)).thenReturn(decl2ID);
-
-        var actual = visitor.visitInterfaceVarDecl(node);
-        assertEquals(expected.getEvaluationType(), actual.getEvaluationType());
-        assertEquals(declType1, actual.getParameters()[0]);
-        assertEquals(declType2, actual.getParameters()[1]);
-        assertEquals("varName1", actual.getParameterNames()[0]);
-        assertEquals("varName2", actual.getParameterNames()[1]);
-    }
-
-    @Test
-    void interfaceVarDeclWrongReturnsErrorType() {
-        var expected = ERROR_TYPE;
-        var declType1 = ERROR_TYPE;
-        var declType2 = DOUBLE_TYPE;
-
-        var visitor = new TypeCheckerVisitor();
-
-        var decl1ID = mock(UCELParser.ArrayDeclIDContext.class);
-        var name1Mock = mock(TerminalNodeImpl.class);
-        when(name1Mock.getText()).thenReturn("varName1");
-        when(decl1ID.ID()).thenReturn(name1Mock);
-
-        var decl2ID = mock(UCELParser.ArrayDeclIDContext.class);
-        var name2Mock = mock(TerminalNodeImpl.class);
-        when(name2Mock.getText()).thenReturn("varName2");
-        when(decl2ID.ID()).thenReturn(name2Mock);
-
-        var decl1TypeNode = mockForVisitorResult(UCELParser.TypeContext.class, declType1, visitor);
-        var decl2TypeNode = mockForVisitorResult(UCELParser.TypeContext.class, declType2, visitor);
-        var node = mock(UCELParser.InterfaceVarDeclContext.class);
-
-        List<UCELParser.TypeContext> types = new ArrayList<>();
-        List<UCELParser.ArrayDeclIDContext> declsNameCtxs = new ArrayList<>();
-
-        types.add(decl1TypeNode);
-        types.add(decl2TypeNode);
-
-        when(node.type()).thenReturn(types);
-        when(node.type(0)).thenReturn(decl1TypeNode);
-        when(node.type(1)).thenReturn(decl2TypeNode);
-
-        declsNameCtxs.add(decl1ID);
-        declsNameCtxs.add(decl2ID);
-
-        when(node.arrayDeclID()).thenReturn(declsNameCtxs);
-        when(node.arrayDeclID(0)).thenReturn(decl1ID);
-        when(node.arrayDeclID(1)).thenReturn(decl2ID);
-
-        var actual = visitor.visitInterfaceVarDecl(node);
-        assertEquals(expected.getEvaluationType(), actual.getEvaluationType());
-        assertEquals(declType1, actual.getParameters()[0]);
-        assertEquals(declType2, actual.getParameters()[1]);
-        assertEquals("varName1", actual.getParameterNames()[0]);
-        assertEquals("varName2", actual.getParameterNames()[1]);
-    }
-
-    // endregion
 
     //region Top level
 
@@ -376,6 +246,133 @@ public class TypeCheckerTests  {
     //endregion
 
     //region InterfaceVarDecl
+
+    @Test
+    void interfaceVarDeclCorrect1() {
+        var expected = VOID_TYPE;
+        var declType = INT_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var declID = mock(UCELParser.ArrayDeclIDContext.class);
+        var nameMock = mock(TerminalNodeImpl.class);
+        when(nameMock.getText()).thenReturn("varName1");
+        when(declID.ID()).thenReturn(nameMock);
+
+        var declTypeNode = mockForVisitorResult(UCELParser.TypeContext.class, declType, visitor);
+        var node = mock(UCELParser.InterfaceVarDeclContext.class);
+
+        List<UCELParser.TypeContext> types = new ArrayList<>();
+        List<UCELParser.ArrayDeclIDContext> declsNameCtxs = new ArrayList<>();
+
+        types.add(declTypeNode);
+        when(node.type()).thenReturn(types);
+        when(node.type(0)).thenReturn(declTypeNode);
+
+        declsNameCtxs.add(declID);
+        when(node.arrayDeclID()).thenReturn(declsNameCtxs);
+        when(node.arrayDeclID(0)).thenReturn(declID);
+
+
+        var actual = visitor.visitInterfaceVarDecl(node);
+        assertEquals(expected.getEvaluationType(), actual.getEvaluationType());
+        assertEquals(declType, actual.getParameters()[0]);
+        assertEquals("varName1", actual.getParameterNames()[0]);
+    }
+
+    @Test
+    void interfaceVarDeclCorrect2() {
+        var expected = VOID_TYPE;
+        var declType1 = INT_TYPE;
+        var declType2 = DOUBLE_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var decl1ID = mock(UCELParser.ArrayDeclIDContext.class);
+        var name1Mock = mock(TerminalNodeImpl.class);
+        when(name1Mock.getText()).thenReturn("varName1");
+        when(decl1ID.ID()).thenReturn(name1Mock);
+
+        var decl2ID = mock(UCELParser.ArrayDeclIDContext.class);
+        var name2Mock = mock(TerminalNodeImpl.class);
+        when(name2Mock.getText()).thenReturn("varName2");
+        when(decl2ID.ID()).thenReturn(name2Mock);
+
+        var decl1TypeNode = mockForVisitorResult(UCELParser.TypeContext.class, declType1, visitor);
+        var decl2TypeNode = mockForVisitorResult(UCELParser.TypeContext.class, declType2, visitor);
+        var node = mock(UCELParser.InterfaceVarDeclContext.class);
+
+        List<UCELParser.TypeContext> types = new ArrayList<>();
+        List<UCELParser.ArrayDeclIDContext> declsNameCtxs = new ArrayList<>();
+
+        types.add(decl1TypeNode);
+        types.add(decl2TypeNode);
+
+        when(node.type()).thenReturn(types);
+        when(node.type(0)).thenReturn(decl1TypeNode);
+        when(node.type(1)).thenReturn(decl2TypeNode);
+
+        declsNameCtxs.add(decl1ID);
+        declsNameCtxs.add(decl2ID);
+
+        when(node.arrayDeclID()).thenReturn(declsNameCtxs);
+        when(node.arrayDeclID(0)).thenReturn(decl1ID);
+        when(node.arrayDeclID(1)).thenReturn(decl2ID);
+
+        var actual = visitor.visitInterfaceVarDecl(node);
+        assertEquals(expected.getEvaluationType(), actual.getEvaluationType());
+        assertEquals(declType1, actual.getParameters()[0]);
+        assertEquals(declType2, actual.getParameters()[1]);
+        assertEquals("varName1", actual.getParameterNames()[0]);
+        assertEquals("varName2", actual.getParameterNames()[1]);
+    }
+
+    @Test
+    void interfaceVarDeclWrongReturnsErrorType() {
+        var expected = ERROR_TYPE;
+        var declType1 = ERROR_TYPE;
+        var declType2 = DOUBLE_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var decl1ID = mock(UCELParser.ArrayDeclIDContext.class);
+        var name1Mock = mock(TerminalNodeImpl.class);
+        when(name1Mock.getText()).thenReturn("varName1");
+        when(decl1ID.ID()).thenReturn(name1Mock);
+
+        var decl2ID = mock(UCELParser.ArrayDeclIDContext.class);
+        var name2Mock = mock(TerminalNodeImpl.class);
+        when(name2Mock.getText()).thenReturn("varName2");
+        when(decl2ID.ID()).thenReturn(name2Mock);
+
+        var decl1TypeNode = mockForVisitorResult(UCELParser.TypeContext.class, declType1, visitor);
+        var decl2TypeNode = mockForVisitorResult(UCELParser.TypeContext.class, declType2, visitor);
+        var node = mock(UCELParser.InterfaceVarDeclContext.class);
+
+        List<UCELParser.TypeContext> types = new ArrayList<>();
+        List<UCELParser.ArrayDeclIDContext> declsNameCtxs = new ArrayList<>();
+
+        types.add(decl1TypeNode);
+        types.add(decl2TypeNode);
+
+        when(node.type()).thenReturn(types);
+        when(node.type(0)).thenReturn(decl1TypeNode);
+        when(node.type(1)).thenReturn(decl2TypeNode);
+
+        declsNameCtxs.add(decl1ID);
+        declsNameCtxs.add(decl2ID);
+
+        when(node.arrayDeclID()).thenReturn(declsNameCtxs);
+        when(node.arrayDeclID(0)).thenReturn(decl1ID);
+        when(node.arrayDeclID(1)).thenReturn(decl2ID);
+
+        var actual = visitor.visitInterfaceVarDecl(node);
+        assertEquals(expected.getEvaluationType(), actual.getEvaluationType());
+        assertEquals(declType1, actual.getParameters()[0]);
+        assertEquals(declType2, actual.getParameters()[1]);
+        assertEquals("varName1", actual.getParameterNames()[0]);
+        assertEquals("varName2", actual.getParameterNames()[1]);
+    }
 
     //endregion
 
