@@ -115,6 +115,23 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     //endregion
 
+    //region Interface declaration
+
+    @Override
+    public Boolean visitInterfaceDecl(UCELParser.InterfaceDeclContext ctx) {
+        String identifier = ctx.ID().getText();
+
+        if (!currentScope.isUnique(identifier, false)) {
+            logger.log(new ErrorLog(ctx, "The interface name '" + identifier + "' is already defined in scope"));
+            return false;
+        }
+
+        ctx.reference = currentScope.add(new DeclarationInfo(identifier, ctx));
+        return true;
+    }
+
+    //endregion
+
     //endregion
 
     //region ProjectStructure

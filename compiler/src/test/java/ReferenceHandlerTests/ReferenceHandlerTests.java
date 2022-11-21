@@ -672,6 +672,58 @@ public class ReferenceHandlerTests {
 
     //endregion
 
+    //region Interface declaration
+    @Test
+    void interfaceDeclValid() {
+        String name = "tester";
+        var scope = mock(Scope.class);
+
+        var visitor = new ReferenceVisitor(scope);
+
+        var node = mock(UCELParser.InterfaceDeclContext.class);
+        var interfaceVarDeclNode = mock(UCELParser.InterfaceVarDeclContext.class);
+        var idNode = mock(TerminalNode.class);
+        var declRef = mock(DeclarationReference.class);
+
+        when(node.ID()).thenReturn(idNode);
+        when(idNode.getText()).thenReturn(name);
+        when(node.interfaceVarDecl()).thenReturn(interfaceVarDeclNode);
+        when(scope.isUnique(name, false)).thenReturn(true);
+        when(scope.add(any())).thenReturn(declRef);
+
+        var actual = visitor.visitInterfaceDecl(node);
+
+        assertTrue(actual);
+        assertEquals(declRef, node.reference);
+        verify(interfaceVarDeclNode, never()).accept(visitor);
+    }
+
+    @Test
+    void interfaceDeclNonUniqueIDFails() {
+        String name = "tester";
+        var scope = mock(Scope.class);
+
+        var visitor = new ReferenceVisitor(scope);
+
+        var node = mock(UCELParser.InterfaceDeclContext.class);
+        var interfaceVarDeclNode = mock(UCELParser.InterfaceVarDeclContext.class);
+        var idNode = mock(TerminalNode.class);
+        var declRef = mock(DeclarationReference.class);
+
+        when(node.ID()).thenReturn(idNode);
+        when(idNode.getText()).thenReturn(name);
+        when(node.interfaceVarDecl()).thenReturn(interfaceVarDeclNode);
+        when(scope.isUnique(name, false)).thenReturn(false);
+        when(scope.add(any())).thenReturn(declRef);
+
+        var actual = visitor.visitInterfaceDecl(node);
+
+        assertFalse(actual);
+        verify(interfaceVarDeclNode, never()).accept(visitor);
+    }
+
+    //endregion
+
     //endregion
 
     //region Project
