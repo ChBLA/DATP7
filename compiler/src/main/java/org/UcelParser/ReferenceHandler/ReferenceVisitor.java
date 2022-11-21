@@ -36,6 +36,88 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     //endregion
 
+    //region Component Extension
+
+    //region Component
+
+    @Override
+    public Boolean visitComponent(UCELParser.ComponentContext ctx) {
+        String compName = ctx.ID().getText();
+        try {
+            if(!currentScope.isUnique(compName, false)) {
+                logger.log(new ErrorLog(ctx, "Component name '" + compName + "' is already declared"));
+                return false;
+            }
+            ctx.reference = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+        }
+
+        enterScope();
+        ctx.scope = currentScope;
+        boolean success = (ctx.parameters() == null || visit(ctx.parameters())) && visit(ctx.interfaces()) && visit(ctx.compBody());
+
+        exitScope();
+        return success;
+    }
+
+    //endregion
+
+    //region Build block
+
+    @Override
+    public Boolean visitBuildBlock(UCELParser.BuildBlockContext ctx) {
+        enterScope();
+        ctx.scope = currentScope;
+
+        boolean success = true;
+
+        for (var stmnt : ctx.buildStmnt()) {
+            success = (success && visit(stmnt));
+        }
+
+        exitScope();
+        return success;
+    }
+
+
+    //endregion
+
+    //region Build declaration
+
+    @Override
+    public Boolean visitBuildDecl(UCELParser.BuildDeclContext ctx) {
+        String typeIdentifier = ctx.ID(0).getText();
+        String identifier = ctx.ID(1).getText();
+
+        try {
+            ctx.typeReference = currentScope.find(typeIdentifier, false);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Type " + typeIdentifier + " is not defined"));
+            return false;
+        }
+
+        if(!currentScope.isUnique(identifier, true)) {
+            logger.log(new ErrorLog(ctx, "The variable name '" + identifier + "' already defined in scope"));
+            return false;
+        }
+
+        boolean valid = true;
+
+        for (UCELParser.ArrayDeclContext arrayDecl : ctx.arrayDecl()) {
+            valid = valid && visit(arrayDecl);
+        }
+
+        ctx.reference = currentScope.add(new DeclarationInfo(identifier, ctx));
+
+        return valid;
+    }
+
+
+    //endregion
+
+    //endregion
+
     //region ProjectStructure
 
     @Override
