@@ -116,6 +116,24 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     //endregion
 
+    //region Build iteration
+
+    @Override
+    public Boolean visitBuildIteration(UCELParser.BuildIterationContext ctx) {
+        String identifier = ctx.ID().getText();
+
+        if (!currentScope.isUnique(identifier, true)) {
+            logger.log(new ErrorLog(ctx, "The variable name '" + identifier + "' already defined in scope"));
+            return false;
+        }
+
+        ctx.reference = currentScope.add(new DeclarationInfo(identifier, ctx));
+
+        return visit(ctx.type()) && visit(ctx.buildBlock());
+    }
+
+    //endregion
+
     //endregion
 
     //region ProjectStructure
