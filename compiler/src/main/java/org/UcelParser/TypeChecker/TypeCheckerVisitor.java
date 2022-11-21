@@ -221,13 +221,16 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public Type visitCompBody(UCELParser.CompBodyContext ctx) {
         enterScope(ctx.scope);
 
-
-
+        var declsType = visit(ctx.declarations());
+        var buildType = visit(ctx.build());
 
         exitScope();
 
-
-        return INT_TYPE;
+        if (declsType.equals(ERROR_TYPE) && buildType.equals(ERROR_TYPE)) {
+            return ERROR_TYPE;
+        } else {
+            return VOID_TYPE;
+        }
     }
 
     @Override
