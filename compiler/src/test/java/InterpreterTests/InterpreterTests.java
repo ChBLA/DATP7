@@ -675,17 +675,23 @@ public class InterpreterTests {
     //region BuildIteration
     @ParameterizedTest
     @MethodSource("buildIterationTestSuccessSource")
-    void buildIterationTestSuccess(int lowerBound, int upperBound) {
+    void buildIterationTestSuccess(int lowerBound, int upperBound) throws Exception {
         var expected = value(); // void
         int expectedItrCount = upperBound - lowerBound + 1; // bounds are inclusive
 
-        var visitor = testVisitor();
+        var scope = mock(Scope.class);
+        var visitor = testVisitor(scope);
+
+        var iteratorDeclRef = mock(DeclarationReference.class);
+        var iteratorVarRef = mock(DeclarationInfo.class);
+        when(scope.get(iteratorDeclRef)).thenReturn(iteratorVarRef);
 
         var lowerBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(lowerBound), visitor);
         var upperBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(upperBound), visitor);
         var stmt = mockForVisitorResult(UCELParser.BuildStmntContext.class, value(), visitor);
 
         var node = mock(UCELParser.BuildIterationContext.class);
+        node.reference = iteratorDeclRef;
         when(node.expression(0)).thenReturn(lowerBoundExpr);
         when(node.expression(1)).thenReturn(upperBoundExpr);
         when(node.buildStmnt()).thenReturn(stmt);
@@ -693,6 +699,7 @@ public class InterpreterTests {
         var actual = visitor.visitBuildIteration(node);
 
         verify(stmt, times(expectedItrCount)).accept(any());
+        verify(iteratorVarRef, times(expectedItrCount)).setValue(any());
         assertEquals(expected, actual);
     }
     private static Stream<Arguments> buildIterationTestSuccessSource() {
@@ -736,26 +743,30 @@ public class InterpreterTests {
     }
 
     @Test
-    void buildIterationTestStmtError() {
+    void buildIterationTestStmtError() throws Exception {
         int lowerBound = 0;
         int upperBound = 4;
         InterpreterValue expected = null; // error
-        int expectedItrCount = 1;
 
-        var visitor = testVisitor();
+        var scope = mock(Scope.class);
+        var visitor = testVisitor(scope);
+
+        var iteratorDeclRef = mock(DeclarationReference.class);
+        var iteratorVarRef = mock(DeclarationInfo.class);
+        when(scope.get(iteratorDeclRef)).thenReturn(iteratorVarRef);
 
         var lowerBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(lowerBound), visitor);
         var upperBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(upperBound), visitor);
-        var errorStmt = mockForVisitorResult(UCELParser.BuildStmntContext.class, null, visitor);
+        var stmt = mockForVisitorResult(UCELParser.BuildStmntContext.class, null, visitor);
 
         var node = mock(UCELParser.BuildIterationContext.class);
+        node.reference = iteratorDeclRef;
         when(node.expression(0)).thenReturn(lowerBoundExpr);
         when(node.expression(1)).thenReturn(upperBoundExpr);
-        when(node.buildStmnt()).thenReturn(errorStmt);
+        when(node.buildStmnt()).thenReturn(stmt);
 
         var actual = visitor.visitBuildIteration(node);
 
-        verify(errorStmt, times(expectedItrCount)).accept(any());
         assertEquals(expected, actual);
     }
 
@@ -783,6 +794,11 @@ public class InterpreterTests {
 
     private InterpreterVisitor testVisitor(ILogger logger) {
         var scope = mock(Scope.class);
+        return new InterpreterVisitor(logger, scope);
+    }
+
+    private InterpreterVisitor testVisitor(Scope scope) {
+        var logger = mock(ILogger.class);
         return new InterpreterVisitor(logger, scope);
     }
 
