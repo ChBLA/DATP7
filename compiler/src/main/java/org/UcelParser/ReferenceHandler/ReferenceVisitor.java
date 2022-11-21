@@ -97,6 +97,41 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     //endregion
 
+    //region Build iteration
+
+    @Override
+    public Boolean visitBuildIteration(UCELParser.BuildIterationContext ctx) {
+        String identifier = ctx.ID().getText();
+
+        if (!currentScope.isUnique(identifier, true)) {
+            logger.log(new ErrorLog(ctx, "The variable name '" + identifier + "' already defined in scope"));
+            return false;
+        }
+
+        ctx.reference = currentScope.add(new DeclarationInfo(identifier, ctx));
+
+        return visit(ctx.expression(0)) && visit(ctx.expression(1)) && visit(ctx.buildStmnt());
+    }
+
+    //endregion
+
+    //region Interface declaration
+
+    @Override
+    public Boolean visitInterfaceDecl(UCELParser.InterfaceDeclContext ctx) {
+        String identifier = ctx.ID().getText();
+
+        if (!currentScope.isUnique(identifier, false)) {
+            logger.log(new ErrorLog(ctx, "The interface name '" + identifier + "' is already defined in scope"));
+            return false;
+        }
+
+        ctx.reference = currentScope.add(new DeclarationInfo(identifier, ctx));
+        return true;
+    }
+
+    //endregion
+
     //endregion
 
     //region ProjectStructure

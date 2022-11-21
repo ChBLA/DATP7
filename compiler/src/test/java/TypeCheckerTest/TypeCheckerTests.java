@@ -342,6 +342,45 @@ public class TypeCheckerTests  {
     }
     //endregion
 
+    //region Build Region
+    //region Build
+
+    //endregion
+
+    //region BuildStmt
+
+    //endregion
+
+    //region BuildBlock
+
+    //endregion
+
+    //region LinkStatement
+
+    //endregion
+
+    //region BuildIf
+
+    //endregion
+
+    //region CompCon
+
+    //endregion
+
+    //region BuildDecl
+
+    //endregion
+
+    //region InterfaceDecl
+
+    //endregion
+
+    //region InterfaceVarDecl
+
+    //endregion
+
+    //endregion
+
     //region Start
     @ParameterizedTest
     @MethodSource("startFaultyTypes")

@@ -6,8 +6,7 @@ import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.DeclarationReference;
 import org.UcelParser.Util.Logging.ILogger;
 import org.UcelParser.Util.Scope;
-import org.UcelParser.Util.Value.IntegerValue;
-import org.UcelParser.Util.Value.InterpreterValue;
+import org.UcelParser.Util.Value.*;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -16,8 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 
 import java.util.ArrayList;
-import org.UcelParser.Util.Value.BooleanValue;
-import org.UcelParser.Util.Value.StringValue;
+
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import java.util.stream.Stream;
@@ -583,15 +581,16 @@ public class InterpreterTests {
         var visitor = testVisitor();
 
         var predicate = mockForVisitorResult(UCELParser.ExpressionContext.class, value(predicateValue), visitor);
-        var stmtTrue = mock(UCELParser.BuildStmntContext.class);
-        var stmtFalse = mock(UCELParser.BuildStmntContext.class);
+        var stmtTrue = mockForVisitorResult(UCELParser.BuildStmntContext.class, value(), visitor);
+        var stmtFalse = mockForVisitorResult(UCELParser.BuildStmntContext.class, value(), visitor);
+
 
         var node = mock(UCELParser.BuildIfContext.class);
         when(node.expression()).thenReturn(predicate);
         when(node.buildStmnt(0)).thenReturn(stmtTrue);
         when(node.buildStmnt(1)).thenReturn(stmtFalse);
 
-        visitor.visitBuildIf(node);
+        var actual = visitor.visitBuildIf(node);
 
         if(predicateValue) {
             verify(stmtTrue, times(1)).accept(any());
@@ -601,6 +600,8 @@ public class InterpreterTests {
             verify(stmtTrue, times(0)).accept(any());
             verify(stmtFalse, times(1)).accept(any());
         }
+
+        assertInstanceOf(VoidValue.class, actual);
     }
 
     @ParameterizedTest
@@ -609,13 +610,13 @@ public class InterpreterTests {
         var visitor = testVisitor();
 
         var predicate = mockForVisitorResult(UCELParser.ExpressionContext.class, value(predicateValue), visitor);
-        var stmtTrue = mock(UCELParser.BuildStmntContext.class);
+        var stmtTrue = mockForVisitorResult(UCELParser.BuildStmntContext.class, value(), visitor);
 
         var node = mock(UCELParser.BuildIfContext.class);
         when(node.expression()).thenReturn(predicate);
         when(node.buildStmnt(0)).thenReturn(stmtTrue);
 
-        visitor.visitBuildIf(node);
+        var actual = visitor.visitBuildIf(node);
 
         if(predicateValue) {
             verify(stmtTrue, times(1)).accept(any());
@@ -623,6 +624,8 @@ public class InterpreterTests {
         else {
             verify(stmtTrue, times(0)).accept(any());
         }
+
+        assertInstanceOf(VoidValue.class, actual);
     }
 
     @Test
@@ -633,20 +636,140 @@ public class InterpreterTests {
         var predVal = value(28);
 
         var predicate = mockForVisitorResult(UCELParser.ExpressionContext.class, predVal, visitor);
-        var stmtTrue = mock(UCELParser.BuildStmntContext.class);
-        var stmtFalse = mock(UCELParser.BuildStmntContext.class);
+        var stmtTrue = mockForVisitorResult(UCELParser.BuildStmntContext.class, value(), visitor);
+        var stmtFalse = mockForVisitorResult(UCELParser.BuildStmntContext.class, value(), visitor);
 
         var node = mock(UCELParser.BuildIfContext.class);
         when(node.expression()).thenReturn(predicate);
         when(node.buildStmnt(0)).thenReturn(stmtTrue);
         when(node.buildStmnt(1)).thenReturn(stmtFalse);
 
-        visitor.visitBuildIf(node);
+        var actual = visitor.visitBuildIf(node);
 
         verify(stmtTrue, times(0)).accept(any());
         verify(stmtFalse, times(0)).accept(any());
         verify(logger, atLeast(1)).log(any());
+        assertNull(actual);
     }
+
+    @Test
+    void buildIfTestInvalidStmt() {
+        var visitor = testVisitor();
+
+        var predVal = value(true);
+
+        var predicate = mockForVisitorResult(UCELParser.ExpressionContext.class, predVal, visitor);
+        var stmtTrue = mockForVisitorResult(UCELParser.BuildStmntContext.class, null, visitor);
+
+        var node = mock(UCELParser.BuildIfContext.class);
+        when(node.expression()).thenReturn(predicate);
+        when(node.buildStmnt(0)).thenReturn(stmtTrue);
+
+        var actual = visitor.visitBuildIf(node);
+
+        verify(stmtTrue, times(1)).accept(any());
+        assertNull(actual);
+    }
+    //endregion
+
+    //region BuildIteration
+    @ParameterizedTest
+    @MethodSource("buildIterationTestSuccessSource")
+    void buildIterationTestSuccess(int lowerBound, int upperBound) throws Exception {
+        var expected = value(); // void
+        int expectedItrCount = upperBound - lowerBound + 1; // bounds are inclusive
+
+        var scope = mock(Scope.class);
+        var visitor = testVisitor(scope);
+
+        var iteratorDeclRef = mock(DeclarationReference.class);
+        var iteratorVarRef = mock(DeclarationInfo.class);
+        when(scope.get(iteratorDeclRef)).thenReturn(iteratorVarRef);
+
+        var lowerBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(lowerBound), visitor);
+        var upperBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(upperBound), visitor);
+        var stmt = mockForVisitorResult(UCELParser.BuildStmntContext.class, value(), visitor);
+
+        var node = mock(UCELParser.BuildIterationContext.class);
+        node.reference = iteratorDeclRef;
+        when(node.expression(0)).thenReturn(lowerBoundExpr);
+        when(node.expression(1)).thenReturn(upperBoundExpr);
+        when(node.buildStmnt()).thenReturn(stmt);
+
+        var actual = visitor.visitBuildIteration(node);
+
+        verify(stmt, times(expectedItrCount)).accept(any());
+        verify(iteratorVarRef, times(expectedItrCount)).setValue(any());
+        assertEquals(expected, actual);
+    }
+    private static Stream<Arguments> buildIterationTestSuccessSource() {
+        // int lowerBound, int upperBound
+        return Stream.of(
+            Arguments.of(0, 4),
+            Arguments.of(8, 12),
+            Arguments.of(-12, -5)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("buildIterationTestMalformedBoundsSource")
+    void buildIterationTestMalformedBounds(int lowerBound, int upperBound) {
+        InterpreterValue expected = null; // error
+        int expectedItrCount = 0;
+
+        var visitor = testVisitor();
+
+        var lowerBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(lowerBound), visitor);
+        var upperBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(upperBound), visitor);
+        var stmt = mockForVisitorResult(UCELParser.BuildStmntContext.class, value(), visitor);
+
+        var node = mock(UCELParser.BuildIterationContext.class);
+        when(node.expression(0)).thenReturn(lowerBoundExpr);
+        when(node.expression(1)).thenReturn(upperBoundExpr);
+        when(node.buildStmnt()).thenReturn(stmt);
+
+        var actual = visitor.visitBuildIteration(node);
+
+        verify(stmt, times(expectedItrCount)).accept(any());
+        assertEquals(expected, actual);
+    }
+    private static Stream<Arguments> buildIterationTestMalformedBoundsSource() {
+        // int lowerBound, int upperBound
+        return Stream.of(
+                Arguments.of(4, 0),
+                Arguments.of(12, 8),
+                Arguments.of(-5, -12)
+        );
+    }
+
+    @Test
+    void buildIterationTestStmtError() throws Exception {
+        int lowerBound = 0;
+        int upperBound = 4;
+        InterpreterValue expected = null; // error
+
+        var scope = mock(Scope.class);
+        var visitor = testVisitor(scope);
+
+        var iteratorDeclRef = mock(DeclarationReference.class);
+        var iteratorVarRef = mock(DeclarationInfo.class);
+        when(scope.get(iteratorDeclRef)).thenReturn(iteratorVarRef);
+
+        var lowerBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(lowerBound), visitor);
+        var upperBoundExpr = mockForVisitorResult(UCELParser.ExpressionContext.class, value(upperBound), visitor);
+        var stmt = mockForVisitorResult(UCELParser.BuildStmntContext.class, null, visitor);
+
+        var node = mock(UCELParser.BuildIterationContext.class);
+        node.reference = iteratorDeclRef;
+        when(node.expression(0)).thenReturn(lowerBoundExpr);
+        when(node.expression(1)).thenReturn(upperBoundExpr);
+        when(node.buildStmnt()).thenReturn(stmt);
+
+        var actual = visitor.visitBuildIteration(node);
+
+        assertEquals(expected, actual);
+    }
+
     //endregion
 
     //endregion
@@ -674,7 +797,16 @@ public class InterpreterTests {
         return new InterpreterVisitor(logger, scope);
     }
 
+    private InterpreterVisitor testVisitor(Scope scope) {
+        var logger = mock(ILogger.class);
+        return new InterpreterVisitor(logger, scope);
+    }
+
     //region Value
+    private static VoidValue value() {
+        return new VoidValue();
+    }
+
     private static IntegerValue value(int val) {
         return new IntegerValue(val);
     }

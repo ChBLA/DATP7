@@ -249,13 +249,16 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public Type visitCompBody(UCELParser.CompBodyContext ctx) {
         enterScope(ctx.scope);
 
-
-
+        var declsType = visit(ctx.declarations());
+        var buildType = visit(ctx.build());
 
         exitScope();
 
-
-        return INT_TYPE;
+        if (declsType.equals(ERROR_TYPE) && buildType.equals(ERROR_TYPE)) {
+            return ERROR_TYPE;
+        } else {
+            return VOID_TYPE;
+        }
     }
 
     @Override
@@ -954,8 +957,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if (leftType.equals(rightType)) {
             return leftType;
         }
-        else if ((leftType.getEvaluationType() == Type.TypeEnum.clockType) && (rightType.getEvaluationType() == Type.TypeEnum.intType)
-                && (rightType.getArrayDimensions() == 0)) {
+        else if ((leftType.getEvaluationType() == Type.TypeEnum.clockType) && (rightType.getEvaluationType() == Type.TypeEnum.intType) ) {
             return leftType;
         }
         else {
@@ -984,8 +986,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if (leftType.equals(rightType)) {
             return VOID_TYPE;
         }
-        else if ((leftType.getEvaluationType() == Type.TypeEnum.clockType) && (rightType.getEvaluationType() == Type.TypeEnum.intType)
-                && (rightType.getArrayDimensions() == 0)) {
+        else if ((leftType.getEvaluationType() == Type.TypeEnum.clockType) && (rightType.getEvaluationType() == Type.TypeEnum.intType) ) {
             return VOID_TYPE;
         }
         else {
