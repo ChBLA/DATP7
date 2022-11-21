@@ -64,7 +64,8 @@ buildBlock locals [Scope scope]
 buildDecl locals [DeclarationReference typeReference, DeclarationReference reference]
     : ID ID (arrayDecl)* END;
 
-interfaceDecl : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;
+interfaceDecl locals [DeclarationReference reference]
+    : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;
 interfaceVarDecl : type arrayDeclID (COMMA type arrayDeclID)*;
 
 instantiation locals [Scope scope, DeclarationReference instantiatedReference, DeclarationReference constructorReference]
