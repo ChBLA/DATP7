@@ -296,7 +296,47 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //endregion
 
     //region Interpreter things
+    @Override
+    public Type visitBuildIteration(UCELParser.BuildIterationContext ctx) {
+        DeclarationInfo iteratorInfo;
+        try {
+            iteratorInfo = currentScope.get(ctx.reference);
+        } catch (Exception e) {
+            throw new RuntimeException(e); // Should be no way this isn't set by the reference handler
+        }
+        var lowerBound = visit(ctx.expression(0));
+        var upperBound = visit(ctx.expression(1));
+        var stmt = visit(ctx.buildStmnt());
 
+        boolean hadError = false;
+        if(!iteratorInfo.getType().equals(INT_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Compiler error, iterator should have been automatically set to an integer."));
+            hadError = true;
+        }
+
+        if(!lowerBound.equals(INT_TYPE)) {
+            if(!lowerBound.equals(ERROR_TYPE))
+                logger.log(new ErrorLog(ctx.expression(0), "Lower bound must be an integer"));
+            hadError = true;
+        }
+
+        if(!upperBound.equals(INT_TYPE)) {
+            if(!upperBound.equals(ERROR_TYPE))
+                logger.log(new ErrorLog(ctx.expression(1), "Upper bound must be an integer"));
+            hadError = true;
+        }
+
+        if(!stmt.equals(VOID_TYPE)) {
+            if(!stmt.equals(ERROR_TYPE))
+                logger.log(new ErrorLog(ctx.buildStmnt(), "Compiler error: Statements should always return error or void"));
+            hadError = true;
+        }
+
+        if(hadError)
+            return ERROR_TYPE;
+
+        return VOID_TYPE;
+    }
 
     //endregion
 
