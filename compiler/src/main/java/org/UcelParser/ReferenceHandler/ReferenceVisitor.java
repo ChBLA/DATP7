@@ -220,13 +220,25 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     }
 
     public Boolean visitCompBody(UCELParser.CompBodyContext ctx) {
+        enterScope();
+        currentScope = ctx.scope;
         Boolean declRes = null;
         if (ctx.declarations() != null) declRes = visit(ctx.declarations());
         Boolean buildRes = null;
         if (ctx.build() != null) buildRes = visit(ctx.build());
+        exitScope();
         return (declRes != null && buildRes != null && declRes && buildRes)
                 || (declRes == null && buildRes != null && buildRes)
                 || (declRes != null && declRes && buildRes == null);
+    }
+
+    public Boolean visitBuild(UCELParser.BuildContext ctx) {
+        List<Boolean> declRes = null;
+        if (ctx.buildDecl() != null) declRes = ctx.buildDecl().stream().map(this::visit).collect(Collectors.toList());
+        List<Boolean> stmntRes = null;
+        if (ctx.buildStmnt() != null) stmntRes = ctx.buildStmnt().stream().map(this::visit).collect(Collectors.toList());
+        return (declRes == null && stmntRes != null && stmntRes.stream().allMatch(b -> b))
+                || (declRes != null && declRes.stream().allMatch(b -> b) && stmntRes != null && stmntRes.stream().allMatch(b -> b));
     }
 
 
