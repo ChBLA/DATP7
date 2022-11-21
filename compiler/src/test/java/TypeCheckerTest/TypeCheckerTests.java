@@ -1,12 +1,9 @@
 package TypeCheckerTest;
 
-import org.UcelParser.CodeGeneration.CodeGenVisitor;
-import org.UcelParser.ReferenceHandler.ReferenceVisitor;
 import org.UcelParser.TypeChecker.TypeCheckerVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.DeclarationReference;
-import org.UcelParser.Util.Logging.Logger;
 import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Type;
 
@@ -20,8 +17,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import javax.lang.model.element.TypeElement;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -51,7 +46,9 @@ public class TypeCheckerTests  {
     private static final Type BOOL_TYPE = new Type(Type.TypeEnum.boolType);
     private static final Type CHAR_TYPE = new Type(Type.TypeEnum.charType);
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
+    private static final Type CONSTANT_INT_TYPE = new Type(Type.TypeEnum.intType, Type.TypePrefixEnum.constant);
     //endregion
+
 
 
     //region Top level
@@ -135,7 +132,25 @@ public class TypeCheckerTests  {
 
 
 
+    //region Component
 
+    @Test void componentInterfaceParametersMatch() {
+        var visitor = new TypeCheckerVisitor();
+        var node = mock(UCELParser.InterfacesContext.class);
+        var parametersResultType = new Type(Type.TypeEnum.voidType, new Type[] {INT_TYPE, INT_TYPE});
+        var parametersNode  = mockForVisitorResult(UCELParser.ParametersContext.class, parametersResultType, visitor);
+        when(node.parameters()).thenReturn(parametersNode);
+
+        var expected = parametersResultType.deepCopy();
+        expected.setEvaluationType(Type.TypeEnum.interfaceType);
+        var actual = visitor.visitInterfaces(node);
+        assertEquals(expected, actual);
+    }
+
+
+
+
+    //endregion
 
 
     //region Parameter
@@ -195,6 +210,172 @@ public class TypeCheckerTests  {
         Type actual = visitor.visitParameters(node);
         assertEquals(expected, actual);
     }
+    //endregion
+
+    //region Build Region
+    //region Build
+
+    //endregion
+
+    //region BuildStmt
+
+    //endregion
+
+    //region BuildBlock
+
+    //endregion
+
+    //region LinkStatement
+
+    //endregion
+
+    //region BuildIf
+
+    //endregion
+
+    //region CompCon
+
+    //endregion
+
+    //region BuildDecl
+
+    //endregion
+
+    //region InterfaceDecl
+
+    //endregion
+
+    //region InterfaceVarDecl
+
+    @Test
+    void interfaceVarDeclCorrect1() {
+        var expected = VOID_TYPE;
+        var declType = INT_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var declID = mock(UCELParser.ArrayDeclIDContext.class);
+        var nameMock = mock(TerminalNodeImpl.class);
+        when(nameMock.getText()).thenReturn("varName1");
+        when(declID.ID()).thenReturn(nameMock);
+
+        var declTypeNode = mockForVisitorResult(UCELParser.TypeContext.class, declType, visitor);
+        var node = mock(UCELParser.InterfaceVarDeclContext.class);
+
+        List<UCELParser.TypeContext> types = new ArrayList<>();
+        List<UCELParser.ArrayDeclIDContext> declsNameCtxs = new ArrayList<>();
+
+        types.add(declTypeNode);
+        when(node.type()).thenReturn(types);
+        when(node.type(0)).thenReturn(declTypeNode);
+
+        declsNameCtxs.add(declID);
+        when(node.arrayDeclID()).thenReturn(declsNameCtxs);
+        when(node.arrayDeclID(0)).thenReturn(declID);
+
+
+        var actual = visitor.visitInterfaceVarDecl(node);
+        assertEquals(expected.getEvaluationType(), actual.getEvaluationType());
+        assertEquals(declType, actual.getParameters()[0]);
+        assertEquals("varName1", actual.getParameterNames()[0]);
+    }
+
+    @Test
+    void interfaceVarDeclCorrect2() {
+        var expected = VOID_TYPE;
+        var declType1 = INT_TYPE;
+        var declType2 = DOUBLE_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var decl1ID = mock(UCELParser.ArrayDeclIDContext.class);
+        var name1Mock = mock(TerminalNodeImpl.class);
+        when(name1Mock.getText()).thenReturn("varName1");
+        when(decl1ID.ID()).thenReturn(name1Mock);
+
+        var decl2ID = mock(UCELParser.ArrayDeclIDContext.class);
+        var name2Mock = mock(TerminalNodeImpl.class);
+        when(name2Mock.getText()).thenReturn("varName2");
+        when(decl2ID.ID()).thenReturn(name2Mock);
+
+        var decl1TypeNode = mockForVisitorResult(UCELParser.TypeContext.class, declType1, visitor);
+        var decl2TypeNode = mockForVisitorResult(UCELParser.TypeContext.class, declType2, visitor);
+        var node = mock(UCELParser.InterfaceVarDeclContext.class);
+
+        List<UCELParser.TypeContext> types = new ArrayList<>();
+        List<UCELParser.ArrayDeclIDContext> declsNameCtxs = new ArrayList<>();
+
+        types.add(decl1TypeNode);
+        types.add(decl2TypeNode);
+
+        when(node.type()).thenReturn(types);
+        when(node.type(0)).thenReturn(decl1TypeNode);
+        when(node.type(1)).thenReturn(decl2TypeNode);
+
+        declsNameCtxs.add(decl1ID);
+        declsNameCtxs.add(decl2ID);
+
+        when(node.arrayDeclID()).thenReturn(declsNameCtxs);
+        when(node.arrayDeclID(0)).thenReturn(decl1ID);
+        when(node.arrayDeclID(1)).thenReturn(decl2ID);
+
+        var actual = visitor.visitInterfaceVarDecl(node);
+        assertEquals(expected.getEvaluationType(), actual.getEvaluationType());
+        assertEquals(declType1, actual.getParameters()[0]);
+        assertEquals(declType2, actual.getParameters()[1]);
+        assertEquals("varName1", actual.getParameterNames()[0]);
+        assertEquals("varName2", actual.getParameterNames()[1]);
+    }
+
+    @Test
+    void interfaceVarDeclWrongReturnsErrorType() {
+        var expected = ERROR_TYPE;
+        var declType1 = ERROR_TYPE;
+        var declType2 = DOUBLE_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var decl1ID = mock(UCELParser.ArrayDeclIDContext.class);
+        var name1Mock = mock(TerminalNodeImpl.class);
+        when(name1Mock.getText()).thenReturn("varName1");
+        when(decl1ID.ID()).thenReturn(name1Mock);
+
+        var decl2ID = mock(UCELParser.ArrayDeclIDContext.class);
+        var name2Mock = mock(TerminalNodeImpl.class);
+        when(name2Mock.getText()).thenReturn("varName2");
+        when(decl2ID.ID()).thenReturn(name2Mock);
+
+        var decl1TypeNode = mockForVisitorResult(UCELParser.TypeContext.class, declType1, visitor);
+        var decl2TypeNode = mockForVisitorResult(UCELParser.TypeContext.class, declType2, visitor);
+        var node = mock(UCELParser.InterfaceVarDeclContext.class);
+
+        List<UCELParser.TypeContext> types = new ArrayList<>();
+        List<UCELParser.ArrayDeclIDContext> declsNameCtxs = new ArrayList<>();
+
+        types.add(decl1TypeNode);
+        types.add(decl2TypeNode);
+
+        when(node.type()).thenReturn(types);
+        when(node.type(0)).thenReturn(decl1TypeNode);
+        when(node.type(1)).thenReturn(decl2TypeNode);
+
+        declsNameCtxs.add(decl1ID);
+        declsNameCtxs.add(decl2ID);
+
+        when(node.arrayDeclID()).thenReturn(declsNameCtxs);
+        when(node.arrayDeclID(0)).thenReturn(decl1ID);
+        when(node.arrayDeclID(1)).thenReturn(decl2ID);
+
+        var actual = visitor.visitInterfaceVarDecl(node);
+        assertEquals(expected.getEvaluationType(), actual.getEvaluationType());
+        assertEquals(declType1, actual.getParameters()[0]);
+        assertEquals(declType2, actual.getParameters()[1]);
+        assertEquals("varName1", actual.getParameterNames()[0]);
+        assertEquals("varName2", actual.getParameterNames()[1]);
+    }
+
+    //endregion
+
     //endregion
 
     //region Start
@@ -693,8 +874,8 @@ public class TypeCheckerTests  {
     }
 
     @ParameterizedTest
-    @MethodSource("assignmentTestSource")
-    void assignmentTests(Type leftType, Type rightType, Type expectedType) {
+    @MethodSource("assignmentExprTestSource")
+    void assignmentExprTests(Type leftType, Type rightType, Type expectedType) {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         var mockLeft = mockForVisitorResult(UCELParser.ExpressionContext.class, leftType, visitor);
@@ -710,7 +891,25 @@ public class TypeCheckerTests  {
         assertEquals(expectedType, actual);
     }
 
-    // TODO: Possibly refactor this to not use for loops as it is prone to mistakes
+    @ParameterizedTest
+    @MethodSource("assignmentTestSource")
+    void assignmentTests(Type leftType, Type rightType, Type expectedType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        var mockLeft = mockForVisitorResult(UCELParser.ExpressionContext.class, leftType, visitor);
+        var mockRight = mockForVisitorResult(UCELParser.ExpressionContext.class, rightType, visitor);
+
+        var node = mock(UCELParser.AssignmentContext.class);
+
+        when(node.expression(0)).thenReturn(mockLeft);
+        when(node.expression(1)).thenReturn(mockRight);
+
+        Type actual = visitor.visitAssignment(node);
+
+        assertEquals(expectedType, actual);
+    }
+
+    // ASSIGNTMENT (NOT EXPR)
     private static Stream<Arguments> assignmentTestSource() {
         Type[] types = new Type[]{INT_TYPE,
                 CHAR_TYPE,
@@ -723,12 +922,72 @@ public class TypeCheckerTests  {
                 CHAR_ARRAY_TYPE,
                 BOOL_ARRAY_TYPE,
                 INT_2D_ARRAY_TYPE,
-                DOUBLE_ARRAY_TYPE
+                DOUBLE_ARRAY_TYPE,
+                CONSTANT_INT_TYPE
         };
 
         Type[][] validPairTypes = new Type[][]{
                 {INT_TYPE, INT_TYPE},
                 {CLOCK_TYPE, INT_TYPE},
+                {CHAR_TYPE, CHAR_TYPE},
+                {BOOL_TYPE, BOOL_TYPE},
+                {STRING_TYPE, STRING_TYPE},
+                {SCALAR_TYPE, SCALAR_TYPE},
+                {STRUCT_TYPE, STRUCT_TYPE},
+                {DOUBLE_TYPE, DOUBLE_TYPE},
+                {INT_ARRAY_TYPE, INT_ARRAY_TYPE},
+                {CHAR_ARRAY_TYPE, CHAR_ARRAY_TYPE},
+                {BOOL_ARRAY_TYPE, BOOL_ARRAY_TYPE},
+                {INT_2D_ARRAY_TYPE, INT_2D_ARRAY_TYPE},
+                {DOUBLE_ARRAY_TYPE, DOUBLE_ARRAY_TYPE}
+        };
+
+        List<Arguments> arguments = new ArrayList<>();
+        for (Type leftType : types) {
+            for (Type rightType : types) {
+                Type expectedType = ERROR_TYPE;
+                for (Type[] validPairType : validPairTypes) {
+                    if (leftType.equals(validPairType[0]) && rightType.equals(validPairType[1])) {
+                        expectedType = VOID_TYPE;
+                        break;
+                    }
+                }
+                arguments.add(Arguments.of(leftType, rightType, expectedType));
+            }
+        }
+
+        Type[] invalidAssignmentTypes = new Type[]{VOID_TYPE, CHAN_TYPE, INVALID_TYPE, ERROR_TYPE};
+        for (Type leftType : types) {
+            for (Type rightType : invalidAssignmentTypes) {
+                arguments.add(Arguments.of(leftType, rightType, ERROR_TYPE));
+            }
+        }
+
+        return arguments.stream();
+    }
+
+    // ASSIGNMENT EXPRESSION
+    // TODO: Possibly refactor this to not use for loops as it is prone to mistakes
+    private static Stream<Arguments> assignmentExprTestSource() {
+        Type[] types = new Type[]{INT_TYPE,
+                CHAR_TYPE,
+                BOOL_TYPE,
+                STRING_TYPE,
+                SCALAR_TYPE,
+                STRUCT_TYPE,
+                DOUBLE_TYPE,
+                INT_ARRAY_TYPE,
+                CHAR_ARRAY_TYPE,
+                BOOL_ARRAY_TYPE,
+                INT_2D_ARRAY_TYPE,
+                DOUBLE_ARRAY_TYPE,
+                CLOCK_TYPE
+        };
+
+        Type[][] validPairTypes = new Type[][]{
+                {INT_TYPE, INT_TYPE},
+                {CLOCK_TYPE, INT_TYPE},
+                {CLOCK_TYPE, CLOCK_TYPE},
                 {CHAR_TYPE, CHAR_TYPE},
                 {BOOL_TYPE, BOOL_TYPE},
                 {STRING_TYPE, STRING_TYPE},

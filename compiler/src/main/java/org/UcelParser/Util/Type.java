@@ -20,6 +20,8 @@ public class Type {
         voidType,
         errorType, invalidType,
         functionType,
+        interfaceType,
+        componentType,
     }
 
     private TypeEnum evaluationType;
@@ -48,12 +50,21 @@ public class Type {
         this.prefix = TypePrefixEnum.noPrefix;
     }
 
+    public Type(TypeEnum type, TypePrefixEnum prefix) {
+        this(type, 0);
+        setPrefix(prefix);
+    }
+
     public Type(TypeEnum evaluationType, Type[] parameters) {
         this(evaluationType, null, parameters, 0);
     }
 
     public TypeEnum getEvaluationType() {
         return evaluationType;
+    }
+
+    public void setEvaluationType(TypeEnum type) {
+        evaluationType = type;
     }
 
     public boolean hasParameters() {
