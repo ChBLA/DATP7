@@ -56,6 +56,24 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public DeclarationInfo currentFunction = null;
     //endregion
 
+    // region interfaceDecl
+
+    // Passes along the type and names of var decls
+    // inside the returned Type object
+    @Override
+    public Type visitInterfaceDecl(UCELParser.InterfaceDeclContext ctx) {
+        Type interfaceType = visit(ctx.interfaceVarDecl());
+        interfaceType.setEvaluationType(Type.TypeEnum.interfaceType);
+        try {
+            currentScope.get(ctx.reference).setType(interfaceType);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx,"internal error: could not find reference to interface"));
+            interfaceType.setEvaluationType(Type.TypeEnum.errorType);
+        }
+        return interfaceType;
+    }
+
+    //endregion
 
     //region interfaceVarDecl
 
@@ -277,10 +295,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //endregion
 
-    //region Interpreter things
 
-    //endregion
-    
+
+
+
 
     //region Start
 
