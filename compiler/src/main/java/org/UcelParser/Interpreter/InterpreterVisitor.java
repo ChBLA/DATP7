@@ -323,7 +323,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     */
     @Override
-    public InterpreterValue visitCompCon(UCELParser.CompConContext ctx) {
+    public InterpreterValue visitCompVar(UCELParser.CompVarContext ctx) {
         int[] indices = new int[ctx.expression().size()];
 
         for(int i = 0; i < ctx.expression().size(); i++) {
@@ -331,6 +331,23 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             if(isIntegerValue(v)) indices[i] = ((IntegerValue) v).getInt();
             else return null;
         }
+
+        String id = "";
+
+        try {
+            id = currentScope.get(ctx.variableReference).getIdentifier();
+        } catch (Exception e) {return null;}
+
+
+        return new CompVarValue(id, indices);
+    }
+
+    @Override
+    public InterpreterValue visitCompCon(UCELParser.CompConContext ctx) {
+
+        InterpreterValue iv = visit(ctx.compVar());
+        if(iv == null || !(iv instanceof CompVarValue)) return null;
+        CompVarValue compVarValue = (CompVarValue) iv;
 
         int argCount = ctx.arguments() == null ? 0 : ctx.arguments().expression().size();
         InterpreterValue[] arguments = new InterpreterValue[argCount];
@@ -341,17 +358,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             else return null;
         }
 
-        String id = "";
+        CompOccurrenceValue occurrenceValue = new CompOccurrenceValue(compVarValue, arguments);
 
         try {
-            id = currentScope.get(ctx.variableReference).getIdentifier();
-        } catch (Exception e) {return null;}
-
-        ComponentOccurrence occurrence = new ComponentOccurrence(ctx, arguments);
-        CompOccurrenceValue occurrenceValue = new CompOccurrenceValue(id, indices, occurrence);
-
-        try {
-            ListValue v = (ListValue) currentScope.get(ctx.variableReference).getValue();
+            ListValue v = (ListValue) currentScope.get(ctx.compVar().variableReference).getValue();
             v.getValues().add(occurrenceValue);
         } catch (Exception e) {return null;}
 

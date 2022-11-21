@@ -19,6 +19,11 @@ public class IntegerValue implements InterpreterValue {
     }
 
     @Override
+    public String generateName(String prefix) {
+        return prefix+generateName();
+    }
+
+    @Override
     public String toString() {
         return Integer.toString(value);
     }

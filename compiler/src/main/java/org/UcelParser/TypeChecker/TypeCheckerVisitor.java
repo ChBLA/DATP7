@@ -56,6 +56,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public DeclarationInfo currentFunction = null;
     //endregion
 
+
     // region interfaceDecl
 
     // Passes along the type and names of var decls
@@ -295,7 +296,32 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //endregion
 
-    //region Interpreter things
+    //region Build Region
+
+    //region Build If
+    @Override
+    public Type visitBuildIf(UCELParser.BuildIfContext ctx) {
+        var exprType = visit(ctx.expression());
+        if (!exprType.equals(BOOL_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Expression in if-statement must be type bool, got type: " + exprType));
+            return ERROR_TYPE;
+        }
+
+        for (var stmnt : ctx.buildStmnt()) {
+            var stmntType = visit(stmnt);
+            if (stmntType.equals(ERROR_TYPE))
+                return ERROR_TYPE;
+            else if (!stmntType.equals(VOID_TYPE)) {
+                logger.log(new ErrorLog(ctx.buildStmnt(0), "Statement must be void-type, got: " + stmntType));
+                return ERROR_TYPE;
+            }
+        }
+
+        return VOID_TYPE;
+    }
+
+    //endregion
+
     @Override
     public Type visitBuildIteration(UCELParser.BuildIterationContext ctx) {
         DeclarationInfo iteratorInfo;

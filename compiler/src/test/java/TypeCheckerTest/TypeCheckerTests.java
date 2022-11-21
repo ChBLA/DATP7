@@ -325,7 +325,113 @@ public class TypeCheckerTests  {
     //endregion
 
     //region BuildIf
+    @ParameterizedTest
+    @MethodSource("buildIfFaultyTypes")
+    void buildIfExpressionFaultyTypesReturnsErrorType(Type inputType) {
+        var expected = ERROR_TYPE;
+        
+        var visitor = new TypeCheckerVisitor();
 
+        var node = mock(UCELParser.BuildIfContext.class);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, inputType, visitor);
+        var buildStmntNode = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+
+        var buildStmnts = new ArrayList<UCELParser.BuildStmntContext>() {{ add(buildStmntNode); }};
+
+        when(node.expression()).thenReturn(exprNode);
+        when(node.buildStmnt()).thenReturn(buildStmnts);
+
+        var actual = visitor.visitBuildIf(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("nonVoidTypes")
+    void buildIfInvalidFirstStatementReturnsErrorType(Type inputType) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.BuildIfContext.class);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var buildStmntNode1 = mockForVisitorResult(UCELParser.BuildStmntContext.class, inputType, visitor);
+        var buildStmntNode2 = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+
+        var buildStmnts = new ArrayList<UCELParser.BuildStmntContext>() {{ add(buildStmntNode1); add(buildStmntNode2); }};
+
+        when(node.expression()).thenReturn(exprNode);
+        when(node.buildStmnt()).thenReturn(buildStmnts);
+
+        var actual = visitor.visitBuildIf(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @MethodSource("nonVoidTypes")
+    void buildIfInvalidSecondStatementReturnsErrorType(Type inputType) {
+        var expected = ERROR_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.BuildIfContext.class);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var buildStmntNode1 = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+        var buildStmntNode2 = mockForVisitorResult(UCELParser.BuildStmntContext.class, inputType, visitor);
+
+        var buildStmnts = new ArrayList<UCELParser.BuildStmntContext>() {{ add(buildStmntNode1); add(buildStmntNode2); }};
+
+        when(node.expression()).thenReturn(exprNode);
+        when(node.buildStmnt()).thenReturn(buildStmnts);
+
+        var actual = visitor.visitBuildIf(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void buildIfCorrect() {
+        var expected = VOID_TYPE;
+
+        var visitor = new TypeCheckerVisitor();
+
+        var node = mock(UCELParser.BuildIfContext.class);
+        var exprNode = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_TYPE, visitor);
+        var buildStmntNode1 = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+        var buildStmntNode2 = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+
+        var buildStmnts = new ArrayList<UCELParser.BuildStmntContext>() {{ add(buildStmntNode1); add(buildStmntNode2); }};
+
+        when(node.expression()).thenReturn(exprNode);
+        when(node.buildStmnt()).thenReturn(buildStmnts);
+
+        var actual = visitor.visitBuildIf(node);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> buildIfFaultyTypes() {
+        var args = new ArrayList<Arguments>();
+
+        for (var type : Type.TypeEnum.values()) {
+            if (type != Type.TypeEnum.boolType)
+                args.add(Arguments.of(new Type(type)));
+        }
+
+        return args.stream();
+    }
+
+    private static Stream<Arguments> nonVoidTypes() {
+        var args = new ArrayList<Arguments>();
+
+        for (var type : Type.TypeEnum.values()) {
+            if (type != Type.TypeEnum.voidType)
+                args.add(Arguments.of(new Type(type)));
+        }
+
+        return args.stream();
+    }
     //endregion
 
     //region CompCon
@@ -1610,7 +1716,7 @@ public class TypeCheckerTests  {
 
         Type result = visitor.visitIfstatement(node);
 
-        assertEquals(CHAR_TYPE, result);
+        assertEquals(ERROR_TYPE, result);
     }
 
     @Test
@@ -1628,7 +1734,7 @@ public class TypeCheckerTests  {
 
         Type result = visitor.visitIfstatement(node);
 
-        assertEquals(CHAR_TYPE, result);
+        assertEquals(ERROR_TYPE, result);
     }
 
     @Test
@@ -1664,7 +1770,7 @@ public class TypeCheckerTests  {
 
         Type result = visitor.visitIfstatement(node);
 
-        assertEquals(VOID_TYPE, result);
+        assertEquals(ERROR_TYPE, result);
     }
     //endregion
 

@@ -19,6 +19,11 @@ public class ListValue implements InterpreterValue {
     }
 
     @Override
+    public String generateName(String prefix) {
+        return prefix+generateName();
+    }
+
+    @Override
     public boolean equals(Object other) {
         if(!(other instanceof ListValue)) return false;
         ListValue pv = (ListValue) other;
