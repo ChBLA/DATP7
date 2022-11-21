@@ -56,6 +56,34 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public DeclarationInfo currentFunction = null;
 
 
+    // interfaceVarDecl
+
+    @Override
+    public Type visitInterfaceVarDecl(UCELParser.InterfaceVarDeclContext ctx) {
+        List<String> names = new ArrayList<>();
+        List<Type> types = new ArrayList<>();
+        assert ctx.type().size() == ctx.arrayDeclID().size();
+
+        for (int i = 0; i < ctx.type().size(); i++) {
+            var varType = visit(ctx.type(i));
+
+            names.add(ctx.arrayDeclID(i).ID().getText());
+            types.add(varType);
+
+            if (varType.equals(ERROR_TYPE)) {
+                logger.log(new ErrorLog(ctx.arrayDeclID(i), "Error: variable has type error"));
+            }
+        }
+
+        if (types.contains(ERROR_TYPE)) {
+            return new Type(Type.TypeEnum.errorType, names.toArray(new String[0]), types.toArray(new Type[0]));
+        }
+
+        return new Type(Type.TypeEnum.voidType, names.toArray(new String[0]), types.toArray(new Type[0]));
+    }
+
+
+    // endregion
 
     @Override
     public Type visitProject(UCELParser.ProjectContext ctx) {
