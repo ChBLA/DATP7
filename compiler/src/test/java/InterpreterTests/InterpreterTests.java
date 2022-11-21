@@ -33,22 +33,17 @@ public class InterpreterTests {
 
     @ParameterizedTest
     @MethodSource("compConValues")
-    void compConReturnsExpected(InterpreterValue i0, InterpreterValue i1,
+    void compConSetsExpected(InterpreterValue c,
                  InterpreterValue a0, InterpreterValue a1,
                  InterpreterValue expected) {
         Scope scope = mock(Scope.class);
         InterpreterVisitor visitor = new InterpreterVisitor(scope);
 
         UCELParser.CompConContext node = mock(UCELParser.CompConContext.class);
+        UCELParser.CompVarContext compVar = mock(UCELParser.CompVarContext.class);
 
-        var indices = new ArrayList<UCELParser.ExpressionContext>();
-        UCELParser.ExpressionContext index0 = mock(UCELParser.ExpressionContext.class);
-        UCELParser.ExpressionContext index1 = mock(UCELParser.ExpressionContext.class);
-        indices.add(index0);
-        indices.add(index1);
-        when(node.expression()).thenReturn(indices);
-        when(index0.accept(visitor)).thenReturn(i0);
-        when(index1.accept(visitor)).thenReturn(i1);
+        when(node.compVar()).thenReturn(compVar);
+        when(compVar.accept(visitor)).thenReturn(c);
 
         DeclarationInfo varInfo = new DeclarationInfo("v");
         varInfo.setValue(new ListValue(new ArrayList<>()));
@@ -58,7 +53,7 @@ public class InterpreterTests {
         DeclarationReference conRef = new DeclarationReference(0,1);
 
         node.constructorReference = conRef;
-        node.variableReference = varRef;
+        compVar.variableReference = varRef;
 
         try{
             when(scope.get(varRef)).thenReturn(varInfo);
@@ -78,7 +73,7 @@ public class InterpreterTests {
         when(arg0.accept(visitor)).thenReturn(a0);
         when(arg1.accept(visitor)).thenReturn(a1);
 
-        var result = visitor.visitCompCon(node);
+        var unUsedResult = visitor.visitCompCon(node);
 
         var list = ((ListValue) varInfo.getValue()).getValues();
         var actual = list.size() > 0 ? list.get(0) : null;
@@ -87,17 +82,19 @@ public class InterpreterTests {
 
     private static Stream<Arguments> compConValues() {
         return Stream.of(
-                Arguments.arguments(value(2), value(4), value(true), value(17),
-                        new CompOccurrenceValue("v", new int[]{2,4},
-                                new ComponentOccurrence(null, new InterpreterValue[]{value(true), value(17)}))),
-                Arguments.arguments(value(92), value(4), value(true), value("17"),
-                        new CompOccurrenceValue("v", new int[]{92,4},
-                                new ComponentOccurrence(null, new InterpreterValue[]{value(true), value("17")}))),
-                Arguments.arguments(value(2), null, value(true), value(17), null)
+                Arguments.arguments(new CompVarValue("v", new int[]{92,4}), value(true), value(17),
+                        new CompOccurrenceValue("v", new int[]{2,4},new InterpreterValue[]{value(true), value(17)})),
+                Arguments.arguments(new CompVarValue("v", new int[]{92,4}), value(true), value("17"),
+                        new CompOccurrenceValue("v", new int[]{92,4}, new InterpreterValue[]{value(true), value("17")})),
+                Arguments.arguments(null, value(true), value(17), null)
         );
     }
 
     //endregion
+
+    //region link statement
+
+
 
     //endregion
 

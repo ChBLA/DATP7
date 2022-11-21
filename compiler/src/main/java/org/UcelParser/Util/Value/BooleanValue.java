@@ -17,6 +17,11 @@ public class BooleanValue implements InterpreterValue {
     }
 
     @Override
+    public String generateName(String prefix) {
+        return prefix+generateName();
+    }
+
+    @Override
     public String toString() {
         return value ? "true" : "false";
     }

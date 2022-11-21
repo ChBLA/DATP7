@@ -53,10 +53,13 @@ buildStmnt : buildBlock
            | buildIf
            | compCon
            ;
-compCon locals [DeclarationReference variableReference, DeclarationReference constructorReference]
-    : ID (LEFTBRACKET expression RIGHTBRACKET)* '=' ID LEFTPAR arguments RIGHTPAR END;
+compCon locals [DeclarationReference constructorReference]
+    : compVar '=' ID LEFTPAR arguments RIGHTPAR END;
+linkStatement locals [DeclarationReference leftInterface, DeclarationReference rightInterface]
+     : LINK compVar '.' ID compVar '.' ID END;
+compVar locals [DeclarationReference variableReference]
+    : ID (LEFTBRACKET expression RIGHTBRACKET)*;
 buildIf : IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?;
-linkStatement : LINK expression expression END;
 buildIteration locals [DeclarationReference reference]
     : FOR LEFTPAR ID COLON LEFTBRACKET expression COMMA expression RIGHTBRACKET RIGHTPAR buildStmnt;
 buildBlock locals [Scope scope]

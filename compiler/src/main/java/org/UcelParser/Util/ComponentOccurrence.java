@@ -8,25 +8,25 @@ import java.util.List;
 
 public class ComponentOccurrence {
     private final UCELParser.CompConContext node;
-    private final InterpreterValue[] parameters;
-    private final InterpreterValue[] interfaces;
+    private final NameGenerator[] parameters;
+    private final NameGenerator[] interfaces;
     private String prefix = "";
 
-    public ComponentOccurrence(UCELParser.CompConContext node, InterpreterValue[] parameters) {
+    public ComponentOccurrence(UCELParser.CompConContext node, NameGenerator[] parameters, NameGenerator[] interfaces) {
         this.node = node;
         this.parameters = parameters;
-        this.interfaces = new InterpreterValue[0];
+        this.interfaces = interfaces;
     }
 
     public UCELParser.CompConContext getNode() {
         return this.node;
     }
 
-    public InterpreterValue[] getParameters() {
+    public NameGenerator[] getParameters() {
         return this.parameters;
     }
 
-    public InterpreterValue[] getInterfaces() {
+    public NameGenerator[] getInterfaces() {
         return this.interfaces;
     }
 

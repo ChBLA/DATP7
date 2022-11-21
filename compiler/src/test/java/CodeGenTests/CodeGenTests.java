@@ -51,7 +51,7 @@ public class CodeGenTests {
         assertEquals(expected, actual.toString());
     }
 
-    /*
+
     @Test
     void componentOneOccurrenceNoNestedComponentsGeneratedCorrectly() {
         var expected = String.format("int Component1_aa_p1 = z%n%nint Component1_aa_q = Component1_aa_p1 + 1");
@@ -170,7 +170,6 @@ public class CodeGenTests {
         assertEquals(expected, actual.toString());
     }
 
-     */
     //endregion
 
     //region Component body
