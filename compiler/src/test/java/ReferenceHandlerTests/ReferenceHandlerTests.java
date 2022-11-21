@@ -512,17 +512,20 @@ public class ReferenceHandlerTests {
 
         var idNode = mock(TerminalNode.class);
         var node = mock(UCELParser.BuildIterationContext.class);
-        var typeNode = mock(UCELParser.TypeContext.class);
-        var buildBlockNode = mock(UCELParser.BuildBlockContext.class);
+        var exprLowerNode = mock(UCELParser.ExpressionContext.class);
+        var exprUpperNode = mock(UCELParser.ExpressionContext.class);
+        var buildStmtNode = mock(UCELParser.BuildStmntContext.class);
         var declRef = mock(DeclarationReference.class);
 
         when(node.ID()).thenReturn(idNode);
-        when(node.type()).thenReturn(typeNode);
-        when(node.buildBlock()).thenReturn(buildBlockNode);
+        when(node.expression(0)).thenReturn(exprLowerNode);
+        when(node.expression(1)).thenReturn(exprUpperNode);
+        when(node.buildStmnt()).thenReturn(buildStmtNode);
         when(idNode.getText()).thenReturn(name);
 
-        when(typeNode.accept(visitor)).thenReturn(true);
-        when(buildBlockNode.accept(visitor)).thenReturn(true);
+        when(exprLowerNode.accept(visitor)).thenReturn(true);
+        when(exprUpperNode.accept(visitor)).thenReturn(true);
+        when(buildStmtNode.accept(visitor)).thenReturn(true);
 
         when(scope.isUnique(name, true)).thenReturn(true);
         when(scope.add(any())).thenReturn(declRef);
@@ -531,6 +534,9 @@ public class ReferenceHandlerTests {
 
         assertTrue(actual);
         assertEquals(declRef, node.reference);
+        verify(exprLowerNode, times(1)).accept(visitor);
+        verify(exprUpperNode, times(1)).accept(visitor);
+        verify(buildStmtNode, times(1)).accept(visitor);
     }
 
     @Test
@@ -543,17 +549,20 @@ public class ReferenceHandlerTests {
 
         var idNode = mock(TerminalNode.class);
         var node = mock(UCELParser.BuildIterationContext.class);
-        var typeNode = mock(UCELParser.TypeContext.class);
-        var buildBlockNode = mock(UCELParser.BuildBlockContext.class);
+        var exprLowerNode = mock(UCELParser.ExpressionContext.class);
+        var exprUpperNode = mock(UCELParser.ExpressionContext.class);
+        var buildStmtNode = mock(UCELParser.BuildStmntContext.class);
         var declRef = mock(DeclarationReference.class);
 
         when(node.ID()).thenReturn(idNode);
-        when(node.type()).thenReturn(typeNode);
-        when(node.buildBlock()).thenReturn(buildBlockNode);
+        when(node.expression(0)).thenReturn(exprLowerNode);
+        when(node.expression(1)).thenReturn(exprUpperNode);
+        when(node.buildStmnt()).thenReturn(buildStmtNode);
         when(idNode.getText()).thenReturn(name);
 
-        when(typeNode.accept(visitor)).thenReturn(true);
-        when(buildBlockNode.accept(visitor)).thenReturn(true);
+        when(exprLowerNode.accept(visitor)).thenReturn(true);
+        when(exprUpperNode.accept(visitor)).thenReturn(true);
+        when(buildStmtNode.accept(visitor)).thenReturn(true);
 
         when(scope.isUnique(name, true)).thenReturn(false);
         when(scope.add(any())).thenReturn(declRef);
@@ -564,7 +573,7 @@ public class ReferenceHandlerTests {
     }
 
     @Test
-    void buildIterationTypeFails() {
+    void buildIterationLowerBoundFails() {
         String name = "tester";
 
         var scope = mock(Scope.class);
@@ -573,17 +582,20 @@ public class ReferenceHandlerTests {
 
         var idNode = mock(TerminalNode.class);
         var node = mock(UCELParser.BuildIterationContext.class);
-        var typeNode = mock(UCELParser.TypeContext.class);
-        var buildBlockNode = mock(UCELParser.BuildBlockContext.class);
+        var exprLowerNode = mock(UCELParser.ExpressionContext.class);
+        var exprUpperNode = mock(UCELParser.ExpressionContext.class);
+        var buildStmtNode = mock(UCELParser.BuildStmntContext.class);
         var declRef = mock(DeclarationReference.class);
 
         when(node.ID()).thenReturn(idNode);
-        when(node.type()).thenReturn(typeNode);
-        when(node.buildBlock()).thenReturn(buildBlockNode);
+        when(node.expression(0)).thenReturn(exprLowerNode);
+        when(node.expression(1)).thenReturn(exprUpperNode);
+        when(node.buildStmnt()).thenReturn(buildStmtNode);
         when(idNode.getText()).thenReturn(name);
 
-        when(typeNode.accept(visitor)).thenReturn(false);
-        when(buildBlockNode.accept(visitor)).thenReturn(true);
+        when(exprLowerNode.accept(visitor)).thenReturn(false);
+        when(exprUpperNode.accept(visitor)).thenReturn(true);
+        when(buildStmtNode.accept(visitor)).thenReturn(true);
 
         when(scope.isUnique(name, true)).thenReturn(true);
         when(scope.add(any())).thenReturn(declRef);
@@ -591,8 +603,38 @@ public class ReferenceHandlerTests {
         var actual = visitor.visitBuildIteration(node);
 
         assertFalse(actual);
-        verify(typeNode, times(1)).accept(visitor);
-        verify(buildBlockNode, never()).accept(visitor);
+    }
+    @Test
+    void buildIterationUpperBoundFails() {
+        String name = "tester";
+
+        var scope = mock(Scope.class);
+
+        var visitor = new ReferenceVisitor(scope);
+
+        var idNode = mock(TerminalNode.class);
+        var node = mock(UCELParser.BuildIterationContext.class);
+        var exprLowerNode = mock(UCELParser.ExpressionContext.class);
+        var exprUpperNode = mock(UCELParser.ExpressionContext.class);
+        var buildStmtNode = mock(UCELParser.BuildStmntContext.class);
+        var declRef = mock(DeclarationReference.class);
+
+        when(node.ID()).thenReturn(idNode);
+        when(node.expression(0)).thenReturn(exprLowerNode);
+        when(node.expression(1)).thenReturn(exprUpperNode);
+        when(node.buildStmnt()).thenReturn(buildStmtNode);
+        when(idNode.getText()).thenReturn(name);
+
+        when(exprLowerNode.accept(visitor)).thenReturn(true);
+        when(exprUpperNode.accept(visitor)).thenReturn(false);
+        when(buildStmtNode.accept(visitor)).thenReturn(true);
+
+        when(scope.isUnique(name, true)).thenReturn(true);
+        when(scope.add(any())).thenReturn(declRef);
+
+        var actual = visitor.visitBuildIteration(node);
+
+        assertFalse(actual);
     }
 
     @Test
@@ -605,17 +647,20 @@ public class ReferenceHandlerTests {
 
         var idNode = mock(TerminalNode.class);
         var node = mock(UCELParser.BuildIterationContext.class);
-        var typeNode = mock(UCELParser.TypeContext.class);
-        var buildBlockNode = mock(UCELParser.BuildBlockContext.class);
+        var exprLowerNode = mock(UCELParser.ExpressionContext.class);
+        var exprUpperNode = mock(UCELParser.ExpressionContext.class);
+        var buildStmtNode = mock(UCELParser.BuildStmntContext.class);
         var declRef = mock(DeclarationReference.class);
 
         when(node.ID()).thenReturn(idNode);
-        when(node.type()).thenReturn(typeNode);
-        when(node.buildBlock()).thenReturn(buildBlockNode);
+        when(node.expression(0)).thenReturn(exprLowerNode);
+        when(node.expression(1)).thenReturn(exprUpperNode);
+        when(node.buildStmnt()).thenReturn(buildStmtNode);
         when(idNode.getText()).thenReturn(name);
 
-        when(typeNode.accept(visitor)).thenReturn(true);
-        when(buildBlockNode.accept(visitor)).thenReturn(false);
+        when(exprLowerNode.accept(visitor)).thenReturn(true);
+        when(exprUpperNode.accept(visitor)).thenReturn(true);
+        when(buildStmtNode.accept(visitor)).thenReturn(false);
 
         when(scope.isUnique(name, true)).thenReturn(true);
         when(scope.add(any())).thenReturn(declRef);
@@ -623,8 +668,6 @@ public class ReferenceHandlerTests {
         var actual = visitor.visitBuildIteration(node);
 
         assertFalse(actual);
-        verify(typeNode, times(1)).accept(visitor);
-        verify(buildBlockNode, times(1)).accept(visitor);
     }
 
     //endregion

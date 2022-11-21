@@ -110,7 +110,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         ctx.reference = currentScope.add(new DeclarationInfo(identifier, ctx));
 
-        return visit(ctx.type()) && visit(ctx.buildBlock());
+        return visit(ctx.expression(0)) && visit(ctx.expression(1)) && visit(ctx.buildStmnt());
     }
 
     //endregion
