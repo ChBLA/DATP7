@@ -724,6 +724,7 @@ public class TypeCheckerTests  {
         assertEquals(expectedType, actual);
     }
 
+    // ASSIGNTMENT (NOT EXPR)
     private static Stream<Arguments> assignmentTestSource() {
         Type[] types = new Type[]{INT_TYPE,
                 CHAR_TYPE,
@@ -780,6 +781,7 @@ public class TypeCheckerTests  {
         return arguments.stream();
     }
 
+    // ASSIGNMENT EXPRESSION
     // TODO: Possibly refactor this to not use for loops as it is prone to mistakes
     private static Stream<Arguments> assignmentExprTestSource() {
         Type[] types = new Type[]{INT_TYPE,
@@ -793,12 +795,14 @@ public class TypeCheckerTests  {
                 CHAR_ARRAY_TYPE,
                 BOOL_ARRAY_TYPE,
                 INT_2D_ARRAY_TYPE,
-                DOUBLE_ARRAY_TYPE
+                DOUBLE_ARRAY_TYPE,
+                CLOCK_TYPE
         };
 
         Type[][] validPairTypes = new Type[][]{
                 {INT_TYPE, INT_TYPE},
                 {CLOCK_TYPE, INT_TYPE},
+                {CLOCK_TYPE, CLOCK_TYPE},
                 {CHAR_TYPE, CHAR_TYPE},
                 {BOOL_TYPE, BOOL_TYPE},
                 {STRING_TYPE, STRING_TYPE},
