@@ -56,16 +56,70 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public DeclarationInfo currentFunction = null;
     //endregion
 
+    // region compCon
+
+    @Override
+    public Type visitCompCon(UCELParser.CompConContext ctx) {
+        Type result = VOID_TYPE;
+        Type constructorType = null;
+        Type argumentsTypes = visit(ctx.arguments());
+
+        try {
+            constructorType = currentScope.get(ctx.constructorReference).getType();
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "could not find reference to component constructor"));
+            result = ERROR_TYPE;
+        }
+
+        if (!(constructorType.getParameters().length == argumentsTypes.getParameters().length)) {
+            logger.log(new ErrorLog(ctx, String.format("constructor %s expects %d arguments, but %d were given",
+                    ctx.ID(), constructorType.getParameters().length, argumentsTypes.getParameters().length)));
+            result = ERROR_TYPE;
+        }
+
+        for (int i = 0; i < argumentsTypes.getParameters().length; i++) {
+            if (!(constructorType.getParameters()[i].getEvaluationType() == argumentsTypes.getParameters()[i].getEvaluationType())) {
+                logger.log(new ErrorLog(ctx, "type error: argument has wrong type. got "
+                        + argumentsTypes.getParameters()[i].getEvaluationType()));
+            }
+            result = ERROR_TYPE;
+        }
+
+        return result;
+    }
+
+
+    // endregion
+
+    // region compVar
+
+    @Override
+    public Type visitCompVar(UCELParser.CompVarContext ctx) {
+        Type result = new Type(Type.TypeEnum.componentType);
+        for (var expr : ctx.expression()){
+            Type exprType = visit(expr);
+            if (exprType.getEvaluationType() != Type.TypeEnum.intType){
+                logger.log(new ErrorLog(expr, "type error: expected type int, got type " + exprType));
+                result = ERROR_TYPE;
+            }
+        }
+
+        return result;
+    }
+
+    // endregion
+
 
     // region linkStatement
 
     @Override
     public Type visitLinkStatement(UCELParser.LinkStatementContext ctx) {
+        Type result = VOID_TYPE;
         var compVar1 = visit(ctx.compVar(0));
         var compVar2 = visit(ctx.compVar(1));
 
-        boolean leftInterfaceIsInterfaceType;
-        boolean rightInterfaceIsInterfaceType;
+        boolean leftInterfaceIsInterfaceType = false;
+        boolean rightInterfaceIsInterfaceType = false;
 
         try {
             leftInterfaceIsInterfaceType = currentScope.get(ctx.leftInterface).getType().getEvaluationType()
@@ -74,30 +128,30 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
                     .equals(Type.TypeEnum.interfaceType);
         } catch (Exception e) {
             logger.log(new ErrorLog(ctx, "error: interface could not be found"));
-            return ERROR_TYPE;
+            result = ERROR_TYPE;
         }
 
         if (!(compVar1.getEvaluationType().equals(Type.TypeEnum.componentType))) {
             logger.log(new ErrorLog(ctx.compVar(0), "error: expected type component but got type " + compVar1.getEvaluationType()));
-            return ERROR_TYPE;
+            result = ERROR_TYPE;
         }
 
         if (!(compVar2.getEvaluationType().equals(Type.TypeEnum.componentType))) {
             logger.log(new ErrorLog(ctx.compVar(1), "error: expected type component but got type " + compVar2.getEvaluationType()));
-            return ERROR_TYPE;
+            result = ERROR_TYPE;
         }
 
         if (!leftInterfaceIsInterfaceType) {
             logger.log(new ErrorLog(ctx.compVar(0), "error: expected type interface"));
-            return ERROR_TYPE;
+            result = ERROR_TYPE;
         }
 
         if (!rightInterfaceIsInterfaceType) {
             logger.log(new ErrorLog(ctx.compVar(1), "error: expected type interface"));
-            return ERROR_TYPE;
+            result = ERROR_TYPE;
         }
 
-        return VOID_TYPE;
+        return result;
     }
 
 
