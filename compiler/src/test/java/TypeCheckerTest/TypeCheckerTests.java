@@ -51,6 +51,7 @@ public class TypeCheckerTests  {
     private static final Type INT_TYPE = new Type(Type.TypeEnum.intType);
     private static final Type CONSTANT_INT_TYPE = new Type(Type.TypeEnum.intType, Type.TypePrefixEnum.constant);
     private static final Type INTERFACE_TYPE = new Type(Type.TypeEnum.interfaceType);
+    private static final Type COMPONENT_TYPE = new Type(Type.TypeEnum.componentType);
     //endregion
 
 
@@ -230,6 +231,186 @@ public class TypeCheckerTests  {
     //endregion
 
     //region LinkStatement
+
+    @Test
+    public void CorrectInterfaceTypesAndComponentTypesReturnsVoid() {
+        var expected = VOID_TYPE;
+
+        var scope = mock(Scope.class);
+        var visitor = new TypeCheckerVisitor(scope);
+
+        var comp1Mock = mockForVisitorResult(UCELParser.CompVarContext.class, COMPONENT_TYPE, visitor);
+        var comp2Mock = mockForVisitorResult(UCELParser.CompVarContext.class, COMPONENT_TYPE, visitor);
+
+        var ref1 = mock(DeclarationReference.class);
+        var ref2 = mock(DeclarationReference.class);
+        var decl1 = mock(DeclarationInfo.class);
+        var decl2 = mock(DeclarationInfo.class);
+        when(decl1.getType()).thenReturn(INTERFACE_TYPE);
+        when(decl2.getType()).thenReturn(INTERFACE_TYPE);
+
+        try {
+            when(scope.get(ref1)).thenReturn(decl1);
+            when(scope.get(ref2)).thenReturn(decl2);
+        } catch (Exception e) {
+            fail("error: could not mock scope");
+        }
+
+        var node = mock(UCELParser.LinkStatementContext.class);
+        node.leftInterface = ref1;
+        node.rightInterface = ref2;
+
+        when(node.compVar(0)).thenReturn(comp1Mock);
+        when(node.compVar(1)).thenReturn(comp2Mock);
+
+        var actual = visitor.visitLinkStatement(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void WrongComponent1TypeReturnsError() {
+        var expected = ERROR_TYPE;
+
+        var scope = mock(Scope.class);
+        var visitor = new TypeCheckerVisitor(scope);
+
+        var comp1Mock = mockForVisitorResult(UCELParser.CompVarContext.class, INTERFACE_TYPE, visitor);
+        var comp2Mock = mockForVisitorResult(UCELParser.CompVarContext.class, COMPONENT_TYPE, visitor);
+
+        var ref1 = mock(DeclarationReference.class);
+        var ref2 = mock(DeclarationReference.class);
+        var decl1 = mock(DeclarationInfo.class);
+        var decl2 = mock(DeclarationInfo.class);
+        when(decl1.getType()).thenReturn(INTERFACE_TYPE);
+        when(decl2.getType()).thenReturn(INTERFACE_TYPE);
+
+        try {
+            when(scope.get(ref1)).thenReturn(decl1);
+            when(scope.get(ref2)).thenReturn(decl2);
+        } catch (Exception e) {
+            fail("error: could not mock scope");
+        }
+
+        var node = mock(UCELParser.LinkStatementContext.class);
+        node.leftInterface = ref1;
+        node.rightInterface = ref2;
+
+        when(node.compVar(0)).thenReturn(comp1Mock);
+        when(node.compVar(1)).thenReturn(comp2Mock);
+
+        var actual = visitor.visitLinkStatement(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void WrongComponent2TypeReturnsError() {
+        var expected = ERROR_TYPE;
+
+        var scope = mock(Scope.class);
+        var visitor = new TypeCheckerVisitor(scope);
+
+        var comp1Mock = mockForVisitorResult(UCELParser.CompVarContext.class, COMPONENT_TYPE, visitor);
+        var comp2Mock = mockForVisitorResult(UCELParser.CompVarContext.class, INT_TYPE, visitor);
+
+        var ref1 = mock(DeclarationReference.class);
+        var ref2 = mock(DeclarationReference.class);
+        var decl1 = mock(DeclarationInfo.class);
+        var decl2 = mock(DeclarationInfo.class);
+        when(decl1.getType()).thenReturn(INTERFACE_TYPE);
+        when(decl2.getType()).thenReturn(INTERFACE_TYPE);
+
+        try {
+            when(scope.get(ref1)).thenReturn(decl1);
+            when(scope.get(ref2)).thenReturn(decl2);
+        } catch (Exception e) {
+            fail("error: could not mock scope");
+        }
+
+        var node = mock(UCELParser.LinkStatementContext.class);
+        node.leftInterface = ref1;
+        node.rightInterface = ref2;
+
+        when(node.compVar(0)).thenReturn(comp1Mock);
+        when(node.compVar(1)).thenReturn(comp2Mock);
+
+        var actual = visitor.visitLinkStatement(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void WrongInterface1TypeReturnsError() {
+        var expected = ERROR_TYPE;
+
+        var scope = mock(Scope.class);
+        var visitor = new TypeCheckerVisitor(scope);
+
+        var comp1Mock = mockForVisitorResult(UCELParser.CompVarContext.class, COMPONENT_TYPE, visitor);
+        var comp2Mock = mockForVisitorResult(UCELParser.CompVarContext.class, COMPONENT_TYPE, visitor);
+
+        var ref1 = mock(DeclarationReference.class);
+        var ref2 = mock(DeclarationReference.class);
+        var decl1 = mock(DeclarationInfo.class);
+        var decl2 = mock(DeclarationInfo.class);
+        when(decl1.getType()).thenReturn(INT_TYPE);
+        when(decl2.getType()).thenReturn(INTERFACE_TYPE);
+
+        try {
+            when(scope.get(ref1)).thenReturn(decl1);
+            when(scope.get(ref2)).thenReturn(decl2);
+        } catch (Exception e) {
+            fail("error: could not mock scope");
+        }
+
+        var node = mock(UCELParser.LinkStatementContext.class);
+        node.leftInterface = ref1;
+        node.rightInterface = ref2;
+
+        when(node.compVar(0)).thenReturn(comp1Mock);
+        when(node.compVar(1)).thenReturn(comp2Mock);
+
+        var actual = visitor.visitLinkStatement(node);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void WrongInterface2TypeReturnsError() {
+        var expected = ERROR_TYPE;
+
+        var scope = mock(Scope.class);
+        var visitor = new TypeCheckerVisitor(scope);
+
+        var comp1Mock = mockForVisitorResult(UCELParser.CompVarContext.class, COMPONENT_TYPE, visitor);
+        var comp2Mock = mockForVisitorResult(UCELParser.CompVarContext.class, COMPONENT_TYPE, visitor);
+
+        var ref1 = mock(DeclarationReference.class);
+        var ref2 = mock(DeclarationReference.class);
+        var decl1 = mock(DeclarationInfo.class);
+        var decl2 = mock(DeclarationInfo.class);
+        when(decl1.getType()).thenReturn(INTERFACE_TYPE);
+        when(decl2.getType()).thenReturn(INT_TYPE);
+
+        try {
+            when(scope.get(ref1)).thenReturn(decl1);
+            when(scope.get(ref2)).thenReturn(decl2);
+        } catch (Exception e) {
+            fail("error: could not mock scope");
+        }
+
+        var node = mock(UCELParser.LinkStatementContext.class);
+        node.leftInterface = ref1;
+        node.rightInterface = ref2;
+
+        when(node.compVar(0)).thenReturn(comp1Mock);
+        when(node.compVar(1)).thenReturn(comp2Mock);
+
+        var actual = visitor.visitLinkStatement(node);
+
+        assertEquals(expected, actual);
+    }
 
     //endregion
 
