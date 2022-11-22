@@ -724,6 +724,11 @@ public class ReferenceHandlerTests {
 
     //endregion
 
+    //region Component construction
+
+
+    //endregion
+
     //endregion
 
     //region Project

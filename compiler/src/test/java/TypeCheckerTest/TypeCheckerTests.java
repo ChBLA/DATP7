@@ -139,6 +139,30 @@ public class TypeCheckerTests  {
 
     //region Component
 
+    @Test void visitComponentResultTypeTest() throws Exception {
+        var globalScope =  mock(Scope.class);
+        var scope = mock(Scope.class);
+        var declerationInfo = mock(DeclarationInfo.class);
+        when(scope.get(new DeclarationReference(1, 1))).thenReturn(declerationInfo);
+        var visitor = new TypeCheckerVisitor(globalScope);
+
+        var node = mock(UCELParser.ComponentContext.class);
+        node.scope = scope;
+        node.reference = new DeclarationReference(1,1);
+        when(node.parameters()).thenReturn(mock(UCELParser.ParametersContext.class));
+        when(node.interfaces()).thenReturn(mock(UCELParser.InterfacesContext.class));
+        when(node.compBody()).thenReturn(mock(UCELParser.CompBodyContext.class));
+        mockForVisitorResult(UCELParser.ParametersContext.class, new Type(Type.TypeEnum.voidType, new Type[] {INT_TYPE, INT_TYPE}), visitor);
+        var interfacesType = new Type(Type.TypeEnum.interfaceType, new Type[] {INT_TYPE, INT_TYPE});
+        mockForVisitorResult(UCELParser.InterfacesContext.class, interfacesType, visitor);
+        mockForVisitorResult(UCELParser.CompBodyContext.class, VOID_TYPE, visitor);
+
+        var expected = new Type(Type.TypeEnum.componentType, new Type[] {INT_TYPE, INT_TYPE, interfacesType});
+        var actual = visitor.visitComponent(node);
+        assertEquals(expected, actual);
+    }
+
+
     @Test void componentInterfaceParametersMatch() {
         var visitor = new TypeCheckerVisitor();
         var node = mock(UCELParser.InterfacesContext.class);
@@ -227,7 +251,34 @@ public class TypeCheckerTests  {
     //endregion
 
     //region BuildBlock
+    @Test
+    public void testBuildBlockSuccess() {
+        var expected = VOID_TYPE;
 
+        Scope globalScope = mock(Scope.class);
+        Scope localScope = mock(Scope.class);
+        var visitor = new TypeCheckerVisitor(globalScope);
+
+
+        var stmt0 = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+        var stmt1 = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+        var stmt2 = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+
+        var node = mock(UCELParser.BuildBlockContext.class);
+        when(node.buildStmnt()).thenReturn(new ArrayList<>() {{
+            add(stmt0);
+            add(stmt1);
+            add(stmt2);
+        }});
+        node.scope = localScope;
+
+        var actual = visitor.visitBuildBlock(node);
+
+        assertEquals(expected, actual);
+        verify(stmt0, times(1)).accept(any());
+        verify(stmt1, times(1)).accept(any());
+        verify(stmt2, times(1)).accept(any());
+    }
     //endregion
 
     //region LinkStatement
