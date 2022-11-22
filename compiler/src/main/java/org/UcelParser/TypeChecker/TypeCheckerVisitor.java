@@ -298,6 +298,23 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //region Build Region
 
+    @Override
+    public Type visitBuildBlock(UCELParser.BuildBlockContext ctx) {
+        enterScope(ctx.scope);
+
+        var hadError = false;
+        for(var stmt: ctx.buildStmnt()) {
+            if(visit(stmt).equals(ERROR_TYPE))
+                hadError = true;
+        }
+
+        exitScope();
+        if(hadError)
+            return ERROR_TYPE;
+
+        return VOID_TYPE;
+    }
+
     //region Build If
     @Override
     public Type visitBuildIf(UCELParser.BuildIfContext ctx) {

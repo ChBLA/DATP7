@@ -225,7 +225,34 @@ public class TypeCheckerTests  {
     //endregion
 
     //region BuildBlock
+    @Test
+    public void testBuildBlockSuccess() {
+        var expected = VOID_TYPE;
 
+        Scope globalScope = mock(Scope.class);
+        Scope localScope = mock(Scope.class);
+        var visitor = new TypeCheckerVisitor(globalScope);
+
+
+        var stmt0 = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+        var stmt1 = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+        var stmt2 = mockForVisitorResult(UCELParser.BuildStmntContext.class, VOID_TYPE, visitor);
+
+        var node = mock(UCELParser.BuildBlockContext.class);
+        when(node.buildStmnt()).thenReturn(new ArrayList<>() {{
+            add(stmt0);
+            add(stmt1);
+            add(stmt2);
+        }});
+        node.scope = localScope;
+
+        var actual = visitor.visitBuildBlock(node);
+
+        assertEquals(expected, actual);
+        verify(stmt0, times(1)).accept(any());
+        verify(stmt1, times(1)).accept(any());
+        verify(stmt2, times(1)).accept(any());
+    }
     //endregion
 
     //region LinkStatement
