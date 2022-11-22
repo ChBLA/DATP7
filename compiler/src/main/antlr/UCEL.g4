@@ -17,7 +17,7 @@ project locals [Scope scope]
 pdeclaration : declarations;
 ptemplate locals [Scope scope, DeclarationReference reference]
     : ID parameters graph declarations;
-psystem : declarations build? system;
+psystem : declarations (build | system);
 
 graph : location* edge*;
 
