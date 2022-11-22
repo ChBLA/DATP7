@@ -39,9 +39,26 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     //region Component Extension
 
     //region Component
+    @Override
+    public Boolean visitComponent(UCELParser.ComponentContext ctx) {
+        String compName = ctx.ID().getText();
+        try {
+            if(!currentScope.isUnique(compName, false)) {
+                logger.log(new ErrorLog(ctx, "Component name '" + compName + "' is already declared"));
+                return false;
+            }
+            ctx.reference = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+        }
 
+        enterScope();
+        ctx.scope = currentScope;
+        boolean success = (ctx.parameters() == null || visit(ctx.parameters())) && visit(ctx.interfaces()) && visit(ctx.compBody());
 
-
+        exitScope();
+        return success;
+    }
     //endregion
 
     //region Build block
@@ -268,30 +285,6 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     }
 
     //endregion
-
-
-    //region Component
-    @Override
-    public Boolean visitComponent(UCELParser.ComponentContext ctx) {
-        String compName = ctx.ID().getText();
-        try {
-            if(!currentScope.isUnique(compName, false)) {
-                logger.log(new ErrorLog(ctx, "Component name '" + compName + "' is already declared"));
-                return false;
-            }
-            ctx.reference = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
-        } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
-        }
-
-        enterScope();
-        ctx.scope = currentScope;
-        boolean success = (ctx.parameters() == null || visit(ctx.parameters())) && visit(ctx.interfaces()) && visit(ctx.compBody());
-
-        exitScope();
-        return success;
-    }
-
 
 
     @Override
