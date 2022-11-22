@@ -54,8 +54,102 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
     private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
     public DeclarationInfo currentFunction = null;
+    //endregion
 
 
+    // region linkStatement
+
+    @Override
+    public Type visitLinkStatement(UCELParser.LinkStatementContext ctx) {
+        var compVar1 = visit(ctx.compVar(0));
+        var compVar2 = visit(ctx.compVar(1));
+
+        boolean leftInterfaceIsInterfaceType;
+        boolean rightInterfaceIsInterfaceType;
+
+        try {
+            leftInterfaceIsInterfaceType = currentScope.get(ctx.leftInterface).getType().getEvaluationType()
+                    .equals(Type.TypeEnum.interfaceType);
+            rightInterfaceIsInterfaceType = currentScope.get(ctx.rightInterface).getType().getEvaluationType()
+                    .equals(Type.TypeEnum.interfaceType);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "error: interface could not be found"));
+            return ERROR_TYPE;
+        }
+
+        if (!(compVar1.getEvaluationType().equals(Type.TypeEnum.componentType))) {
+            logger.log(new ErrorLog(ctx.compVar(0), "error: expected type component but got type " + compVar1.getEvaluationType()));
+            return ERROR_TYPE;
+        }
+
+        if (!(compVar2.getEvaluationType().equals(Type.TypeEnum.componentType))) {
+            logger.log(new ErrorLog(ctx.compVar(1), "error: expected type component but got type " + compVar2.getEvaluationType()));
+            return ERROR_TYPE;
+        }
+
+        if (!leftInterfaceIsInterfaceType) {
+            logger.log(new ErrorLog(ctx.compVar(0), "error: expected type interface"));
+            return ERROR_TYPE;
+        }
+
+        if (!rightInterfaceIsInterfaceType) {
+            logger.log(new ErrorLog(ctx.compVar(1), "error: expected type interface"));
+            return ERROR_TYPE;
+        }
+
+        return VOID_TYPE;
+    }
+
+
+    //endregion
+
+    // region interfaceDecl
+
+    // Passes along the type and names of var decls
+    // inside the returned Type object
+    @Override
+    public Type visitInterfaceDecl(UCELParser.InterfaceDeclContext ctx) {
+        Type interfaceType = visit(ctx.interfaceVarDecl());
+        interfaceType.setEvaluationType(Type.TypeEnum.interfaceType);
+        try {
+            currentScope.get(ctx.reference).setType(interfaceType);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx,"internal error: could not find reference to interface"));
+            interfaceType.setEvaluationType(Type.TypeEnum.errorType);
+        }
+        return interfaceType;
+    }
+
+    //endregion
+
+    //region interfaceVarDecl
+
+    @Override
+    public Type visitInterfaceVarDecl(UCELParser.InterfaceVarDeclContext ctx) {
+        List<String> names = new ArrayList<>();
+        List<Type> types = new ArrayList<>();
+        assert ctx.type().size() == ctx.arrayDeclID().size();
+
+        for (int i = 0; i < ctx.type().size(); i++) {
+            var varType = visit(ctx.type(i));
+
+            names.add(ctx.arrayDeclID(i).ID().getText());
+            types.add(varType);
+
+            if (varType.equals(ERROR_TYPE)) {
+                logger.log(new ErrorLog(ctx.arrayDeclID(i), "Error: variable has type error"));
+            }
+        }
+
+        if (types.contains(ERROR_TYPE)) {
+            return new Type(Type.TypeEnum.errorType, names.toArray(new String[0]), types.toArray(new Type[0]));
+        }
+
+        return new Type(Type.TypeEnum.voidType, names.toArray(new String[0]), types.toArray(new Type[0]));
+    }
+
+
+    // endregion
 
     @Override
     public Type visitProject(UCELParser.ProjectContext ctx) {
@@ -245,10 +339,92 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     //endregion
 
+    //region Build Region
 
+    @Override
+    public Type visitBuildBlock(UCELParser.BuildBlockContext ctx) {
+        enterScope(ctx.scope);
 
+        var hadError = false;
+        for(var stmt: ctx.buildStmnt()) {
+            if(visit(stmt).equals(ERROR_TYPE))
+                hadError = true;
+        }
 
+        exitScope();
+        if(hadError)
+            return ERROR_TYPE;
 
+        return VOID_TYPE;
+    }
+
+    //region Build If
+    @Override
+    public Type visitBuildIf(UCELParser.BuildIfContext ctx) {
+        var exprType = visit(ctx.expression());
+        if (!exprType.equals(BOOL_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Expression in if-statement must be type bool, got type: " + exprType));
+            return ERROR_TYPE;
+        }
+
+        for (var stmnt : ctx.buildStmnt()) {
+            var stmntType = visit(stmnt);
+            if (stmntType.equals(ERROR_TYPE))
+                return ERROR_TYPE;
+            else if (!stmntType.equals(VOID_TYPE)) {
+                logger.log(new ErrorLog(ctx.buildStmnt(0), "Statement must be void-type, got: " + stmntType));
+                return ERROR_TYPE;
+            }
+        }
+
+        return VOID_TYPE;
+    }
+
+    //endregion
+
+    @Override
+    public Type visitBuildIteration(UCELParser.BuildIterationContext ctx) {
+        DeclarationInfo iteratorInfo;
+        try {
+            iteratorInfo = currentScope.get(ctx.reference);
+        } catch (Exception e) {
+            throw new RuntimeException(e); // Should be no way this isn't set by the reference handler
+        }
+        var lowerBound = visit(ctx.expression(0));
+        var upperBound = visit(ctx.expression(1));
+        var stmt = visit(ctx.buildStmnt());
+
+        boolean hadError = false;
+        if(!iteratorInfo.getType().equals(INT_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Compiler error, iterator should have been automatically set to an integer."));
+            hadError = true;
+        }
+
+        if(!lowerBound.equals(INT_TYPE)) {
+            if(!lowerBound.equals(ERROR_TYPE))
+                logger.log(new ErrorLog(ctx.expression(0), "Lower bound must be an integer"));
+            hadError = true;
+        }
+
+        if(!upperBound.equals(INT_TYPE)) {
+            if(!upperBound.equals(ERROR_TYPE))
+                logger.log(new ErrorLog(ctx.expression(1), "Upper bound must be an integer"));
+            hadError = true;
+        }
+
+        if(!stmt.equals(VOID_TYPE)) {
+            if(!stmt.equals(ERROR_TYPE))
+                logger.log(new ErrorLog(ctx.buildStmnt(), "Compiler error: Statements should always return error or void"));
+            hadError = true;
+        }
+
+        if(hadError)
+            return ERROR_TYPE;
+
+        return VOID_TYPE;
+    }
+
+    //endregion
 
     //region Start
 
@@ -587,14 +763,17 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return ERROR_TYPE;
         }
 
-        if (ctx.statement(1) != null) {
-            if (visit(ctx.statement(1)).equals(ERROR_TYPE)) {
-                //No logging passing through
+        for (var stmnt : ctx.statement()) {
+            var stmntType = visit(stmnt);
+            if (stmntType.equals(ERROR_TYPE))
                 return ERROR_TYPE;
-            } else if (visit(ctx.statement(1)).equals(VOID_TYPE))
-                return VOID_TYPE;
+            else if (!stmntType.equals(VOID_TYPE)) {
+                logger.log(new ErrorLog(ctx.statement(0), "Statement must be void-type, got: " + stmntType));
+                return ERROR_TYPE;
+            }
         }
-        return visit(ctx.statement(0));
+
+        return VOID_TYPE;
     }
 
     //endregion

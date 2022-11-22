@@ -1,15 +1,13 @@
 package org.UcelParser.Util.Value;
 
-public class StringValue implements InterpreterValue {
+public class VoidValue implements InterpreterValue {
 
-    private String value;
-    public StringValue(String v) {
-        this.value = v;
-    }
+    public VoidValue() { }
+
 
     @Override
     public String generateName() {
-        return value;
+        return toString();
     }
 
     @Override
@@ -19,11 +17,11 @@ public class StringValue implements InterpreterValue {
 
     @Override
     public String toString() {
-        return value;
+        return "void";
     }
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof StringValue && ((StringValue) other).generateName().equals(value);
+        return other instanceof VoidValue;
     }
 }

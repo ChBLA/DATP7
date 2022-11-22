@@ -38,7 +38,6 @@ update : (expression (COMMA expression)*)?;
 
 start locals [Scope scope]
     : declarations statement* system;
-    //TODO: Add ? after expression to make the tests run :D
 system : SYSTEM expression ((COMMA | '<') expression)* END;
 
 component locals [Scope scope, DeclarationReference reference, List<ComponentOccurrence> occurrences]
@@ -48,23 +47,28 @@ compBody locals [Scope scope]
 interfaces : LEFTPAR parameters? RIGHTPAR;
 
 build : BUILD COLON LEFTCURLYBRACE buildDecl* buildStmnt+ RIGHTCURLYBRACE;
-buildStmnt : linkStatement
+buildStmnt : buildBlock
+           | linkStatement
            | buildIteration
            | buildIf
            | compCon
            ;
-compCon locals [DeclarationReference instantiatedReference, DeclarationReference constructorReference]
-    : ID (LEFTBRACKET expression RIGHTBRACKET)* '=' ID LEFTPAR arguments RIGHTPAR END;
+compCon locals [DeclarationReference constructorReference]
+    : compVar '=' ID LEFTPAR arguments RIGHTPAR END;
+linkStatement locals [DeclarationReference leftInterface, DeclarationReference rightInterface]
+     : LINK compVar '.' ID compVar '.' ID END;
+compVar locals [DeclarationReference variableReference]
+    : ID (LEFTBRACKET expression RIGHTBRACKET)*;
 buildIf : IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?;
-linkStatement : LINK expression expression END;
 buildIteration locals [DeclarationReference reference]
-    : FOR LEFTPAR ID COLON type RIGHTPAR buildBlock;
+    : FOR LEFTPAR ID COLON LEFTBRACKET expression COMMA expression RIGHTBRACKET RIGHTPAR buildStmnt;
 buildBlock locals [Scope scope]
     : LEFTCURLYBRACE buildStmnt+ RIGHTCURLYBRACE;
 buildDecl locals [DeclarationReference typeReference, DeclarationReference reference]
     : ID ID (arrayDecl)* END;
 
-interfaceDecl : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;
+interfaceDecl locals [DeclarationReference reference]
+    : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;
 interfaceVarDecl : type arrayDeclID (COMMA type arrayDeclID)*;
 
 instantiation locals [Scope scope, DeclarationReference instantiatedReference, DeclarationReference constructorReference]

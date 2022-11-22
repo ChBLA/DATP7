@@ -1,8 +1,10 @@
 package org.UcelParser.Interpreter;
 
+import org.UcelParser.Util.ComponentOccurrence;
 import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.Logging.ErrorLog;
 import org.UcelParser.Util.Logging.ILogger;
+import org.UcelParser.Util.Logging.Log;
 import org.UcelParser.Util.Value.*;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
@@ -33,8 +35,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     //endregion
 
     public ArrayList<InterpreterValue> interpret(UCELParser.ProjectContext ctx) {
-        ParameterValue values = (ParameterValue) visitProject(ctx);
-        return values.getParameters();
+        ListValue values = (ListValue) visitProject(ctx);
+        return values.getValues();
     }
 
     //region Scope
@@ -103,7 +105,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression());
         String id = ctx.ID().getText();
 
-        if(!isStringValue(left) || id == null) return null;
+        if(!isStringValue(left) || id == null/**/) return null;
         return new StringValue(left.generateName() + "." + id);
     }
 
@@ -258,21 +260,113 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         }
 
         var predicateVal = ((BooleanValue)predicate).getBool();
-        if(predicateVal)
-            visit(ctx.buildStmnt(0));
+
+        if(predicateVal) {
+            var stmtReturn = visit(ctx.buildStmnt(0));
+            if(stmtReturn == null)
+                return null;
+        }
 
         else {
             var elseStmt = ctx.buildStmnt(1);
-            if(elseStmt != null)
-                visit(elseStmt);
+            if(elseStmt != null) {
+                var stmtReturn = visit(elseStmt);
+                if(stmtReturn == null)
+                    return null;
+            }
         }
 
-        return null;
+        return new VoidValue();
     }
+
+    @Override
+    public InterpreterValue visitBuildIteration(UCELParser.BuildIterationContext ctx) {
+        int rangeStart = ((IntegerValue)visit(ctx.expression(0))).getInt();
+        int rangeEnd   = ((IntegerValue)visit(ctx.expression(1))).getInt();
+
+        if(rangeStart > rangeEnd) {
+            logger.log(new ErrorLog(ctx, "Lower bound must not be greater than upper bound"));
+            return null;
+        };
+
+        for(int i=rangeStart; i<=rangeEnd; i++) {
+            try {
+                currentScope.get(ctx.reference).setValue(new IntegerValue(i));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            var stmtReturn = visit(ctx.buildStmnt());
+            if(stmtReturn == null)
+                return null;
+        }
+
+        return new VoidValue();
+    }
+
 
     //endregion
 
     //region Build / Linker
+    /*
+
+    DESIGN OF BUILD:
+     -  Reference handler sets a declInfo on scope for the buildDecl (comp or template variable) and points
+        the left hand side of the compCon to it
+     -  The interpreter sets a ListValue on the declInfo
+     -  visitCompCon in the interpreter adds a CompOccurrenceValue to the ListValue on declInfo for the buildDecl
+     -  visitCompCon returns a voidValue or null
+     -  at the end of visitBuild the occurrences on the comp node are set before that node is
+        visited by the interpreter. visiting must be done last as all linking must have taken place.
+     -  it must be checked by the end of build that all indices for buildDecls are used,
+        that there are no duplicates and that all interfaces have been set.
+
+    */
+    @Override
+    public InterpreterValue visitCompVar(UCELParser.CompVarContext ctx) {
+        int[] indices = new int[ctx.expression().size()];
+
+        for(int i = 0; i < ctx.expression().size(); i++) {
+            InterpreterValue v = visit(ctx.expression().get(i));
+            if(isIntegerValue(v)) indices[i] = ((IntegerValue) v).getInt();
+            else return null;
+        }
+
+        String id = "";
+
+        try {
+            id = currentScope.get(ctx.variableReference).getIdentifier();
+        } catch (Exception e) {return null;}
+
+
+        return new CompVarValue(id, indices);
+    }
+
+    @Override
+    public InterpreterValue visitCompCon(UCELParser.CompConContext ctx) {
+
+        InterpreterValue iv = visit(ctx.compVar());
+        if(iv == null || !(iv instanceof CompVarValue)) return null;
+        CompVarValue compVarValue = (CompVarValue) iv;
+
+        int argCount = ctx.arguments() == null ? 0 : ctx.arguments().expression().size();
+        InterpreterValue[] arguments = new InterpreterValue[argCount];
+
+        for(int i = 0; i < argCount; i++) {
+            InterpreterValue v = visit(ctx.arguments().expression().get(i));
+            if(v != null) arguments[i] = v;
+            else return null;
+        }
+
+        CompOccurrenceValue occurrenceValue = new CompOccurrenceValue(compVarValue, arguments);
+
+        try {
+            ListValue v = (ListValue) currentScope.get(ctx.compVar().variableReference).getValue();
+            v.getValues().add(occurrenceValue);
+        } catch (Exception e) {return null;}
+
+        return new VoidValue();
+    }
 
     //endregion
 
