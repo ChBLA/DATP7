@@ -400,8 +400,6 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
                         }
                     }).toArray(String[]::new);
 
-
-
         return new Type(Type.TypeEnum.voidType, interfaceNames, interfacesTypes);
     }
 
@@ -493,7 +491,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
 
 
-
+        return VOID_TYPE;
 
     }
 
