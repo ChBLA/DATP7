@@ -249,6 +249,23 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     //region Control Flow
     @Override
+    public InterpreterValue visitBuildBlock(UCELParser.BuildBlockContext ctx) {
+        enterScope(ctx.scope);
+        var hadError = false;
+        for(var stmt: ctx.buildStmnt()) {
+            if (visit(stmt) == null)
+                hadError = true;
+        }
+
+        exitScope();
+
+        if(hadError)
+            return null;
+
+        return new VoidValue();
+    }
+
+    @Override
     public InterpreterValue visitBuildIf(UCELParser.BuildIfContext ctx) {
         // | IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?  #BuildIf
         var predicate = visit(ctx.expression());
