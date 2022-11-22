@@ -31,6 +31,50 @@ public class InterpreterTests {
 
     //region CompCon
 
+
+    @ParameterizedTest
+    @MethodSource("compVarValues")
+    void compVarReturnsExpected(InterpreterValue i0, InterpreterValue i1,
+                             InterpreterValue expected) {
+        Scope scope = mock(Scope.class);
+        InterpreterVisitor visitor = new InterpreterVisitor(scope);
+
+        UCELParser.CompVarContext node = mock(UCELParser.CompVarContext.class);
+
+        var indices = new ArrayList<UCELParser.ExpressionContext>();
+        UCELParser.ExpressionContext index0 = mock(UCELParser.ExpressionContext.class);
+        UCELParser.ExpressionContext index1 = mock(UCELParser.ExpressionContext.class);
+        indices.add(index0);
+        indices.add(index1);
+        when(node.expression()).thenReturn(indices);
+
+        when(index0.accept(visitor)).thenReturn(i0);
+        when(index1.accept(visitor)).thenReturn(i1);
+
+        DeclarationInfo varInfo = new DeclarationInfo("v");
+        varInfo.setValue(new ListValue(new ArrayList<>()));
+        DeclarationReference varRef = new DeclarationReference(0,0);
+
+        node.variableReference = varRef;
+
+        try{
+            when(scope.get(varRef)).thenReturn(varInfo);
+        } catch (Exception e) {fail();}
+
+
+        var actual = visitor.visitCompVar(node);
+
+        assertEquals(expected, actual);
+    }
+
+    private static Stream<Arguments> compVarValues() {
+        return Stream.of(
+                Arguments.arguments(value(3), value(4), new CompVarValue("v", new int[]{3,4})),
+                Arguments.arguments(value(92), value(4), new CompVarValue("v", new int[]{92,4})),
+                Arguments.arguments(value(12), null, null)
+        );
+    }
+
     @ParameterizedTest
     @MethodSource("compConValues")
     void compConSetsExpected(InterpreterValue c,
@@ -82,7 +126,7 @@ public class InterpreterTests {
 
     private static Stream<Arguments> compConValues() {
         return Stream.of(
-                Arguments.arguments(new CompVarValue("v", new int[]{92,4}), value(true), value(17),
+                Arguments.arguments(new CompVarValue("v", new int[]{2,4}), value(true), value(17),
                         new CompOccurrenceValue("v", new int[]{2,4},new InterpreterValue[]{value(true), value(17)})),
                 Arguments.arguments(new CompVarValue("v", new int[]{92,4}), value(true), value("17"),
                         new CompOccurrenceValue("v", new int[]{92,4}, new InterpreterValue[]{value(true), value("17")})),
