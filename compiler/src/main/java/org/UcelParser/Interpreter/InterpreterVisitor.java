@@ -39,6 +39,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         return values.getValues();
     }
 
+    //region Project / Manual Parser
+
+    //endregion
+
     //region Scope
     private void enterScope(Scope scope) {
         currentScope = scope;
