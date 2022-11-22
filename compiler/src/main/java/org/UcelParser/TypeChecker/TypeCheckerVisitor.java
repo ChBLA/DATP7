@@ -351,7 +351,9 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         Type[] paramTypes = parametersType.getParameters();
         var templateTypes = new ArrayList<Type>();
+        templateTypes.add(new Type(Type.TypeEnum.componentType));
         if (paramTypes != null) templateTypes.addAll(Arrays.asList(paramTypes));
+        templateTypes.add(new Type(Type.TypeEnum.seperatorType));
         if (interfacesType.getParameters() != null) templateTypes.addAll(Arrays.asList(interfacesType.getParameters()));
         var componentType = new Type(Type.TypeEnum.componentType, templateTypes.toArray(new Type[0]));
         try {
@@ -359,6 +361,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
         return componentType;
     }
 
@@ -386,8 +389,20 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             interfacesTypes = Arrays.stream(paramTypes)
                     .map(t -> new Type(Type.TypeEnum.interfaceType))
                     .toArray(Type[]::new);
+        String[] interfaceNames = null;
+        if (ctx.parameters() != null)
+            interfaceNames = ctx.parameters().parameter().stream()
+                    .map(p -> {
+                        try {
+                            return currentScope.get(p.reference).getIdentifier();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }).toArray(String[]::new);
 
-        return new Type(Type.TypeEnum.voidType, interfacesTypes);
+
+
+        return new Type(Type.TypeEnum.voidType, interfaceNames, interfacesTypes);
     }
 
 
@@ -466,6 +481,20 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
 
         return VOID_TYPE;
+    }
+
+    @Override
+    public Type visitBuildDecl(UCELParser.BuildDeclContext ctx) {
+        // buildDecl locals [DeclarationReference typeReference, DeclarationReference reference]
+        //    : ID ID (arrayDecl)* END;
+        Type[] arrayDeclTypes = null;
+        if (ctx.arrayDecl() != null) {
+            arrayDeclTypes = ctx.arrayDecl().stream().map(this::visit).toArray(Type[]::new);
+        }
+
+
+
+
     }
 
     //endregion
