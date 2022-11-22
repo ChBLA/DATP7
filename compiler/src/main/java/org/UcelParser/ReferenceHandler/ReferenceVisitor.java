@@ -170,6 +170,68 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     //endregion
 
+    //region Component variable
+    @Override
+    public Boolean visitCompVar(UCELParser.CompVarContext ctx) {
+        String identifier = ctx.ID().getText();
+        DeclarationReference reference;
+
+        try {
+            reference = currentScope.find(identifier, true);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "The variable " + identifier + " is not defined in scope"));
+            return false;
+        }
+
+        ctx.variableReference = reference;
+
+        for (var expr : ctx.expression()) {
+            if (!visit(expr))
+                return false;
+        }
+
+        return true;
+    }
+
+    //endregion
+
+    //region Link statement
+    private DeclarationReference extractInterfaceNumberFromComponentAsReference(String id, Scope scope, UCELParser.CompVarContext node) {
+        UCELParser.ComponentContext componentNode;
+        try {
+            componentNode = (UCELParser.ComponentContext) scope.get(node.variableReference).getNode();
+        } catch (Exception e) {
+            logger.log(new ErrorLog(node, "Compiler error"));
+            return null;
+        }
+
+        UCELParser.ParametersContext parameters = componentNode.interfaces().parameters();
+        for (int i = 0; i < parameters.parameter().size(); i++) {
+            UCELParser.ParameterContext param = parameters.parameter(i);
+            if (param.ID().getText().equals(id)) {
+                return new DeclarationReference(-1, i);
+            }
+        }
+
+        return null;
+    }
+    @Override
+    public Boolean visitLinkStatement(UCELParser.LinkStatementContext ctx) {
+        boolean success = visit(ctx.compVar(0));
+        var leftNode = extractInterfaceNumberFromComponentAsReference(ctx.ID(0).getText(), currentScope, ctx.compVar(0));
+        success = success && leftNode != null;
+        ctx.leftInterface = leftNode;
+
+        success = success && visit(ctx.compVar(1));
+        var rightNode = extractInterfaceNumberFromComponentAsReference(ctx.ID(1).getText(), currentScope, ctx.compVar(1));
+        success = success && rightNode != null;
+        ctx.rightInterface = rightNode;
+
+        return super.visitLinkStatement(ctx);
+    }
+
+    //endregion
+
     //endregion
 
     //region ProjectStructure

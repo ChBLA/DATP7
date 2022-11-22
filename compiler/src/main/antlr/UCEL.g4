@@ -148,6 +148,7 @@ expression locals [DeclarationReference reference, DeclarationInfo originDefinit
             |  DECREMENT expression                             #DecrementPre
             |  ID LEFTPAR arguments RIGHTPAR                    #FuncCall
             |  <assoc=right> unary expression                   #UnaryExpr
+            |  <assoc=right> expression POWER expression        #Power
             |  expression op=('*' | '/' | '%') expression       #MultDiv
             |  expression op=('+' | '-') expression             #AddSub
             |  expression op=('<<' | '>>') expression           #Bitshift
@@ -216,6 +217,7 @@ BITOR : '|';
 QUESTIONMARK : '?';
 INCREMENT : '++';
 DECREMENT : '--';
+POWER : '**';
 
 COMP : 'comp';
 DECLARATIONS : 'declarations';

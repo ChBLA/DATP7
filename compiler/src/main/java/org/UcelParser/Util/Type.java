@@ -22,6 +22,8 @@ public class Type {
         functionType,
         interfaceType,
         componentType,
+
+        seperatorType
     }
 
     private TypeEnum evaluationType;
