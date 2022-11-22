@@ -57,6 +57,52 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //endregion
 
 
+    // region linkStatement
+
+    @Override
+    public Type visitLinkStatement(UCELParser.LinkStatementContext ctx) {
+        var compVar1 = visit(ctx.compVar(0));
+        var compVar2 = visit(ctx.compVar(1));
+
+        boolean leftInterfaceIsInterfaceType;
+        boolean rightInterfaceIsInterfaceType;
+
+        try {
+            leftInterfaceIsInterfaceType = currentScope.get(ctx.leftInterface).getType().getEvaluationType()
+                    .equals(Type.TypeEnum.interfaceType);
+            rightInterfaceIsInterfaceType = currentScope.get(ctx.rightInterface).getType().getEvaluationType()
+                    .equals(Type.TypeEnum.interfaceType);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "error: interface could not be found"));
+            return ERROR_TYPE;
+        }
+
+        if (!(compVar1.getEvaluationType().equals(Type.TypeEnum.componentType))) {
+            logger.log(new ErrorLog(ctx.compVar(0), "error: expected type component but got type " + compVar1.getEvaluationType()));
+            return ERROR_TYPE;
+        }
+
+        if (!(compVar2.getEvaluationType().equals(Type.TypeEnum.componentType))) {
+            logger.log(new ErrorLog(ctx.compVar(1), "error: expected type component but got type " + compVar2.getEvaluationType()));
+            return ERROR_TYPE;
+        }
+
+        if (!leftInterfaceIsInterfaceType) {
+            logger.log(new ErrorLog(ctx.compVar(0), "error: expected type interface"));
+            return ERROR_TYPE;
+        }
+
+        if (!rightInterfaceIsInterfaceType) {
+            logger.log(new ErrorLog(ctx.compVar(1), "error: expected type interface"));
+            return ERROR_TYPE;
+        }
+
+        return VOID_TYPE;
+    }
+
+
+    //endregion
+
     // region interfaceDecl
 
     // Passes along the type and names of var decls
@@ -297,6 +343,23 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //endregion
 
     //region Build Region
+
+    @Override
+    public Type visitBuildBlock(UCELParser.BuildBlockContext ctx) {
+        enterScope(ctx.scope);
+
+        var hadError = false;
+        for(var stmt: ctx.buildStmnt()) {
+            if(visit(stmt).equals(ERROR_TYPE))
+                hadError = true;
+        }
+
+        exitScope();
+        if(hadError)
+            return ERROR_TYPE;
+
+        return VOID_TYPE;
+    }
 
     //region Build If
     @Override
