@@ -195,37 +195,31 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitComponent(UCELParser.ComponentContext ctx) {
         enterScope(ctx.scope);
-
         Type parametersType = null;
         if (ctx.parameters() != null) parametersType = visit(ctx.parameters());
         Type interfacesType = visit(ctx.interfaces());
         Type compBodyType = visit(ctx.compBody());
-
         exitScope();
+
         Type[] paramTypes = parametersType.getParameters();
         var templateTypes = new ArrayList<Type>();
         if (paramTypes != null) templateTypes.addAll(Arrays.asList(paramTypes));
-        templateTypes.add(interfacesType);
+        if (interfacesType.getParameters() != null) templateTypes.addAll(Arrays.asList(interfacesType.getParameters()));
         var componentType = new Type(Type.TypeEnum.componentType, templateTypes.toArray(new Type[0]));
         try {
             currentScope.get(ctx.reference).setType(componentType);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-
         return componentType;
     }
 
     @Override
     public Type visitCompBody(UCELParser.CompBodyContext ctx) {
         enterScope(ctx.scope);
-
         var declsType = visit(ctx.declarations());
         var buildType = visit(ctx.build());
-
         exitScope();
-
         if (declsType.equals(ERROR_TYPE) && buildType.equals(ERROR_TYPE)) {
             return ERROR_TYPE;
         } else {
@@ -238,11 +232,14 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type parametersType = null;
         if (ctx.parameters() != null) parametersType = visit(ctx.parameters());
 
-        Type interfacesType = null;
-        if (parametersType != null) interfacesType = new Type(Type.TypeEnum.interfaceType, parametersType.getParameters());
-        else interfacesType = new Type(Type.TypeEnum.interfaceType, new Type[0]);
+        Type[] interfacesTypes = null;
+        Type[] paramTypes = parametersType.getParameters();
+        if (paramTypes != null)
+            interfacesTypes = Arrays.stream(paramTypes)
+                    .map(t -> new Type(Type.TypeEnum.interfaceType))
+                    .toArray(Type[]::new);
 
-        return interfacesType;
+        return new Type(Type.TypeEnum.voidType, interfacesTypes);
     }
 
 
