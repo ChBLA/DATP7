@@ -17,7 +17,7 @@ project locals [Scope scope]
 pdeclaration : declarations;
 ptemplate locals [Scope scope, DeclarationReference reference]
     : ID parameters graph declarations;
-psystem : declarations build? system;
+psystem : declarations (build | system);
 
 graph : location* edge*;
 
@@ -148,6 +148,7 @@ expression locals [DeclarationReference reference, DeclarationInfo originDefinit
             |  DECREMENT expression                             #DecrementPre
             |  ID LEFTPAR arguments RIGHTPAR                    #FuncCall
             |  <assoc=right> unary expression                   #UnaryExpr
+            |  <assoc=right> expression POWER expression        #Power
             |  expression op=('*' | '/' | '%') expression       #MultDiv
             |  expression op=('+' | '-') expression             #AddSub
             |  expression op=('<<' | '>>') expression           #Bitshift
@@ -216,6 +217,7 @@ BITOR : '|';
 QUESTIONMARK : '?';
 INCREMENT : '++';
 DECREMENT : '--';
+POWER : '**';
 
 COMP : 'comp';
 DECLARATIONS : 'declarations';
