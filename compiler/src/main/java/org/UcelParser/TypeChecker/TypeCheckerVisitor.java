@@ -345,6 +345,40 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //region Build Region
 
     @Override
+    public Type visitBuild(UCELParser.BuildContext ctx) {
+        // build : BUILD COLON LEFTCURLYBRACE buildDecl* buildStmnt+ RIGHTCURLYBRACE;
+        boolean hadError = false;
+
+        var decls = ctx.buildDecl();
+        if(decls != null) {
+            for (var decl : decls) {
+                var declType = visit(decl);
+                if (!declType.equals(VOID_TYPE)) {
+                    hadError = true;
+                    if (!decl.equals(ERROR_TYPE))
+                        logger.log(new ErrorLog(decl, "Compiler error: Void type expected"));
+                }
+            }
+        }
+
+
+        for(var stmt: ctx.buildStmnt()) {
+            var stmtType = visit(stmt);
+            if (!stmtType.equals(VOID_TYPE)) {
+                hadError = true;
+                if(!stmt.equals(ERROR_TYPE))
+                    logger.log(new ErrorLog(stmt, "Compiler error: Void type expected"));
+            }
+        }
+
+
+        if(hadError)
+            return ERROR_TYPE;
+
+        return VOID_TYPE;
+    }
+
+    @Override
     public Type visitBuildBlock(UCELParser.BuildBlockContext ctx) {
         enterScope(ctx.scope);
 
