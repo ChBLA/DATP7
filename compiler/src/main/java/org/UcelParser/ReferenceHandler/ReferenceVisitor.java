@@ -149,6 +149,27 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     //endregion
 
+    //region
+
+    @Override
+    public Boolean visitCompCon(UCELParser.CompConContext ctx) {
+        String identifier = ctx.ID().getText();
+        DeclarationReference ref;
+
+        try {
+            ref = currentScope.find(identifier, false);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Type " + identifier + " not defined in scope"));
+            return false;
+        }
+
+        ctx.constructorReference = ref;
+
+        return visit(ctx.compVar()) && visit(ctx.arguments());
+    }
+
+    //endregion
+
     //endregion
 
     //region ProjectStructure
