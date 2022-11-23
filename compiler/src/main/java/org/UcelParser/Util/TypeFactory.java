@@ -40,7 +40,7 @@ public class TypeFactory {
                 paramNamesCopy[i] = baseType.getParameterNames()[i];
         }
 
-        NamedType result = new NamedType(baseType.getEvaluationType(), paramNamesCopy, paramCopy, baseType.getArrayDimensions());
+        NamedType result = new NamedType(baseType.getName(), baseType.getEvaluationType(), paramNamesCopy, paramCopy, baseType.getArrayDimensions());
         result.setInstance(true);
         return result;
     }
@@ -49,8 +49,13 @@ public class TypeFactory {
         return null;
     }
 
-    public Type createNamedType() {
-        return null;
+    public Type createNamedType(String name, Type.TypeEnum type, String[] paramNames, Type[] parameters, int arrayDimensions) {
+        assert !this.namedTypeExists(type, name);
+        assert this.isValidNameType(type);
+
+        Type result = new NamedType(name, type, paramNames, parameters, arrayDimensions);
+        this.enterNewNamedType(type, name);
+        return result;
     }
 
     public Type copy(Type type) {
@@ -85,6 +90,12 @@ public class TypeFactory {
             case interfaceType -> namedInterfaces.contains(name);
             default -> false;
         };
+    }
+
+    private boolean isValidNameType(Type.TypeEnum type) {
+        return type.equals(Type.TypeEnum.intType) || type.equals(Type.TypeEnum.componentType) || type.equals(Type.TypeEnum.processType)
+                || type.equals(Type.TypeEnum.templateType) || type.equals(Type.TypeEnum.functionType) || type.equals(Type.TypeEnum.structType)
+                || type.equals(Type.TypeEnum.interfaceType);
     }
 
 }

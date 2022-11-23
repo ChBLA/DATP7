@@ -10,30 +10,31 @@ public class NamedType extends Type {
     //endregion
 
     //region Constructors
-    public NamedType(TypeEnum type) {
-        this(type, 0);
+    public NamedType(String name, TypeEnum type) {
+        this(name, type, 0);
     }
 
-    public NamedType(TypeEnum type, int arrayDimensions) {
-        this(type, null, null, arrayDimensions);
+    public NamedType(String name, TypeEnum type, int arrayDimensions) {
+        this(name, type, null, null, arrayDimensions);
     }
 
-    public NamedType(TypeEnum evaluationType, String[] paramNames, Type[] parameters) {
-        this(evaluationType, paramNames, parameters, 0);
+    public NamedType(String name, TypeEnum evaluationType, String[] paramNames, Type[] parameters) {
+        this(name, evaluationType, paramNames, parameters, 0);
     }
 
-    public NamedType(TypeEnum evaluationType, Type[] parameters) {
-        this(evaluationType, null, parameters);
+    public NamedType(String name, TypeEnum evaluationType, Type[] parameters) {
+        this(name, evaluationType, null, parameters);
     }
 
-    public NamedType(TypeEnum evaluationType, String[] paramNames, Type[] parameters, int arrayDimensions) {
+    public NamedType(String name, TypeEnum evaluationType, String[] paramNames, Type[] parameters, int arrayDimensions) {
         super(evaluationType, arrayDimensions);
+        this.name = name;
         this.parameterNames = paramNames;
         this.parameters = parameters;
     }
 
-    public NamedType(TypeEnum type, TypePrefixEnum prefix) {
-        this(type);
+    public NamedType(String name, TypeEnum type, TypePrefixEnum prefix) {
+        this(name, type);
         setPrefix(prefix);
     }
 
