@@ -378,18 +378,26 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitComponent(UCELParser.ComponentContext ctx) {
         enterScope(ctx.scope);
-        Type parametersType = null;
+
+        Type parametersType = VOID_TYPE;
         if (ctx.parameters() != null) parametersType = visit(ctx.parameters());
         Type interfacesType = visit(ctx.interfaces());
         Type compBodyType = visit(ctx.compBody());
         exitScope();
 
-        var templateTypes = new ArrayList<Type>();
+        if (parametersType.equals(ERROR_TYPE) || interfacesType.equals(ERROR_TYPE) || compBodyType.equals(ERROR_TYPE))
+            return ERROR_TYPE;
+
+        if (!compBodyType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx.compBody(), "Body must be of type void, got: " + compBodyType));
+        }
+
+        var componentTypes = new ArrayList<Type>();
         Type[] paramTypes = parametersType.getParameters();
-        templateTypes.add(new Type(Type.TypeEnum.componentType));
-        if (paramTypes != null) templateTypes.addAll(Arrays.asList(paramTypes));
-        templateTypes.add(new Type(Type.TypeEnum.seperatorType));
-        if (interfacesType.getParameters() != null) templateTypes.addAll(Arrays.asList(interfacesType.getParameters()));
+        componentTypes.add(new Type(Type.TypeEnum.componentType));
+        if (paramTypes != null) componentTypes.addAll(Arrays.asList(paramTypes));
+        componentTypes.add(new Type(Type.TypeEnum.seperatorType));
+        if (interfacesType.getParameters() != null) componentTypes.addAll(Arrays.asList(interfacesType.getParameters()));
 
         var paramNames = parametersType.getParameterNames();
         var interNames = interfacesType.getParameterNames();
@@ -400,7 +408,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         names.add(":");
         names.addAll(Arrays.asList(interNames));
 
-        var componentType = new Type(Type.TypeEnum.componentType, names.toArray(String[]::new), templateTypes.toArray(new Type[0]));
+        var componentType = new Type(Type.TypeEnum.componentType, names.toArray(String[]::new), componentTypes.toArray(new Type[0]));
         try {
             currentScope.get(ctx.reference).setType(componentType);
         } catch (Exception e) {
@@ -413,39 +421,39 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitCompBody(UCELParser.CompBodyContext ctx) {
         enterScope(ctx.scope);
-        var declsType = visit(ctx.declarations());
-        var buildType = visit(ctx.build());
+
+        var declsType = ctx.declarations() != null ? visit(ctx.declarations()) : VOID_TYPE;
+        var buildType = ctx.build() != null ? visit(ctx.build()) : VOID_TYPE;
+
         exitScope();
-        if (declsType.equals(ERROR_TYPE) && buildType.equals(ERROR_TYPE)) {
+
+        if (declsType.equals(ERROR_TYPE) || buildType.equals(ERROR_TYPE)) {
             return ERROR_TYPE;
-        } else {
-            return VOID_TYPE;
+        } else if (!declsType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx.declarations(), "Compiler error: declarations must be void, got: " + declsType));
+            return ERROR_TYPE;
+        } else if (!buildType.equals((VOID_TYPE))) {
+            logger.log(new ErrorLog(ctx.build(), "Compiler error: build must be void, got: " + buildType));
+            return ERROR_TYPE;
         }
+
+        return VOID_TYPE;
     }
 
     @Override
     public Type visitInterfaces(UCELParser.InterfacesContext ctx) {
-        Type parametersType = null;
-        if (ctx.parameters() != null) parametersType = visit(ctx.parameters());
+        if (ctx.parameters() == null)
+            return VOID_TYPE;
 
-        Type[] interfacesTypes = null;
-        Type[] paramTypes = parametersType.getParameters();
-        if (paramTypes != null)
-            interfacesTypes = Arrays.stream(paramTypes)
-                    .map(t -> new Type(Type.TypeEnum.interfaceType))
-                    .toArray(Type[]::new);
-        String[] interfaceNames = null;
-        if (ctx.parameters() != null)
-            interfaceNames = ctx.parameters().parameter().stream()
-                    .map(p -> {
-                        try {
-                            return currentScope.get(p.reference).getIdentifier();
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    }).toArray(String[]::new);
+        Type parametersType = visit(ctx.parameters());
+        boolean foundError = false;
 
-        return new Type(Type.TypeEnum.voidType, interfaceNames, interfacesTypes);
+        for (var paramType : parametersType.getParameters()) {
+            if (paramType.equals(ERROR_TYPE))
+                foundError = true;
+        }
+
+        return foundError ? ERROR_TYPE : new Type(Type.TypeEnum.voidType, parametersType.getParameterNames(), parametersType.getParameters());
     }
 
 
@@ -755,24 +763,28 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //region Parameters
     @Override
     public Type visitParameters(UCELParser.ParametersContext ctx) {
+        boolean foundError = false;
         List<Type> parameterTypes = new ArrayList<>();
         var names = new ArrayList<String>();
-        ctx.parameter()
-                .forEach(parameter -> {
-                    parameterTypes.add(visit(parameter));
-                    try {
-                        var paramName = currentScope.get(parameter.reference).getIdentifier();
-                        names.add(paramName);
-                    } catch (Exception e) {
-                        logger.log(new ErrorLog(parameter, "Cannot get parameter name from context: " + e.getMessage()));
-                        names.add("error_parameter_name");
-                    };
-                });
+        for (UCELParser.ParameterContext parameter : ctx.parameter()) {
+            Type paramType = visit(parameter);
+            if (paramType.equals(ERROR_TYPE))
+                foundError = true;
+            parameterTypes.add(paramType);
+            try {
+                var paramName = currentScope.get(parameter.reference).getIdentifier();
+                names.add(paramName);
+            } catch (Exception e) {
+                logger.log(new ErrorLog(parameter, "Cannot get parameter name from context: " + e.getMessage()));
+                names.add("error_parameter_name");
+                return ERROR_TYPE;
+            }
+        }
 
         Type[] parameterTypesArray = {};
         parameterTypesArray = parameterTypes.toArray(parameterTypesArray);
 
-        return new Type(Type.TypeEnum.voidType, names.toArray(String[]::new), parameterTypesArray);
+        return foundError ? ERROR_TYPE : new Type(Type.TypeEnum.voidType, names.toArray(String[]::new), parameterTypesArray);
     }
 
     //endregion
