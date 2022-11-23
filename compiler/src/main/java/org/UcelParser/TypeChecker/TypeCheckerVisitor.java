@@ -318,7 +318,6 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if (ctx.build() != null) {
             var buildType = visit(ctx.build());
             if (buildType.equals(ERROR_TYPE)) {
-                logger.log(new ErrorLog(ctx, "Type error in build. Value is ERROR_TYPE"));
                 result = ERROR_TYPE;
             } else if (!buildType.equals(VOID_TYPE)) {
                 logger.log(new ErrorLog(ctx, "Type error in build. Value is not VOID_TYPE"));
@@ -326,17 +325,23 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             }
         }
 
-        var systemType = visit(ctx.system());
-        if (systemType.equals(ERROR_TYPE)) {
-            logger.log(new ErrorLog(ctx, "Type error in system. Value is ERROR_TYPE"));
-            result = ERROR_TYPE;
-        } else if (!systemType.equals(VOID_TYPE)) {
-            logger.log(new ErrorLog(ctx, "Type error in system. Value is not VOID_TYPE"));
+
+        else if (ctx.system() != null) {
+            var systemType = visit(ctx.system());
+            if (systemType.equals(ERROR_TYPE)) {
+                result = ERROR_TYPE;
+            } else if (!systemType.equals(VOID_TYPE)) {
+                logger.log(new ErrorLog(ctx, "Type error in system. Value is not VOID_TYPE"));
+                result = ERROR_TYPE;
+            }
+        }
+        else {
+            logger.log(new ErrorLog(ctx, "Compiler error: PSystem: Expected either build or system in type checker"));
             result = ERROR_TYPE;
         }
 
 
-        return VOID_TYPE;
+        return result;
     }
 
     //region Component
