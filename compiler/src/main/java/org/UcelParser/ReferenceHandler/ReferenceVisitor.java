@@ -206,6 +206,8 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         }
 
         UCELParser.ParametersContext parameters = componentNode.interfaces().parameters();
+        if (parameters == null)
+            return null;
         for (int i = 0; i < parameters.parameter().size(); i++) {
             UCELParser.ParameterContext param = parameters.parameter(i);
             if (param.ID().getText().equals(id)) {
@@ -227,7 +229,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         success = success && rightNode != null;
         ctx.rightInterface = rightNode;
 
-        return super.visitLinkStatement(ctx);
+        return success;
     }
 
     //endregion
