@@ -5,6 +5,7 @@ public class NamedType extends Type {
     //region Properties
     private Type[] parameters;
     private String[] parameterNames;
+    private String name;
 
     //endregion
 
@@ -53,6 +54,13 @@ public class NamedType extends Type {
 
     public void setEvaluationType(TypeEnum type) {
         evaluationType = type;
+    }
+
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
     }
     //endregion
 

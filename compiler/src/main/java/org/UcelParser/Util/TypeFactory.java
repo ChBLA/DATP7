@@ -23,7 +23,7 @@ public class TypeFactory {
     public NamedType createInstanceNamedType(NamedType baseType) {
         // TypeEnum evaluationType, String[] paramNames, Type[] parameters, int arrayDimensions
         assert !baseType.getInstance();
-
+        assert this.namedTypeExists(baseType.getEvaluationType(), baseType.getName());
         // Copy arrays:
         Type[] paramCopy = null;
         String[] paramNamesCopy = null;
@@ -72,6 +72,19 @@ public class TypeFactory {
             case interfaceType -> namedInterfaces.add(name);
             default -> throw new RuntimeException("Invalid named type");
         }
+    }
+
+    private boolean namedTypeExists(Type.TypeEnum type, String name) {
+        return switch (type) {
+            case intType -> namedIntegers.contains(name);
+            case componentType -> namedComponents.contains(name);
+            case processType -> namedProcesses.contains(name);
+            case templateType -> namedTemplates.contains(name);
+            case functionType -> namedFunctions.contains(name);
+            case structType -> namedStructs.contains(name);
+            case interfaceType -> namedInterfaces.contains(name);
+            default -> false;
+        };
     }
 
 }
