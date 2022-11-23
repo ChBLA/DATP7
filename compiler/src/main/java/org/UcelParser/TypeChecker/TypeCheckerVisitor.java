@@ -556,8 +556,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             var refType = new Type(typeInfo.getType().getEvaluationType(), arrayDeclTypes != null ? arrayDeclTypes.length : 0);
             refInfo.setType(refType);
         }
-        catch {
-            logger.log(new ErrorLog(ctx, "Compiler error: Could not find typeReference or reference in scope"));
+        catch(Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler error: Could not find typeReference or reference in scope: " + e.getMessage()));
             return ERROR_TYPE;
         }
 
