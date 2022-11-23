@@ -61,17 +61,28 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitCompCon(UCELParser.CompConContext ctx) {
         Type result = VOID_TYPE;
-        Type constructorType = null;
         Type argumentsTypes = visit(ctx.arguments());
 
+        DeclarationInfo constructorInfo;
+        DeclarationInfo variableCompInfo;
+
         try {
-            constructorType = currentScope.get(ctx.constructorReference).getType();
+            constructorInfo = currentScope.get(ctx.constructorReference);
+            variableCompInfo = currentScope.get(ctx.compVar().variableReference);
         } catch (Exception e) {
             logger.log(new ErrorLog(ctx,
                     "internal error: constructor for component could not be found in scope"));
             return ERROR_TYPE;
         }
 
+        if (!constructorInfo.equals(variableCompInfo)) {
+            String conID = ((UCELParser.ComponentContext) constructorInfo.getNode()).ID().getText();
+            String varConID = ((UCELParser.ComponentContext) variableCompInfo.getNode()).ID().getText();
+            logger.log(new ErrorLog(ctx, "Trying to assign " + conID + " to component of type " + varConID));
+            return ERROR_TYPE;
+        }
+
+        Type constructorType = constructorInfo.getType();
         if (!(constructorType.getEvaluationType().equals(Type.TypeEnum.componentType))) {
             logger.log(new ErrorLog(ctx,
                     "internal error: constructor for component is not of type component"));
@@ -98,14 +109,16 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     @Override
     public Type visitCompVar(UCELParser.CompVarContext ctx) {
-        Type result = new Type(Type.TypeEnum.componentType);
+        boolean success = true;
         DeclarationInfo variableRefDecl = null;
 
-        for (var expr : ctx.expression()){
-            Type exprType = visit(expr);
-            if (exprType.getEvaluationType() != Type.TypeEnum.intType){
-                logger.log(new ErrorLog(expr, "type error: expected type int, got type " + exprType));
-                result = ERROR_TYPE;
+        if (ctx.expression() != null) {
+            for (var expr : ctx.expression()) {
+                Type exprType = visit(expr);
+                if (exprType.getEvaluationType() != Type.TypeEnum.intType) {
+                    logger.log(new ErrorLog(expr, "type error: expected type int, got type " + exprType));
+                    success = false;
+                }
             }
         }
 
@@ -116,21 +129,22 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return ERROR_TYPE;
         }
 
-        if (variableRefDecl.getType().getArrayDimensions() != ctx.expression().size()){
+        if (variableRefDecl.getType().getArrayDimensions() < ctx.expression().size()){
             logger.log(new ErrorLog(ctx, "type error: expected "
                         + variableRefDecl.getType().getArrayDimensions()
                         + " array dimensions, got " + ctx.expression().size()));
-            result = ERROR_TYPE;
+            success = false;
         }
 
         if (variableRefDecl.getType().getEvaluationType() != Type.TypeEnum.componentType
-                && variableRefDecl.getType().getEvaluationType() != Type.TypeEnum.templateType){
+                || variableRefDecl.getType().getEvaluationType() != Type.TypeEnum.templateType){
             logger.log(new ErrorLog(ctx, "type error: expected type component or template, got type "
                     + variableRefDecl.getType()));
-            result = ERROR_TYPE;
+            success = false;
         }
 
-        return result;
+        Type result = new Type(Type.TypeEnum.componentType, variableRefDecl.getType().getArrayDimensions() - ctx.expression().size());
+        return success ? result : ERROR_TYPE;
     }
 
     // endregion
