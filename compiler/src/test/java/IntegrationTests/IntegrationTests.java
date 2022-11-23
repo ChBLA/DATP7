@@ -20,42 +20,44 @@ public class IntegrationTests {
         var logger = new TestLogger();
         var compiler = new Compiler(logger);
 
-        var input = "typedef int[0,10] smallInt;\n" +
-                "\n" +
-                "smallInt a = 1;\n" +
-                "int[0,100] b = 5;\n" +
-                "\n" +
-                "int f(int number) {\n" +
-                "    number += 1;\n" +
-                "    return number;\n" +
-                "}\n" +
-                "\n" +
-                "f(b);\n" +
-                "\n" +
-                "for (a = 0; a < 5; a++) {\n" +
-                "    if (a == 3) {\n" +
-                "        // do something\n" +
-                "    }\n" +
-                "}\n" +
-                "system ;";
+        var input = """
+                typedef int[0,10] smallInt;
 
-        var expectedOutput = ("typedef int[0,10] aaaaaa_smallInt;\n" +
-                "aaaaaa_smallInt aaaaaa_a = 1;\n" +
-                "int[0,100] aaaaaa_b = 5;\n" +
-                "int aaaaaa_f(int aaaaab_number)\n" +
-                "{\n" +
-                "aaaaab_number += 1;\n" +
-                "return aaaaab_number;\n" +
-                "}\n" +
-                "\n" +
-                "aaaaaa_f(aaaaaa_b);\n" +
-                "\n" +
-                "for (aaaaaa_a = 0;aaaaaa_a < 5;aaaaaa_a++) {\n" +
-                "if (aaaaaa_a == 3) {\n" +
-                "}\n" +
-                "}\n" +
-                "\n" +
-                "system ;").replaceAll("\n", String.format("%n"));
+                smallInt a = 1;
+                int[0,100] b = 5;
+
+                int f(int number) {
+                    number += 1;
+                    return number;
+                }
+
+                f(b);
+
+                for (a = 0; a < 5; a++) {
+                    if (a == 3) {
+                        // do something
+                    }
+                }
+                system ;""";
+
+        var expectedOutput = ("""
+                typedef int[0,10] aaaaaa_smallInt;
+                aaaaaa_smallInt aaaaaa_a = 1;
+                int[0,100] aaaaaa_b = 5;
+                int aaaaaa_f(int aaaaab_number)
+                {
+                aaaaab_number += 1;
+                return aaaaab_number;
+                }
+
+                aaaaaa_f(aaaaaa_b);
+
+                for (aaaaaa_a = 0;aaaaaa_a < 5;aaaaaa_a++) {
+                if (aaaaaa_a == 3) {
+                }
+                }
+
+                system ;""").replaceAll("\n", String.format("%n"));
 
         var generatedOutput = compiler.compile(input);
 
