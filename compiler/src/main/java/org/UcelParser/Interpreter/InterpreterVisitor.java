@@ -505,12 +505,23 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         return new VoidValue();
     }
 
+    //region link helper functions
+
     private UCELParser.ComponentContext getCompCtxNode(ParserRuleContext prc){
         return prc != null && prc instanceof UCELParser.CompConContext ? (UCELParser.ComponentContext) prc : null;
     }
 
     private boolean isCompVarValue(InterpreterValue value) {
         return value != null && value instanceof CompVarValue;
+    }
+
+    //endregion
+
+    @Override
+    public InterpreterValue visitBuildDecl(UCELParser.BuildDeclContext ctx) {
+
+
+        return null;
     }
 
     //endregion

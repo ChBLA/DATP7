@@ -64,8 +64,8 @@ buildIteration locals [DeclarationReference reference]
     : FOR LEFTPAR ID COLON LEFTBRACKET expression COMMA expression RIGHTBRACKET RIGHTPAR buildStmnt;
 buildBlock locals [Scope scope]
     : LEFTCURLYBRACE buildStmnt+ RIGHTCURLYBRACE;
-buildDecl locals [DeclarationReference typeReference, DeclarationReference reference]
-    : ID ID (arrayDecl)* END;
+buildDecl locals [DeclarationReference typeReference]
+    : ID compVar END;
 
 interfaceDecl locals [DeclarationReference reference]
     : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;

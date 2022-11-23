@@ -320,8 +320,12 @@ public class ReferenceHandlerTests {
         var typeDeclRef = mock(DeclarationReference.class);
         var declRef = mock(DeclarationReference.class);
 
-        when(node.ID(0)).thenReturn(typeIDNode);
-        when(node.ID(1)).thenReturn(idNode);
+        var compVar = mock(UCELParser.CompVarContext.class);
+
+        when(node.ID()).thenReturn(typeIDNode);
+        when(node.compVar()).thenReturn(compVar);
+        when(compVar.ID()).thenReturn(idNode);
+        when(compVar.accept(visitor)).thenReturn(true);
 
         when(typeIDNode.getText()).thenReturn(typeName);
         when(idNode.getText()).thenReturn(name);
@@ -338,7 +342,6 @@ public class ReferenceHandlerTests {
 
         assertTrue(actual);
         assertEquals(node.typeReference, typeDeclRef);
-        assertEquals(node.reference, declRef);
     }
 
     @Test
@@ -353,20 +356,19 @@ public class ReferenceHandlerTests {
         var node = mock(UCELParser.BuildDeclContext.class);
         var typeIDNode = mock(TerminalNode.class);
         var idNode = mock(TerminalNode.class);
-        var arrayDeclNode = mock(UCELParser.ArrayDeclContext.class);
-
-        var arrayDecls = new ArrayList<UCELParser.ArrayDeclContext>() {{ add(arrayDeclNode); }};
 
         var typeDeclRef = mock(DeclarationReference.class);
         var declRef = mock(DeclarationReference.class);
 
-        when(node.ID(0)).thenReturn(typeIDNode);
-        when(node.ID(1)).thenReturn(idNode);
+        var compVar = mock(UCELParser.CompVarContext.class);
+
+        when(node.ID()).thenReturn(typeIDNode);
+        when(node.compVar()).thenReturn(compVar);
+        when(compVar.ID()).thenReturn(idNode);
 
         when(typeIDNode.getText()).thenReturn(typeName);
         when(idNode.getText()).thenReturn(name);
-        when(node.arrayDecl()).thenReturn(arrayDecls);
-        when(arrayDeclNode.accept(visitor)).thenReturn(true);
+        when(compVar.accept(visitor)).thenReturn(true);
 
         try {
             when(scope.isUnique(name, true)).thenReturn(true);
@@ -380,53 +382,6 @@ public class ReferenceHandlerTests {
 
         assertTrue(actual);
         assertEquals(node.typeReference, typeDeclRef);
-        assertEquals(node.reference, declRef);
-    }
-
-    @Test
-    void buildDeclArrayDeclFirstFailsSecondNotVisited() {
-        var scope = mock(Scope.class);
-
-        var name = "tester";
-        var typeName = "Test";
-
-        var visitor = new ReferenceVisitor(scope);
-
-        var node = mock(UCELParser.BuildDeclContext.class);
-        var typeIDNode = mock(TerminalNode.class);
-        var idNode = mock(TerminalNode.class);
-        var arrayDeclNode1 = mock(UCELParser.ArrayDeclContext.class);
-        var arrayDeclNode2 = mock(UCELParser.ArrayDeclContext.class);
-
-        var arrayDecls = new ArrayList<UCELParser.ArrayDeclContext>() {{ add(arrayDeclNode1); add(arrayDeclNode2); }};
-
-        var typeDeclRef = mock(DeclarationReference.class);
-        var declRef = mock(DeclarationReference.class);
-
-        when(node.ID(0)).thenReturn(typeIDNode);
-        when(node.ID(1)).thenReturn(idNode);
-
-        when(typeIDNode.getText()).thenReturn(typeName);
-        when(idNode.getText()).thenReturn(name);
-        when(node.arrayDecl()).thenReturn(arrayDecls);
-        when(arrayDeclNode1.accept(visitor)).thenReturn(false);
-        when(arrayDeclNode2.accept(visitor)).thenReturn(true);
-
-        try {
-            when(scope.isUnique(name, true)).thenReturn(true);
-            when(scope.find(typeName, false)).thenReturn(typeDeclRef);
-            when(scope.add(any())).thenReturn(declRef);
-        } catch (Exception e) {
-            fail();
-        }
-
-        var actual = visitor.visitBuildDecl(node);
-
-        assertFalse(actual);
-        verify(arrayDeclNode1, times(1)).accept(visitor);
-        verify(arrayDeclNode2, never()).accept(visitor);
-        assertEquals(node.typeReference, typeDeclRef);
-        assertEquals(node.reference, declRef);
     }
 
     @Test
@@ -445,8 +400,12 @@ public class ReferenceHandlerTests {
         var typeDeclRef = mock(DeclarationReference.class);
         var declRef = mock(DeclarationReference.class);
 
-        when(node.ID(0)).thenReturn(typeIDNode);
-        when(node.ID(1)).thenReturn(idNode);
+        var compVar = mock(UCELParser.CompVarContext.class);
+
+        when(node.ID()).thenReturn(typeIDNode);
+        when(node.compVar()).thenReturn(compVar);
+        when(compVar.ID()).thenReturn(idNode);
+        when(compVar.accept(visitor)).thenReturn(true);
 
         when(typeIDNode.getText()).thenReturn(typeName);
         when(idNode.getText()).thenReturn(name);
@@ -480,8 +439,12 @@ public class ReferenceHandlerTests {
         var typeDeclRef = mock(DeclarationReference.class);
         var declRef = mock(DeclarationReference.class);
 
-        when(node.ID(0)).thenReturn(typeIDNode);
-        when(node.ID(1)).thenReturn(idNode);
+        var compVar = mock(UCELParser.CompVarContext.class);
+
+        when(node.ID()).thenReturn(typeIDNode);
+        when(node.compVar()).thenReturn(compVar);
+        when(compVar.ID()).thenReturn(idNode);
+        when(compVar.accept(visitor)).thenReturn(true);
 
         when(typeIDNode.getText()).thenReturn(typeName);
         when(idNode.getText()).thenReturn(name);

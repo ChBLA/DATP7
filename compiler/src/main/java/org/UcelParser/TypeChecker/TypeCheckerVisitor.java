@@ -544,6 +544,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public Type visitBuildDecl(UCELParser.BuildDeclContext ctx) {
         // buildDecl locals [DeclarationReference typeReference, DeclarationReference reference]
         //    : ID ID (arrayDecl)* END;
+        //TODO grammer change
+        /*
         Type[] arrayDeclTypes = null;
         if (ctx.arrayDecl() != null) {
             arrayDeclTypes = ctx.arrayDecl().stream().map(this::visit).toArray(Type[]::new);
@@ -561,6 +563,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return ERROR_TYPE;
         }
 
+         */
         return VOID_TYPE;
 
     }
