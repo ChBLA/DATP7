@@ -69,10 +69,6 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         } catch (Exception e) {
             logger.log(new ErrorLog(ctx,
                     "internal error: constructor for component could not be found in scope"));
-        }
-
-        if (constructorType == null ) {
-            // logged in try catch
             return ERROR_TYPE;
         }
 
@@ -103,12 +99,35 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitCompVar(UCELParser.CompVarContext ctx) {
         Type result = new Type(Type.TypeEnum.componentType);
+        DeclarationInfo variableRefDecl = null;
+
         for (var expr : ctx.expression()){
             Type exprType = visit(expr);
             if (exprType.getEvaluationType() != Type.TypeEnum.intType){
                 logger.log(new ErrorLog(expr, "type error: expected type int, got type " + exprType));
                 result = ERROR_TYPE;
             }
+        }
+
+        try {
+            variableRefDecl = currentScope.get(ctx.variableReference);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "internal error: variable reference could not be found in scope"));
+            return ERROR_TYPE;
+        }
+
+        if (variableRefDecl.getType().getArrayDimensions() != ctx.expression().size()){
+            logger.log(new ErrorLog(ctx, "type error: expected "
+                        + variableRefDecl.getType().getArrayDimensions()
+                        + " array dimensions, got " + ctx.expression().size()));
+            result = ERROR_TYPE;
+        }
+
+        if (variableRefDecl.getType().getEvaluationType() != Type.TypeEnum.componentType
+                && variableRefDecl.getType().getEvaluationType() != Type.TypeEnum.templateType){
+            logger.log(new ErrorLog(ctx, "type error: expected type component or template, got type "
+                    + variableRefDecl.getType()));
+            result = ERROR_TYPE;
         }
 
         return result;
