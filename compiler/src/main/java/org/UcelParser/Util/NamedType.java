@@ -89,8 +89,24 @@ public class NamedType extends Type {
             if(!parameters[i].equals(tParameters[i])) return false;
         }
 
+        if (t.getInstance() != this.isInstance)
+            return false;
+
+        if (this.isInstance)
+            return this.prefix == t.getPrefix();
+
         return true;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof NamedType))
+            return false;
+        NamedType nt = (NamedType) o;
+
+        return this.equalsOrIsArrayOf(nt) && this.arrayDimensions == nt.getArrayDimensions();
+    }
+
 
     @Override
     public String toString() {

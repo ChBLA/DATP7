@@ -72,6 +72,10 @@ public class Type {
     public int getArrayDimensions() {
         return arrayDimensions;
     }
+    public void setArrayDimensions(int value) {
+        assert value > -1;
+        this.arrayDimensions = value;
+    }
 
     public TypePrefixEnum getPrefix() {
         return prefix;
@@ -90,8 +94,14 @@ public class Type {
         if (!(o instanceof Type)) return false;
         Type t = (Type) o;
 
-        return equalsOrIsArrayOf(t) &&
-                t.getArrayDimensions() == this.arrayDimensions;
+        if (t.getInstance() != this.isInstance)
+            return false;
+        if (this.isInstance)
+            return equalsOrIsArrayOf(t)
+                    && t.getArrayDimensions() == this.arrayDimensions
+                    && t.getPrefix() == this.prefix;
+        return equalsOrIsArrayOf(t)
+                && t.getArrayDimensions() == this.arrayDimensions;
     }
 
     public boolean isSameBaseType(Type type) {

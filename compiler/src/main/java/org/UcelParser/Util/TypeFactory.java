@@ -45,8 +45,13 @@ public class TypeFactory {
         return result;
     }
 
-    public Type createArrayInstanceType() {
-        return null;
+    public Type createArrayInstanceType(Type type, int arrayDims) {
+        assert arrayDims > -1;
+        assert type.getInstance();
+
+        Type copy = this.copy(type);
+        copy.setArrayDimensions(arrayDims);
+        return copy;
     }
 
     public Type createNamedType(String name, Type.TypeEnum type, String[] paramNames, Type[] parameters, int arrayDimensions) {
