@@ -349,13 +349,23 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type compBodyType = visit(ctx.compBody());
         exitScope();
 
-        Type[] paramTypes = parametersType.getParameters();
         var templateTypes = new ArrayList<Type>();
+        Type[] paramTypes = parametersType.getParameters();
         templateTypes.add(new Type(Type.TypeEnum.componentType));
         if (paramTypes != null) templateTypes.addAll(Arrays.asList(paramTypes));
         templateTypes.add(new Type(Type.TypeEnum.seperatorType));
         if (interfacesType.getParameters() != null) templateTypes.addAll(Arrays.asList(interfacesType.getParameters()));
-        var componentType = new Type(Type.TypeEnum.componentType, templateTypes.toArray(new Type[0]));
+
+        var paramNames = parametersType.getParameterNames();
+        var interNames = interfacesType.getParameterNames();
+
+        var names = new ArrayList<String>();
+        names.add("");
+        names.addAll(Arrays.asList(paramNames));
+        names.add(":");
+        names.addAll(Arrays.asList(interNames));
+
+        var componentType = new Type(Type.TypeEnum.componentType, names.toArray(String[]::new), templateTypes.toArray(new Type[0]));
         try {
             currentScope.get(ctx.reference).setType(componentType);
         } catch (Exception e) {
@@ -698,14 +708,23 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitParameters(UCELParser.ParametersContext ctx) {
         List<Type> parameterTypes = new ArrayList<>();
-
+        var names = new ArrayList<String>();
         ctx.parameter()
-                .forEach(parameter -> parameterTypes.add(visit(parameter)));
+                .forEach(parameter -> {
+                    parameterTypes.add(visit(parameter));
+                    try {
+                        var paramName = currentScope.get(parameter.reference).getIdentifier();
+                        names.add(paramName);
+                    } catch (Exception e) {
+                        logger.log(new ErrorLog(parameter, "Cannot get parameter name from context: " + e.getMessage()));
+                        names.add("error_parameter_name");
+                    };
+                });
 
         Type[] parameterTypesArray = {};
         parameterTypesArray = parameterTypes.toArray(parameterTypesArray);
 
-        return new Type(Type.TypeEnum.voidType, parameterTypesArray);
+        return new Type(Type.TypeEnum.voidType, names.toArray(String[]::new), parameterTypesArray);
     }
 
     //endregion
