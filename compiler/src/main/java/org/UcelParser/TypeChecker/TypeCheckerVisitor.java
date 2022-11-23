@@ -560,6 +560,19 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         return VOID_TYPE;
     }
 
+    @Override
+    public Type visitBuildStmnt(UCELParser.BuildStmntContext ctx) {
+        var childType = visit(ctx.children.get(0));
+        if (childType.equals(ERROR_TYPE))
+            return ERROR_TYPE;
+        else if (!childType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Compiler error"));
+            return ERROR_TYPE;
+        }
+
+        return VOID_TYPE;
+    }
+
     //endregion
 
     //region Start
