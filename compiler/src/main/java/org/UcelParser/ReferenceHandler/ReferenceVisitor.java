@@ -280,9 +280,21 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     @Override
     public Boolean visitPsystem(UCELParser.PsystemContext ctx) {
-        boolean b = visit(ctx.declarations());
-        b = (ctx.build() == null || visit(ctx.build())) && b;
-        return visit(ctx.system()) && b;
+        boolean declSuccess = visit(ctx.declarations());
+
+        var build = ctx.build();
+        var system = ctx.system();
+
+        if(build != null) {
+            return declSuccess && visit(build);
+        }
+        else if (system != null) {
+            return declSuccess && visit(system);
+        }
+        else {
+            logger.log(new ErrorLog(ctx,"Compiler error: Expected build or system in RefVisitor: PSystem"));
+            return false;
+        }
     }
 
     @Override
