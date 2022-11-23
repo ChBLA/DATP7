@@ -182,8 +182,9 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return ERROR_TYPE;
 
         if (leftInterfaceType == null || rightInterfaceType == null ||
-                leftInterfaceType.getEvaluationType().equals(rightInterfaceType.getEvaluationType())) {
+                !leftInterfaceType.getEvaluationType().equals(rightInterfaceType.getEvaluationType())) {
             logger.log(new ErrorLog(ctx, "Link statement must link interfaces of same type. Got " + leftInterfaceType + " and " + rightInterfaceType));
+            return ERROR_TYPE;
         }
 
         return VOID_TYPE;
