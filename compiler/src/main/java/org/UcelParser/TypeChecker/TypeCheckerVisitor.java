@@ -111,47 +111,42 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
 
     // region linkStatement
+    private Type extractInterfaceTypeFromComponent(int number, Scope scope, UCELParser.CompVarContext node) {
+        UCELParser.ComponentContext componentNode;
+        DeclarationInfo compInfo;
+        try {
+            componentNode = (UCELParser.ComponentContext) scope.get(node.variableReference).getNode();
+            compInfo = currentScope.get(componentNode.reference);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(node, "Compiler error"));
+            return null;
+        }
 
+        Type compType = compInfo.getType();
+        int counter = 0;
+        while (compType.getParameters()[counter].getEvaluationType() != Type.TypeEnum.seperatorType)
+            counter++;
+
+        return compType.getParameters()[counter + number + 1];
+    }
     @Override
     public Type visitLinkStatement(UCELParser.LinkStatementContext ctx) {
-        Type result = VOID_TYPE;
-        var compVar1 = visit(ctx.compVar(0));
-        var compVar2 = visit(ctx.compVar(1));
+        Type compVar1 = visit(ctx.compVar(0));
+        Type compVar2 = visit(ctx.compVar(1));
 
-        boolean leftInterfaceIsInterfaceType = false;
-        boolean rightInterfaceIsInterfaceType = false;
+        var leftInterfaceType = extractInterfaceTypeFromComponent(ctx.leftInterface.getDeclarationId(), currentScope, ctx.compVar(0));
+        var rightInterfaceType = extractInterfaceTypeFromComponent(ctx.rightInterface.getDeclarationId(), currentScope, ctx.compVar(1));
 
-        try {
-            leftInterfaceIsInterfaceType = currentScope.get(ctx.leftInterface).getType().getEvaluationType()
-                    .equals(Type.TypeEnum.interfaceType);
-            rightInterfaceIsInterfaceType = currentScope.get(ctx.rightInterface).getType().getEvaluationType()
-                    .equals(Type.TypeEnum.interfaceType);
-        } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "error: interface could not be found"));
-            result = ERROR_TYPE;
+        if (compVar1.getEvaluationType().equals(Type.TypeEnum.errorType)
+                || compVar2.getEvaluationType().equals(Type.TypeEnum.errorType))
+            return ERROR_TYPE;
+
+        if (leftInterfaceType == null || rightInterfaceType == null ||
+                leftInterfaceType.getEvaluationType().equals(rightInterfaceType.getEvaluationType())) {
+            logger.log(new ErrorLog(ctx, "Link statement must link interfaces of same type. Got " + leftInterfaceType + " and " + rightInterfaceType));
         }
 
-        if (!(compVar1.getEvaluationType().equals(Type.TypeEnum.componentType))) {
-            logger.log(new ErrorLog(ctx.compVar(0), "error: expected type component but got type " + compVar1.getEvaluationType()));
-            result = ERROR_TYPE;
-        }
-
-        if (!(compVar2.getEvaluationType().equals(Type.TypeEnum.componentType))) {
-            logger.log(new ErrorLog(ctx.compVar(1), "error: expected type component but got type " + compVar2.getEvaluationType()));
-            result = ERROR_TYPE;
-        }
-
-        if (!leftInterfaceIsInterfaceType) {
-            logger.log(new ErrorLog(ctx.compVar(0), "error: expected type interface"));
-            result = ERROR_TYPE;
-        }
-
-        if (!rightInterfaceIsInterfaceType) {
-            logger.log(new ErrorLog(ctx.compVar(1), "error: expected type interface"));
-            result = ERROR_TYPE;
-        }
-
-        return result;
+        return VOID_TYPE;
     }
 
 
