@@ -39,9 +39,26 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     //region Component Extension
 
     //region Component
+    @Override
+    public Boolean visitComponent(UCELParser.ComponentContext ctx) {
+        String compName = ctx.ID().getText();
+        try {
+            if(!currentScope.isUnique(compName, false)) {
+                logger.log(new ErrorLog(ctx, "Component name '" + compName + "' is already declared"));
+                return false;
+            }
+            ctx.reference = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+        }
 
+        enterScope();
+        ctx.scope = currentScope;
+        boolean success = (ctx.parameters() == null || visit(ctx.parameters())) && visit(ctx.interfaces()) && visit(ctx.compBody());
 
-
+        exitScope();
+        return success;
+    }
     //endregion
 
     //region Build block
@@ -132,6 +149,91 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     //endregion
 
+    //region
+
+    @Override
+    public Boolean visitCompCon(UCELParser.CompConContext ctx) {
+        String identifier = ctx.ID().getText();
+        DeclarationReference ref;
+
+        try {
+            ref = currentScope.find(identifier, false);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Type " + identifier + " not defined in scope"));
+            return false;
+        }
+
+        ctx.constructorReference = ref;
+
+        return visit(ctx.compVar()) && visit(ctx.arguments());
+    }
+
+    //endregion
+
+    //region Component variable
+    @Override
+    public Boolean visitCompVar(UCELParser.CompVarContext ctx) {
+        String identifier = ctx.ID().getText();
+        DeclarationReference reference;
+
+        try {
+            reference = currentScope.find(identifier, true);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "The variable " + identifier + " is not defined in scope"));
+            return false;
+        }
+
+        ctx.variableReference = reference;
+
+        for (var expr : ctx.expression()) {
+            if (!visit(expr))
+                return false;
+        }
+
+        return true;
+    }
+
+    //endregion
+
+    //region Link statement
+    private DeclarationReference extractInterfaceNumberFromComponentAsReference(String id, Scope scope, UCELParser.CompVarContext node) {
+        UCELParser.ComponentContext componentNode;
+        try {
+            componentNode = (UCELParser.ComponentContext) scope.get(node.variableReference).getNode();
+        } catch (Exception e) {
+            logger.log(new ErrorLog(node, "Compiler error"));
+            return null;
+        }
+
+        UCELParser.ParametersContext parameters = componentNode.interfaces().parameters();
+        if (parameters == null)
+            return null;
+        for (int i = 0; i < parameters.parameter().size(); i++) {
+            UCELParser.ParameterContext param = parameters.parameter(i);
+            if (param.ID().getText().equals(id)) {
+                return new DeclarationReference(-1, i);
+            }
+        }
+
+        return null;
+    }
+    @Override
+    public Boolean visitLinkStatement(UCELParser.LinkStatementContext ctx) {
+        boolean success = visit(ctx.compVar(0));
+        var leftNode = extractInterfaceNumberFromComponentAsReference(ctx.ID(0).getText(), currentScope, ctx.compVar(0));
+        success = success && leftNode != null;
+        ctx.leftInterface = leftNode;
+
+        success = success && visit(ctx.compVar(1));
+        var rightNode = extractInterfaceNumberFromComponentAsReference(ctx.ID(1).getText(), currentScope, ctx.compVar(1));
+        success = success && rightNode != null;
+        ctx.rightInterface = rightNode;
+
+        return success;
+    }
+
+    //endregion
+
     //endregion
 
     //region ProjectStructure
@@ -178,9 +280,21 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     @Override
     public Boolean visitPsystem(UCELParser.PsystemContext ctx) {
-        boolean b = visit(ctx.declarations());
-        b = (ctx.build() == null || visit(ctx.build())) && b;
-        return visit(ctx.system()) && b;
+        boolean declSuccess = visit(ctx.declarations());
+
+        var build = ctx.build();
+        var system = ctx.system();
+
+        if(build != null) {
+            return declSuccess && visit(build);
+        }
+        else if (system != null) {
+            return declSuccess && visit(system);
+        }
+        else {
+            logger.log(new ErrorLog(ctx,"Compiler error: Expected build or system in RefVisitor: PSystem"));
+            return false;
+        }
     }
 
     @Override
@@ -268,30 +382,6 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     }
 
     //endregion
-
-
-    //region Component
-    @Override
-    public Boolean visitComponent(UCELParser.ComponentContext ctx) {
-        String compName = ctx.ID().getText();
-        try {
-            if(!currentScope.isUnique(compName, false)) {
-                logger.log(new ErrorLog(ctx, "Component name '" + compName + "' is already declared"));
-                return false;
-            }
-            ctx.reference = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
-        } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
-        }
-
-        enterScope();
-        ctx.scope = currentScope;
-        boolean success = (ctx.parameters() == null || visit(ctx.parameters())) && visit(ctx.interfaces()) && visit(ctx.compBody());
-
-        exitScope();
-        return success;
-    }
-
 
 
     @Override

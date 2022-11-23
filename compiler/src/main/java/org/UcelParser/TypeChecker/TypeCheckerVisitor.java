@@ -56,6 +56,142 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public DeclarationInfo currentFunction = null;
     //endregion
 
+    // region compCon
+
+    @Override
+    public Type visitCompCon(UCELParser.CompConContext ctx) {
+        Type result = VOID_TYPE;
+        Type argumentsTypes = visit(ctx.arguments());
+
+        DeclarationInfo constructorInfo;
+        DeclarationInfo variableCompInfo;
+
+        try {
+            constructorInfo = currentScope.get(ctx.constructorReference);
+            variableCompInfo = currentScope.get(ctx.compVar().variableReference);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx,
+                    "internal error: constructor for component could not be found in scope"));
+            return ERROR_TYPE;
+        }
+
+        if (!constructorInfo.equals(variableCompInfo)) {
+            String conID = ((UCELParser.ComponentContext) constructorInfo.getNode()).ID().getText();
+            String varConID = ((UCELParser.ComponentContext) variableCompInfo.getNode()).ID().getText();
+            logger.log(new ErrorLog(ctx, "Trying to assign " + conID + " to component of type " + varConID));
+            return ERROR_TYPE;
+        }
+
+        Type constructorType = constructorInfo.getType();
+        if (!(constructorType.getEvaluationType().equals(Type.TypeEnum.componentType))) {
+            logger.log(new ErrorLog(ctx,
+                    "internal error: constructor for component is not of type component"));
+            result = ERROR_TYPE;
+        }
+
+        for (int i = 0; i < argumentsTypes.getParameters().length; i++) {
+            if (!constructorType.getParameters()[i].equals(argumentsTypes.getParameters()[i])) {
+                logger.log(new ErrorLog(ctx,
+                        "internal error: constructor for component does not match arguments. expected: "
+                                + constructorType.getParameters()[i] + " but got: "
+                                + argumentsTypes.getParameters()[i]));
+                result = ERROR_TYPE;
+            }
+        }
+
+        return result;
+    }
+
+
+    // endregion
+
+    // region compVar
+
+    @Override
+    public Type visitCompVar(UCELParser.CompVarContext ctx) {
+        boolean success = true;
+        DeclarationInfo variableRefDecl = null;
+
+        if (ctx.expression() != null) {
+            for (var expr : ctx.expression()) {
+                Type exprType = visit(expr);
+                if (exprType.getEvaluationType() != Type.TypeEnum.intType) {
+                    logger.log(new ErrorLog(expr, "type error: expected type int, got type " + exprType));
+                    success = false;
+                }
+            }
+        }
+
+        try {
+            variableRefDecl = currentScope.get(ctx.variableReference);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "internal error: variable reference could not be found in scope"));
+            return ERROR_TYPE;
+        }
+
+        if (variableRefDecl.getType().getArrayDimensions() < ctx.expression().size()){
+            logger.log(new ErrorLog(ctx, "type error: expected "
+                        + variableRefDecl.getType().getArrayDimensions()
+                        + " array dimensions, got " + ctx.expression().size()));
+            success = false;
+        }
+
+        if (variableRefDecl.getType().getEvaluationType() != Type.TypeEnum.componentType
+                || variableRefDecl.getType().getEvaluationType() != Type.TypeEnum.templateType){
+            logger.log(new ErrorLog(ctx, "type error: expected type component or template, got type "
+                    + variableRefDecl.getType()));
+            success = false;
+        }
+
+        Type result = new Type(Type.TypeEnum.componentType, variableRefDecl.getType().getArrayDimensions() - ctx.expression().size());
+        return success ? result : ERROR_TYPE;
+    }
+
+    // endregion
+
+
+    // region linkStatement
+    private Type extractInterfaceTypeFromComponent(int number, Scope scope, UCELParser.CompVarContext node) {
+        UCELParser.ComponentContext componentNode;
+        DeclarationInfo compInfo;
+        try {
+            componentNode = (UCELParser.ComponentContext) scope.get(node.variableReference).getNode();
+            compInfo = currentScope.get(componentNode.reference);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(node, "Compiler error"));
+            return null;
+        }
+
+        Type compType = compInfo.getType();
+        int counter = 0;
+        while (compType.getParameters()[counter].getEvaluationType() != Type.TypeEnum.seperatorType)
+            counter++;
+
+        return compType.getParameters()[counter + number + 1];
+    }
+    @Override
+    public Type visitLinkStatement(UCELParser.LinkStatementContext ctx) {
+        Type compVar1 = visit(ctx.compVar(0));
+        Type compVar2 = visit(ctx.compVar(1));
+
+        var leftInterfaceType = extractInterfaceTypeFromComponent(ctx.leftInterface.getDeclarationId(), currentScope, ctx.compVar(0));
+        var rightInterfaceType = extractInterfaceTypeFromComponent(ctx.rightInterface.getDeclarationId(), currentScope, ctx.compVar(1));
+
+        if (compVar1.getEvaluationType().equals(Type.TypeEnum.errorType)
+                || compVar2.getEvaluationType().equals(Type.TypeEnum.errorType))
+            return ERROR_TYPE;
+
+        if (leftInterfaceType == null || rightInterfaceType == null ||
+                !leftInterfaceType.getEvaluationType().equals(rightInterfaceType.getEvaluationType())) {
+            logger.log(new ErrorLog(ctx, "Link statement must link interfaces of same type. Got " + leftInterfaceType + " and " + rightInterfaceType));
+            return ERROR_TYPE;
+        }
+
+        return VOID_TYPE;
+    }
+
+
+    //endregion
 
     // region interfaceDecl
 
@@ -218,7 +354,6 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if (ctx.build() != null) {
             var buildType = visit(ctx.build());
             if (buildType.equals(ERROR_TYPE)) {
-                logger.log(new ErrorLog(ctx, "Type error in build. Value is ERROR_TYPE"));
                 result = ERROR_TYPE;
             } else if (!buildType.equals(VOID_TYPE)) {
                 logger.log(new ErrorLog(ctx, "Type error in build. Value is not VOID_TYPE"));
@@ -226,17 +361,23 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             }
         }
 
-        var systemType = visit(ctx.system());
-        if (systemType.equals(ERROR_TYPE)) {
-            logger.log(new ErrorLog(ctx, "Type error in system. Value is ERROR_TYPE"));
-            result = ERROR_TYPE;
-        } else if (!systemType.equals(VOID_TYPE)) {
-            logger.log(new ErrorLog(ctx, "Type error in system. Value is not VOID_TYPE"));
+
+        else if (ctx.system() != null) {
+            var systemType = visit(ctx.system());
+            if (systemType.equals(ERROR_TYPE)) {
+                result = ERROR_TYPE;
+            } else if (!systemType.equals(VOID_TYPE)) {
+                logger.log(new ErrorLog(ctx, "Type error in system. Value is not VOID_TYPE"));
+                result = ERROR_TYPE;
+            }
+        }
+        else {
+            logger.log(new ErrorLog(ctx, "Compiler error: PSystem: Expected either build or system in type checker"));
             result = ERROR_TYPE;
         }
 
 
-        return VOID_TYPE;
+        return result;
     }
 
     //region Component
@@ -244,23 +385,41 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public Type visitComponent(UCELParser.ComponentContext ctx) {
         enterScope(ctx.scope);
 
-        Type parametersType = null;
+        Type parametersType = VOID_TYPE;
         if (ctx.parameters() != null) parametersType = visit(ctx.parameters());
         Type interfacesType = visit(ctx.interfaces());
         Type compBodyType = visit(ctx.compBody());
-
         exitScope();
+
+        if (parametersType.equals(ERROR_TYPE) || interfacesType.equals(ERROR_TYPE) || compBodyType.equals(ERROR_TYPE))
+            return ERROR_TYPE;
+
+        if (!compBodyType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx.compBody(), "Body must be of type void, got: " + compBodyType));
+        }
+
+        var componentTypes = new ArrayList<Type>();
         Type[] paramTypes = parametersType.getParameters();
-        var templateTypes = new ArrayList<Type>();
-        if (paramTypes != null) templateTypes.addAll(Arrays.asList(paramTypes));
-        templateTypes.add(interfacesType);
-        var componentType = new Type(Type.TypeEnum.componentType, templateTypes.toArray(new Type[0]));
+        componentTypes.add(new Type(Type.TypeEnum.componentType));
+        if (paramTypes != null) componentTypes.addAll(Arrays.asList(paramTypes));
+        componentTypes.add(new Type(Type.TypeEnum.seperatorType));
+        if (interfacesType.getParameters() != null) componentTypes.addAll(Arrays.asList(interfacesType.getParameters()));
+
+        var paramNames = parametersType.getParameterNames();
+        var interNames = interfacesType.getParameterNames();
+
+        var names = new ArrayList<String>();
+        names.add("");
+        names.addAll(Arrays.asList(paramNames));
+        names.add(":");
+        names.addAll(Arrays.asList(interNames));
+
+        var componentType = new Type(Type.TypeEnum.componentType, names.toArray(String[]::new), componentTypes.toArray(new Type[0]));
         try {
             currentScope.get(ctx.reference).setType(componentType);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
 
         return componentType;
     }
@@ -269,34 +428,95 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     public Type visitCompBody(UCELParser.CompBodyContext ctx) {
         enterScope(ctx.scope);
 
-        var declsType = visit(ctx.declarations());
-        var buildType = visit(ctx.build());
+        var declsType = ctx.declarations() != null ? visit(ctx.declarations()) : VOID_TYPE;
+        var buildType = ctx.build() != null ? visit(ctx.build()) : VOID_TYPE;
 
         exitScope();
 
-        if (declsType.equals(ERROR_TYPE) && buildType.equals(ERROR_TYPE)) {
+        if (declsType.equals(ERROR_TYPE) || buildType.equals(ERROR_TYPE)) {
             return ERROR_TYPE;
-        } else {
-            return VOID_TYPE;
+        } else if (!declsType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx.declarations(), "Compiler error: declarations must be void, got: " + declsType));
+            return ERROR_TYPE;
+        } else if (!buildType.equals((VOID_TYPE))) {
+            logger.log(new ErrorLog(ctx.build(), "Compiler error: build must be void, got: " + buildType));
+            return ERROR_TYPE;
         }
+
+        return VOID_TYPE;
     }
 
     @Override
     public Type visitInterfaces(UCELParser.InterfacesContext ctx) {
-        Type parametersType = null;
-        if (ctx.parameters() != null) parametersType = visit(ctx.parameters());
+        if (ctx.parameters() == null)
+            return VOID_TYPE;
 
-        Type interfacesType = null;
-        if (parametersType != null) interfacesType = new Type(Type.TypeEnum.interfaceType, parametersType.getParameters());
-        else interfacesType = new Type(Type.TypeEnum.interfaceType, new Type[0]);
+        Type parametersType = visit(ctx.parameters());
+        boolean foundError = false;
 
-        return interfacesType;
+        for (var paramType : parametersType.getParameters()) {
+            if (paramType.equals(ERROR_TYPE))
+                foundError = true;
+        }
+
+        return foundError ? ERROR_TYPE : new Type(Type.TypeEnum.voidType, parametersType.getParameterNames(), parametersType.getParameters());
     }
 
 
     //endregion
 
     //region Build Region
+
+    @Override
+    public Type visitBuild(UCELParser.BuildContext ctx) {
+        // build : BUILD COLON LEFTCURLYBRACE buildDecl* buildStmnt+ RIGHTCURLYBRACE;
+        boolean hadError = false;
+
+        var decls = ctx.buildDecl();
+        if(decls != null) {
+            for (var decl : decls) {
+                var declType = visit(decl);
+                if (!declType.equals(VOID_TYPE)) {
+                    hadError = true;
+                    if (!decl.equals(ERROR_TYPE))
+                        logger.log(new ErrorLog(decl, "Compiler error: Void type expected"));
+                }
+            }
+        }
+
+
+        for(var stmt: ctx.buildStmnt()) {
+            var stmtType = visit(stmt);
+            if (!stmtType.equals(VOID_TYPE)) {
+                hadError = true;
+                if(!stmt.equals(ERROR_TYPE))
+                    logger.log(new ErrorLog(stmt, "Compiler error: Void type expected"));
+            }
+        }
+
+
+        if(hadError)
+            return ERROR_TYPE;
+
+        return VOID_TYPE;
+    }
+
+    @Override
+    public Type visitBuildBlock(UCELParser.BuildBlockContext ctx) {
+        enterScope(ctx.scope);
+
+        var hadError = false;
+        for(var stmt: ctx.buildStmnt()) {
+            if(visit(stmt).equals(ERROR_TYPE))
+                hadError = true;
+        }
+
+        exitScope();
+        if(hadError)
+            return ERROR_TYPE;
+
+        return VOID_TYPE;
+    }
 
     //region Build If
     @Override
@@ -318,6 +538,31 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
 
         return VOID_TYPE;
+    }
+
+    @Override
+    public Type visitBuildDecl(UCELParser.BuildDeclContext ctx) {
+        // buildDecl locals [DeclarationReference typeReference, DeclarationReference reference]
+        //    : ID ID (arrayDecl)* END;
+        Type[] arrayDeclTypes = null;
+        if (ctx.arrayDecl() != null) {
+            arrayDeclTypes = ctx.arrayDecl().stream().map(this::visit).toArray(Type[]::new);
+        }
+
+        try {
+            var typeInfo = currentScope.get(ctx.typeReference);
+            var refInfo = currentScope.get(ctx.reference);
+
+            var refType = new Type(typeInfo.getType().getEvaluationType(), arrayDeclTypes != null ? arrayDeclTypes.length : 0);
+            refInfo.setType(refType);
+        }
+        catch(Exception e) {
+            logger.log(new ErrorLog(ctx, "Compiler error: Could not find typeReference or reference in scope: " + e.getMessage()));
+            return ERROR_TYPE;
+        }
+
+        return VOID_TYPE;
+
     }
 
     //endregion
@@ -360,6 +605,19 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         if(hadError)
             return ERROR_TYPE;
+
+        return VOID_TYPE;
+    }
+
+    @Override
+    public Type visitBuildStmnt(UCELParser.BuildStmntContext ctx) {
+        var childType = visit(ctx.children.get(0));
+        if (childType.equals(ERROR_TYPE))
+            return ERROR_TYPE;
+        else if (!childType.equals(VOID_TYPE)) {
+            logger.log(new ErrorLog(ctx, "Compiler error"));
+            return ERROR_TYPE;
+        }
 
         return VOID_TYPE;
     }
@@ -522,15 +780,28 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     //region Parameters
     @Override
     public Type visitParameters(UCELParser.ParametersContext ctx) {
+        boolean foundError = false;
         List<Type> parameterTypes = new ArrayList<>();
-
-        ctx.parameter()
-                .forEach(parameter -> parameterTypes.add(visit(parameter)));
+        var names = new ArrayList<String>();
+        for (UCELParser.ParameterContext parameter : ctx.parameter()) {
+            Type paramType = visit(parameter);
+            if (paramType.equals(ERROR_TYPE))
+                foundError = true;
+            parameterTypes.add(paramType);
+            try {
+                var paramName = currentScope.get(parameter.reference).getIdentifier();
+                names.add(paramName);
+            } catch (Exception e) {
+                logger.log(new ErrorLog(parameter, "Cannot get parameter name from context: " + e.getMessage()));
+                names.add("error_parameter_name");
+                return ERROR_TYPE;
+            }
+        }
 
         Type[] parameterTypesArray = {};
         parameterTypesArray = parameterTypes.toArray(parameterTypesArray);
 
-        return new Type(Type.TypeEnum.voidType, parameterTypesArray);
+        return foundError ? ERROR_TYPE : new Type(Type.TypeEnum.voidType, names.toArray(String[]::new), parameterTypesArray);
     }
 
     //endregion

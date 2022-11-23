@@ -724,6 +724,11 @@ public class ReferenceHandlerTests {
 
     //endregion
 
+    //region Component construction
+
+
+    //endregion
+
     //endregion
 
     //region Project
@@ -863,15 +868,12 @@ public class ReferenceHandlerTests {
         UCELParser.PsystemContext node = mock(UCELParser.PsystemContext.class);
         UCELParser.DeclarationsContext decls = mock(UCELParser.DeclarationsContext.class);
         UCELParser.BuildContext build = mock(UCELParser.BuildContext.class);
-        UCELParser.SystemContext system = mock(UCELParser.SystemContext.class);
 
         when(node.declarations()).thenReturn(decls);
         when(node.build()).thenReturn(build);
-        when(node.system()).thenReturn(system);
 
         when(decls.accept(visitor)).thenReturn(true);
         when(build.accept(visitor)).thenReturn(true);
-        when(system.accept(visitor)).thenReturn(true);
 
         visitor.visitPsystem(node);
 
@@ -885,15 +887,12 @@ public class ReferenceHandlerTests {
 
         UCELParser.PsystemContext node = mock(UCELParser.PsystemContext.class);
         UCELParser.DeclarationsContext decls = mock(UCELParser.DeclarationsContext.class);
-        UCELParser.BuildContext build = mock(UCELParser.BuildContext.class);
         UCELParser.SystemContext system = mock(UCELParser.SystemContext.class);
 
         when(node.declarations()).thenReturn(decls);
-        when(node.build()).thenReturn(build);
         when(node.system()).thenReturn(system);
 
         when(decls.accept(visitor)).thenReturn(true);
-        when(build.accept(visitor)).thenReturn(true);
         when(system.accept(visitor)).thenReturn(true);
 
         visitor.visitPsystem(node);

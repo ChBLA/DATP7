@@ -89,6 +89,7 @@ public class Compiler {
     }
 
     public String compile(String input) {
+        UniquePrefixGenerator.resetCounter();
         CharStream charStream = CharStreams.fromString(input);
         UCELLexer lexer = new UCELLexer(charStream);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
