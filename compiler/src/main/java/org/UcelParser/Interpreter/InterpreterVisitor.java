@@ -5,10 +5,12 @@ import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.Logging.ErrorLog;
 import org.UcelParser.Util.Logging.ILogger;
 import org.UcelParser.Util.Logging.Log;
+import org.UcelParser.Util.Type;
 import org.UcelParser.Util.Value.*;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.Scope;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
 
@@ -19,12 +21,16 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     private Scope currentScope;
     private ILogger logger;
 
+    private int nextInterfaceId;
+
     public InterpreterVisitor(Scope scope) {
         currentScope = scope;
+        nextInterfaceId = 0;
     }
 
     public InterpreterVisitor(ILogger logger) {
         this.logger = logger;
+        nextInterfaceId = 0;
     }
 
     public InterpreterVisitor(ILogger logger, Scope scope) {
@@ -33,11 +39,6 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     }
 
     //endregion
-
-    public ArrayList<InterpreterValue> interpret(UCELParser.ProjectContext ctx) {
-        ListValue values = (ListValue) visitProject(ctx);
-        return values.getValues();
-    }
 
     //region Scope
     private void enterScope(Scope scope) {
@@ -358,14 +359,101 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             else return null;
         }
 
-        CompOccurrenceValue occurrenceValue = new CompOccurrenceValue(compVarValue, arguments);
 
         try {
-            ListValue v = (ListValue) currentScope.get(ctx.compVar().variableReference).getValue();
-            v.getValues().add(occurrenceValue);
+            DeclarationInfo declInfo = currentScope.get(ctx.compVar().variableReference);
+            int[] indices = compVarValue.getIndices();
+            ListValue listValue = getInnerList(indices, declInfo.getValue());
+            if(listValue.getValue(lastIndex(indices)) != null) {
+                logger.log(new ErrorLog(ctx, "two components or processes with indices: " + indices));
+            }
+
+            UCELParser.ComponentContext compNode = ((UCELParser.ComponentContext) declInfo.getNode());
+            Type compType = compNode.scope.get(compNode.reference).getType();
+            CompOccurrenceValue occurrenceValue = new CompOccurrenceValue(arguments, compType);
+            listValue.setValue(lastIndex(indices), occurrenceValue);
         } catch (Exception e) {return null;}
 
         return new VoidValue();
+    }
+
+    //region helperFunctions
+    private int lastIndex(int[] indices) {
+        return indices[indices.length - 1];
+    }
+
+    private ListValue getInnerList(int indices[], InterpreterValue value) {
+        ListValue listValue = (ListValue) value;
+        for(int i = 0; i < indices.length - 1; i++) {
+            listValue = (ListValue) listValue.getValue(indices[i]);
+        }
+        return listValue;
+    }
+
+    private InterpreterValue getValueFromMultiDimArray(int indices[], InterpreterValue value) {
+        ListValue listValue = (ListValue) value;
+        for(int i = 0; i < indices.length - 1; i++) {
+            listValue = (ListValue) listValue.getValue(indices[i]);
+        }
+        return listValue.getValue(lastIndex(indices));
+    }
+
+    //endregion
+
+    @Override
+    public InterpreterValue visitLinkStatement(UCELParser.LinkStatementContext ctx) {
+        InterpreterValue left = visit(ctx.compVar().get(0));
+        InterpreterValue right = visit(ctx.compVar().get(1));
+
+        if(!isCompVarValue(left) || !isCompVarValue(right))
+            return null;
+
+        CompVarValue compVarLeft = (CompVarValue) left;
+        CompVarValue compVarRight = (CompVarValue) right;
+
+        DeclarationInfo leftInfo;
+        DeclarationInfo rightInfo;
+
+        try{
+            //Get the DeclInfo of each buildDecl
+            leftInfo = currentScope.get(ctx.compVar().get(0).variableReference);
+            rightInfo = currentScope.get(ctx.compVar().get(1).variableReference);
+
+            InterpreterValue leftValue = leftInfo.getValue();
+            InterpreterValue rightValue = rightInfo.getValue();
+
+            //Find the occurrenceValues in each declInfo
+            int[] leftIndices = compVarLeft.getIndices();
+            int[] rightIndices = compVarRight.getIndices();
+            CompOccurrenceValue leftCompOcc = (CompOccurrenceValue) getValueFromMultiDimArray(leftIndices, leftValue);
+            CompOccurrenceValue rightCompOcc = (CompOccurrenceValue) getValueFromMultiDimArray(rightIndices, rightValue);
+
+            //Construct the interface values
+            int leftParamNum = ctx.leftInterface.getDeclarationId();
+            int rightParamNum = ctx.rightInterface.getDeclarationId();
+
+            int id = nextInterfaceId;
+            nextInterfaceId++;
+            InterfaceValue leftInterfaceValue = new InterfaceValue(leftParamNum, id);
+            InterfaceValue rightInterfaceValue = new InterfaceValue(rightParamNum, id);
+
+            //Set the interfaceValues on occurrenceValues
+            leftCompOcc.getInterfaces()[leftParamNum] = leftInterfaceValue;
+            rightCompOcc.getInterfaces()[rightParamNum] = rightInterfaceValue;
+
+        } catch (Exception e) {
+            return null;
+        }
+
+        return new VoidValue();
+    }
+
+    private UCELParser.ComponentContext getCompCtxNode(ParserRuleContext prc){
+        return prc != null && prc instanceof UCELParser.CompConContext ? (UCELParser.ComponentContext) prc : null;
+    }
+
+    private boolean isCompVarValue(InterpreterValue value) {
+        return value != null && value instanceof CompVarValue;
     }
 
     //endregion

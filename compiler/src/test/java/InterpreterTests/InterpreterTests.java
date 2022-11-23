@@ -2,11 +2,8 @@ package InterpreterTests;
 
 import org.UcelParser.Interpreter.InterpreterVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
-import org.UcelParser.Util.ComponentOccurrence;
-import org.UcelParser.Util.DeclarationInfo;
-import org.UcelParser.Util.DeclarationReference;
+import org.UcelParser.Util.*;
 import org.UcelParser.Util.Logging.ILogger;
-import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Value.*;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -52,7 +49,9 @@ public class InterpreterTests {
         when(index1.accept(visitor)).thenReturn(i1);
 
         DeclarationInfo varInfo = new DeclarationInfo("v");
-        varInfo.setValue(new ListValue(new ArrayList<>()));
+        InterpreterValue[] array = new InterpreterValue[100];
+        for(int i = 0; i < array.length; i++) array[i] = new ListValue(new InterpreterValue[100]);
+        varInfo.setValue(new ListValue(array));
         DeclarationReference varRef = new DeclarationReference(0,0);
 
         node.variableReference = varRef;
@@ -75,9 +74,11 @@ public class InterpreterTests {
         );
     }
 
+    /*
+
     @ParameterizedTest
     @MethodSource("compConValues")
-    void compConSetsExpected(InterpreterValue c,
+    void compConSetsExpected(CompVarValue c,
                  InterpreterValue a0, InterpreterValue a1,
                  InterpreterValue expected) {
         Scope scope = mock(Scope.class);
@@ -90,7 +91,9 @@ public class InterpreterTests {
         when(compVar.accept(visitor)).thenReturn(c);
 
         DeclarationInfo varInfo = new DeclarationInfo("v");
-        varInfo.setValue(new ListValue(new ArrayList<>()));
+        InterpreterValue[] array = new InterpreterValue[100];
+        for(int i = 0; i < array.length; i++) array[i] = new ListValue(new InterpreterValue[100]);
+        varInfo.setValue(new ListValue(array));
         DeclarationInfo conInfo = new DeclarationInfo("c", mock(UCELParser.ComponentContext.class));
 
         DeclarationReference varRef = new DeclarationReference(0,0);
@@ -119,26 +122,29 @@ public class InterpreterTests {
 
         var unUsedResult = visitor.visitCompCon(node);
 
-        var list = ((ListValue) varInfo.getValue()).getValues();
-        var actual = list.size() > 0 ? list.get(0) : null;
+        var list = (ListValue) varInfo.getValue();
+        list = list.size() > 0 ? (ListValue) list.getValue(c.getIndices()[0]) : null;
+        var actual = list.size() > 0 ? list.getValue(c.getIndices()[1]) : null;
         assertEquals(expected, actual);
     }
 
     private static Stream<Arguments> compConValues() {
         return Stream.of(
                 Arguments.arguments(new CompVarValue("v", new int[]{2,4}), value(true), value(17),
-                        new CompOccurrenceValue("v", new int[]{2,4},new InterpreterValue[]{value(true), value(17)})),
+                        new CompOccurrenceValue(new InterpreterValue[]{value(true), value(17)}, new Type(Type.TypeEnum.voidType))),
                 Arguments.arguments(new CompVarValue("v", new int[]{92,4}), value(true), value("17"),
-                        new CompOccurrenceValue("v", new int[]{92,4}, new InterpreterValue[]{value(true), value("17")})),
-                Arguments.arguments(null, value(true), value(17), null)
+                        new CompOccurrenceValue( new InterpreterValue[]{value(true), value("17")}))
         );
     }
+    */
 
     //endregion
 
     //region link statement
 
 
+
+    //endregion
 
     //endregion
 
