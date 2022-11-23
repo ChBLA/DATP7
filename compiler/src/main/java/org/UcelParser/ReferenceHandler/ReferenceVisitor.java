@@ -227,7 +227,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         success = success && rightNode != null;
         ctx.rightInterface = rightNode;
 
-        return super.visitLinkStatement(ctx);
+        return success;
     }
 
     //endregion
