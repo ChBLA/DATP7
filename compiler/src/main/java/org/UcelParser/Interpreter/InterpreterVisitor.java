@@ -382,7 +382,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     */
     @Override
     public InterpreterValue visitCompVar(UCELParser.CompVarContext ctx) {
-        int[] indices = new int[ctx.expression().size()];
+        int size = ctx.expression() != null ? ctx.expression().size() : 0;
+        int[] indices = new int[size];
 
         for(int i = 0; i < ctx.expression().size(); i++) {
             InterpreterValue v = visit(ctx.expression().get(i));
@@ -419,16 +420,23 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         try {
             DeclarationInfo declInfo = currentScope.get(ctx.compVar().variableReference);
+
             int[] indices = compVarValue.getIndices();
             ListValue listValue = getInnerList(indices, declInfo.getValue());
-            if(listValue.getValue(lastIndex(indices)) != null) {
-                logger.log(new ErrorLog(ctx, "two components or processes with indices: " + indices));
-            }
 
             UCELParser.ComponentContext compNode = ((UCELParser.ComponentContext) declInfo.getNode());
             Type compType = compNode.scope.get(compNode.reference).getType();
+
             CompOccurrenceValue occurrenceValue = new CompOccurrenceValue(arguments, compType);
-            listValue.setValue(lastIndex(indices), occurrenceValue);
+            if(listValue == null) {
+                declInfo.setValue(occurrenceValue);
+            } else {
+                if(listValue.getValue(lastIndex(indices)) != null) {
+                    logger.log(new ErrorLog(ctx, "two components or processes with indices: " + indices));
+                }
+                listValue.setValue(lastIndex(indices), occurrenceValue);
+            }
+
         } catch (Exception e) {return null;}
 
         return new VoidValue();
@@ -440,6 +448,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     }
 
     private ListValue getInnerList(int indices[], InterpreterValue value) {
+        if(!(value instanceof ListValue)) {
+            return null;
+        }
         ListValue listValue = (ListValue) value;
         for(int i = 0; i < indices.length - 1; i++) {
             listValue = (ListValue) listValue.getValue(indices[i]);
@@ -448,6 +459,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     }
 
     private InterpreterValue getValueFromMultiDimArray(int indices[], InterpreterValue value) {
+        if(!(value instanceof  ListValue))
+            return value;
         ListValue listValue = (ListValue) value;
         for(int i = 0; i < indices.length - 1; i++) {
             listValue = (ListValue) listValue.getValue(indices[i]);
@@ -519,9 +532,28 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     @Override
     public InterpreterValue visitBuildDecl(UCELParser.BuildDeclContext ctx) {
+        CompVarValue compVarValue = (CompVarValue) visit(ctx.compVar());
 
+        try {
+            InterpreterValue value = recBuildMultiDimLists(compVarValue.getIndices(), compVarValue.getIndices().length - 1 );
+            currentScope.get(ctx.compVar().variableReference).setValue(value);
+        } catch (Exception e) {
+            return null;
+        }
 
-        return null;
+        return new VoidValue();
+    }
+
+    public InterpreterValue recBuildMultiDimLists(int[] sizes, int layer) {
+        if(layer <= 0) return null;
+        if(layer == 1) return new ListValue(lastIndex(sizes));
+
+        InterpreterValue[] values = new InterpreterValue[sizes[layer]];
+
+        for(int i = 0; i < sizes[layer]; i++) {
+            values[i] = recBuildMultiDimLists(sizes, layer - 1);
+        }
+        return new ListValue(values);
     }
 
     //endregion
