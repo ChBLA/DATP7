@@ -402,7 +402,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     public InterpreterValue visitCompCon(UCELParser.CompConContext ctx) {
 
         InterpreterValue iv = visit(ctx.compVar());
-        if(iv == null || !(iv instanceof CompVarValue)) return null;
+        if(iv == null || !(iv instanceof CompVarValue))
+            return null;
         CompVarValue compVarValue = (CompVarValue) iv;
 
         int argCount = ctx.arguments() == null ? 0 : ctx.arguments().expression().size();
@@ -414,17 +415,25 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             else return null;
         }
 
-
         try {
             DeclarationInfo declInfo = currentScope.get(ctx.compVar().variableReference);
 
             int[] indices = compVarValue.getIndices();
             ListValue listValue = getInnerList(indices, declInfo.getValue());
 
-            UCELParser.ComponentContext compNode = ((UCELParser.ComponentContext) declInfo.getNode());
-            Type compType = compNode.scope.get(compNode.reference).getType();
+            InterpreterValue occurrenceValue = null;
 
-            CompOccurrenceValue occurrenceValue = new CompOccurrenceValue(ctx.ID().getText(), arguments, compType);
+            if(declInfo.getNode() instanceof UCELParser.ComponentContext) {
+                UCELParser.ComponentContext compNode = ((UCELParser.ComponentContext) declInfo.getNode());
+                Type compType = compNode.scope.get(compNode.reference).getType();
+
+                occurrenceValue = new CompOccurrenceValue(ctx.ID().getText(), arguments, compType);
+            } else if(declInfo.getNode() instanceof UCELParser.PtemplateContext) {
+                occurrenceValue = new TemplateOccurrenceValue(ctx.ID().getText(), arguments);
+            } else {
+                return null;
+            }
+
             if(listValue == null) {
                 declInfo.setValue(occurrenceValue);
             } else {
@@ -532,7 +541,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         CompVarValue compVarValue = (CompVarValue) visit(ctx.compVar());
 
         try {
-            InterpreterValue value = recBuildMultiDimLists(compVarValue.getIndices(), compVarValue.getIndices().length - 1 );
+            InterpreterValue value = recBuildMultiDimLists(compVarValue.getIndices(),
+                    compVarValue.getIndices().length - 1 );
             currentScope.get(ctx.compVar().variableReference).setValue(value);
         } catch (Exception e) {
             return null;
@@ -568,38 +578,43 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         }
 
         for(UCELParser.BuildDeclContext buildDecl : ctx.buildDecl()) {
-            UCELParser.ComponentContext componentNode = null;
-            InterpreterValue value = null;
 
-            try{
+
+            try {
+                InterpreterValue value = null;
                 DeclarationReference variableReference = buildDecl.compVar().variableReference;
-                componentNode = (UCELParser.ComponentContext) currentScope.get(variableReference).getNode();
+                ParserRuleContext node = currentScope.get(variableReference).getNode();
+
                 value = currentScope.get(variableReference).getValue();
+
+                if(!visitCompWithAllOccurrences(node, value, ""))
+                    return null;
             } catch (Exception e) {
                 return null;
             }
-
-            if(!visitCompWithAllOccurrences(componentNode, value, ""))
-                return null;
         }
 
         return new VoidValue();
     }
 
-    private boolean visitCompWithAllOccurrences(UCELParser.ComponentContext componentNode,
+    private boolean visitCompWithAllOccurrences(ParserRuleContext node,
                                                 InterpreterValue value, String indices) {
         if(value instanceof ListValue) {
             ListValue listvalue = (ListValue) value;
 
             for(int i = 0; i < listvalue.size(); i++) {
-                boolean b = visitCompWithAllOccurrences(componentNode,
+                boolean b = visitCompWithAllOccurrences(node,
                         listvalue.getValue(i), indices + "_" + i);
                 if(!b) return false;
             }
 
             return true;
-        } else if(value instanceof CompOccurrenceValue) {
+        } else if(value instanceof CompOccurrenceValue && node instanceof UCELParser.ComponentContext) {
+            UCELParser.ComponentContext componentNode = (UCELParser.ComponentContext) node;
             return visitCompWithOccurrence(componentNode, (CompOccurrenceValue) value, indices);
+        } else if(value instanceof TemplateOccurrenceValue && node instanceof UCELParser.PtemplateContext) {
+            UCELParser.PtemplateContext componentNode = (UCELParser.PtemplateContext) node;
+            return visitTempWithOccurrence(componentNode, (CompOccurrenceValue) value, indices);
         } else {
             return false;
         }
@@ -640,6 +655,15 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         visit(componentNode.compBody().build());
         currentScope = oldScope;
+
+        return true;
+    }
+
+    private boolean visitTempWithOccurrence(UCELParser.PtemplateContext templateNode, CompOccurrenceValue value, String indices) {
+        TemplateOccurrence templateOccurrence = new TemplateOccurrence(value.generateName() + indices,
+                value.getArguments());
+
+        templateNode.occurrences.add(templateOccurrence);
 
         return true;
     }

@@ -50,7 +50,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             }
             ctx.reference = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            logger.log(new CompilerErrorLog(ctx, e.getMessage()));
         }
 
         enterScope();
@@ -193,7 +193,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         try {
             componentNode = (UCELParser.ComponentContext) scope.get(node.variableReference).getNode();
         } catch (Exception e) {
-            logger.log(new ErrorLog(node, "Compiler error"));
+            logger.log(new CompilerErrorLog(node, "Could not get component reference from scope"));
             return null;
         }
 
@@ -254,7 +254,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             ctx.reference = declRef;
 
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            logger.log(new CompilerErrorLog(ctx, e.getMessage()));
         }
 
         enterScope();
@@ -284,7 +284,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             return declSuccess && visit(system);
         }
         else {
-            logger.log(new ErrorLog(ctx,"Compiler error: Expected build or system in RefVisitor: PSystem"));
+            logger.log(new CompilerErrorLog(ctx,"Expected build or system in RefVisitor: PSystem"));
             return false;
         }
     }
@@ -310,7 +310,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         List<UCELParser.TypeContext> types = ctx.type();
 
         if(ids.size() != types.size()) {
-            logger.log(new ErrorLog(ctx, "Compiler Error: non equal amounts of identifiers and types"));
+            logger.log(new CompilerErrorLog(ctx, "non equal amounts of identifiers and types"));
             return false;
         }
 
@@ -328,7 +328,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
                 declRefs.add(currentScope.add(new DeclarationInfo(id)));
             } catch (Exception e) {
-                logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+                logger.log(new CompilerErrorLog(ctx, e.getMessage()));
                 return false;
             }
 
@@ -425,7 +425,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             ctx.reference = declRef;
 
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            logger.log(new CompilerErrorLog(ctx, e.getMessage()));
         }
 
         if(!visit(ctx.type())) {
@@ -478,7 +478,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
             ctx.reference = currentScope.add(new DeclarationInfo(parameterName));
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            logger.log(new CompilerErrorLog(ctx, e.getMessage()));
             return false;
         }
 
@@ -497,7 +497,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             }
             ctx.instantiatedReference = currentScope.add(new DeclarationInfo(instantiationIdentifier));
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            logger.log(new CompilerErrorLog(ctx, e.getMessage()));
             return false;
         }
 
@@ -507,7 +507,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         try {
             ctx.constructorReference = currentScope.find(constructorIdentifier, false);
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            logger.log(new ErrorLog(ctx, e.getMessage()));
             exitScope();
             return false;
         }
@@ -533,7 +533,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         try {
             ctx.reference = currentScope.find(typeID, false);
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+            logger.log(new CompilerErrorLog(ctx, e.getMessage()));
             return false;
         }
 
@@ -564,7 +564,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
                 references.add(currentScope.add(new DeclarationInfo(identifier, arrayDeclID)));
             } catch (Exception e) {
-                logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
+                logger.log(new CompilerErrorLog(ctx, e.getMessage()));
                 return false;
             }
         }
@@ -667,7 +667,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             DeclarationReference declRef = currentScope.add(new DeclarationInfo(identifier, ctx));
             ctx.reference = declRef;
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Compiler Error" + e.getMessage()));
+            logger.log(new CompilerErrorLog(ctx, e.getMessage()));
             return false;
         }
 
