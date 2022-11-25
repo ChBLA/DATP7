@@ -5,6 +5,7 @@ import org.UcelParser.CodeGeneration.CodeGenVisitor;
 import org.UcelParser.CodeGeneration.ProjectCodeLinker;
 import org.UcelParser.CodeGeneration.templates.ProjectTemplate;
 import org.UcelParser.CodeGeneration.templates.Template;
+import org.UcelParser.Interpreter.InterpreterVisitor;
 import org.UcelParser.ManualParser.ManualParser;
 import org.UcelParser.Util.Exception.ErrorsFoundException;
 import org.UcelParser.Util.Logging.ILogger;
@@ -23,6 +24,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 public class Compiler {
     private final ReferenceVisitor referenceVisitor;
     private final TypeCheckerVisitor typeCheckerVisitor;
+    private final InterpreterVisitor interpreterVisitor;
     private final CodeGenVisitor codeGenVisitor;
     private final ILogger logger;
 
@@ -35,6 +37,7 @@ public class Compiler {
         this.referenceVisitor = new ReferenceVisitor(logger);
         this.typeCheckerVisitor = new TypeCheckerVisitor(logger);
         this.codeGenVisitor = new CodeGenVisitor(logger);
+        this.interpreterVisitor = new InterpreterVisitor(logger);
     }
 
     public IProject compileProject(IProject project) throws ErrorsFoundException {
@@ -45,7 +48,8 @@ public class Compiler {
 
         var refTree = runVisitor(referenceVisitor, tree, logger);
         var typeTree = runVisitor(typeCheckerVisitor, refTree, logger);
-        var generatedCode = runVisitor(codeGenVisitor, typeTree, logger);
+        var interpreterTree = runVisitor(interpreterVisitor, typeTree, logger);
+        var generatedCode = runVisitor(codeGenVisitor, interpreterTree, logger);
         var outputProject = new ProjectCodeLinker().generateUppaalProject((ProjectTemplate) generatedCode);
         return outputProject;
     }

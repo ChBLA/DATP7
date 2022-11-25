@@ -704,9 +704,6 @@ public class CodeGenTests {
         var actual = visitor.visitPsystem(node);
         assertInstanceOf(PSystemTemplate.class, actual);
         var actualCasted = (PSystemTemplate) actual;
-        assertEquals(declTemplate, actualCasted.declarations);
-        assertEquals(sysTemplate, actualCasted.system);
-        assertNull(actualCasted.build);
     }
 
     private Template generateDefaultBuildTemplate() {
@@ -732,9 +729,6 @@ public class CodeGenTests {
         var actual = visitor.visitPsystem(node);
         assertInstanceOf(PSystemTemplate.class, actual);
         var actualCasted = (PSystemTemplate) actual;
-        assertEquals(declTemplate, actualCasted.declarations);
-        assertEquals(sysTemplate, actualCasted.system);
-        assertEquals(buildTemplate, actualCasted.build);
     }
 
     //endregion
