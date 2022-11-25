@@ -1,8 +1,11 @@
 package org.UcelPlugin;
 
+import org.UcelParser.Util.Logging.Log;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
 import java.util.function.Consumer;
 
 public class UcelEditorUI extends BaseWorkspace {
@@ -10,6 +13,7 @@ public class UcelEditorUI extends BaseWorkspace {
         setJPanel(new JPanel());
         this.loadCompileButton();
         this.loadCompileButtonX100();
+        this.loadErrorLog();
     }
 
     @Override
@@ -32,6 +36,7 @@ public class UcelEditorUI extends BaseWorkspace {
         jPanel = value;
     }
 
+    //region Compile Button
     private JButton compileButton;
     private void loadCompileButton() {
         compileButton = new JButton("Compile");
@@ -45,7 +50,9 @@ public class UcelEditorUI extends BaseWorkspace {
             }
         });
     }
+    //endregion
 
+    //region Compile Button x100
     private JButton compileButtonX100;
     private void loadCompileButtonX100() {
         compileButtonX100 = new JButton("Compile x100");
@@ -59,5 +66,27 @@ public class UcelEditorUI extends BaseWorkspace {
             }
         });
     }
+    //endregion
 
+    //region Errorlog
+    JTextArea errorLogTextPanel;
+
+    private void loadErrorLog() {
+        errorLogTextPanel = new JTextArea("");
+
+        jPanel.add(errorLogTextPanel);
+
+        errorLogTextPanel.setBounds(50, 100, 600, 600);
+    }
+    public void resetErrorLog() {
+        errorLogTextPanel.setText("");
+    }
+    public void setErrors(ArrayList<Log> logs) {
+        var collectiveErrorLog = "";
+        for(var log: logs) {
+            collectiveErrorLog += log.getMessage() + "\n";
+        }
+        errorLogTextPanel.setText(collectiveErrorLog);
+    }
+    //endregion
 }

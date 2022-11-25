@@ -1,5 +1,7 @@
 package org.UcelParser.Util.Logging;
 
+import java.util.ArrayList;
+
 public interface ILogger {
 
     void setSource(String source);
@@ -7,5 +9,5 @@ public interface ILogger {
     boolean hasErrors();
     int getErrorCount();
     void printLogs();
-
+    ArrayList<Log> getLogs();
 }

@@ -124,4 +124,7 @@ public class Logger implements ILogger {
         }
     }
 
+    public ArrayList<Log> getLogs() {
+        return logs;
+    }
 }
