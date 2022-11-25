@@ -254,10 +254,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     @Override
     public Template visitPsystem(UCELParser.PsystemContext ctx) {
         var declTemplate = visit(ctx.declarations());
-        var sysTemplate = visit(ctx.system());
-        var buildTemplate = ctx.build() != null ? visit(ctx.build()) : null;
+        var buildSystemTemplate = ctx.build() != null ? visit(ctx.build()) : visit(ctx.system());
 
-        return new PSystemTemplate(declTemplate, buildTemplate, sysTemplate);
+        return new PSystemTemplate(declTemplate, buildSystemTemplate);
     }
     //endregion
 

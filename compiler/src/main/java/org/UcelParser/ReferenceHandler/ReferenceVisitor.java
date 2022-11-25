@@ -507,7 +507,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         try {
             ctx.constructorReference = currentScope.find(constructorIdentifier, false);
         } catch (Exception e) {
-            logger.log(new CompilerErrorLog(ctx, e.getMessage()));
+            logger.log(new ErrorLog(ctx, e.getMessage()));
             exitScope();
             return false;
         }
