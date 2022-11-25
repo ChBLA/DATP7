@@ -63,6 +63,9 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type result = VOID_TYPE;
         Type argumentsTypes = visit(ctx.arguments());
 
+        if (argumentsTypes.getEvaluationType().equals(ERROR_TYPE.getEvaluationType()))
+            return ERROR_TYPE;
+
         DeclarationInfo constructorInfo;
         DeclarationInfo variableCompInfo;
 
@@ -75,15 +78,20 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return ERROR_TYPE;
         }
 
-        if (!constructorInfo.equals(variableCompInfo)) {
-            String conID = ((UCELParser.ComponentContext) constructorInfo.getNode()).ID().getText();
-            String varConID = ((UCELParser.ComponentContext) variableCompInfo.getNode()).ID().getText();
+        if (!constructorInfo.getNode().equals(variableCompInfo.getNode())) {
+            String conID = constructorInfo.getNode() instanceof UCELParser.ComponentContext
+                    ? ((UCELParser.ComponentContext) constructorInfo.getNode()).ID().getText()
+                    : ((UCELParser.PtemplateContext) constructorInfo.getNode()).ID().getText();
+            String varConID = variableCompInfo.getNode() instanceof UCELParser.ComponentContext
+                    ? ((UCELParser.ComponentContext) variableCompInfo.getNode()).ID().getText()
+                    : ((UCELParser.PtemplateContext) variableCompInfo.getNode()).ID().getText();
             logger.log(new ErrorLog(ctx, "Trying to assign " + conID + " to component of type " + varConID));
             return ERROR_TYPE;
         }
 
         Type constructorType = constructorInfo.getType();
-        if (!(constructorType.getEvaluationType().equals(Type.TypeEnum.componentType))) {
+        if (!(constructorType.getEvaluationType().equals(Type.TypeEnum.componentType)
+                || constructorType.getEvaluationType().equals(Type.TypeEnum.templateType))) {
             logger.log(new ErrorLog(ctx,
                     "internal error: constructor for component is not of type component"));
             result = ERROR_TYPE;
@@ -97,6 +105,13 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
                                 + argumentsTypes.getParameters()[i]));
                 result = ERROR_TYPE;
             }
+        }
+
+        Type compVarType = visit(ctx.compVar());
+        if (!(compVarType.getEvaluationType().equals(Type.TypeEnum.processType) && constructorType.getEvaluationType().equals(Type.TypeEnum.templateType))
+            || !(compVarType.getEvaluationType().equals(Type.TypeEnum.componentType) && constructorType.getEvaluationType().equals(Type.TypeEnum.componentType))) {
+            logger.log(new ErrorLog(ctx, "Trying to assign " + constructorType + " to " + compVarType));
+            return ERROR_TYPE;
         }
 
         return result;
@@ -325,12 +340,17 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         exitScope();
 
         Type[] paramTypes = parametersType.getParameters();
+        String[] paramNames = parametersType.getParameterNames();
         Type[] templateTypes = new Type[paramTypes != null ? paramTypes.length + 1 : 1];
+        String[] templateNames = new String[paramNames != null ? paramNames.length + 1 : 1];
         templateTypes[0] = new Type(Type.TypeEnum.processType);
+        templateNames[0] = "";
         if (paramTypes != null)
             System.arraycopy(paramTypes, 0, templateTypes, 1, paramTypes.length);
+        if (paramNames != null)
+            System.arraycopy(paramNames, 0, templateNames, 1, paramNames.length);
         try {
-            currentScope.get(ctx.reference).setType(new Type(Type.TypeEnum.templateType, templateTypes));
+            currentScope.get(ctx.reference).setType(new Type(Type.TypeEnum.templateType, templateNames, templateTypes));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -396,6 +416,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         if (!compBodyType.equals(VOID_TYPE)) {
             logger.log(new ErrorLog(ctx.compBody(), "Body must be of type void, got: " + compBodyType));
+            return ERROR_TYPE;
         }
 
         var componentTypes = new ArrayList<Type>();
@@ -578,15 +599,12 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         } catch (Exception e) {
             throw new RuntimeException(e); // Should be no way this isn't set by the reference handler
         }
+        iteratorInfo.setType(INT_TYPE);
         var lowerBound = visit(ctx.expression(0));
         var upperBound = visit(ctx.expression(1));
         var stmt = visit(ctx.buildStmnt());
 
         boolean hadError = false;
-        if(!iteratorInfo.getType().equals(INT_TYPE)) {
-            logger.log(new ErrorLog(ctx, "Compiler error, iterator should have been automatically set to an integer."));
-            hadError = true;
-        }
 
         if(!lowerBound.equals(INT_TYPE)) {
             if(!lowerBound.equals(ERROR_TYPE))
@@ -813,7 +831,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitParameter(UCELParser.ParameterContext ctx) {
         var type = visit(ctx.type());
-        Type parameterType = new Type(type.getEvaluationType(), ctx.arrayDecl().size());
+        Type parameterType = type.deepCopy(ctx.arrayDecl().size());
 
         try {
             getCurrentScope().get(ctx.reference).setType(parameterType);
@@ -1003,6 +1021,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             case "broadcast" ->  type.deepCopy(Type.TypePrefixEnum.broadcast);
             case "meta" -> type.deepCopy(Type.TypePrefixEnum.meta);
             case "const" ->  type.deepCopy(Type.TypePrefixEnum.constant);
+            case "in" -> type.deepCopy(Type.TypePrefixEnum.in);
+            case "out" -> type.deepCopy(Type.TypePrefixEnum.out);
             default -> type;
         };
     }
@@ -1136,7 +1156,11 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         assert ctx.references.size() == ctx.arrayDeclID().size();
         for (int i = 0; i < ctx.references.size(); i++) {
 
-            Type declType = visit(ctx.arrayDeclID(i));
+            for (var arrayDecl : ctx.arrayDeclID(i).arrayDecl()){
+                if (visit(arrayDecl).equals(ERROR_TYPE))
+                    return ERROR_TYPE;
+            }
+            Type declType = type.deepCopy(ctx.arrayDeclID(i).arrayDecl().size());
 
             if (declType == ERROR_TYPE) {
                 logger.log(new ErrorLog(ctx.arrayDeclID(i), "type error: declaration has type error"));
@@ -1383,7 +1407,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         String identifier = ctx.ID().getText();
 
-        if(structType.getEvaluationType() != Type.TypeEnum.structType ||
+        if((structType.getEvaluationType() != Type.TypeEnum.structType && structType.getEvaluationType() != Type.TypeEnum.interfaceType) ||
             parameterTypes == null || parameterNames == null) {
             logger.log(new ErrorLog(ctx, "Invalid struct"));
             return ERROR_TYPE;
@@ -1616,12 +1640,12 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type[] argTypes = ctx.expression().stream().map(expr -> visit(expr)).toArray(Type[]::new);
 
         // If any type is error, then base-type is error-type.
-        // Else if no errors, then base-type is invalidType
+        // Else if no errors, then base-type is void-type
         if(Arrays.stream(argTypes).anyMatch(t -> t.getEvaluationType() == Type.TypeEnum.errorType)) {
-            return new Type(Type.TypeEnum.errorType, argTypes);
+            return ERROR_TYPE;
         }
         else {
-            return new Type(Type.TypeEnum.invalidType, argTypes);
+            return new Type(Type.TypeEnum.voidType, argTypes);
         }
     }
     private UCELParser.ExpressionContext[] getArgumentsContexts(UCELParser.ArgumentsContext ctx) {

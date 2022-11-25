@@ -3,7 +3,7 @@ package org.UcelParser.Util;
 public class Type {
 
     public enum TypePrefixEnum {
-        urgent, broadcast, meta, constant, noPrefix;
+        urgent, broadcast, meta, constant, in, out, noPrefix;
     }
 
     public enum TypeEnum {

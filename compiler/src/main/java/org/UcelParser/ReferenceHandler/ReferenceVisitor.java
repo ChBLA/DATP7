@@ -3,6 +3,7 @@ package org.UcelParser.ReferenceHandler;
 import org.UcelParser.UCELParser_Generated.*;
 import org.UcelParser.Util.*;
 import org.UcelParser.Util.Logging.*;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.List;
@@ -91,8 +92,9 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             String id = ctx.compVar().ID().getText();
             if(!currentScope.isUnique(id, true))
                 return false;
-            currentScope.add(new DeclarationInfo(id));
             ctx.typeReference = currentScope.find(typeIdentifier, false);
+            var compNode = currentScope.get(ctx.typeReference).getNode();
+            currentScope.add(new DeclarationInfo(id, compNode));
         } catch (Exception e) {
             logger.log(new ErrorLog(ctx, "Type " + typeIdentifier + " is not defined"));
             return false;
@@ -385,7 +387,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     public Boolean visitCompBody(UCELParser.CompBodyContext ctx) {
         enterScope();
-        currentScope = ctx.scope;
+        ctx.scope = currentScope;
         Boolean declRes = null;
         if (ctx.declarations() != null) declRes = visit(ctx.declarations());
         Boolean buildRes = null;
@@ -560,7 +562,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
                     return false;
                 }
 
-                references.add(currentScope.add(new DeclarationInfo(identifier)));
+                references.add(currentScope.add(new DeclarationInfo(identifier, arrayDeclID)));
             } catch (Exception e) {
                 logger.log(new ErrorLog(ctx, "Compiler Error: " + e.getMessage()));
                 return false;

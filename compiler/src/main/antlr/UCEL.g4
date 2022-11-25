@@ -61,7 +61,7 @@ compVar locals [DeclarationReference variableReference]
     : ID (LEFTBRACKET expression RIGHTBRACKET)*;
 buildIf : IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?;
 buildIteration locals [DeclarationReference reference]
-    : FOR LEFTPAR ID COLON LEFTBRACKET expression COMMA expression RIGHTBRACKET RIGHTPAR buildStmnt;
+    : FOR LEFTPAR ID COLON 'int' LEFTBRACKET expression COMMA expression RIGHTBRACKET RIGHTPAR buildStmnt;
 buildBlock locals [Scope scope]
     : LEFTCURLYBRACE buildStmnt+ RIGHTCURLYBRACE;
 buildDecl locals [DeclarationReference typeReference]
@@ -94,11 +94,11 @@ typeDecl locals [List<DeclarationReference> references]
 arrayDeclID : ID arrayDecl*;
 
 type          : prefix? typeId;
-prefix        : 'urgent' | 'broadcast' | 'meta' | 'const';
+prefix        : 'urgent' | 'broadcast' | 'meta' | 'const' | 'in' | 'out';
 
 typeId locals [DeclarationReference reference]
               : ID                                                                               #TypeIDID
-              | op=('int' | 'clock' | 'chan' | 'bool' | 'double' | 'string' | 'in' | 'out')      #TypeIDType
+              | op=('int' | 'clock' | 'chan' | 'bool' | 'double' | 'string')                     #TypeIDType
               | 'int' LEFTBRACKET expression? COMMA expression? RIGHTBRACKET                     #TypeIDInt
               | 'scalar' LEFTBRACKET expression RIGHTBRACKET                                     #TypeIDScalar
               | 'struct' LEFTCURLYBRACE fieldDecl (fieldDecl)* RIGHTCURLYBRACE                   #TypeIDStruct

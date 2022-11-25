@@ -223,12 +223,12 @@ public class ManualParser {
     //endregion
 
     //region Project system
-        public UCELParser.PsystemContext parseProjectSystem(UCELParser.ProjectContext parent, String psystem) {
+    public UCELParser.PsystemContext parseProjectSystem(UCELParser.ProjectContext parent, String psystem) {
         var Parser = generateParser(psystem);
         var psystemNode = Parser.psystem();
         psystemNode.parent = parent;
         return Parser.getNumberOfSyntaxErrors() == 0 && isEOF(Parser) ? psystemNode : null;
-        }
+    }
     //endregion
     //endregion
 
