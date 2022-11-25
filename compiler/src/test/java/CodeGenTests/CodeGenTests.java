@@ -88,8 +88,8 @@ public class CodeGenTests {
 
         parameters[0] = parameterInfo;
         interfaces[0] = interfaceInfo;
-        var occurrence = new ComponentOccurrence(constructorCallNode, parameters, interfaces);
-        occurrence.setPrefix("Component1");
+        var occurrence = new ComponentOccurrence("Component1", parameters, interfaces);
+
         node.occurrences = new ArrayList<>() {{ add(occurrence); }};
         node.scope = scopeCompNode;
 
@@ -158,10 +158,8 @@ public class CodeGenTests {
         interfaces2[0] = interfaceInfo2;
 
 
-        var occurrence1 = new ComponentOccurrence(constructorCallNode, parameters1, interfaces1);
-        var occurrence2 = new ComponentOccurrence(constructorCallNode, parameters2, interfaces2);
-        occurrence1.setPrefix("Component1");
-        occurrence2.setPrefix("Component2");
+        var occurrence1 = new ComponentOccurrence("Component1", parameters1, interfaces1);
+        var occurrence2 = new ComponentOccurrence("Component2", parameters2, interfaces2);
         node.occurrences = new ArrayList<>() {{ add(occurrence1); add(occurrence2); }};
         node.scope = scopeCompNode;
 

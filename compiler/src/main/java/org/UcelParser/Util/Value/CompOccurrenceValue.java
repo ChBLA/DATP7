@@ -9,15 +9,17 @@ public class CompOccurrenceValue implements InterpreterValue {
 
     private InterpreterValue[] arguments, interfaces;
 
+    private String prefix;
 
-    public CompOccurrenceValue(InterpreterValue[] arguments, Type compType) {
+    public CompOccurrenceValue(String prefix, InterpreterValue[] arguments, Type compType) {
+        this.prefix = prefix;
         this.arguments = arguments;
-        interfaces = new InterpreterValue[compType.getParameters().length - arguments.length - 2];
+        this.interfaces = new InterpreterValue[compType.getParameters().length - arguments.length - 2];
     }
 
     @Override
     public String generateName() {
-        return "comp occurrence";
+        return prefix;
     }
 
     @Override

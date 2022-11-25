@@ -1,11 +1,21 @@
 package org.UcelParser.Util.Exception;
 
+import org.UcelParser.Util.Logging.Log;
+
+import java.util.ArrayList;
+
 public class ErrorsFoundException extends Exception {
     public ErrorsFoundException() {
         super();
     }
 
-    public ErrorsFoundException(String msg) {
+    private ArrayList<Log> logs;
+    public ArrayList<Log> getLogs() {
+        return logs;
+    }
+
+    public ErrorsFoundException(String msg, ArrayList<Log> logs) {
         super(msg);
+        this.logs = logs;
     }
 }

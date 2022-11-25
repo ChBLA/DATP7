@@ -6,6 +6,7 @@ import com.uppaal.plugin.PluginWorkspace;
 import com.uppaal.plugin.Registry;
 import org.Ucel.IProject;
 import org.UcelParser.Compiler;
+import org.UcelParser.Util.Exception.ErrorsFoundException;
 import org.UcelPlugin.DocumentParser.UcelToUppaalDocumentParser;
 import org.UcelPlugin.DocumentParser.UppaalToUcelDocumentParser;
 import org.UcelPlugin.Models.SharedInterface.Project;
@@ -23,17 +24,25 @@ public class UcelPlugin implements Plugin {
     public UcelPlugin(Registry registry) {
         this.uppaalManager = new UppaalManager(registry);
 
-        ui.addCompileAction(e ->
-                setCurrentProject(CompileCurrentProject())
-        );
+        ui.addCompileAction(e -> {
+            try {
+                setCurrentProject(CompileCurrentProject());
+            } catch (ErrorsFoundException err) {
+                ui.setErrors(err.getLogs());
+            }
+        });
 
         ui.addCompileActionX100(e -> {
-            for (int i = 0; i < 100; i++)
-                setCurrentProject(CompileCurrentProject());
+            try {
+                for (int i = 0; i < 100; i++)
+                    setCurrentProject(CompileCurrentProject());
+            } catch (ErrorsFoundException err) {
+                ui.setErrors(err.getLogs());
+            }
         });
     }
 
-    private IProject CompileCurrentProject() {
+    private IProject CompileCurrentProject() throws ErrorsFoundException {
         Document document = uppaalManager.getCurrentDocument();
         UppaalToUcelDocumentParser documentParser = new UppaalToUcelDocumentParser(document);
         Project project = documentParser.parseDocument();

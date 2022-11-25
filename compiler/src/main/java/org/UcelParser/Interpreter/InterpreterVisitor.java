@@ -1,15 +1,12 @@
 package org.UcelParser.Interpreter;
 
-import org.UcelParser.Util.ComponentOccurrence;
-import org.UcelParser.Util.DeclarationInfo;
+import org.UcelParser.Util.*;
 import org.UcelParser.Util.Logging.ErrorLog;
 import org.UcelParser.Util.Logging.ILogger;
 import org.UcelParser.Util.Logging.Log;
-import org.UcelParser.Util.Type;
 import org.UcelParser.Util.Value.*;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
-import org.UcelParser.Util.Scope;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
@@ -427,7 +424,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             UCELParser.ComponentContext compNode = ((UCELParser.ComponentContext) declInfo.getNode());
             Type compType = compNode.scope.get(compNode.reference).getType();
 
-            CompOccurrenceValue occurrenceValue = new CompOccurrenceValue(arguments, compType);
+            CompOccurrenceValue occurrenceValue = new CompOccurrenceValue(ctx.ID().getText(), arguments, compType);
             if(listValue == null) {
                 declInfo.setValue(occurrenceValue);
             } else {
@@ -554,6 +551,97 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             values[i] = recBuildMultiDimLists(sizes, layer - 1);
         }
         return new ListValue(values);
+    }
+
+    @Override
+    public InterpreterValue visitBuild(UCELParser.BuildContext ctx) {
+        for(UCELParser.BuildDeclContext buildDecl : ctx.buildDecl()) {
+            InterpreterValue value = visit(buildDecl);
+            if(value == null || !(value instanceof VoidValue))
+                return null;
+        }
+
+        for(UCELParser.BuildStmntContext buildStmnt : ctx.buildStmnt()) {
+            InterpreterValue value = visit(buildStmnt);
+            if(value == null || !(value instanceof VoidValue))
+                return null;
+        }
+
+        for(UCELParser.BuildDeclContext buildDecl : ctx.buildDecl()) {
+            UCELParser.ComponentContext componentNode = null;
+            InterpreterValue value = null;
+
+            try{
+                DeclarationReference variableReference = buildDecl.compVar().variableReference;
+                componentNode = (UCELParser.ComponentContext) currentScope.get(variableReference).getNode();
+                value = currentScope.get(variableReference).getValue();
+            } catch (Exception e) {
+                return null;
+            }
+
+            if(!visitCompWithAllOccurrences(componentNode, value, ""))
+                return null;
+        }
+
+        return new VoidValue();
+    }
+
+    private boolean visitCompWithAllOccurrences(UCELParser.ComponentContext componentNode,
+                                                InterpreterValue value, String indices) {
+        if(value instanceof ListValue) {
+            ListValue listvalue = (ListValue) value;
+
+            for(int i = 0; i < listvalue.size(); i++) {
+                boolean b = visitCompWithAllOccurrences(componentNode,
+                        listvalue.getValue(i), indices + "_" + i);
+                if(!b) return false;
+            }
+
+            return true;
+        } else if(value instanceof CompOccurrenceValue) {
+            return visitCompWithOccurrence(componentNode, (CompOccurrenceValue) value, indices);
+        } else {
+            return false;
+        }
+    }
+
+    private boolean visitCompWithOccurrence(UCELParser.ComponentContext componentNode, CompOccurrenceValue value, String indices) {
+        ComponentOccurrence componentOccurrence = new ComponentOccurrence(value.generateName() + indices,
+                value.getArguments(), value.getInterfaces());
+
+        componentNode.occurrences.add(componentOccurrence);
+
+        if(componentNode.compBody().build() == null) {
+            //No build block means nothing needs to be interpreted
+            return true;
+        }
+
+        Scope oldScope = currentScope;
+        enterScope(componentNode.scope);
+
+        //Set parameters
+        try {
+            var parameters = componentNode.parameters().parameter();
+            for(int i = 0; i < parameters.size(); i++) {
+                UCELParser.ParameterContext paramCtx = parameters.get(i);
+                DeclarationInfo parameterInfo = currentScope.get(paramCtx.reference);
+                parameterInfo.setValue(value.getArguments()[i]);
+            }
+
+            var interFaceParameters = componentNode.interfaces().parameters().parameter();
+            for(int i = 0; i < interFaceParameters.size(); i++) {
+                UCELParser.ParameterContext paramCtx = interFaceParameters.get(i);
+                DeclarationInfo parameterInfo = currentScope.get(paramCtx.reference);
+                parameterInfo.setValue(value.getInterfaces()[i]);
+            }
+        } catch (Exception e) {
+            return false;
+        }
+
+        visit(componentNode.compBody().build());
+        currentScope = oldScope;
+
+        return true;
     }
 
     //endregion
