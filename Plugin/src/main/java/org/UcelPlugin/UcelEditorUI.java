@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 
 public class UcelEditorUI extends BaseWorkspace {
     public UcelEditorUI() {
-        setJPanel(new JPanel());
+        setJPanel(new JPanel(new FlowLayout(FlowLayout.LEFT)));
         this.loadCompileButton();
         this.loadCompileButtonX100();
         this.loadErrorLog();
@@ -70,17 +70,28 @@ public class UcelEditorUI extends BaseWorkspace {
 
     //region Errorlog
     JTextArea errorLogTextPanel;
+    JScrollPane errorScrollBar;
 
     private void loadErrorLog() {
         errorLogTextPanel = new JTextArea("");
 
-        JScrollPane scrollPane = new JScrollPane(errorLogTextPanel);
-        jPanel.add(scrollPane);
-        
-        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setPreferredSize(new Dimension(400,500));
+        errorScrollBar = new JScrollPane(errorLogTextPanel);
+        jPanel.add(errorScrollBar);
+
+        errorScrollBar.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        errorScrollBar.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        resetErrorBlockSize();
     }
+    void resetErrorBlockSize() {
+        errorScrollBar.setBorder(BorderFactory.createEmptyBorder(30, 5, 5, 5));
+        errorScrollBar.setPreferredSize(new Dimension(jPanel.getWidth()-10,jPanel.getHeight() - 35));
+    }
+
+    @Override
+    public void setActive(boolean b) {
+        resetErrorBlockSize();
+    }
+
     public void resetErrorLog() {
         errorLogTextPanel.setText("");
     }
