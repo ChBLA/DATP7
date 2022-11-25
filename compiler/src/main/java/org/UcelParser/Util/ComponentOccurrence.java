@@ -7,19 +7,14 @@ import org.UcelParser.Util.Value.StringValue;
 import java.util.List;
 
 public class ComponentOccurrence {
-    private final UCELParser.CompConContext node;
     private final NameGenerator[] parameters;
     private final NameGenerator[] interfaces;
     private String prefix = "";
 
-    public ComponentOccurrence(UCELParser.CompConContext node, NameGenerator[] parameters, NameGenerator[] interfaces) {
-        this.node = node;
+    public ComponentOccurrence(String prefix, NameGenerator[] parameters, NameGenerator[] interfaces) {
+        this.prefix = prefix;
         this.parameters = parameters;
         this.interfaces = interfaces;
-    }
-
-    public UCELParser.CompConContext getNode() {
-        return this.node;
     }
 
     public NameGenerator[] getParameters() {
@@ -32,10 +27,6 @@ public class ComponentOccurrence {
 
     public String getPrefix() {
         return this.prefix;
-    }
-
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
     }
 
     @Override
