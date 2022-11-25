@@ -5,6 +5,8 @@ import org.UcelParser.Util.Logging.ILogger;
 import org.UcelParser.Util.Logging.Log;
 import org.UcelParser.Util.Logging.Logger;
 
+import java.util.ArrayList;
+
 public class TestLogger implements ILogger {
     @Override
     public void setSource(String source) {
@@ -29,5 +31,9 @@ public class TestLogger implements ILogger {
     @Override
     public void printLogs() {
 
+    }
+
+    public ArrayList<Log> getLogs() {
+        return new ArrayList<>();
     }
 }

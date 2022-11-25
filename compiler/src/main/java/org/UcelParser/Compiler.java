@@ -37,28 +37,17 @@ public class Compiler {
         this.codeGenVisitor = new CodeGenVisitor(logger);
     }
 
-    public IProject compileProject(IProject project) {
+    public IProject compileProject(IProject project) throws ErrorsFoundException {
         UniquePrefixGenerator.resetCounter();
         ManualParser manualParser = new ManualParser();
         ParserRuleContext tree = manualParser.parseProject(project);
         logger.setSource("");//TODO inject sources
-        try {
-            var refTree = runVisitor(referenceVisitor, tree, logger);
-            var typeTree = runVisitor(typeCheckerVisitor, refTree, logger);
-            var generatedCode = runVisitor(codeGenVisitor, typeTree, logger);
-            var outputProject = new ProjectCodeLinker().generateUppaalProject((ProjectTemplate) generatedCode);
-//            System.out.println(generatedCode);
-            return outputProject;
-        }
-        catch (ErrorsFoundException e) {
-            logger.printLogs();
-            throw new RuntimeException(e);
-        }
 
-//        logger.printLogs();
-
-//        return project;
-//        return generateDummyProject();
+        var refTree = runVisitor(referenceVisitor, tree, logger);
+        var typeTree = runVisitor(typeCheckerVisitor, refTree, logger);
+        var generatedCode = runVisitor(codeGenVisitor, typeTree, logger);
+        var outputProject = new ProjectCodeLinker().generateUppaalProject((ProjectTemplate) generatedCode);
+        return outputProject;
     }
 
     private IProject generateDummyProject() {
@@ -117,13 +106,13 @@ public class Compiler {
     private ParserRuleContext runVisitor(UCELBaseVisitor visitor, ParserRuleContext tree, ILogger logger) throws ErrorsFoundException{
         visitor.visit(tree);
         if (logger.hasErrors())
-            throw new ErrorsFoundException(String.format("Found errors in visitor %s", visitor.getClass().toString()));
+            throw new ErrorsFoundException(String.format("Found errors in visitor %s", visitor.getClass().toString()), logger.getLogs());
         return tree;
     }
     private Template runVisitor(CodeGenVisitor visitor, ParserRuleContext tree, ILogger logger) throws ErrorsFoundException{
         var output = visitor.visit(tree);
         if (logger.hasErrors())
-            throw new ErrorsFoundException(String.format("Found errors in visitor %s", visitor.getClass().toString()));
+            throw new ErrorsFoundException(String.format("Found errors in visitor %s", visitor.getClass().toString()), logger.getLogs());
         return output;
     }
 }
