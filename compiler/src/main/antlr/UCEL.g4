@@ -8,6 +8,7 @@ grammar UCEL;
     import org.UcelParser.Util.DeclarationInfo;
     import org.UcelParser.Util.FuncCallOccurrence;
     import org.UcelParser.Util.ComponentOccurrence;
+    import org.UcelParser.Util.TemplateOccurrence;
 }
 
 
@@ -15,7 +16,7 @@ project locals [Scope scope]
     : pdeclaration ptemplate* psystem;
 
 pdeclaration : declarations;
-ptemplate locals [Scope scope, DeclarationReference reference]
+ptemplate locals [Scope scope, DeclarationReference reference, List<TemplateOccurrence> occurrences]
     : ID parameters graph declarations;
 psystem : declarations (build | system);
 
