@@ -74,9 +74,12 @@ public class UcelEditorUI extends BaseWorkspace {
     private void loadErrorLog() {
         errorLogTextPanel = new JTextArea("");
 
-        jPanel.add(errorLogTextPanel);
-
-        errorLogTextPanel.setBounds(50, 100, 600, 600);
+        JScrollPane scrollPane = new JScrollPane(errorLogTextPanel);
+        jPanel.add(scrollPane);
+        
+        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setPreferredSize(new Dimension(400,500));
     }
     public void resetErrorLog() {
         errorLogTextPanel.setText("");
