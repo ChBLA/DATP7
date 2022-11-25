@@ -611,9 +611,13 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             return true;
         } else if(value instanceof CompOccurrenceValue && node instanceof UCELParser.ComponentContext) {
             UCELParser.ComponentContext componentNode = (UCELParser.ComponentContext) node;
+            if(componentNode.occurrences == null)
+                componentNode.occurrences = new ArrayList<>();
             return visitCompWithOccurrence(componentNode, (CompOccurrenceValue) value, indices);
         } else if(value instanceof TemplateOccurrenceValue && node instanceof UCELParser.PtemplateContext) {
             UCELParser.PtemplateContext componentNode = (UCELParser.PtemplateContext) node;
+            if(componentNode.occurrences == null)
+                componentNode.occurrences = new ArrayList<>();
             return visitTempWithOccurrence(componentNode, (CompOccurrenceValue) value, indices);
         } else {
             return false;
