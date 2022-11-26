@@ -1,8 +1,11 @@
 package org.UcelParser.TypeChecker;
 
+import com.sun.jdi.FloatType;
 import org.UcelParser.CodeGeneration.templates.ManualTemplate;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+
+import java.nio.channels.FileLock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -1422,6 +1425,21 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitParen(UCELParser.ParenContext ctx) {
         return visit(ctx.expression());
+    }
+
+    @Override
+    public Type visitPower(UCELParser.PowerContext ctx) {
+        Type base = visit(ctx.expression(0));
+        Type exponent = visit(ctx.expression(1));
+
+        if (base.getEvaluationType() == Type.TypeEnum.intType && exponent.getEvaluationType() == Type.TypeEnum.intType) {
+            return INT_TYPE;
+        } else if (base.getEvaluationType() == Type.TypeEnum.doubleType && exponent.getEvaluationType() == Type.TypeEnum.intType) {
+            return DOUBLE_TYPE;
+        } else {
+            logger.log(new ErrorLog(ctx, "Type error: cannot raise " + base + " to the power of " + exponent));
+            return ERROR_TYPE;
+        }
     }
 
     @Override
