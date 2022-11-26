@@ -23,6 +23,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     private Scope currentScope;
     private final ILogger logger;
     public String componentPrefix = "";
+    public int depthFromComponentScope = 0;
 
     public CodeGenVisitor() {
         this.logger = new Logger();
@@ -48,6 +49,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         if (ctx.occurrences != null) {
             for (var occurrence : ctx.occurrences) {
                 this.componentPrefix = occurrence.getPrefix();
+                this.depthFromComponentScope = 0;
 
                 ArrayList<Template> parameters = new ArrayList<>();
                 ArrayList<Template> interfaces = new ArrayList<>();
@@ -59,8 +61,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                             //TODO: Implement when component with references
                         } else {
                             Template paramTemplate = visit(paramNode);
-                            String actualParameter = occurrence.getParameters()[i].generateName(componentPrefix);
-                            ManualTemplate paramDeclaration = new ManualTemplate(String.format("%s = %s", paramTemplate, actualParameter));
+                            String actualParameter = occurrence.getParameters()[i].generateName("");
+                            ManualTemplate paramDeclaration = new ManualTemplate(String.format("%s = %s;", paramTemplate, actualParameter));
                             parameters.add(paramDeclaration);
                         }
                     }
@@ -83,7 +85,10 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitCompBody(UCELParser.CompBodyContext ctx) {
-        return ctx.declarations() != null ? visit(ctx.declarations()) : new ManualTemplate("");
+        enterScope(ctx.scope);
+        var result = ctx.declarations() != null ? visit(ctx.declarations()) : new ManualTemplate("");
+        exitScope();
+        return result;
     }
 
 
@@ -230,7 +235,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
         ArrayList<PTemplateTemplate> pTemplateTemplates = new ArrayList<>();
         for (var pTemp : ctx.ptemplate()) {
-            pTemplateTemplates.add((PTemplateTemplate) visit(pTemp));
+            PTemplatesWrapperTemplate pTemplates = (PTemplatesWrapperTemplate) visit(pTemp);
+            pTemplateTemplates.addAll(pTemplates.pTemplates);
         }
 
         exitScope();
@@ -264,20 +270,43 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitPtemplate(UCELParser.PtemplateContext ctx) {
-        String name;
-        try {
-            name = currentScope.get(ctx.reference).generateName();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        ArrayList<PTemplateTemplate> templates = new ArrayList<>();
+
+        if (ctx.occurrences != null && ctx.occurrences.size() > 0) {
+            for (var occurrence : ctx.occurrences) {
+                this.componentPrefix = occurrence.getPrefix();
+                String name;
+                try {
+                    name = currentScope.get(ctx.reference).generateName();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+                enterScope(ctx.scope);
+                var params = visit(ctx.parameters());
+                var decls = visit(ctx.declarations());
+                var graph = (GraphTemplate) visit(ctx.graph());
+                exitScope();
+
+                templates.add(new PTemplateTemplate(name, params, graph, decls));
+            }
+        } else {
+            String name;
+            try {
+                name = currentScope.get(ctx.reference).generateName();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            enterScope(ctx.scope);
+            var params = visit(ctx.parameters());
+            var decls = visit(ctx.declarations());
+            var graph = (GraphTemplate) visit(ctx.graph());
+            exitScope();
+
+            templates.add(new PTemplateTemplate(name, params, graph, decls));
         }
-
-        enterScope(ctx.scope);
-        var params = visit(ctx.parameters());
-        var decls = visit(ctx.declarations());
-        var graph = (GraphTemplate) visit(ctx.graph());
-
-        exitScope();
-        return new PTemplateTemplate(name, params, graph, decls);
+        return new PTemplatesWrapperTemplate(templates);
     }
 
     //endregion
@@ -336,7 +365,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitFuncCall(UCELParser.FuncCallContext ctx) {
         String callName;
         try {
-            callName = currentScope.get(ctx.reference).generateName(componentPrefix);
+            callName = currentScope.get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -383,7 +412,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                 var parameters = visit(ctx.parameters());
                 String nameOfCall = null;
                 try {
-                    nameOfCall = currentScope.getParent().get(ctx.occurrences.get(i).getFuncCallContext().reference).generateName(componentPrefix);
+                    DeclarationReference callRef = ctx.occurrences.get(i).getFuncCallContext().reference;
+                    nameOfCall = currentScope.getParent().get(callRef).generateName(getComponentPrefix(callRef.getRelativeScope()));
                 } catch (Exception e) {
                     throw new RuntimeException("error: could not find occurrence");
                 }
@@ -394,7 +424,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         } else {
             String ID = null;
             try {
-                ID = currentScope.getParent().get(ctx.reference).generateName(componentPrefix);
+                ID = currentScope.getParent().get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope()));
             } catch (Exception e) {
                 throw new RuntimeException("error: could not find function name");
             }
@@ -415,7 +445,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitInstantiation(UCELParser.InstantiationContext ctx) {
         var ID1 = "";
         try {
-            ID1 = currentScope.get(ctx.instantiatedReference).generateName(componentPrefix);
+            ID1 = currentScope.get(ctx.instantiatedReference).generateName(getComponentPrefix(ctx.instantiatedReference.getRelativeScope()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -423,7 +453,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         enterScope(ctx.scope);
         var ID2 = "";
         try {
-            ID2 = currentScope.get(ctx.constructorReference).generateName(componentPrefix);
+            ID2 = currentScope.get(ctx.constructorReference).generateName(getComponentPrefix(ctx.constructorReference.getRelativeScope()));
         } catch (Exception e) {
             exitScope();
             throw new RuntimeException(e);
@@ -545,7 +575,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
             Template arrayDeclID = visit(ctx.arrayDeclID(i));
 
             try {
-                String identifier = currentScope.get(ctx.references.get(i)).generateName(componentPrefix);
+                String identifier = currentScope.get(ctx.references.get(i)).generateName(getComponentPrefix(ctx.references.get(i).getRelativeScope()));
                 arrayDeclID = arrayDeclID.replaceValue("ID", identifier);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -597,7 +627,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitTypeIDID(UCELParser.TypeIDIDContext ctx) {
         ManualTemplate result;
         try {
-            result = new ManualTemplate(currentScope.get(ctx.reference).generateName(componentPrefix));
+            result = new ManualTemplate(currentScope.get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope())));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -655,7 +685,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
             throw new RuntimeException(e);
         }
 
-        var idString = info != null ? info.generateName(componentPrefix) : "";
+        var idString = info != null ? info.generateName(getComponentPrefix(ctx.reference.getRelativeScope())) : "";
 
         var arrayTemplates = new ArrayList<Template>();
 
@@ -687,7 +717,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitChanExpr(UCELParser.ChanExprContext ctx) {
         if (ctx.chanExpr() == null) {
             try {
-                return new ManualTemplate(currentScope.get(ctx.reference).generateName(componentPrefix));
+                return new ManualTemplate(currentScope.get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope())));
             } catch (Exception e) {
                 throw new RuntimeException(e.getMessage());
             }
@@ -771,10 +801,10 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
         if (ctx.initialiser() != null) {
             Template initialiserResult = visit(ctx.initialiser());
-            result = new VariableIDTemplate(declarationInfo.generateName(componentPrefix), arrayDecals, initialiserResult);
+            result = new VariableIDTemplate(declarationInfo.generateName(getComponentPrefix(ctx.reference.getRelativeScope())), arrayDecals, initialiserResult);
         }
         else {
-            result = new VariableIDTemplate(declarationInfo.generateName(componentPrefix), arrayDecals);
+            result = new VariableIDTemplate(declarationInfo.generateName(getComponentPrefix(ctx.reference.getRelativeScope())), arrayDecals);
         }
 
         return result;
@@ -808,7 +838,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     @Override
     public Template visitIdExpr(UCELParser.IdExprContext ctx) {
         try {
-            return new ManualTemplate(currentScope.get(ctx.reference).generateName(componentPrefix));
+            return new ManualTemplate(currentScope.get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope())));
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -983,7 +1013,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitVerification(UCELParser.VerificationContext ctx) {
         String id = "";
         try {
-            id = currentScope.get(ctx.reference).generateName(componentPrefix);
+            id = currentScope.get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope()));
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -1064,7 +1094,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         var typeResult = ctx.type() != null ? visit(ctx.type()) : new ManualTemplate("");
         var stmntResult = visit(ctx.statement());
 
-        return new IterationTemplate(new ManualTemplate(declarationInfo != null ? declarationInfo.generateName(componentPrefix) : ""), typeResult, stmntResult);
+        return new IterationTemplate(new ManualTemplate(declarationInfo != null
+                ? declarationInfo.generateName(getComponentPrefix(ctx.reference.getRelativeScope()))
+                : ""), typeResult, stmntResult);
     }
 
 
@@ -1153,7 +1185,13 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
     //region Helper functions
+    private String getComponentPrefix(int depth) {
+        return depth <= this.depthFromComponentScope ? componentPrefix : "";
+    }
+
     private void enterScope(Scope scope) {
+        if (!this.componentPrefix.equals(""))
+            this.depthFromComponentScope++;
         currentScope = scope;
     }
 

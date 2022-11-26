@@ -304,6 +304,11 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     }
 
     @Override
+    public InterpreterValue visitBuildStmnt(UCELParser.BuildStmntContext ctx) {
+        return visit(ctx.children.get(0));
+    }
+
+    @Override
     public InterpreterValue visitBuildIf(UCELParser.BuildIfContext ctx) {
         // | IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?  #BuildIf
         var predicate = visit(ctx.expression());
@@ -425,7 +430,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
             if(declInfo.getNode() instanceof UCELParser.ComponentContext) {
                 UCELParser.ComponentContext compNode = ((UCELParser.ComponentContext) declInfo.getNode());
-                Type compType = compNode.scope.get(compNode.reference).getType();
+                Type compType = compNode.scope.getParent().get(compNode.reference).getType();
 
                 occurrenceValue = new CompOccurrenceValue(ctx.ID().getText(), arguments, compType);
             } else if(declInfo.getNode() instanceof UCELParser.PtemplateContext) {
@@ -618,7 +623,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             UCELParser.PtemplateContext componentNode = (UCELParser.PtemplateContext) node;
             if(componentNode.occurrences == null)
                 componentNode.occurrences = new ArrayList<>();
-            return visitTempWithOccurrence(componentNode, (CompOccurrenceValue) value, indices);
+            return visitTempWithOccurrence(componentNode, (TemplateOccurrenceValue) value, indices);
         } else {
             return false;
         }
@@ -663,7 +668,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         return true;
     }
 
-    private boolean visitTempWithOccurrence(UCELParser.PtemplateContext templateNode, CompOccurrenceValue value, String indices) {
+    private boolean visitTempWithOccurrence(UCELParser.PtemplateContext templateNode, TemplateOccurrenceValue value, String indices) {
         TemplateOccurrence templateOccurrence = new TemplateOccurrence(value.generateName() + indices,
                 value.getArguments());
 
