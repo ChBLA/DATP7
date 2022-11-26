@@ -871,6 +871,14 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
     @Override
+    public Template visitPower(UCELParser.PowerContext ctx) {
+        var left = visit(ctx.expression(0));
+        var right = visit(ctx.expression(1));
+
+        return new PowerExprTemplate(left, right);
+    }
+
+    @Override
     public Template visitAddSub(UCELParser.AddSubContext ctx) {
         var left = visit(ctx.expression(0));
         var right = visit(ctx.expression(1));
