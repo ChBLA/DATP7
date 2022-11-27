@@ -23,6 +23,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     private final ILogger logger;
     public String componentPrefix = "";
     public int depthFromComponentScope = 0;
+    private int counter = 0;
 
     public CodeGenVisitor() {
         this.logger = new Logger();
@@ -230,12 +231,16 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitProject(UCELParser.ProjectContext ctx) {
         enterScope(ctx.scope);
         Template pDeclTemplate = visit(ctx.pdeclaration());
-        Template pSystemTemplate = visit(ctx.psystem());
+        PSystemTemplate pSystemTemplate = (PSystemTemplate) visit(ctx.psystem());
 
         ArrayList<PTemplateTemplate> pTemplateTemplates = new ArrayList<>();
         for (var pTemp : ctx.ptemplate()) {
-            pTemplateTemplates.add((PTemplateTemplate) visit(pTemp));
+            PTemplateTemplate template = (PTemplateTemplate) visit(pTemp);
+            pTemplateTemplates.add(template);
+            pSystemTemplate.system.template.add("decls", template.sysDeclarations);
+            pSystemTemplate.system.template.add("names", template.namesForSysDeclarations);
         }
+        pSystemTemplate.finalise();
 
         exitScope();
         return new ProjectTemplate(pTemplateTemplates, pDeclTemplate, pSystemTemplate);
@@ -286,7 +291,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         ArrayList<Template> declarations = new ArrayList<Template>();
         if (ctx.occurrences != null && ctx.occurrences.size() > 0) {
             for (var occ : ctx.occurrences) {
-                String occName = occ.getPrefix();
+                String occName = occ.getPrefix() + this.counter++;
                 ST constructorCall = new ST("<exprs; separator=\", \">");
                 constructorCall.add("exprs", Arrays.stream(occ.getParameters()).map(NameGenerator::generateName));
                 Template occDecl = new ManualTemplate(String.format("%s = %s", occName, constructorCall));
@@ -295,7 +300,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                 declarations.add(occDecl);
             }
         }
-        return new PTemplateTemplate(name, params, graph, decls);
+        Template sysDecls = new DeclarationsTemplate(declarations);
+        return new PTemplateTemplate(name, params, graph, decls, sysDecls, namesForInstans);
     }
 
     //endregion
