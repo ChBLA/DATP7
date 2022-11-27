@@ -143,7 +143,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression());
         String id = ctx.ID().getText();
 
-        if(!isStringValue(left) || id == null/**/) return null;
+        if(!isStringValue(left) || id == null)
+            return null;
         return new StringValue(left.generateName() + "." + id);
     }
 
@@ -448,7 +449,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
                 listValue.setValue(lastIndex(indices), occurrenceValue);
             }
 
-        } catch (Exception e) {return null;}
+        } catch (Exception e) {
+            return null;
+        }
 
         return new VoidValue();
     }
@@ -662,6 +665,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             return false;
         }
 
+        enterScope(componentNode.compBody().scope);
         visit(componentNode.compBody().build());
         currentScope = oldScope;
 

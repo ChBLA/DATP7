@@ -3,19 +3,18 @@ package org.UcelParser.CodeGeneration;
 import org.UcelParser.CodeGeneration.templates.*;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
-import org.UcelParser.Util.DeclarationInfo;
-import org.UcelParser.Util.DeclarationReference;
+import org.UcelParser.Util.*;
 import org.UcelParser.Util.Logging.ErrorLog;
 import org.UcelParser.Util.Logging.ILogger;
 import org.UcelParser.Util.Logging.Logger;
-import org.UcelParser.Util.Scope;
 import org.UcelParser.CodeGeneration.templates.ManualTemplate;
 import org.UcelParser.CodeGeneration.templates.Template;
-import org.UcelParser.Util.Type;
+import org.stringtemplate.v4.ST;
 
 import javax.swing.text.DefaultCaret;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -230,13 +229,12 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     @Override
     public Template visitProject(UCELParser.ProjectContext ctx) {
         enterScope(ctx.scope);
-        var pDeclTemplate = visit(ctx.pdeclaration());
-        var pSystemTemplate = visit(ctx.psystem());
+        Template pDeclTemplate = visit(ctx.pdeclaration());
+        Template pSystemTemplate = visit(ctx.psystem());
 
         ArrayList<PTemplateTemplate> pTemplateTemplates = new ArrayList<>();
         for (var pTemp : ctx.ptemplate()) {
-            PTemplatesWrapperTemplate pTemplates = (PTemplatesWrapperTemplate) visit(pTemp);
-            pTemplateTemplates.addAll(pTemplates.pTemplates);
+            pTemplateTemplates.add((PTemplateTemplate) visit(pTemp));
         }
 
         exitScope();
@@ -270,43 +268,34 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitPtemplate(UCELParser.PtemplateContext ctx) {
-        ArrayList<PTemplateTemplate> templates = new ArrayList<>();
-
-        if (ctx.occurrences != null && ctx.occurrences.size() > 0) {
-            for (var occurrence : ctx.occurrences) {
-                this.componentPrefix = occurrence.getPrefix();
-                String name;
-                try {
-                    name = currentScope.get(ctx.reference).generateName();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-
-                enterScope(ctx.scope);
-                var params = visit(ctx.parameters());
-                var decls = visit(ctx.declarations());
-                var graph = (GraphTemplate) visit(ctx.graph());
-                exitScope();
-
-                templates.add(new PTemplateTemplate(name, params, graph, decls));
-            }
-        } else {
-            String name;
-            try {
-                name = currentScope.get(ctx.reference).generateName();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
-            enterScope(ctx.scope);
-            var params = visit(ctx.parameters());
-            var decls = visit(ctx.declarations());
-            var graph = (GraphTemplate) visit(ctx.graph());
-            exitScope();
-
-            templates.add(new PTemplateTemplate(name, params, graph, decls));
+        String name;
+        try {
+            name = currentScope.get(ctx.reference).generateName();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return new PTemplatesWrapperTemplate(templates);
+
+        enterScope(ctx.scope);
+        var params = visit(ctx.parameters());
+        var decls = visit(ctx.declarations());
+        var graph = (GraphTemplate) visit(ctx.graph());
+        exitScope();
+
+        // Make the instantiations for all template occurrences
+        ArrayList<String> namesForInstans = new ArrayList<>();
+        ArrayList<Template> declarations = new ArrayList<Template>();
+        if (ctx.occurrences != null && ctx.occurrences.size() > 0) {
+            for (var occ : ctx.occurrences) {
+                String occName = occ.getPrefix();
+                ST constructorCall = new ST("<exprs; separator=\", \">");
+                constructorCall.add("exprs", Arrays.stream(occ.getParameters()).map(NameGenerator::generateName));
+                Template occDecl = new ManualTemplate(String.format("%s = %s", occName, constructorCall));
+
+                namesForInstans.add(occName);
+                declarations.add(occDecl);
+            }
+        }
+        return new PTemplateTemplate(name, params, graph, decls);
     }
 
     //endregion
