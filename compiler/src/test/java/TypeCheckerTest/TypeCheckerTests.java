@@ -3804,6 +3804,48 @@ public class TypeCheckerTests  {
 
     //endregion
 
+    //region Power
+    @ParameterizedTest(name = "{index} => using type {0} for Power")
+    @MethodSource("powerTypesArguments")
+    void powerTypes(Type left, Type right, Type expectedType) {
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        final var node = mock(UCELParser.PowerContext.class);
+
+        var child1 = mockForVisitorResult(UCELParser.PowerContext.class, left, visitor);
+        var child2 = mockForVisitorResult(UCELParser.PowerContext.class, right, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
+
+        Type actual = visitor.visitPower(node);
+
+        assertEquals(expectedType, actual);
+    }
+
+    private static Stream<Arguments> powerTypesArguments() {
+
+        ArrayList<Arguments> args = new ArrayList<Arguments>();
+        args.add(Arguments.arguments(INT_TYPE, INT_TYPE, INT_TYPE));
+        args.add(Arguments.arguments(INT_TYPE, DOUBLE_TYPE, ERROR_TYPE));
+        args.add(Arguments.arguments(DOUBLE_TYPE, INT_TYPE, DOUBLE_TYPE));
+        args.add(Arguments.arguments(DOUBLE_TYPE, DOUBLE_TYPE, ERROR_TYPE));
+
+        args.add(Arguments.arguments(INT_TYPE, ERROR_TYPE, ERROR_TYPE));
+        args.add(Arguments.arguments(ERROR_TYPE, INT_TYPE, ERROR_TYPE));
+        args.add(Arguments.arguments(DOUBLE_TYPE, ERROR_TYPE, ERROR_TYPE));
+        args.add(Arguments.arguments(ERROR_TYPE, DOUBLE_TYPE, ERROR_TYPE));
+
+        args.add(Arguments.arguments(INT_TYPE, VOID_TYPE, ERROR_TYPE));
+        args.add(Arguments.arguments(VOID_TYPE, INT_TYPE, ERROR_TYPE));
+        args.add(Arguments.arguments(DOUBLE_TYPE, VOID_TYPE, ERROR_TYPE));
+        args.add(Arguments.arguments(VOID_TYPE, DOUBLE_TYPE, ERROR_TYPE));
+
+        return args.stream();
+    }
+
+    //endregion
+
     //region UnaryExpr
     @ParameterizedTest(name = "{index} => using type {0} for unary +")
     @MethodSource("unaryPlusMinusNumberTypes")

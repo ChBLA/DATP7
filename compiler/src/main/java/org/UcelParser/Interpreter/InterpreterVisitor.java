@@ -143,7 +143,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression());
         String id = ctx.ID().getText();
 
-        if(!isStringValue(left) || id == null/**/) return null;
+        if(!isStringValue(left) || id == null)
+            return null;
         return new StringValue(left.generateName() + "." + id);
     }
 
@@ -304,6 +305,11 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     }
 
     @Override
+    public InterpreterValue visitBuildStmnt(UCELParser.BuildStmntContext ctx) {
+        return visit(ctx.children.get(0));
+    }
+
+    @Override
     public InterpreterValue visitBuildIf(UCELParser.BuildIfContext ctx) {
         // | IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?  #BuildIf
         var predicate = visit(ctx.expression());
@@ -425,7 +431,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
             if(declInfo.getNode() instanceof UCELParser.ComponentContext) {
                 UCELParser.ComponentContext compNode = ((UCELParser.ComponentContext) declInfo.getNode());
-                Type compType = compNode.scope.get(compNode.reference).getType();
+                Type compType = compNode.scope.getParent().get(compNode.reference).getType();
 
                 occurrenceValue = new CompOccurrenceValue(ctx.ID().getText(), arguments, compType);
             } else if(declInfo.getNode() instanceof UCELParser.PtemplateContext) {
@@ -443,7 +449,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
                 listValue.setValue(lastIndex(indices), occurrenceValue);
             }
 
-        } catch (Exception e) {return null;}
+        } catch (Exception e) {
+            return null;
+        }
 
         return new VoidValue();
     }
@@ -618,7 +626,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             UCELParser.PtemplateContext componentNode = (UCELParser.PtemplateContext) node;
             if(componentNode.occurrences == null)
                 componentNode.occurrences = new ArrayList<>();
-            return visitTempWithOccurrence(componentNode, (CompOccurrenceValue) value, indices);
+            return visitTempWithOccurrence(componentNode, (TemplateOccurrenceValue) value, indices);
         } else {
             return false;
         }
@@ -657,13 +665,14 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             return false;
         }
 
+        enterScope(componentNode.compBody().scope);
         visit(componentNode.compBody().build());
         currentScope = oldScope;
 
         return true;
     }
 
-    private boolean visitTempWithOccurrence(UCELParser.PtemplateContext templateNode, CompOccurrenceValue value, String indices) {
+    private boolean visitTempWithOccurrence(UCELParser.PtemplateContext templateNode, TemplateOccurrenceValue value, String indices) {
         TemplateOccurrence templateOccurrence = new TemplateOccurrence(value.generateName() + indices,
                 value.getArguments());
 
