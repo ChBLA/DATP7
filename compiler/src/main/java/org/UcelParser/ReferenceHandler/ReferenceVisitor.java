@@ -53,7 +53,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             logger.log(new CompilerErrorLog(ctx, e.getMessage()));
         }
 
-        enterScope();
+        enterScope(true);
         ctx.scope = currentScope;
         boolean success = (ctx.parameters() == null || visit(ctx.parameters())) && visit(ctx.interfaces()) && visit(ctx.compBody());
 
@@ -430,7 +430,6 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         if(!visit(ctx.type())) {
             //No logging, passing through
-            exitScope();
             return false;
         }
 
