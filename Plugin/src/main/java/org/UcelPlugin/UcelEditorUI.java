@@ -1,20 +1,14 @@
 package org.UcelPlugin;
 
 import org.UcelParser.Util.Logging.Log;
+import org.UcelPlugin.UiComponents.Button;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.util.ArrayList;
-import java.util.function.Consumer;
 
 public class UcelEditorUI extends BaseWorkspace {
     public UcelEditorUI() {
-        setJPanel(new JPanel(new FlowLayout(FlowLayout.LEFT)));
-        this.loadCompileButton();
-        this.loadCompileButtonX100();
-        this.loadUndoButton();
-        this.loadTryBuildButton();
         this.loadErrorLog();
     }
 
@@ -30,7 +24,7 @@ public class UcelEditorUI extends BaseWorkspace {
         return jPanel;
     }
 
-    private JPanel jPanel;
+    private JPanel jPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
     public JPanel getJPanel() {
         return jPanel;
     }
@@ -38,69 +32,26 @@ public class UcelEditorUI extends BaseWorkspace {
         jPanel = value;
     }
 
-    //region Compile Button
-    private JButton compileButton;
-    private void loadCompileButton() {
-        compileButton = new JButton("Compile");
-        jPanel.add(compileButton);
-    }
-    public void addCompileAction(Consumer onCompile) {
-        compileButton.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                onCompile.accept(e);
-            }
-        });
-    }
-    //endregion
 
-    //region Compile Button x100
-    private JButton compileButtonX100;
-    private void loadCompileButtonX100() {
-        compileButtonX100 = new JButton("Compile x100");
-        jPanel.add(compileButtonX100);
+    private Button compileButton = new Button(jPanel, "Compile");
+    public Button getCompileButton() {
+        return compileButton;
     }
-    public void addCompileActionX100(Consumer onCompile) {
-        compileButtonX100.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                onCompile.accept(e);
-            }
-        });
-    }
-    //endregion
 
-    //region Undo Button
-    private JButton undoButton;
-    private void loadUndoButton() {
-        undoButton = new JButton("Undo");
-        jPanel.add(undoButton);
+    private Button compileX100Button = new Button(jPanel, "Compile x100");
+    public Button getCompileX100Button() {
+        return compileX100Button;
     }
-    public void addUndoAction(Consumer onUndo) {
-        undoButton.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                onUndo.accept(e);
-            }
-        });
-    }
-    //endregion
 
-    //region "Try Build" Button
-    private JButton tryBuildButton;
-    private void loadTryBuildButton() {
-        tryBuildButton = new JButton("Try Build");
-        jPanel.add(tryBuildButton);
+    private Button undoButton = new Button(jPanel, "Undo");
+    public Button getUndoButton() {
+        return undoButton;
     }
-    public void addTryBuildAction(Consumer onTryBuild) {
-        tryBuildButton.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                onTryBuild.accept(e);
-            }
-        });
+
+    private Button tryBuildButton = new Button(jPanel, "Try Build");
+    public Button getTryBuildButton() {
+        return tryBuildButton;
     }
-    //endregion
 
     //region Errorlog
     JTextArea errorLogTextPanel;

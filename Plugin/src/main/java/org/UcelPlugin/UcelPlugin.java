@@ -25,7 +25,7 @@ public class UcelPlugin implements Plugin {
     public UcelPlugin(Registry registry) {
         this.uppaalManager = new UppaalManager(registry);
 
-        ui.addCompileAction(e -> {
+        ui.getCompileButton().addOnClick(e -> {
             try {
                 previousIProject = getCurrentProject();
 
@@ -40,7 +40,7 @@ public class UcelPlugin implements Plugin {
             }
         });
 
-        ui.addCompileActionX100(e -> {
+        ui.getCompileX100Button().addOnClick(e -> {
             previousIProject = getCurrentProject();
             try {
                 for (int i = 0; i < 100; i++)
@@ -55,12 +55,12 @@ public class UcelPlugin implements Plugin {
             }
         });
 
-        ui.addUndoAction(e -> {
+        ui.getUndoButton().addOnClick(e -> {
             if(previousIProject != null)
                 setCurrentProject(previousIProject);
         });
 
-        ui.addTryBuildAction(e -> {
+        ui.getTryBuildButton().addOnClick(e -> {
             try {
                 compileProject(getCurrentProject());
                 ui.setSuccess();
