@@ -134,7 +134,20 @@ public class UcelEditorUI extends BaseWorkspace {
         for(var log: logs) {
             collectiveErrorLog += log.getFancyMessage() + "\n";
         }
-        errorLogTextPanel.setText(collectiveErrorLog);
+        setError(collectiveErrorLog);
+    }
+
+    public void setError(Exception ex) {
+        String errText = ex.getMessage();
+        for(var trace: ex.getStackTrace()) {
+            errText += "\n\t" + trace.toString();
+        }
+
+        errorLogTextPanel.setText(errText);
+    }
+
+    public void setError(String text) {
+        errorLogTextPanel.setText(text);
     }
 
     public void setSuccess() {

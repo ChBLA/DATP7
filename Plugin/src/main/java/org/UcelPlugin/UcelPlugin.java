@@ -31,8 +31,12 @@ public class UcelPlugin implements Plugin {
 
                 setCurrentProject(compileProject(previousIProject));
                 ui.setSuccess();
-            } catch (ErrorsFoundException err) {
+            }
+            catch (ErrorsFoundException err) {
                 ui.setErrors(err.getLogs());
+            }
+            catch (Exception ex) {
+                ui.setError(ex);
             }
         });
 
@@ -42,8 +46,12 @@ public class UcelPlugin implements Plugin {
                 for (int i = 0; i < 100; i++)
                     setCurrentProject(compileProject(getCurrentProject()));
                 ui.setSuccess();
-            } catch (ErrorsFoundException err) {
+            }
+            catch (ErrorsFoundException err) {
                 ui.setErrors(err.getLogs());
+            }
+            catch (Exception ex) {
+                ui.setError(ex);
             }
         });
 
@@ -56,8 +64,12 @@ public class UcelPlugin implements Plugin {
             try {
                 compileProject(getCurrentProject());
                 ui.setSuccess();
-            } catch (ErrorsFoundException err) {
+            }
+            catch (ErrorsFoundException err) {
                 ui.setErrors(err.getLogs());
+            }
+            catch (Exception ex) {
+                ui.setError(ex);
             }
         });
     }
