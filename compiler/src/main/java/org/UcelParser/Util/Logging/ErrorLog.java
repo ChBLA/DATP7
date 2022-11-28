@@ -8,6 +8,10 @@ public class ErrorLog extends Log {
         super(ctx, message);
     }
 
+    public ErrorLog(int lineStart, int lineStop, int charStart, int charStop, String message) {
+        super(lineStart, lineStop, charStart, charStop, message);
+    }
+
     @Override
     public String toString() {
         return this.getMessage();

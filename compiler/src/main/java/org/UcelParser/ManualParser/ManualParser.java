@@ -3,6 +3,10 @@ package org.UcelParser.ManualParser;
 import org.Ucel.*;
 import org.UcelParser.UCELParser_Generated.UCELLexer;
 import org.UcelParser.UCELParser_Generated.UCELParser;
+import org.UcelParser.Util.Logging.ErrorLog;
+import org.UcelParser.Util.Logging.ILogger;
+import org.UcelParser.Util.Logging.Logger;
+import org.UcelParser.Util.Logging.SyntaxErrorLog;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -12,9 +16,16 @@ import java.util.Map;
 
 public class ManualParser {
     private static int counter = 0;
+    private ILogger logger;
+    private ErrorListener errorListener;
+
+    public ManualParser(ILogger logger) {
+        this.logger = logger;
+        this.errorListener = new ErrorListener(logger);
+    }
 
     public ManualParser() {
-
+        this(new Logger());
     }
 
     //region Project
@@ -227,6 +238,10 @@ public class ManualParser {
         var Parser = generateParser(psystem);
         var psystemNode = Parser.psystem();
         psystemNode.parent = parent;
+
+        if(!isEOF(Parser))
+            logger.log(new ErrorLog(null, "Didn't match end of file"));
+
         return Parser.getNumberOfSyntaxErrors() == 0 && isEOF(Parser) ? psystemNode : null;
     }
     //endregion
@@ -237,7 +252,10 @@ public class ManualParser {
         CharStream charStream = CharStreams.fromString(input);
         UCELLexer lexer = new UCELLexer(charStream);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-        return new UCELParser(tokenStream);
+        var parser = new UCELParser(tokenStream);
+        parser.addErrorListener(ConsoleErrorListener.INSTANCE);
+        parser.addErrorListener(errorListener);
+        return parser;
     }
 
     private Boolean isEOF(UCELParser parser) {

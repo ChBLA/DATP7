@@ -3,30 +3,54 @@ package org.UcelParser.Util.Logging;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 
+import java.util.Arrays;
+
 import static com.ibm.icu.impl.Utility.repeat;
 
 public class Log {
 
     private String message;
     private int lineStart, charStart, lineStop, charStop;
+    private boolean isPacked;
     private ParserRuleContext ctx;
     public ParserRuleContext getCtx() {
         return ctx;
     }
 
     public Log(ParserRuleContext ctx, String message) {
+        saveLogCallerLocation();
         this.message = message;
         this.ctx = ctx;
+        isPacked = true;
+    }
+
+    public Log(int lineStart, int lineStop, int charStart, int charStop, String message) {
+        saveLogCallerLocation();
+        this.lineStart = lineStart - 1;
+        this.lineStop = lineStop - 1;
+        this.charStart = charStart;
+        this.charStop = charStop;
+        isPacked = false;
+
+        this.message = message;
     }
 
     public void unpack() {
-        Token start = ctx.getStart();
-        Token stop = ctx.getStop();
+        if(isPacked) {
+            Token start = ctx.getStart();
+            Token stop = ctx.getStop();
 
-        this.lineStart = start.getLine() - 1;
-        this.lineStop = stop.getLine() - 1;
-        this.charStart = start.getCharPositionInLine();
-        this.charStop = stop.getCharPositionInLine();
+            this.lineStart = start.getLine() - 1;
+            this.lineStop = stop.getLine() - 1;
+            this.charStart = start.getCharPositionInLine();
+            this.charStop = stop.getCharPositionInLine();
+        }
+    }
+
+    private StackTraceElement[] callerLocation;
+    private void saveLogCallerLocation() {
+        var stack = Thread.currentThread().getStackTrace();
+        callerLocation = stack;
     }
 
     public String getMessage() {
@@ -34,7 +58,11 @@ public class Log {
     }
 
     public String getFancyMessage() {
-        String[] lines = getCtx().getStart().getTokenSource().getInputStream().toString()
+        var ctx = getCtx();
+        if(ctx == null)
+            return getMessage();
+
+        String[] lines = ctx.getStart().getTokenSource().getInputStream().toString()
                 .split("\\n\\r?");
 
         if(getLineStart() == getLineStop()) {
