@@ -1,6 +1,7 @@
 package org.UcelParser.Interpreter;
 
 import org.UcelParser.Util.*;
+import org.UcelParser.Util.Logging.CompilerErrorLog;
 import org.UcelParser.Util.Logging.ErrorLog;
 import org.UcelParser.Util.Logging.ILogger;
 import org.UcelParser.Util.Logging.Log;
@@ -86,6 +87,33 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     private void exitScope() {
         this.currentScope = this.currentScope.getParent();
     }
+    //endregion
+
+    //region Declarations
+
+    @Override
+    public InterpreterValue visitVariableID(UCELParser.VariableIDContext ctx) {
+        try {
+            DeclarationInfo declInfo = currentScope.get(ctx.reference);
+            boolean isConst = declInfo.getType().getPrefix() == Type.TypePrefixEnum.constant;
+
+            if(ctx.initialiser() != null) {
+                InterpreterValue value = visit(ctx.initialiser());
+                declInfo.setValue(value);
+                if(isConst && value == null) {
+                    logger.log(new ErrorLog(ctx, "Constant variable not given a value"));
+                    return null;
+                }
+            }
+        } catch (Exception e){
+            logger.log(new CompilerErrorLog(ctx, "Interpreter VariableID Reference"));
+            return null;
+        }
+
+
+        return new VoidValue();
+    }
+
     //endregion
 
     //region Expressions
