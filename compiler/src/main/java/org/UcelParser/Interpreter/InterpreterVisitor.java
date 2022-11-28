@@ -401,6 +401,20 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     }
 
     @Override
+    public InterpreterValue visitVariableDecl(UCELParser.VariableDeclContext ctx) {
+        // variableDecl  : type variableID (COMMA variableID)* END;
+
+        boolean hadError = false;
+
+        for(var varId: ctx.variableID()) {
+            if(visit(varId) == null)
+                hadError = true;
+        }
+
+        return hadError ? null : new VoidValue();
+    }
+
+    @Override
     public InterpreterValue visitCompVar(UCELParser.CompVarContext ctx) {
         int size = ctx.expression() != null ? ctx.expression().size() : 0;
         int[] indices = new int[size];
