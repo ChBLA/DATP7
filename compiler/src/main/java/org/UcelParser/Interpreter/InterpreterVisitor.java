@@ -57,6 +57,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         // psystem : declarations (build | system);
         boolean hadError = false;
 
+        if(visit(ctx.declarations()) == null)
+            hadError = true;
+
         var build = ctx.build();
         var sys = ctx.system();
 
