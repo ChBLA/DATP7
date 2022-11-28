@@ -383,6 +383,24 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         that there are no duplicates and that all interfaces have been set.
 
     */
+
+    @Override
+    public InterpreterValue visitDeclarations(UCELParser.DeclarationsContext ctx) {
+        // (variableDecl | typeDecl | function | chanPriority | instantiation | component | interfaceDecl)*;
+
+        boolean hadError = false;
+
+        var varDecls = ctx.variableDecl();
+        if(varDecls != null) {
+            for(var vardecl: varDecls) {
+                if(visit(vardecl) == null)
+                    hadError = true;
+            }
+        }
+
+        return hadError ? null : new VoidValue();
+    }
+
     @Override
     public InterpreterValue visitCompVar(UCELParser.CompVarContext ctx) {
         int size = ctx.expression() != null ? ctx.expression().size() : 0;
