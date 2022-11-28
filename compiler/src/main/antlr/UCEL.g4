@@ -100,7 +100,7 @@ prefix        : 'urgent' | 'broadcast' | 'meta' | 'const' | 'in' | 'out';
 
 typeId locals [DeclarationReference reference]
               : ID                                                                               #TypeIDID
-              | op=('int' | 'clock' | 'chan' | 'bool' | 'double' | 'string')                     #TypeIDType
+              | op=('int' | 'clock' | 'chan' | 'bool' | 'double' | 'string' | 'void')            #TypeIDType
               | 'int' LEFTBRACKET expression? COMMA expression? RIGHTBRACKET                     #TypeIDInt
               | 'scalar' LEFTBRACKET expression RIGHTBRACKET                                     #TypeIDScalar
               | 'struct' LEFTCURLYBRACE fieldDecl (fieldDecl)* RIGHTCURLYBRACE                   #TypeIDStruct

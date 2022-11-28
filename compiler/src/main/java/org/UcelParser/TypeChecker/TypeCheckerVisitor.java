@@ -1063,6 +1063,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             case "bool" -> BOOL_TYPE;
             case "double" -> DOUBLE_TYPE;
             case "string" -> STRING_TYPE;
+            case "void" -> VOID_TYPE;
             default -> ERROR_TYPE;
         };
     }

@@ -58,6 +58,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         // psystem : declarations (build | system);
         boolean hadError = false;
 
+        if(visit(ctx.declarations()) == null)
+            hadError = true;
+
         var build = ctx.build();
         var sys = ctx.system();
 
@@ -426,6 +429,33 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         }
 
         return hadError ? null : new VoidValue();
+    }
+
+    @Override
+    public InterpreterValue visitVariableDecl(UCELParser.VariableDeclContext ctx) {
+        // variableDecl  : type variableID (COMMA variableID)* END;
+
+        boolean hadError = false;
+
+        for(var varId: ctx.variableID()) {
+            if(visit(varId) == null)
+                hadError = true;
+        }
+
+        return hadError ? null : new VoidValue();
+    }
+
+    @Override
+    public InterpreterValue visitInitialiser(UCELParser.InitialiserContext ctx) {
+        // initialiser   : expression?
+        //               | LEFTCURLYBRACE initialiser (COMMA initialiser)* RIGHTCURLYBRACE;
+
+        var expr = ctx.expression();
+        if(expr != null) {
+            return visit(expr);
+        }
+
+        return null; // Struct, should not be interpreted
     }
 
     @Override
