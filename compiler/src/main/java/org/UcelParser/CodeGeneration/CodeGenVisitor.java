@@ -24,6 +24,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public String componentPrefix = "";
     public int depthFromComponentScope = 0;
     private int counter = 0;
+    private List<InterfaceTemplate> interfaces = new ArrayList<>();
 
     public CodeGenVisitor() {
         this.logger = new Logger();
@@ -91,6 +92,58 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         return result;
     }
 
+
+    //endregion
+
+    //region Interfaces
+
+    @Override
+    public Template visitInterfaceDecl(UCELParser.InterfaceDeclContext ctx) {
+        String id;
+        try {
+            id = currentScope.get(ctx.reference).generateName(this.componentPrefix);
+        } catch (Exception e) {
+            logger.log(new ErrorLog(ctx, "Could not find " + ctx.ID().getText() + " in current scope"));
+            return new ManualTemplate("");
+        }
+
+        ArrayList<Template> interfaceTemplates = new ArrayList<>();
+        for (var occ : ctx.occurrences) {
+            String occId = occ.generateName();
+            this.componentPrefix = String.format("%s%s", id, occId);
+            this.depthFromComponentScope = -1;
+            occ.setValue(id);
+
+            var occRes = visit(ctx.interfaceVarDecl());
+            interfaceTemplates.add(occRes);
+        }
+        this.componentPrefix = "";
+
+        this.interfaces.add(new InterfaceTemplate(interfaceTemplates));
+        return new ManualTemplate("");
+    }
+
+    @Override
+    public Template visitInterfaceVarDecl(UCELParser.InterfaceVarDeclContext ctx) {
+        String fieldPrefix = this.componentPrefix + "_";
+
+        ArrayList<Template> types = new ArrayList<>();
+        ArrayList<Template> arrayIDDecls = new ArrayList<>();
+
+        for (int i = 0; i < ctx.arrayDeclID().size(); i++) {
+            types.add(visit(ctx.type(i)));
+            List<Template> arrayDecls = new ArrayList<>();
+
+            if (ctx.arrayDeclID(i).arrayDecl() != null) {
+                for (var arrayDecl : ctx.arrayDeclID(i).arrayDecl()) {
+                    arrayDecls.add(visit(arrayDecl));
+                }
+            }
+            arrayIDDecls.add(new ArrayDeclIDTemplate(fieldPrefix + ctx.arrayDeclID(i).ID().getText(), arrayDecls));
+        }
+
+        return new InterfaceFieldsTemplate(types, arrayIDDecls);
+    }
 
     //endregion
 
@@ -230,7 +283,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     @Override
     public Template visitProject(UCELParser.ProjectContext ctx) {
         enterScope(ctx.scope);
-        Template pDeclTemplate = visit(ctx.pdeclaration());
+        PDeclarationTemplate pDeclTemplate = (PDeclarationTemplate) visit(ctx.pdeclaration());
         PSystemTemplate pSystemTemplate = (PSystemTemplate) visit(ctx.psystem());
 
         ArrayList<PTemplateTemplate> pTemplateTemplates = new ArrayList<>();
@@ -241,6 +294,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
             pSystemTemplate.system.template.add("names", template.namesForSysDeclarations);
         }
         pSystemTemplate.finalise();
+
+        pDeclTemplate.template.add("decls", this.interfaces);
 
         exitScope();
         return new ProjectTemplate(pTemplateTemplates, pDeclTemplate, pSystemTemplate);
@@ -263,7 +318,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     @Override
     public Template visitPsystem(UCELParser.PsystemContext ctx) {
         var declTemplate = visit(ctx.declarations());
-        var buildSystemTemplate = ctx.build() != null ? visit(ctx.build()) : visit(ctx.system());
+        var buildSystemTemplate = ctx.build() != null ? new SystemTemplate(new ArrayList<>(), new ArrayList<>()) : visit(ctx.system());
 
         return new PSystemTemplate(declTemplate, buildSystemTemplate);
     }
@@ -292,9 +347,11 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         if (ctx.occurrences != null && ctx.occurrences.size() > 0) {
             for (var occ : ctx.occurrences) {
                 String occName = occ.getPrefix() + this.counter++;
-                ST constructorCall = new ST("<exprs; separator=\", \">");
-                constructorCall.add("exprs", Arrays.stream(occ.getParameters()).map(NameGenerator::generateName));
-                Template occDecl = new ManualTemplate(String.format("%s = %s", occName, constructorCall));
+                ST constructorCall = new ST("<cons>(<exprs; separator=\", \">)");
+                constructorCall.add("cons", name);
+                for (var param : occ.getParameters())
+                    constructorCall.add("exprs", param.generateName());
+                Template occDecl = new ManualTemplate(String.format("%s = %s;", occName, constructorCall.render()));
 
                 namesForInstans.add(occName);
                 declarations.add(occDecl);

@@ -10,6 +10,7 @@ import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
@@ -143,9 +144,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression());
         String id = ctx.ID().getText();
 
-        if(!isStringValue(left) || id == null)
-            return null;
-        return new StringValue(left.generateName() + "." + id);
+        return new PointerValue(id, left);
     }
 
     @Override
@@ -518,12 +517,23 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
             int id = nextInterfaceId;
             nextInterfaceId++;
-            InterfaceValue leftInterfaceValue = new InterfaceValue(leftParamNum, id);
-            InterfaceValue rightInterfaceValue = new InterfaceValue(rightParamNum, id);
+            StringValue interfaceAlias = new StringValue(Integer.toString(id));
+            InterfaceValue leftInterfaceValue = new InterfaceValue(leftParamNum, id, interfaceAlias);
+            InterfaceValue rightInterfaceValue = new InterfaceValue(rightParamNum, id, interfaceAlias);
 
             //Set the interfaceValues on occurrenceValues
             leftCompOcc.getInterfaces()[leftParamNum] = leftInterfaceValue;
             rightCompOcc.getInterfaces()[rightParamNum] = rightInterfaceValue;
+
+            //Set stringValue on interface
+            var leftInterface = extractInterfaceDefFromLink(ctx, 0, ctx.leftInterface);
+            var rightInterface = extractInterfaceDefFromLink(ctx, 1, ctx.rightInterface);
+
+            assert Objects.equals(leftInterface, rightInterface);
+            assert leftInterface != null;
+            if (leftInterface.occurrences == null)
+                leftInterface.occurrences = new ArrayList<>();
+            leftInterface.occurrences.add(interfaceAlias);
 
         } catch (Exception e) {
             return null;
@@ -533,6 +543,19 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     }
 
     //region link helper functions
+
+    private UCELParser.InterfaceDeclContext extractInterfaceDefFromLink(UCELParser.LinkStatementContext node, int index, DeclarationReference ref) {
+        UCELParser.InterfaceDeclContext interfaceNode;
+        try {
+            UCELParser.ComponentContext componentNode = (UCELParser.ComponentContext) currentScope.get(node.compVar(index).variableReference).getNode();
+            UCELParser.ParameterContext interfaceTypeNode = componentNode.interfaces().parameters().parameter(ref.getDeclarationId());
+            DeclarationReference interfaceRef = interfaceTypeNode.type().typeId().reference;
+            interfaceNode = (UCELParser.InterfaceDeclContext) componentNode.scope.get(interfaceRef).getNode();
+        } catch (Exception e) {
+            return null;
+        }
+        return interfaceNode;
+    }
 
     private UCELParser.ComponentContext getCompCtxNode(ParserRuleContext prc){
         return prc != null && prc instanceof UCELParser.CompConContext ? (UCELParser.ComponentContext) prc : null;
@@ -689,7 +712,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     }
 
     private boolean isStringValue(InterpreterValue v) {
-        return v != null && v instanceof StringValue && v.generateName() != null;
+        return v instanceof StringValue && v.generateName() != null;
     }
 
     private boolean isBoolValue(InterpreterValue v) {
