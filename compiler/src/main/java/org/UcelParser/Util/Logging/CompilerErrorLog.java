@@ -12,7 +12,7 @@ public class CompilerErrorLog extends ErrorLog {
     }
 
     public CompilerErrorLog(ParserRuleContext ctx, String message) {
-        super(ctx, message);
+        super(ctx, "Compiler Error: " + message);
         stackTrace = Arrays.stream(Thread.currentThread().getStackTrace()).skip(2).toArray(StackTraceElement[]::new);
     }
 }

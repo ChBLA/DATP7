@@ -1,6 +1,7 @@
 package org.UcelParser.Interpreter;
 
 import org.UcelParser.Util.*;
+import org.UcelParser.Util.Logging.CompilerErrorLog;
 import org.UcelParser.Util.Logging.ErrorLog;
 import org.UcelParser.Util.Logging.ILogger;
 import org.UcelParser.Util.Logging.Log;
@@ -10,11 +11,12 @@ import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     //region Header
-
+    private ComponentOccurrence currentOccurrence;
     private Scope currentScope;
     private ILogger logger;
 
@@ -56,6 +58,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         // psystem : declarations (build | system);
         boolean hadError = false;
 
+        if(visit(ctx.declarations()) == null)
+            hadError = true;
+
         var build = ctx.build();
         var sys = ctx.system();
 
@@ -85,6 +90,33 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     private void exitScope() {
         this.currentScope = this.currentScope.getParent();
     }
+    //endregion
+
+    //region Declarations
+
+    @Override
+    public InterpreterValue visitVariableID(UCELParser.VariableIDContext ctx) {
+        try {
+            DeclarationInfo declInfo = currentScope.get(ctx.reference);
+            boolean isConst = declInfo.getType().getPrefix() == Type.TypePrefixEnum.constant;
+
+            if(ctx.initialiser() != null) {
+                InterpreterValue value = visit(ctx.initialiser());
+                declInfo.setValue(value);
+                if(isConst && value == null) {
+                    logger.log(new ErrorLog(ctx, "Constant variable not given a value"));
+                    return null;
+                }
+            }
+        } catch (Exception e){
+            logger.log(new CompilerErrorLog(ctx, "Interpreter VariableID Reference"));
+            return null;
+        }
+
+
+        return new VoidValue();
+    }
+
     //endregion
 
     //region Expressions
@@ -122,7 +154,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     public InterpreterValue visitIdExpr(UCELParser.IdExprContext ctx) {
         try{
             DeclarationInfo declInfo = currentScope.get(ctx.reference);
-            return declInfo.getValue() == null ? new StringValue(declInfo.generateName()) : declInfo.getValue();
+            return declInfo.getValue() == null
+                    ? new VariableValue(currentOccurrence.getPrefix(), "", declInfo)
+                    : declInfo.getValue();
         } catch (Exception e) {
             return null;
         }
@@ -135,7 +169,11 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         if(!isStringValue(left) || !isIntegerValue(right)) return null;
         IntegerValue intRight = (IntegerValue) right;
-        return intRight.getInt() < 0 ? null : new StringValue(left.generateName() + "_" + right.generateName());
+        if(intRight.getInt() < 0) {
+            logger.log(new ErrorLog(ctx, "Array index out of range"));
+            return null;
+        }
+        return new VariableValue("", "[" + right.generateName() + "]", left);
     }
 
     @Override
@@ -143,8 +181,13 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression());
         String id = ctx.ID().getText();
 
-        if(!isStringValue(left) || id == null/**/) return null;
-        return new StringValue(left.generateName() + "." + id);
+        if(left instanceof InterfaceValue)
+            return new PointerValue(id, left);
+        else if(left == null) {
+            return null;
+        } else {
+            return new VariableValue("", "." + id, left);
+        }
     }
 
     @Override
@@ -304,6 +347,11 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     }
 
     @Override
+    public InterpreterValue visitBuildStmnt(UCELParser.BuildStmntContext ctx) {
+        return visit(ctx.children.get(0));
+    }
+
+    @Override
     public InterpreterValue visitBuildIf(UCELParser.BuildIfContext ctx) {
         // | IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?  #BuildIf
         var predicate = visit(ctx.expression());
@@ -377,6 +425,51 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         that there are no duplicates and that all interfaces have been set.
 
     */
+
+    @Override
+    public InterpreterValue visitDeclarations(UCELParser.DeclarationsContext ctx) {
+        // (variableDecl | typeDecl | function | chanPriority | instantiation | component | interfaceDecl)*;
+
+        boolean hadError = false;
+
+        var varDecls = ctx.variableDecl();
+        if(varDecls != null) {
+            for(var vardecl: varDecls) {
+                if(visit(vardecl) == null)
+                    hadError = true;
+            }
+        }
+
+        return hadError ? null : new VoidValue();
+    }
+
+    @Override
+    public InterpreterValue visitVariableDecl(UCELParser.VariableDeclContext ctx) {
+        // variableDecl  : type variableID (COMMA variableID)* END;
+
+        boolean hadError = false;
+
+        for(var varId: ctx.variableID()) {
+            if(visit(varId) == null)
+                hadError = true;
+        }
+
+        return hadError ? null : new VoidValue();
+    }
+
+    @Override
+    public InterpreterValue visitInitialiser(UCELParser.InitialiserContext ctx) {
+        // initialiser   : expression?
+        //               | LEFTCURLYBRACE initialiser (COMMA initialiser)* RIGHTCURLYBRACE;
+
+        var expr = ctx.expression();
+        if(expr != null) {
+            return visit(expr);
+        }
+
+        return null; // Struct, should not be interpreted
+    }
+
     @Override
     public InterpreterValue visitCompVar(UCELParser.CompVarContext ctx) {
         int size = ctx.expression() != null ? ctx.expression().size() : 0;
@@ -425,7 +518,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
             if(declInfo.getNode() instanceof UCELParser.ComponentContext) {
                 UCELParser.ComponentContext compNode = ((UCELParser.ComponentContext) declInfo.getNode());
-                Type compType = compNode.scope.get(compNode.reference).getType();
+                Type compType = compNode.scope.getParent().get(compNode.reference).getType();
 
                 occurrenceValue = new CompOccurrenceValue(ctx.ID().getText(), arguments, compType);
             } else if(declInfo.getNode() instanceof UCELParser.PtemplateContext) {
@@ -443,7 +536,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
                 listValue.setValue(lastIndex(indices), occurrenceValue);
             }
 
-        } catch (Exception e) {return null;}
+        } catch (Exception e) {
+            return null;
+        }
 
         return new VoidValue();
     }
@@ -510,12 +605,23 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
             int id = nextInterfaceId;
             nextInterfaceId++;
-            InterfaceValue leftInterfaceValue = new InterfaceValue(leftParamNum, id);
-            InterfaceValue rightInterfaceValue = new InterfaceValue(rightParamNum, id);
+            StringValue interfaceAlias = new StringValue(Integer.toString(id));
+            InterfaceValue leftInterfaceValue = new InterfaceValue(leftParamNum, id, interfaceAlias);
+            InterfaceValue rightInterfaceValue = new InterfaceValue(rightParamNum, id, interfaceAlias);
 
             //Set the interfaceValues on occurrenceValues
             leftCompOcc.getInterfaces()[leftParamNum] = leftInterfaceValue;
             rightCompOcc.getInterfaces()[rightParamNum] = rightInterfaceValue;
+
+            //Set stringValue on interface
+            var leftInterface = extractInterfaceDefFromLink(ctx, 0, ctx.leftInterface);
+            var rightInterface = extractInterfaceDefFromLink(ctx, 1, ctx.rightInterface);
+
+            assert Objects.equals(leftInterface, rightInterface);
+            assert leftInterface != null;
+            if (leftInterface.occurrences == null)
+                leftInterface.occurrences = new ArrayList<>();
+            leftInterface.occurrences.add(interfaceAlias);
 
         } catch (Exception e) {
             return null;
@@ -525,6 +631,19 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     }
 
     //region link helper functions
+
+    private UCELParser.InterfaceDeclContext extractInterfaceDefFromLink(UCELParser.LinkStatementContext node, int index, DeclarationReference ref) {
+        UCELParser.InterfaceDeclContext interfaceNode;
+        try {
+            UCELParser.ComponentContext componentNode = (UCELParser.ComponentContext) currentScope.get(node.compVar(index).variableReference).getNode();
+            UCELParser.ParameterContext interfaceTypeNode = componentNode.interfaces().parameters().parameter(ref.getDeclarationId());
+            DeclarationReference interfaceRef = interfaceTypeNode.type().typeId().reference;
+            interfaceNode = (UCELParser.InterfaceDeclContext) componentNode.scope.get(interfaceRef).getNode();
+        } catch (Exception e) {
+            return null;
+        }
+        return interfaceNode;
+    }
 
     private UCELParser.ComponentContext getCompCtxNode(ParserRuleContext prc){
         return prc != null && prc instanceof UCELParser.CompConContext ? (UCELParser.ComponentContext) prc : null;
@@ -618,7 +737,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             UCELParser.PtemplateContext componentNode = (UCELParser.PtemplateContext) node;
             if(componentNode.occurrences == null)
                 componentNode.occurrences = new ArrayList<>();
-            return visitTempWithOccurrence(componentNode, (CompOccurrenceValue) value, indices);
+            return visitTempWithOccurrence(componentNode, (TemplateOccurrenceValue) value, indices);
         } else {
             return false;
         }
@@ -637,6 +756,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         Scope oldScope = currentScope;
         enterScope(componentNode.scope);
+        currentOccurrence = componentOccurrence;
 
         //Set parameters
         try {
@@ -657,13 +777,14 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             return false;
         }
 
+        enterScope(componentNode.compBody().scope);
         visit(componentNode.compBody().build());
         currentScope = oldScope;
 
         return true;
     }
 
-    private boolean visitTempWithOccurrence(UCELParser.PtemplateContext templateNode, CompOccurrenceValue value, String indices) {
+    private boolean visitTempWithOccurrence(UCELParser.PtemplateContext templateNode, TemplateOccurrenceValue value, String indices) {
         TemplateOccurrence templateOccurrence = new TemplateOccurrence(value.generateName() + indices,
                 value.getArguments());
 
@@ -680,7 +801,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     }
 
     private boolean isStringValue(InterpreterValue v) {
-        return v != null && v instanceof StringValue && v.generateName() != null;
+        return v instanceof StringValue && v.generateName() != null;
     }
 
     private boolean isBoolValue(InterpreterValue v) {

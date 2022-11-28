@@ -9,6 +9,7 @@ grammar UCEL;
     import org.UcelParser.Util.FuncCallOccurrence;
     import org.UcelParser.Util.ComponentOccurrence;
     import org.UcelParser.Util.TemplateOccurrence;
+    import org.UcelParser.Util.Value.StringValue;
 }
 
 
@@ -68,7 +69,7 @@ buildBlock locals [Scope scope]
 buildDecl locals [DeclarationReference typeReference]
     : ID compVar END;
 
-interfaceDecl locals [DeclarationReference reference]
+interfaceDecl locals [DeclarationReference reference, List<StringValue> occurrences]
     : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;
 interfaceVarDecl : type arrayDeclID (COMMA type arrayDeclID)*;
 
@@ -99,7 +100,7 @@ prefix        : 'urgent' | 'broadcast' | 'meta' | 'const' | 'in' | 'out';
 
 typeId locals [DeclarationReference reference]
               : ID                                                                               #TypeIDID
-              | op=('int' | 'clock' | 'chan' | 'bool' | 'double' | 'string')                     #TypeIDType
+              | op=('int' | 'clock' | 'chan' | 'bool' | 'double' | 'string' | 'void')            #TypeIDType
               | 'int' LEFTBRACKET expression? COMMA expression? RIGHTBRACKET                     #TypeIDInt
               | 'scalar' LEFTBRACKET expression RIGHTBRACKET                                     #TypeIDScalar
               | 'struct' LEFTCURLYBRACE fieldDecl (fieldDecl)* RIGHTCURLYBRACE                   #TypeIDStruct

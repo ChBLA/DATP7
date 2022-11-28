@@ -7,6 +7,9 @@ public class StringValue implements InterpreterValue {
         this.value = v;
     }
 
+    public void setValue(String newValue) {
+        this.value = newValue;
+    }
     @Override
     public String generateName() {
         return value;
