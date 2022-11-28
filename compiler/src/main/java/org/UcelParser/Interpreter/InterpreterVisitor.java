@@ -16,7 +16,7 @@ import java.util.Objects;
 public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     //region Header
-
+    private ComponentOccurrence currentOccurrence;
     private Scope currentScope;
     private ILogger logger;
 
@@ -154,7 +154,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     public InterpreterValue visitIdExpr(UCELParser.IdExprContext ctx) {
         try{
             DeclarationInfo declInfo = currentScope.get(ctx.reference);
-            return declInfo.getValue() == null ? new StringValue(declInfo.generateName()) : declInfo.getValue();
+            return declInfo.getValue() == null
+                    ? new VariableValue(currentOccurrence.getPrefix(), "", declInfo)
+                    : declInfo.getValue();
         } catch (Exception e) {
             return null;
         }
@@ -167,7 +169,11 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         if(!isStringValue(left) || !isIntegerValue(right)) return null;
         IntegerValue intRight = (IntegerValue) right;
-        return intRight.getInt() < 0 ? null : new StringValue(left.generateName() + "_" + right.generateName());
+        if(intRight.getInt() < 0) {
+            logger.log(new ErrorLog(ctx, "Array index out of range"));
+            return null;
+        }
+        return new VariableValue("", "[" + right.generateName() + "]", left);
     }
 
     @Override
@@ -175,7 +181,13 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression());
         String id = ctx.ID().getText();
 
-        return new PointerValue(id, left);
+        if(left instanceof InterfaceValue)
+            return new PointerValue(id, left);
+        else if(left == null) {
+            return null;
+        } else {
+            return new VariableValue("", "." + id, left);
+        }
     }
 
     @Override
@@ -744,6 +756,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         Scope oldScope = currentScope;
         enterScope(componentNode.scope);
+        currentOccurrence = componentOccurrence;
 
         //Set parameters
         try {
