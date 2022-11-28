@@ -415,6 +415,19 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     }
 
     @Override
+    public InterpreterValue visitInitialiser(UCELParser.InitialiserContext ctx) {
+        // initialiser   : expression?
+        //               | LEFTCURLYBRACE initialiser (COMMA initialiser)* RIGHTCURLYBRACE;
+
+        var expr = ctx.expression();
+        if(expr != null) {
+            return visit(expr);
+        }
+
+        return null; // Struct, should not be interpreted
+    }
+
+    @Override
     public InterpreterValue visitCompVar(UCELParser.CompVarContext ctx) {
         int size = ctx.expression() != null ? ctx.expression().size() : 0;
         int[] indices = new int[size];
