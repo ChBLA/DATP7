@@ -8,7 +8,9 @@ import org.UcelParser.CodeGeneration.templates.Template;
 import org.UcelParser.Interpreter.InterpreterVisitor;
 import org.UcelParser.ManualParser.ManualParser;
 import org.UcelParser.Util.Exception.ErrorsFoundException;
+import org.UcelParser.Util.Logging.ErrorLog;
 import org.UcelParser.Util.Logging.ILogger;
+import org.UcelParser.Util.Logging.Log;
 import org.UcelParser.Util.UniquePrefixGenerator;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.CharStream;
@@ -19,6 +21,8 @@ import org.UcelParser.ReferenceHandler.ReferenceVisitor;
 import org.UcelParser.TypeChecker.TypeCheckerVisitor;
 import org.UcelParser.Util.Logging.Logger;
 import org.antlr.v4.runtime.tree.ParseTree;
+
+import java.util.ArrayList;
 
 
 public class Compiler {
@@ -42,10 +46,9 @@ public class Compiler {
 
     public IProject compileProject(IProject project) throws ErrorsFoundException {
         UniquePrefixGenerator.resetCounter();
-        ManualParser manualParser = new ManualParser();
-        ParserRuleContext tree = manualParser.parseProject(project);
         logger.setSource("");//TODO inject sources
 
+        var tree = runVisitor(new ManualParser(logger), project, logger);
         var refTree = runVisitor(referenceVisitor, tree, logger);
         var typeTree = runVisitor(typeCheckerVisitor, refTree, logger);
         var interpreterTree = runVisitor(interpreterVisitor, typeTree, logger);
@@ -107,6 +110,14 @@ public class Compiler {
         return generatedCode != null ? generatedCode.toString() : "";
     }
 
+    private ParserRuleContext runVisitor(ManualParser visitor, IProject project, ILogger logger) throws ErrorsFoundException{
+        ParserRuleContext tree = visitor.parseProject(project);
+
+        if (logger.hasErrors())
+            throw new ErrorsFoundException("Found errors in visitor ManualParser", logger.getLogs());
+
+        return tree;
+    }
     private ParserRuleContext runVisitor(UCELBaseVisitor visitor, ParserRuleContext tree, ILogger logger) throws ErrorsFoundException{
         visitor.visit(tree);
         if (logger.hasErrors())
