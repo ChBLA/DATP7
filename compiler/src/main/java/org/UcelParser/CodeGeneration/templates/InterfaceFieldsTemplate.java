@@ -9,6 +9,7 @@ public class InterfaceFieldsTemplate extends Template {
         template = new ST("<field; separator=[newline]>;");
         for (int i = 0; i < types.size(); i++){
             template.add("field", String.format("%s %s", types.get(i), fields.get(i)));
+            template.add("newline", System.lineSeparator());
         }
     }
 }
