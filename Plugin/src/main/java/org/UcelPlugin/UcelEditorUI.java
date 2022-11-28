@@ -13,6 +13,8 @@ public class UcelEditorUI extends BaseWorkspace {
         setJPanel(new JPanel(new FlowLayout(FlowLayout.LEFT)));
         this.loadCompileButton();
         this.loadCompileButtonX100();
+        this.loadUndoButton();
+        this.loadTryBuildButton();
         this.loadErrorLog();
     }
 
@@ -68,6 +70,38 @@ public class UcelEditorUI extends BaseWorkspace {
     }
     //endregion
 
+    //region Undo Button
+    private JButton undoButton;
+    private void loadUndoButton() {
+        undoButton = new JButton("Undo");
+        jPanel.add(undoButton);
+    }
+    public void addUndoAction(Consumer onUndo) {
+        undoButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onUndo.accept(e);
+            }
+        });
+    }
+    //endregion
+
+    //region "Try Build" Button
+    private JButton tryBuildButton;
+    private void loadTryBuildButton() {
+        tryBuildButton = new JButton("Try Build");
+        jPanel.add(tryBuildButton);
+    }
+    public void addTryBuildAction(Consumer onTryBuild) {
+        tryBuildButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onTryBuild.accept(e);
+            }
+        });
+    }
+    //endregion
+
     //region Errorlog
     JTextArea errorLogTextPanel;
     JScrollPane errorScrollBar;
@@ -101,6 +135,10 @@ public class UcelEditorUI extends BaseWorkspace {
             collectiveErrorLog += log.getFancyMessage() + "\n";
         }
         errorLogTextPanel.setText(collectiveErrorLog);
+    }
+
+    public void setSuccess() {
+        errorLogTextPanel.setText("Success");
     }
     //endregion
 }

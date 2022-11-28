@@ -9,7 +9,6 @@ import org.UcelParser.Compiler;
 import org.UcelParser.Util.Exception.ErrorsFoundException;
 import org.UcelPlugin.DocumentParser.UcelToUppaalDocumentParser;
 import org.UcelPlugin.DocumentParser.UppaalToUcelDocumentParser;
-import org.UcelPlugin.Models.SharedInterface.Project;
 
 public class UcelPlugin implements Plugin {
     private UcelEditorUI ui = new UcelEditorUI();
@@ -21,32 +20,55 @@ public class UcelPlugin implements Plugin {
 
     private UppaalManager uppaalManager;
 
+    private IProject previousIProject = null;
+
     public UcelPlugin(Registry registry) {
         this.uppaalManager = new UppaalManager(registry);
 
         ui.addCompileAction(e -> {
             try {
-                setCurrentProject(CompileCurrentProject());
+                previousIProject = getCurrentProject();
+
+                setCurrentProject(compileProject(previousIProject));
+                ui.setSuccess();
             } catch (ErrorsFoundException err) {
                 ui.setErrors(err.getLogs());
             }
         });
 
         ui.addCompileActionX100(e -> {
+            previousIProject = getCurrentProject();
             try {
                 for (int i = 0; i < 100; i++)
-                    setCurrentProject(CompileCurrentProject());
+                    setCurrentProject(compileProject(getCurrentProject()));
+                ui.setSuccess();
+            } catch (ErrorsFoundException err) {
+                ui.setErrors(err.getLogs());
+            }
+        });
+
+        ui.addUndoAction(e -> {
+            if(previousIProject != null)
+                setCurrentProject(previousIProject);
+        });
+
+        ui.addTryBuildAction(e -> {
+            try {
+                compileProject(getCurrentProject());
+                ui.setSuccess();
             } catch (ErrorsFoundException err) {
                 ui.setErrors(err.getLogs());
             }
         });
     }
 
-    private IProject CompileCurrentProject() throws ErrorsFoundException {
+    private IProject getCurrentProject() {
         Document document = uppaalManager.getCurrentDocument();
         UppaalToUcelDocumentParser documentParser = new UppaalToUcelDocumentParser(document);
-        Project project = documentParser.parseDocument();
+        return documentParser.parseDocument();
+    }
 
+    private IProject compileProject(IProject project) throws ErrorsFoundException {
         Compiler compiler = new Compiler();
         return compiler.compileProject(project);
     }
