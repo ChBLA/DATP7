@@ -104,5 +104,8 @@ public class UcelEditorUI extends BaseWorkspace {
     public void setSuccess() {
         errorLogTextPanel.setText("Success");
     }
+    public void setCompiling() {
+        errorLogTextPanel.setText("Compiling...");
+    }
     //endregion
 }

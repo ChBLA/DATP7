@@ -28,25 +28,25 @@ public class UcelPlugin implements Plugin {
         ui.getCompileButton().addOnClick(e -> {
             var currentProject = getCurrentProject();
             previousIProject = currentProject;
-            var compiled = compileProjectWithUiNotifications(currentProject);
-
-            if(compiled != null)
-                setCurrentProject(compiled);
+            compileAndSetInNewThread(currentProject);
         });
 
         ui.getCompileX100Button().addOnClick(e -> {
             previousIProject = getCurrentProject();
-            try {
-                for (int i = 0; i < 100; i++)
-                    setCurrentProject(compileProject(getCurrentProject()));
-                ui.setSuccess();
-            }
-            catch (ErrorsFoundException err) {
-                ui.setErrors(err.getLogs());
-            }
-            catch (Exception ex) {
-                ui.setError(ex);
-            }
+            new Thread(() -> {
+                try {
+                    for (int i = 0; i < 100; i++)
+                        setCurrentProject(compileProject(getCurrentProject()));
+
+                    ui.setSuccess();
+                }
+                catch (ErrorsFoundException err) {
+                    ui.setErrors(err.getLogs());
+                }
+                catch (Exception ex) {
+                    ui.setError(ex);
+                }
+            }).start();
         });
 
         ui.getUndoButton().addOnClick(e -> {
@@ -68,6 +68,15 @@ public class UcelPlugin implements Plugin {
     private IProject compileProject(IProject project) throws ErrorsFoundException {
         Compiler compiler = new Compiler();
         return compiler.compileProject(project);
+    }
+
+    private void compileAndSetInNewThread(IProject project) {
+        ui.setCompiling();
+        new Thread(() -> {
+            var compiled = compileProjectWithUiNotifications(project);
+            if(compiled != null)
+                setCurrentProject(compiled);
+        }).start();
     }
 
     private IProject compileProjectWithUiNotifications(IProject project) {
