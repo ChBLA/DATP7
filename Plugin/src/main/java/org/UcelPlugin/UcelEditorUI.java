@@ -104,6 +104,9 @@ public class UcelEditorUI extends BaseWorkspace {
     public void setSuccess() {
         errorLogTextPanel.setText("Success");
     }
+    public void setStatus(String status) {
+        errorLogTextPanel.setText(status);
+    }
     public void setCompiling() {
         errorLogTextPanel.setText("Compiling...");
     }

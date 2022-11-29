@@ -50,8 +50,10 @@ public class UcelPlugin implements Plugin {
         });
 
         ui.getUndoButton().addOnClick(e -> {
-            if(previousIProject != null)
+            if(previousIProject != null) {
                 setCurrentProject(previousIProject);
+                ui.setStatus("Undo successful");
+            }
         });
 
         ui.getTryBuildButton().addOnClick(e -> {
