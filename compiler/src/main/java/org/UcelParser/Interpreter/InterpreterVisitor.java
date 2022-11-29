@@ -520,9 +520,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
                 UCELParser.ComponentContext compNode = ((UCELParser.ComponentContext) declInfo.getNode());
                 Type compType = compNode.scope.getParent().get(compNode.reference).getType();
 
-                occurrenceValue = new CompOccurrenceValue(ctx.ID().getText(), arguments, compType);
+                occurrenceValue = new CompOccurrenceValue(ctx.compVar().ID().getText(), arguments, compType);
             } else if(declInfo.getNode() instanceof UCELParser.PtemplateContext) {
-                occurrenceValue = new TemplateOccurrenceValue(ctx.ID().getText(), arguments);
+                occurrenceValue = new TemplateOccurrenceValue(ctx.compVar().ID().getText(), arguments);
             } else {
                 return null;
             }
@@ -778,6 +778,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         }
 
         enterScope(componentNode.compBody().scope);
+        visit(componentNode.compBody().declarations());
         visit(componentNode.compBody().build());
         currentScope = oldScope;
 
