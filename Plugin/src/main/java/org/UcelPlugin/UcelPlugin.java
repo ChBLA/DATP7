@@ -26,18 +26,12 @@ public class UcelPlugin implements Plugin {
         this.uppaalManager = new UppaalManager(registry);
 
         ui.getCompileButton().addOnClick(e -> {
-            try {
-                previousIProject = getCurrentProject();
+            var currentProject = getCurrentProject();
+            previousIProject = currentProject;
+            var compiled = compileProjectWithUiNotifications(currentProject);
 
-                setCurrentProject(compileProject(previousIProject));
-                ui.setSuccess();
-            }
-            catch (ErrorsFoundException err) {
-                ui.setErrors(err.getLogs());
-            }
-            catch (Exception ex) {
-                ui.setError(ex);
-            }
+            if(compiled != null)
+                setCurrentProject(compiled);
         });
 
         ui.getCompileX100Button().addOnClick(e -> {
@@ -61,16 +55,7 @@ public class UcelPlugin implements Plugin {
         });
 
         ui.getTryBuildButton().addOnClick(e -> {
-            try {
-                compileProject(getCurrentProject());
-                ui.setSuccess();
-            }
-            catch (ErrorsFoundException err) {
-                ui.setErrors(err.getLogs());
-            }
-            catch (Exception ex) {
-                ui.setError(ex);
-            }
+            compileProjectWithUiNotifications(getCurrentProject());
         });
     }
 
@@ -83,6 +68,22 @@ public class UcelPlugin implements Plugin {
     private IProject compileProject(IProject project) throws ErrorsFoundException {
         Compiler compiler = new Compiler();
         return compiler.compileProject(project);
+    }
+
+    private IProject compileProjectWithUiNotifications(IProject project) {
+        try {
+            var compiledProject = compileProject(project);
+            ui.setSuccess();
+            return compiledProject;
+        }
+        catch (ErrorsFoundException err) {
+            ui.setErrors(err.getLogs());
+            return null;
+        }
+        catch (Exception ex) {
+            ui.setError(ex);
+            return null;
+        }
     }
 
     private void setCurrentProject(IProject project) {
