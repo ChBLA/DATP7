@@ -16,7 +16,7 @@ import java.util.Objects;
 public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     //region Header
-    private ComponentOccurrence currentOccurrence;
+    private ComponentOccurrence currentOccurrence = new ComponentOccurrence("", null, null);
     private Scope currentScope;
     private ILogger logger;
 
@@ -155,7 +155,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         try{
             DeclarationInfo declInfo = currentScope.get(ctx.reference);
             return declInfo.getValue() == null
-                    ? new VariableValue(currentOccurrence.getPrefix(), "", declInfo)
+                    ? new VariableValue(currentOccurrence.getPrefix() + (!currentOccurrence.getPrefix().equals("") ? "_" : ""), "", declInfo)
                     : declInfo.getValue();
         } catch (Exception e) {
             return null;
@@ -167,7 +167,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression().get(0));
         InterpreterValue right = visit(ctx.expression().get(1));
 
-        if(!isStringValue(left) || !isIntegerValue(right)) return null;
+        if(!isVariableValue(left) || !isIntegerValue(right)) return null;
         IntegerValue intRight = (IntegerValue) right;
         if(intRight.getInt() < 0) {
             logger.log(new ErrorLog(ctx, "Array index out of range"));
@@ -661,7 +661,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         try {
             InterpreterValue value = recBuildMultiDimLists(compVarValue.getIndices(),
-                    compVarValue.getIndices().length - 1 );
+                    compVarValue.getIndices().length);
             currentScope.get(ctx.compVar().variableReference).setValue(value);
         } catch (Exception e) {
             return null;
@@ -804,6 +804,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         return v instanceof StringValue && v.generateName() != null;
     }
 
+    private boolean isVariableValue(InterpreterValue v) {
+        return v instanceof VariableValue && v.generateName() != null;
+    }
     private boolean isBoolValue(InterpreterValue v) {
         return v != null && v instanceof BooleanValue;
     }

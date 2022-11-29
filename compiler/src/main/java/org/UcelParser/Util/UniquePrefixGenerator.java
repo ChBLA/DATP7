@@ -19,6 +19,6 @@ public class UniquePrefixGenerator {
             num = num / 26;
         }
 
-        return builder.toString();
+        return builder.toString().replaceAll("^a+", "");
     }
 }

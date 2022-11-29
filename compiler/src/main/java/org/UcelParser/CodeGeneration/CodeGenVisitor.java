@@ -108,14 +108,16 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         }
 
         ArrayList<Template> interfaceTemplates = new ArrayList<>();
-        for (var occ : ctx.occurrences) {
-            String occId = occ.generateName();
-            this.componentPrefix = String.format("%s%s", id, occId);
-            this.depthFromComponentScope = -1;
-            occ.setValue(id);
+        if (ctx.occurrences != null) {
+            for (var occ : ctx.occurrences) {
+                String occId = occ.generateName();
+                this.componentPrefix = String.format("%s_%s", id, occId);
+                this.depthFromComponentScope = -1;
+                occ.setValue(id + "_");
 
-            var occRes = visit(ctx.interfaceVarDecl());
-            interfaceTemplates.add(occRes);
+                var occRes = visit(ctx.interfaceVarDecl());
+                interfaceTemplates.add(occRes);
+            }
         }
         this.componentPrefix = "";
 
@@ -346,7 +348,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         ArrayList<Template> declarations = new ArrayList<Template>();
         if (ctx.occurrences != null && ctx.occurrences.size() > 0) {
             for (var occ : ctx.occurrences) {
-                String occName = occ.getPrefix() + this.counter++;
+                String occName = occ.getPrefix() + "_" + this.counter++;
                 ST constructorCall = new ST("<cons>(<exprs; separator=\", \">)");
                 constructorCall.add("cons", name);
                 for (var param : occ.getParameters())

@@ -70,10 +70,10 @@ public class DeclarationInfo implements NameGenerator {
     }
 
     public String generateName() {
-        return this.scope.getPrefix() + "_" + this.identifier;
+        return this.scope.getPrefix() + (this.scope.getPrefix().equals("") ? "" : "_") + this.identifier;
     }
     public String generateName(String componentPrefix) {
-        return componentPrefix + (componentPrefix.isEmpty() ? "" : "_") + this.scope.getPrefix() + "_" + this.identifier;
+        return componentPrefix + (componentPrefix.isEmpty() ? "" : "_") + this.generateName();
     }
 
     public InterpreterValue getValue() {
