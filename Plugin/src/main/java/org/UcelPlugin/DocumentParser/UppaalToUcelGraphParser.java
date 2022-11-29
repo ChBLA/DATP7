@@ -33,7 +33,10 @@ public class UppaalToUcelGraphParser {
 
         newLocation.setPosX(location.getX());
         newLocation.setPosY(location.getY());
-        newLocation.setName(location.getName());
+        if (location.getProperty(UppaalPropertyNames.Location.name) != null)
+            newLocation.setName((String) location.getPropertyValue(UppaalPropertyNames.Location.name));
+        else
+            newLocation.setName("");
 
         // Optional Properties
         if (location.getProperty(UppaalPropertyNames.Location.invariant) != null)

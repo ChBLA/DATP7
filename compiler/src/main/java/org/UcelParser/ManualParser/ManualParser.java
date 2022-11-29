@@ -128,9 +128,7 @@ public class ManualParser {
             return null;
 
         locationNode.children = new ArrayList<>() {{ add(invariantNode); add(exponentialNode); }};
-
-        if (!location.getName().isEmpty())
-            locationNode.addChild(new CommonToken(UCELParser.ID, location.getName()));
+        locationNode.addChild(new CommonToken(UCELParser.ID, location.getName() != null ? location.getName() : ""));
 
         locationNode.isCommitted = location.getCommitted();
         locationNode.isInitial = location.getInitial();

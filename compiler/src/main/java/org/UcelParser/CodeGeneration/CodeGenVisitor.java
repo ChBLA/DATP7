@@ -257,7 +257,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitLocation(UCELParser.LocationContext ctx) {
         Template invariant = visit(ctx.invariant());
         Template exponential = visit(ctx.exponential());
-        String ID = null; //TODO: get ID from somewhere
+        String ID = ctx.ID().getText(); //TODO: get ID from somewhere
         return new LocationTemplate(invariant, exponential, ctx, ID);
     }
 
