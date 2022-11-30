@@ -22,7 +22,7 @@ public class UcelPlugin implements Plugin {
     public UcelPlugin(Registry registry) {
         this.uppaalManager = new UppaalManager(registry);
 
-        ui.getCompileButton().addOnClickAsync(e -> {
+        ui.getCompileToEditorButton().addOnClickAsync(e -> {
             var currentProject = uppaalManager.getProject();
             previousIProject = currentProject;
 
@@ -31,7 +31,7 @@ public class UcelPlugin implements Plugin {
                 uppaalManager.setProject(compiled);
         });
 
-        ui.getSendToSimulatorButton().addOnClickAsync(e -> {
+        ui.getCompileToEngineButton().addOnClickAsync(e -> {
             var currentProject = uppaalManager.getProject();
 
             var compiled = compileProjectWithUiNotifications(currentProject);
