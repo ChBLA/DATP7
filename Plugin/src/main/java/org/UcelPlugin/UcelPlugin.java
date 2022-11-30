@@ -38,13 +38,13 @@ public class UcelPlugin implements Plugin {
                     for (int i = 0; i < 100; i++)
                         setCurrentProject(compileProject(getCurrentProject()));
 
-                    ui.setSuccess();
+                    ui.getStatusArea().setSuccess();
                 }
                 catch (ErrorsFoundException err) {
-                    ui.setErrors(err.getLogs());
+                    ui.getStatusArea().setErrors(err.getLogs());
                 }
                 catch (Exception ex) {
-                    ui.setError(ex);
+                    ui.getStatusArea().setError(ex);
                 }
             }).start();
         });
@@ -52,7 +52,7 @@ public class UcelPlugin implements Plugin {
         ui.getUndoButton().addOnClick(e -> {
             if(previousIProject != null) {
                 setCurrentProject(previousIProject);
-                ui.setStatus("Undo successful");
+                ui.getStatusArea().setUndoSuccess();
             }
         });
 
@@ -73,7 +73,7 @@ public class UcelPlugin implements Plugin {
     }
 
     private void compileAndSetInNewThread(IProject project) {
-        ui.setCompiling();
+        ui.getStatusArea().setCompiling();
         new Thread(() -> {
             var compiled = compileProjectWithUiNotifications(project);
             if(compiled != null)
@@ -84,15 +84,15 @@ public class UcelPlugin implements Plugin {
     private IProject compileProjectWithUiNotifications(IProject project) {
         try {
             var compiledProject = compileProject(project);
-            ui.setSuccess();
+            ui.getStatusArea().setSuccess();
             return compiledProject;
         }
         catch (ErrorsFoundException err) {
-            ui.setErrors(err.getLogs());
+            ui.getStatusArea().setErrors(err.getLogs());
             return null;
         }
         catch (Exception ex) {
-            ui.setError(ex);
+            ui.getStatusArea().setError(ex);
             return null;
         }
     }

@@ -1,15 +1,16 @@
 package org.UcelPlugin.UiComponents;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.function.Consumer;
 
 public class Button {
     private JButton element;
 
-    public Button(JPanel panel, String text) {
+    public Button(JPanel panel, GridBagConstraints layout, String text) {
         element = new JButton(text);
-        panel.add(element);
+        panel.add(element, layout);
     }
 
     public void addOnClick(Consumer onClick) {
