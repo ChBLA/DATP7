@@ -22,28 +22,21 @@ public class UcelPlugin implements Plugin {
     public UcelPlugin(Registry registry) {
         this.uppaalManager = new UppaalManager(registry);
 
-        ui.getCompileButton().addOnClick(e -> {
+        ui.getCompileButton().addOnClickAsync(e -> {
             var currentProject = uppaalManager.getProject();
             previousIProject = currentProject;
-            compileAndSetInNewThread(currentProject);
+
+            var compiled = compileProjectWithUiNotifications(currentProject);
+            if(compiled != null)
+                uppaalManager.setProject(compiled);
         });
 
-        ui.getCompileX100Button().addOnClick(e -> {
-            previousIProject = uppaalManager.getProject();
-            new Thread(() -> {
-                try {
-                    for (int i = 0; i < 100; i++)
-                        uppaalManager.setProject(compileProject(uppaalManager.getProject()));
+        ui.getSendToSimulatorButton().addOnClickAsync(e -> {
+            var currentProject = uppaalManager.getProject();
 
-                    ui.getStatusArea().setSuccess();
-                }
-                catch (ErrorsFoundException err) {
-                    ui.getStatusArea().setErrors(err.getLogs());
-                }
-                catch (Exception ex) {
-                    ui.getStatusArea().setError(ex);
-                }
-            }).start();
+            var compiled = compileProjectWithUiNotifications(currentProject);
+            if(compiled != null)
+                uppaalManager.setModelCheckerProject(compiled);
         });
 
         ui.getUndoButton().addOnClick(e -> {
@@ -53,7 +46,7 @@ public class UcelPlugin implements Plugin {
             }
         });
 
-        ui.getTryBuildButton().addOnClick(e -> {
+        ui.getTryBuildButton().addOnClickAsync(e -> {
             compileProjectWithUiNotifications(uppaalManager.getProject());
         });
     }
@@ -61,15 +54,6 @@ public class UcelPlugin implements Plugin {
     private IProject compileProject(IProject project) throws ErrorsFoundException {
         Compiler compiler = new Compiler();
         return compiler.compileProject(project);
-    }
-
-    private void compileAndSetInNewThread(IProject project) {
-        ui.getStatusArea().setCompiling();
-        new Thread(() -> {
-            var compiled = compileProjectWithUiNotifications(project);
-            if(compiled != null)
-                uppaalManager.setProject(compiled);
-        }).start();
     }
 
     private IProject compileProjectWithUiNotifications(IProject project) {
