@@ -10,6 +10,7 @@ import org.UcelParser.Util.Logging.ILogger;
 import org.UcelParser.Util.Logging.Logger;
 import org.UcelParser.CodeGeneration.templates.ManualTemplate;
 import org.UcelParser.CodeGeneration.templates.Template;
+import org.UcelParser.Util.Value.InterfaceValue;
 import org.stringtemplate.v4.ST;
 
 import javax.swing.text.DefaultCaret;
@@ -76,7 +77,6 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                         }
                     }
                 }
-                //TODO: handle interfaces
 
                 compBodyTemplate = visit(ctx.compBody());
 
@@ -353,14 +353,22 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
         // Make the instantiations for all template occurrences
         ArrayList<String> namesForInstans = new ArrayList<>();
-        ArrayList<Template> declarations = new ArrayList<Template>();
+        ArrayList<Template> declarations = new ArrayList<>();
         if (ctx.occurrences != null && ctx.occurrences.size() > 0) {
             for (var occ : ctx.occurrences) {
                 String occName = occ.getPrefix() + "_" + this.counter++;
                 ST constructorCall = new ST("<cons>(<exprs; separator=\", \">)");
                 constructorCall.add("cons", name);
-                for (var param : occ.getParameters())
-                    constructorCall.add("exprs", param.generateName());
+                for (var param : occ.getParameters()) {
+                    if (param instanceof InterfaceValue) {
+                        InterfaceValue interfaceParam = (InterfaceValue) param;
+                        for (var interfaceField : interfaceParam.getInterfaceNode().interfaceVarDecl().arrayDeclID()) {
+                            constructorCall.add("exprs", param.generateName() + "_" + interfaceField.ID().getText());
+                        }
+                    } else {
+                        constructorCall.add("exprs", param.generateName());
+                    }
+                }
                 Template occDecl = new ManualTemplate(String.format("%s = %s;", occName, constructorCall.render()));
 
                 namesForInstans.add(occName);
@@ -737,25 +745,56 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitParameter(UCELParser.ParameterContext ctx) {
-        var typeTemplate = ctx.type() != null ? visit(ctx.type()) : new ManualTemplate("");
-        var ampString = ctx.BITAND() != null ? ctx.BITAND().getText() : "";
-        DeclarationInfo info = null;
+        DeclarationInfo paramInfo = null;
         try {
-            if (ctx.reference != null)
-                info = currentScope.get(ctx.reference);
+            paramInfo = currentScope.get(ctx.reference);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        var idString = info != null ? info.generateName(getComponentPrefix(ctx.reference.getRelativeScope())) : "";
+        if (paramInfo.getType().getEvaluationType().equals(Type.TypeEnum.interfaceType)) {
+            DeclarationInfo paramTypeInfo;
+            try {
+                paramTypeInfo = currentScope.get(ctx.type().typeId().reference);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
-        var arrayTemplates = new ArrayList<Template>();
+            if (paramTypeInfo.getNode() instanceof UCELParser.InterfaceDeclContext) {
 
-        for (var arrayDecl : ctx.arrayDecl()) {
-            arrayTemplates.add(visit(arrayDecl));
+                StringBuilder arrayString = new StringBuilder("");
+
+                for (var arrayDecl : ctx.arrayDecl()) {
+                    arrayString.append(visit(arrayDecl));
+                }
+
+                UCELParser.InterfaceDeclContext interfaceNode = (UCELParser.InterfaceDeclContext) paramTypeInfo.getNode();
+                ArrayList<Template> paramDecls = new ArrayList<>();
+
+                for (int i = 0; i < interfaceNode.interfaceVarDecl().arrayDeclID().size(); i++) {
+                    String type = visit(interfaceNode.interfaceVarDecl().type(i).typeId()).toString();
+                    String name = paramInfo.generateName(getComponentPrefix(ctx.reference.getRelativeScope())) + "_" + interfaceNode.interfaceVarDecl().arrayDeclID(i).ID().getText();
+                    paramDecls.add(new ManualTemplate(String.format("%s &%s%s", type, name, arrayString)));
+                }
+                return new ParametersTemplate(paramDecls);
+            }
+        } else {
+            var typeTemplate = ctx.type() != null ? visit(ctx.type()) : new ManualTemplate("");
+            var ampString = ctx.BITAND() != null ? ctx.BITAND().getText() : "";
+
+
+            var idString = paramInfo.generateName(getComponentPrefix(ctx.reference.getRelativeScope()));
+
+            var arrayTemplates = new ArrayList<Template>();
+
+            for (var arrayDecl : ctx.arrayDecl()) {
+                arrayTemplates.add(visit(arrayDecl));
+            }
+
+            return ctx.REF() != null ? new ManualTemplate("") : new ParameterTemplate(typeTemplate, ampString, idString, arrayTemplates);
         }
 
-        return ctx.REF() != null ? new ManualTemplate("") : new ParameterTemplate(typeTemplate, ampString, idString, arrayTemplates);
+        return new ManualTemplate("");
     }
 
     @Override
@@ -896,6 +935,44 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     //region Expressions
 
+
+    @Override
+    public Template visitStructAccess(UCELParser.StructAccessContext ctx) {
+        var expr = ctx.expression();
+        int arrayCounter;
+        for (arrayCounter = 0; expr instanceof UCELParser.ArrayIndexContext; arrayCounter++)
+            expr = ((UCELParser.ArrayIndexContext) expr).expression(0);
+
+        if (expr instanceof UCELParser.IdExprContext) {
+            DeclarationInfo exprInfo;
+            try {
+                exprInfo = currentScope.get(expr.reference);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            if (exprInfo.getType().getEvaluationType().equals(Type.TypeEnum.interfaceType)) {
+                Template leftSide = visit(ctx.expression());
+                if (leftSide instanceof ArrayIndexTemplate) {
+                    ArrayIndexTemplate leftSideCasted = (ArrayIndexTemplate) leftSide;
+                    leftSideCasted.template.add("unexpectedField", ctx.ID().getText());
+                    return leftSideCasted;
+                }
+                return new ManualTemplate(String.format("%s_%s", leftSide, ctx.ID().getText()));
+            }
+        }
+
+        // Struct.id and [Struct].id
+
+        // interface T {chan c, int q}, T t, T s[]
+        // t.c -> t_c   s[i].c -> s_c[i]
+
+        //interface T1 {chan c, int q[10]}, T1 t1, T1 s1[]
+        // t1.q[i] -> t1_q[i], s1[j].q[i] -> s1_q[j][i]
+
+
+        return new ManualTemplate(String.format("%s.%s", visit(ctx.expression()), ctx.ID().getText()));
+    }
 
     @Override
     public Template visitIdExpr(UCELParser.IdExprContext ctx) {

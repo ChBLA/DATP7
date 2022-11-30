@@ -47,10 +47,11 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         enterScope(ctx.scope);
         // Only psystem can contain build statements for interpretation
+        var resDecl = visit(ctx.pdeclaration().declarations());
         var visitRes = visit(ctx.psystem());
         exitScope();
 
-        return visitRes;
+        return resDecl instanceof VoidValue && visitRes instanceof VoidValue ? visitRes : null;
     }
 
     @Override
@@ -485,7 +486,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         try {
             id = currentScope.get(ctx.variableReference).getIdentifier();
-        } catch (Exception e) {return null;}
+        } catch (Exception e) {
+            return null;
+        }
 
 
         return new CompVarValue(id, indices);
@@ -606,19 +609,20 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             int id = nextInterfaceId;
             nextInterfaceId++;
             StringValue interfaceAlias = new StringValue(Integer.toString(id));
-            InterfaceValue leftInterfaceValue = new InterfaceValue(leftParamNum, id, interfaceAlias);
-            InterfaceValue rightInterfaceValue = new InterfaceValue(rightParamNum, id, interfaceAlias);
+
+            var leftInterface = extractInterfaceDefFromLink(ctx, 0, ctx.leftInterface);
+            var rightInterface = extractInterfaceDefFromLink(ctx, 1, ctx.rightInterface);
+            assert Objects.equals(leftInterface, rightInterface);
+            assert leftInterface != null;
+
+            InterfaceValue leftInterfaceValue = new InterfaceValue(leftInterface, id, interfaceAlias);
+            InterfaceValue rightInterfaceValue = new InterfaceValue(rightInterface, id, interfaceAlias);
 
             //Set the interfaceValues on occurrenceValues
             leftCompOcc.getInterfaces()[leftParamNum] = leftInterfaceValue;
             rightCompOcc.getInterfaces()[rightParamNum] = rightInterfaceValue;
 
             //Set stringValue on interface
-            var leftInterface = extractInterfaceDefFromLink(ctx, 0, ctx.leftInterface);
-            var rightInterface = extractInterfaceDefFromLink(ctx, 1, ctx.rightInterface);
-
-            assert Objects.equals(leftInterface, rightInterface);
-            assert leftInterface != null;
             if (leftInterface.occurrences == null)
                 leftInterface.occurrences = new ArrayList<>();
             leftInterface.occurrences.add(interfaceAlias);

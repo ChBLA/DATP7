@@ -1,15 +1,16 @@
 package org.UcelParser.Util.Value;
 
+import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.NameGenerator;
 
 public class InterfaceValue implements InterpreterValue {
 
-    private final int param;
+    private final UCELParser.InterfaceDeclContext interfaceNode;
     private final int id;
     private final NameGenerator generator;
 
-    public InterfaceValue(int param, int id, NameGenerator generator) {
-        this.param = param;
+    public InterfaceValue(UCELParser.InterfaceDeclContext node, int id, NameGenerator generator) {
+        this.interfaceNode = node;
         this.id = id;
         this.generator = generator;
     }
@@ -17,11 +18,9 @@ public class InterfaceValue implements InterpreterValue {
     public int getId() {
         return id;
     }
-
-    public int getParam() {
-        return param;
+    public UCELParser.InterfaceDeclContext getInterfaceNode() {
+        return interfaceNode;
     }
-
     @Override
     public String generateName() {
         return generator.generateName() + id;
@@ -41,4 +40,6 @@ public class InterfaceValue implements InterpreterValue {
     public boolean equals(Object other) {
         return (other instanceof InterfaceValue) && id == ((InterfaceValue) other).id;
     }
+
+
 }
