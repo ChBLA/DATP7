@@ -9,9 +9,6 @@ import java.awt.*;
 
 public class UcelEditorUI extends BaseWorkspace {
     public UcelEditorUI() {
-//        var btn = new JButton("Test");
-//        jPanel.add(btn, BorderLayout.PAGE_START);
-        var gbc = new GridBagConstraints();
 
     }
 
@@ -36,14 +33,14 @@ public class UcelEditorUI extends BaseWorkspace {
     }};
 
 
-    private Button compileButton = new Button(topPanel, LayoutGenerator.GetLayout(0,0,1,1), "Compile");
-    public Button getCompileButton() {
-        return compileButton;
+    private Button compileToEditorButton = new Button(topPanel, LayoutGenerator.GetLayout(0,0,1,1), "Compile to Editor");
+    public Button getCompileToEditorButton() {
+        return compileToEditorButton;
     }
 
-    private Button sendToSimulatorButton = new Button(topPanel, LayoutGenerator.GetLayout(1,0,1,1), "Send to Simulator");
-    public Button getSendToSimulatorButton() {
-        return sendToSimulatorButton;
+    private Button compileToEngineButton = new Button(topPanel, LayoutGenerator.GetLayout(1,0,1,1), "Compile to Engine");
+    public Button getCompileToEngineButton() {
+        return compileToEngineButton;
     }
 
     private Button undoButton = new Button(topPanel, LayoutGenerator.GetLayout(2,0,1,1), "Undo");
