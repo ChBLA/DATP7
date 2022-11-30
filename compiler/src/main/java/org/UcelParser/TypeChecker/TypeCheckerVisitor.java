@@ -255,9 +255,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         for (int i = 0; i < ctx.type().size(); i++) {
             var varType = visit(ctx.type(i));
+            int dimensions = ctx.arrayDeclID(i).arrayDecl().size();
 
             names.add(ctx.arrayDeclID(i).ID().getText());
-            types.add(varType);
+            types.add(varType.deepCopy(dimensions));
 
             if (varType.equals(ERROR_TYPE)) {
                 logger.log(new ErrorLog(ctx.arrayDeclID(i), "Error: variable has type error"));
@@ -1490,7 +1491,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return ERROR_TYPE;
         }
 
-        return arrayType;
+        return arrayType.deepCopy(arrayType.getArrayDimensions() - 1);
     }
 
     @Override

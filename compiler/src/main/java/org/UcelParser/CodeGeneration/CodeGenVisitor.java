@@ -46,6 +46,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitComponent(UCELParser.ComponentContext ctx) {
+        String prevPrefix = componentPrefix;
         enterScope(ctx.scope);
 
         ArrayList<ComponentTemplate> components = new ArrayList<>();
@@ -80,11 +81,11 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
                 compBodyTemplate = visit(ctx.compBody());
 
-                components.add(new ComponentTemplate(parameters, interfaces, compBodyTemplate));
+                components.add(new ComponentTemplate(this.componentPrefix, parameters, interfaces, compBodyTemplate));
             }
         }
 
-        componentPrefix = "";
+        componentPrefix = prevPrefix;
         exitScope();
         return new ComponentsTemplate(components);
     }
@@ -300,7 +301,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         for (var pTemp : ctx.ptemplate()) {
             PTemplateTemplate template = (PTemplateTemplate) visit(pTemp);
             pTemplateTemplates.add(template);
-            pSystemTemplate.system.template.add("decls", template.sysDeclarations);
+            pSystemTemplate.system.template.add("decls", System.lineSeparator() + "// Declaration of all processes of type "
+                    + template.name + System.lineSeparator() + template.sysDeclarations);
             pSystemTemplate.system.template.add("names", template.namesForSysDeclarations);
         }
         pSystemTemplate.finalise();
@@ -773,7 +775,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
                 for (int i = 0; i < interfaceNode.interfaceVarDecl().arrayDeclID().size(); i++) {
                     String type = visit(interfaceNode.interfaceVarDecl().type(i).typeId()).toString();
-                    String name = paramInfo.generateName(getComponentPrefix(ctx.reference.getRelativeScope())) + "_" + interfaceNode.interfaceVarDecl().arrayDeclID(i).ID().getText();
+                    String name = paramInfo.generateName(getComponentPrefix(ctx.reference.getRelativeScope())) + "_" + visit(interfaceNode.interfaceVarDecl().arrayDeclID(i));
                     paramDecls.add(new ManualTemplate(String.format("%s &%s%s", type, name, arrayString)));
                 }
                 return new ParametersTemplate(paramDecls);
@@ -955,7 +957,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                 Template leftSide = visit(ctx.expression());
                 if (leftSide instanceof ArrayIndexTemplate) {
                     ArrayIndexTemplate leftSideCasted = (ArrayIndexTemplate) leftSide;
-                    leftSideCasted.template.add("unexpectedField", ctx.ID().getText());
+                    leftSideCasted.template.add("unexpectedField", "_" + ctx.ID().getText());
                     return leftSideCasted;
                 }
                 return new ManualTemplate(String.format("%s_%s", leftSide, ctx.ID().getText()));
