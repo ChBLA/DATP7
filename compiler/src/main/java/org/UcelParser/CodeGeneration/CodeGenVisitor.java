@@ -4,6 +4,7 @@ import org.UcelParser.CodeGeneration.templates.*;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.*;
+import org.UcelParser.Util.Logging.CompilerErrorLog;
 import org.UcelParser.Util.Logging.ErrorLog;
 import org.UcelParser.Util.Logging.ILogger;
 import org.UcelParser.Util.Logging.Logger;
@@ -58,9 +59,16 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                 if (ctx.parameters() != null) {
                     for (int i = 0; i < ctx.parameters().parameter().size(); i++) {
                         UCELParser.ParameterContext paramNode = ctx.parameters().parameter().get(i);
+                        Type paramNodeType;
+                        try {
+                            paramNodeType = currentScope.get(paramNode.reference).getType();
+                        } catch (Exception e) {
+                            logger.log(new CompilerErrorLog(paramNode, "Could not find entry in scope"));
+                            return new ManualTemplate("");
+                        }
                         if (paramNode.REF() != null) {
                             //TODO: Implement when component with references
-                        } else {
+                        } else if (!paramNodeType.getEvaluationType().equals(Type.TypeEnum.interfaceType)) {
                             Template paramTemplate = visit(paramNode);
                             String actualParameter = occurrence.getParameters()[i].generateName("");
                             ManualTemplate paramDeclaration = new ManualTemplate(String.format("%s = %s;", paramTemplate, actualParameter));
