@@ -1,14 +1,11 @@
 package org.UcelPlugin;
 
-import com.uppaal.model.core2.Document;
 import com.uppaal.plugin.Plugin;
 import com.uppaal.plugin.PluginWorkspace;
 import com.uppaal.plugin.Registry;
 import org.Ucel.IProject;
 import org.UcelParser.Compiler;
 import org.UcelParser.Util.Exception.ErrorsFoundException;
-import org.UcelPlugin.DocumentParser.UcelToUppaalDocumentParser;
-import org.UcelPlugin.DocumentParser.UppaalToUcelDocumentParser;
 
 public class UcelPlugin implements Plugin {
     private UcelEditorUI ui = new UcelEditorUI();
@@ -25,60 +22,38 @@ public class UcelPlugin implements Plugin {
     public UcelPlugin(Registry registry) {
         this.uppaalManager = new UppaalManager(registry);
 
-        ui.getCompileButton().addOnClick(e -> {
-            var currentProject = getCurrentProject();
+        ui.getCompileButton().addOnClickAsync(e -> {
+            var currentProject = uppaalManager.getProject();
             previousIProject = currentProject;
-            compileAndSetInNewThread(currentProject);
+
+            var compiled = compileProjectWithUiNotifications(currentProject);
+            if(compiled != null)
+                uppaalManager.setProject(compiled);
         });
 
-        ui.getCompileX100Button().addOnClick(e -> {
-            previousIProject = getCurrentProject();
-            new Thread(() -> {
-                try {
-                    for (int i = 0; i < 100; i++)
-                        setCurrentProject(compileProject(getCurrentProject()));
+        ui.getSendToSimulatorButton().addOnClickAsync(e -> {
+            var currentProject = uppaalManager.getProject();
 
-                    ui.getStatusArea().setSuccess();
-                }
-                catch (ErrorsFoundException err) {
-                    ui.getStatusArea().setErrors(err.getLogs());
-                }
-                catch (Exception ex) {
-                    ui.getStatusArea().setError(ex);
-                }
-            }).start();
+            var compiled = compileProjectWithUiNotifications(currentProject);
+            if(compiled != null)
+                uppaalManager.setModelCheckerProject(compiled);
         });
 
         ui.getUndoButton().addOnClick(e -> {
             if(previousIProject != null) {
-                setCurrentProject(previousIProject);
+                uppaalManager.setProject(previousIProject);
                 ui.getStatusArea().setUndoSuccess();
             }
         });
 
-        ui.getTryBuildButton().addOnClick(e -> {
-            compileProjectWithUiNotifications(getCurrentProject());
+        ui.getTryBuildButton().addOnClickAsync(e -> {
+            compileProjectWithUiNotifications(uppaalManager.getProject());
         });
-    }
-
-    private IProject getCurrentProject() {
-        Document document = uppaalManager.getCurrentDocument();
-        UppaalToUcelDocumentParser documentParser = new UppaalToUcelDocumentParser(document);
-        return documentParser.parseDocument();
     }
 
     private IProject compileProject(IProject project) throws ErrorsFoundException {
         Compiler compiler = new Compiler();
         return compiler.compileProject(project);
-    }
-
-    private void compileAndSetInNewThread(IProject project) {
-        ui.getStatusArea().setCompiling();
-        new Thread(() -> {
-            var compiled = compileProjectWithUiNotifications(project);
-            if(compiled != null)
-                setCurrentProject(compiled);
-        }).start();
     }
 
     private IProject compileProjectWithUiNotifications(IProject project) {
@@ -95,11 +70,5 @@ public class UcelPlugin implements Plugin {
             ui.getStatusArea().setError(ex);
             return null;
         }
-    }
-
-    private void setCurrentProject(IProject project) {
-        Document document = uppaalManager.getCurrentDocument();
-        UcelToUppaalDocumentParser projParser = new UcelToUppaalDocumentParser(document);
-        projParser.parseProject(project);
     }
 }

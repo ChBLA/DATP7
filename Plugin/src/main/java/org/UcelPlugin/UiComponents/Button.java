@@ -21,4 +21,12 @@ public class Button {
             }
         });
     }
+
+    public void addOnClickAsync(Consumer onClick) {
+        addOnClick((e) -> {
+            new Thread(() -> {
+                onClick.accept(e);
+            }).start();
+        });
+    }
 }

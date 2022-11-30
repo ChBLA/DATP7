@@ -1,13 +1,11 @@
 package org.UcelPlugin;
 
-import org.UcelParser.Util.Logging.Log;
 import org.UcelPlugin.UiComponents.Button;
 import org.UcelPlugin.UiComponents.LayoutGenerator;
 import org.UcelPlugin.UiComponents.StatusArea;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
 
 public class UcelEditorUI extends BaseWorkspace {
     public UcelEditorUI() {
@@ -43,9 +41,9 @@ public class UcelEditorUI extends BaseWorkspace {
         return compileButton;
     }
 
-    private Button compileX100Button = new Button(topPanel, LayoutGenerator.GetLayout(1,0,1,1), "Compile x100");
-    public Button getCompileX100Button() {
-        return compileX100Button;
+    private Button sendToSimulatorButton = new Button(topPanel, LayoutGenerator.GetLayout(1,0,1,1), "Send to Simulator");
+    public Button getSendToSimulatorButton() {
+        return sendToSimulatorButton;
     }
 
     private Button undoButton = new Button(topPanel, LayoutGenerator.GetLayout(2,0,1,1), "Undo");
