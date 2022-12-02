@@ -2,6 +2,7 @@ package org.UcelParser.TypeChecker;
 
 import com.sun.jdi.FloatType;
 import org.UcelParser.CodeGeneration.templates.ManualTemplate;
+import org.UcelParser.Util.Exception.CouldNotFindException;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -53,6 +54,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     private static final Type CHAN_TYPE = new Type(Type.TypeEnum.chanType);
     private static final Type STRUCT_TYPE = new Type(Type.TypeEnum.structType);
     private static final Type PROCESS_TYPE = new Type(Type.TypeEnum.processType);
+    private static final Type COMPONENT_TYPE = new Type(Type.TypeEnum.componentType);
     private static final Type TEMPLATE_TYPE = new Type(Type.TypeEnum.templateType);
     private static final Type SCALAR_TYPE = new Type(Type.TypeEnum.scalarType);
     private static final Type ARRAY_TYPE = new Type(Type.TypeEnum.voidType, 1);
@@ -63,7 +65,6 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     @Override
     public Type visitCompCon(UCELParser.CompConContext ctx) {
-        Type result = VOID_TYPE;
         Type argumentsTypes = visit(ctx.arguments());
 
         if (argumentsTypes.getEvaluationType().equals(ERROR_TYPE.getEvaluationType()))
@@ -74,10 +75,15 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         try {
             constructorInfo = currentScope.get(ctx.constructorReference);
+        } catch (CouldNotFindException e) {
+            logger.log(new TypeNotDeclaredErrorLog(ctx, ctx.ID().getText()));
+            return ERROR_TYPE;
+        }
+
+        try {
             variableCompInfo = currentScope.get(ctx.compVar().variableReference);
-        } catch (Exception e) {
-            logger.log(new ErrorLog(ctx,
-                    "internal error: constructor for component could not be found in scope"));
+        } catch (CouldNotFindException e) {
+            logger.log(new VariableNotDeclaredErrorLog(ctx.compVar(), ctx.compVar().ID().getText()));
             return ERROR_TYPE;
         }
 
@@ -88,25 +94,24 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             String varConID = variableCompInfo.getNode() instanceof UCELParser.ComponentContext
                     ? ((UCELParser.ComponentContext) variableCompInfo.getNode()).ID().getText()
                     : ((UCELParser.PtemplateContext) variableCompInfo.getNode()).ID().getText();
-            logger.log(new ErrorLog(ctx, "Trying to assign " + conID + " to component of type " + varConID));
+            logger.log(new WrongAssignmentTypeErrorLog(ctx, conID, varConID));
             return ERROR_TYPE;
         }
 
         Type constructorType = constructorInfo.getType();
         if (!(constructorType.getEvaluationType().equals(Type.TypeEnum.componentType)
                 || constructorType.getEvaluationType().equals(Type.TypeEnum.templateType))) {
-            logger.log(new ErrorLog(ctx,
-                    "internal error: constructor for component is not of type component"));
-            result = ERROR_TYPE;
+            logger.log(new WrongTypeErrorLog(ctx,
+                    new ArrayList<Type>() {{ add(COMPONENT_TYPE); add(TEMPLATE_TYPE); }},
+                    constructorType, "for component construction"
+            ));
+            return ERROR_TYPE;
         }
 
         for (int i = 0; i < argumentsTypes.getParameters().length; i++) {
             if (!constructorType.getParameters()[i+1].getEvaluationType().equals(argumentsTypes.getParameters()[i].getEvaluationType())) {
-                logger.log(new ErrorLog(ctx,
-                        "internal error: constructor for component does not match arguments. expected: "
-                                + constructorType.getParameters()[i] + " but got: "
-                                + argumentsTypes.getParameters()[i]));
-                result = ERROR_TYPE;
+                logger.log(new WrongTypeErrorLog(ctx, constructorType.getParameters()[i], argumentsTypes.getParameters()[i], "for component construction arguments"));
+                return ERROR_TYPE;
             }
         }
 
@@ -114,17 +119,22 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         try {
             compVarType = currentScope.get(ctx.compVar().variableReference).getType();
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx.compVar(), "Cannot find " + ctx.compVar().ID().getText() + " in scope"));
+            logger.log(new VariableNotDeclaredErrorLog(ctx.compVar(), ctx.compVar().ID().getText()));
+            return ERROR_TYPE;
+        }
+
+        if (compVarType == null) {
+            logger.log(new MissingTypeErrorLog(ctx.compVar(), ctx.compVar().ID().getText()));
             return ERROR_TYPE;
         }
 
         if (!(compVarType.getEvaluationType().equals(Type.TypeEnum.processType) && constructorType.getEvaluationType().equals(Type.TypeEnum.templateType))
             && !(compVarType.getEvaluationType().equals(Type.TypeEnum.componentType) && constructorType.getEvaluationType().equals(Type.TypeEnum.componentType))) {
-            logger.log(new ErrorLog(ctx, "Trying to assign " + constructorType + " to " + compVarType));
+            logger.log(new WrongAssignmentTypeErrorLog(ctx, constructorType, compVarType));
             return ERROR_TYPE;
         }
 
-        return result;
+        return VOID_TYPE;
     }
 
 
@@ -176,15 +186,14 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
 
     // region linkStatement
-    private Type extractInterfaceTypeFromComponent(int number, Scope scope, UCELParser.CompVarContext node) {
+    private Type extractInterfaceTypeFromComponent(int number, Scope scope, UCELParser.CompVarContext node) throws CouldNotFindException {
         UCELParser.ComponentContext componentNode;
         DeclarationInfo compInfo;
         try {
             componentNode = (UCELParser.ComponentContext) scope.get(node.variableReference).getNode();
             compInfo = componentNode.scope.getParent().get(componentNode.reference);
         } catch (Exception e) {
-            logger.log(new CompilerErrorLog(node, "Reference not found"));
-            return null;
+            throw new CouldNotFindException(e.getMessage());
         }
 
         Type compType = compInfo.getType();
@@ -201,14 +210,43 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         try {
             compVar1 = currentScope.get(ctx.compVar(0).variableReference).getType();
-            compVar2 = currentScope.get(ctx.compVar(1).variableReference).getType();
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Cannot find something, idk, not my problem"));
+            logger.log(new VariableNotDeclaredErrorLog(ctx.compVar(0), ctx.compVar(0).ID().getText()));
             return ERROR_TYPE;
         }
 
-        var leftInterfaceType = extractInterfaceTypeFromComponent(ctx.leftInterface.getDeclarationId(), currentScope, ctx.compVar(0));
-        var rightInterfaceType = extractInterfaceTypeFromComponent(ctx.rightInterface.getDeclarationId(), currentScope, ctx.compVar(1));
+        try {
+            compVar2 = currentScope.get(ctx.compVar(1).variableReference).getType();
+        } catch (Exception e) {
+            logger.log(new VariableNotDeclaredErrorLog(ctx.compVar(1), ctx.compVar(1).ID().getText()));
+            return ERROR_TYPE;
+        }
+
+        if (compVar1 == null) {
+            logger.log(new MissingTypeErrorLog(ctx.compVar(0), ctx.compVar(0).ID().getText()));
+            return ERROR_TYPE;
+        }
+
+        if (compVar2 == null) {
+            logger.log(new MissingTypeErrorLog(ctx.compVar(1), ctx.compVar(1).ID().getText()));
+            return ERROR_TYPE;
+        }
+
+        Type leftInterfaceType;
+        try {
+            leftInterfaceType = extractInterfaceTypeFromComponent(ctx.leftInterface.getDeclarationId(), currentScope, ctx.compVar(0));
+        } catch (CouldNotFindException e) {
+            logger.log(new MissingReferenceErrorLog(ctx.compVar(0), "interface binding"));
+            return ERROR_TYPE;
+        }
+
+        Type rightInterfaceType;
+        try {
+            rightInterfaceType = extractInterfaceTypeFromComponent(ctx.rightInterface.getDeclarationId(), currentScope, ctx.compVar(1));
+        } catch (CouldNotFindException e) {
+            logger.log(new MissingReferenceErrorLog(ctx.compVar(1), "interface binding"));
+            return ERROR_TYPE;
+        }
 
         if (compVar1.getEvaluationType().equals(Type.TypeEnum.errorType)
                 || compVar2.getEvaluationType().equals(Type.TypeEnum.errorType))
@@ -216,7 +254,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         if (leftInterfaceType == null || rightInterfaceType == null ||
                 !leftInterfaceType.getEvaluationType().equals(rightInterfaceType.getEvaluationType())) {
-            logger.log(new ErrorLog(ctx, "Link statement must link interfaces of same type. Got " + leftInterfaceType + " and " + rightInterfaceType));
+            logger.log(new IncompatibleTypeErrorLog(ctx, leftInterfaceType, rightInterfaceType, "linking"));
             return ERROR_TYPE;
         }
 
@@ -237,7 +275,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         try {
             currentScope.get(ctx.reference).setType(interfaceType);
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx,"internal error: could not find reference to interface"));
+            logger.log(new MissingReferenceErrorLog(ctx, "interface " + ctx.ID().getText()));
             interfaceType.setEvaluationType(Type.TypeEnum.errorType);
         }
         return interfaceType;
