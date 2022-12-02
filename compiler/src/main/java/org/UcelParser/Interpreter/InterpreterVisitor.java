@@ -11,6 +11,7 @@ import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
@@ -47,11 +48,20 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         enterScope(ctx.scope);
         // Only psystem can contain build statements for interpretation
-        var resDecl = visit(ctx.pdeclaration().declarations());
-        var visitRes = visit(ctx.psystem());
+        InterpreterValue resDecl = visit(ctx.pdeclaration().declarations());
+        InterpreterValue visitRes = visit(ctx.psystem());
         exitScope();
 
-        return resDecl instanceof VoidValue && visitRes instanceof VoidValue ? visitRes : null;
+        if (!(resDecl instanceof VoidValue)) {
+            logger.log(new CompilerErrorLog(ctx.pdeclaration().declarations(), "Interpreter error"));
+            return null;
+        }
+
+        if (!(visitRes instanceof VoidValue)) {
+            logger.log(new CompilerErrorLog(ctx.psystem(), "Interpreter error"));
+            return null;
+        }
+        return visitRes;
     }
 
     @Override
@@ -168,13 +178,26 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression().get(0));
         InterpreterValue right = visit(ctx.expression().get(1));
 
-        if(!isVariableValue(left) || !isIntegerValue(right)) return null;
-        IntegerValue intRight = (IntegerValue) right;
-        if(intRight.getInt() < 0) {
-            logger.log(new ErrorLog(ctx, "Array index out of range"));
-            return null;
+        if (isIntegerValue(right)) {
+            IntegerValue intRight = (IntegerValue) right;
+            if(intRight.getInt() < 0) {
+                logger.log(new ErrorLog(ctx, "Array index out of range"));
+                return null;
+            }
+
+            if (isVariableValue(left)) {
+                return new VariableValue("", "[" + right.generateName() + "]", left);
+            } else if (left instanceof ListValue) {
+                ListValue listLeft = (ListValue) left;
+                return listLeft.getValue(intRight.getInt());
+            } else {
+                logger.log(new ErrorLog(ctx, "Left side of array access is neither list nor variable"));
+                return null;
+            }
         }
-        return new VariableValue("", "[" + right.generateName() + "]", left);
+
+        logger.log(new ErrorLog(ctx, "Array must be accessed with integer"));
+        return null;
     }
 
     @Override
@@ -498,7 +521,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     public InterpreterValue visitCompCon(UCELParser.CompConContext ctx) {
 
         InterpreterValue iv = visit(ctx.compVar());
-        if(iv == null || !(iv instanceof CompVarValue))
+        if(!(iv instanceof CompVarValue))
             return null;
         CompVarValue compVarValue = (CompVarValue) iv;
 
@@ -523,7 +546,45 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
                 UCELParser.ComponentContext compNode = ((UCELParser.ComponentContext) declInfo.getNode());
                 Type compType = compNode.scope.getParent().get(compNode.reference).getType();
 
-                occurrenceValue = new CompOccurrenceValue(ctx.compVar().ID().getText(), arguments, compType);
+                var parameters = compNode.parameters().parameter();
+                Scope oldScope = currentScope;
+                currentScope = compNode.scope;
+
+                for(int i = 0; i < parameters.size(); i++) {
+                    UCELParser.ParameterContext paramCtx = parameters.get(i);
+                    DeclarationInfo parameterInfo = currentScope.get(paramCtx.reference);
+                    parameterInfo.setValue(arguments[i]);
+                }
+
+                // Find and interpret interface array size for each interface in component
+                List<UCELParser.ParameterContext> interfaceParams = compNode.interfaces().parameters().parameter();
+                InterpreterValue[] interfaceParameterValues = new InterpreterValue[interfaceParams.size()];
+                for (int i = 0; i < interfaceParams.size(); i++) {
+                    List<UCELParser.ArrayDeclContext> interfaceParamArrayDecls = interfaceParams.get(i).arrayDecl();
+                    int[] arraySizes = new int[interfaceParamArrayDecls.size()];
+                    for (int j = 0; j < interfaceParamArrayDecls.size(); j++) {
+                        if (interfaceParamArrayDecls.get(j).expression() == null) {
+                            logger.log(new ErrorLog(interfaceParams.get(i), "Cannot have array without declaring size"));
+                            currentScope = oldScope;
+                            return null;
+                        }
+
+                        InterpreterValue arrayDeclValue = visit(interfaceParamArrayDecls.get(j).expression());
+                        if (!(arrayDeclValue instanceof IntegerValue)) {
+                            logger.log(new ErrorLog(interfaceParamArrayDecls.get(j), "Array size must be an integer"));
+                            currentScope = oldScope;
+                            return null;
+                        }
+
+                        arraySizes[j] = ((IntegerValue) arrayDeclValue).getInt();
+                    }
+
+                    InterpreterValue interfaceParamListValue = recBuildMultiDimLists(arraySizes, arraySizes.length);
+                    interfaceParameterValues[i] = interfaceParamListValue;
+                }
+
+                currentScope = oldScope;
+                occurrenceValue = new CompOccurrenceValue(ctx.compVar().ID().getText(), arguments, interfaceParameterValues);
             } else if(declInfo.getNode() instanceof UCELParser.PtemplateContext) {
                 occurrenceValue = new TemplateOccurrenceValue(ctx.compVar().ID().getText(), arguments);
             } else {
@@ -533,10 +594,13 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             if(listValue == null) {
                 declInfo.setValue(occurrenceValue);
             } else {
-                if(listValue.getValue(lastIndex(indices)) != null) {
+                if (lastIndex(indices) >= listValue.size())
+                    logger.log(new ErrorLog(ctx, "Cannot assign to index " + lastIndex(indices) + " to array of size " + listValue.size()));
+                else if(listValue.getValue(lastIndex(indices)) != null) {
                     logger.log(new ErrorLog(ctx, "two components or processes with indices: " + indices));
+                } else {
+                    listValue.setValue(lastIndex(indices), occurrenceValue);
                 }
-                listValue.setValue(lastIndex(indices), occurrenceValue);
             }
 
         } catch (Exception e) {
@@ -619,8 +683,15 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             InterfaceValue rightInterfaceValue = new InterfaceValue(rightInterface, id, interfaceAlias);
 
             //Set the interfaceValues on occurrenceValues
-            leftCompOcc.getInterfaces()[leftParamNum] = leftInterfaceValue;
-            rightCompOcc.getInterfaces()[rightParamNum] = rightInterfaceValue;
+            if (leftCompOcc.getInterfaces()[leftParamNum] instanceof ListValue)
+                ((ListValue) leftCompOcc.getInterfaces()[leftParamNum]).setNext(leftInterfaceValue);
+            else
+                leftCompOcc.getInterfaces()[leftParamNum] = leftInterfaceValue;
+
+            if (rightCompOcc.getInterfaces()[rightParamNum] instanceof ListValue)
+                ((ListValue) rightCompOcc.getInterfaces()[rightParamNum]).setNext(rightInterfaceValue);
+            else
+                rightCompOcc.getInterfaces()[rightParamNum] = rightInterfaceValue;
 
             //Set stringValue on interface
             if (leftInterface.occurrences == null)
