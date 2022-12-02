@@ -88,9 +88,10 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     @Override
     public Boolean visitBuildDecl(UCELParser.BuildDeclContext ctx) {
         String typeIdentifier = ctx.ID().getText();
+        boolean isInitialised = ctx.compVar() == null;
 
         try {
-            String id = ctx.compVar().ID().getText();
+            String id = isInitialised ? ctx.compCon().compVar().ID().getText() : ctx.compVar().ID().getText();
             if(!currentScope.isUnique(id, true)) {
                 logger.log(new VariableAlreadyDeclaredErrorLog(ctx, id));
                 return false;
@@ -105,7 +106,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             logger.log(new CompilerErrorLog(ctx, e.getMessage()));
         }
 
-        return visit(ctx.compVar());
+        return isInitialised ? visit(ctx.compCon()) : visit(ctx.compVar());
     }
 
 

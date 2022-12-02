@@ -583,7 +583,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return ERROR_TYPE;
         }
 
-        int arrayDims = ctx.compVar().expression() != null ? ctx.compVar().expression().size() : 0;
+        boolean isInitialised = ctx.compVar() == null;
+        int arrayDims = !isInitialised && ctx.compVar().expression() != null
+                ? ctx.compVar().expression().size()
+                : 0;
         if (arrayDims > 0) {
             for (var arrayDecl : ctx.compVar().expression()) {
                 if (visit(arrayDecl).getEvaluationType() != Type.TypeEnum.intType)
@@ -591,18 +594,24 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             }
         }
 
+        if(isInitialised && (ctx.compCon().compVar().expression() != null
+                             && ctx.compCon().compVar().expression().size() != 0)) {
+            logger.log(new ErrorLog(ctx, "Array declarations cannot be initialised in a build declaration"));
+        }
+
         Type assigneeType = type.deepCopy(arrayDims);
         if (type.getEvaluationType().equals(Type.TypeEnum.templateType))
             assigneeType.setEvaluationType(Type.TypeEnum.processType);
 
+        UCELParser.CompVarContext compVar = isInitialised ? ctx.compCon().compVar() : ctx.compVar();
         try {
-            currentScope.get(ctx.compVar().variableReference).setType(assigneeType);
+            currentScope.get(compVar.variableReference).setType(assigneeType);
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Cannot find " + ctx.compVar().ID().getText() + " in scope"));
+            logger.log(new ErrorLog(ctx, "Cannot find " + compVar.ID().getText() + " in scope"));
             return ERROR_TYPE;
         }
 
-        return VOID_TYPE;
+        return isInitialised ? visit(ctx.compCon()) : VOID_TYPE;
     }
 
     //endregion
