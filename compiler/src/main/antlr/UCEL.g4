@@ -71,7 +71,7 @@ buildDecl locals [DeclarationReference typeReference]
 
 interfaceDecl locals [DeclarationReference reference, List<StringValue> occurrences]
     : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;
-interfaceVarDecl : type arrayDeclID (COMMA type arrayDeclID)*;
+interfaceVarDecl : (type arrayDeclID END)+;
 
 instantiation locals [Scope scope, DeclarationReference instantiatedReference, DeclarationReference constructorReference]
     : ID ( LEFTPAR parameters? RIGHTPAR )? '=' ID LEFTPAR arguments? RIGHTPAR END;
