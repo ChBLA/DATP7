@@ -45,18 +45,23 @@ public class UcelToUppaalGraphParser {
         var loc = template.createLocation();
         template.insert(loc, null);
 
-        loc.setProperty(UppaalPropertyNames.Location.posX, ucelLocation.getPosX());
-        loc.setProperty(UppaalPropertyNames.Location.posY, ucelLocation.getPosY());
-        loc.setProperty(UppaalPropertyNames.Location.name, ucelLocation.getName());
+        var propX = ucelLocation.getPosX();
+        var propY = ucelLocation.getPosY();
 
-        loc.setProperty(UppaalPropertyNames.Location.invariant, ucelLocation.getInvariant());
-        loc.setProperty(UppaalPropertyNames.Location.rateOfExponential, ucelLocation.getRateOfExponential());
-        loc.setProperty(UppaalPropertyNames.Location.init, ucelLocation.getInitial());
-        loc.setProperty(UppaalPropertyNames.Location.urgent, ucelLocation.getUrgent());
-        loc.setProperty(UppaalPropertyNames.Location.committed, ucelLocation.getCommitted());
-        loc.setProperty(UppaalPropertyNames.Location.comments, ucelLocation.getComments());
-        loc.setProperty(UppaalPropertyNames.Location.testCodeOnEnter, ucelLocation.getTestCodeOnEnter());
-        loc.setProperty(UppaalPropertyNames.Location.testCodeOnExit, ucelLocation.getTestCodeOnExit());
+        setValues(loc, propX, propY, new Hashtable<>() {{
+            put(UppaalPropertyNames.Location.posX, ucelLocation.getPosX());
+            put(UppaalPropertyNames.Location.posY, ucelLocation.getPosY());
+            put(UppaalPropertyNames.Location.name, ucelLocation.getName());
+
+            put(UppaalPropertyNames.Location.invariant, ucelLocation.getInvariant());
+            put(UppaalPropertyNames.Location.rateOfExponential, ucelLocation.getRateOfExponential());
+            put(UppaalPropertyNames.Location.init, ucelLocation.getInitial());
+            put(UppaalPropertyNames.Location.urgent, ucelLocation.getUrgent());
+            put(UppaalPropertyNames.Location.committed, ucelLocation.getCommitted());
+            put(UppaalPropertyNames.Location.comments, ucelLocation.getComments());
+            put(UppaalPropertyNames.Location.testCodeOnEnter, ucelLocation.getTestCodeOnEnter());
+            put(UppaalPropertyNames.Location.testCodeOnExit, ucelLocation.getTestCodeOnExit());
+        }});
 
         locationAssoc.put(ucelLocation, loc);
     }
