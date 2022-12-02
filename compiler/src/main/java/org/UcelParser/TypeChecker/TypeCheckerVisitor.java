@@ -469,7 +469,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         enterScope(ctx.scope);
 
         var declsType = ctx.declarations() != null ? visit(ctx.declarations()) : VOID_TYPE;
-        var buildType = ctx.build() != null ? visit(ctx.build()) : VOID_TYPE;
+        var buildType = ctx.build() != null && !declsType.equals(ERROR_TYPE) ? visit(ctx.build()) : VOID_TYPE;
 
         exitScope();
 
@@ -510,33 +510,29 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     @Override
     public Type visitBuild(UCELParser.BuildContext ctx) {
         // build : BUILD COLON LEFTCURLYBRACE buildDecl* buildStmnt+ RIGHTCURLYBRACE;
-        boolean hadError = false;
 
         var decls = ctx.buildDecl();
         if(decls != null) {
             for (var decl : decls) {
                 var declType = visit(decl);
                 if (!declType.equals(VOID_TYPE)) {
-                    hadError = true;
-                    if (!decl.equals(ERROR_TYPE))
+                    if (!declType.equals(ERROR_TYPE))
                         logger.log(new CompilerErrorLog(decl, "Void type expected"));
+
+                    return ERROR_TYPE;
                 }
             }
         }
 
-
         for(var stmt: ctx.buildStmnt()) {
             var stmtType = visit(stmt);
             if (!stmtType.equals(VOID_TYPE)) {
-                hadError = true;
-                if(!stmt.equals(ERROR_TYPE))
+                if(!stmtType.equals(ERROR_TYPE))
                     logger.log(new CompilerErrorLog(stmt, "Void type expected"));
+
+                return ERROR_TYPE;
             }
         }
-
-
-        if(hadError)
-            return ERROR_TYPE;
 
         return VOID_TYPE;
     }
