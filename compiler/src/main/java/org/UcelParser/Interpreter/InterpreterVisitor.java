@@ -732,17 +732,24 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     @Override
     public InterpreterValue visitBuildDecl(UCELParser.BuildDeclContext ctx) {
-        CompVarValue compVarValue = (CompVarValue) visit(ctx.compVar());
+        if(ctx.compVar() == null) {
+            return visit(ctx.compCon());
+        } else {
+            CompVarValue compVarValue = (CompVarValue) visit(ctx.compVar());
 
-        try {
-            InterpreterValue value = recBuildMultiDimLists(compVarValue.getIndices(),
-                    compVarValue.getIndices().length);
-            currentScope.get(ctx.compVar().variableReference).setValue(value);
-        } catch (Exception e) {
-            return null;
+            if(compVarValue == null)
+                return null;
+
+            try {
+                InterpreterValue value = recBuildMultiDimLists(compVarValue.getIndices(),
+                        compVarValue.getIndices().length);
+                currentScope.get(ctx.compVar().variableReference).setValue(value);
+            } catch (Exception e) {
+                logger.log(new CompilerErrorLog(ctx, "CompVar reference not found"));
+                return null;
+            }
+            return new VoidValue();
         }
-
-        return new VoidValue();
     }
 
     public InterpreterValue recBuildMultiDimLists(int[] sizes, int layer) {
@@ -776,7 +783,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
             try {
                 InterpreterValue value = null;
-                DeclarationReference variableReference = buildDecl.compVar().variableReference;
+                UCELParser.CompVarContext compVar = buildDecl.compVar() == null ? buildDecl.compCon().compVar() : buildDecl.compVar();
+                DeclarationReference variableReference = compVar.variableReference;
                 ParserRuleContext node = currentScope.get(variableReference).getNode();
 
                 value = currentScope.get(variableReference).getValue();

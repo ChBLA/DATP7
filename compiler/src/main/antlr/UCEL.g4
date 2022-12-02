@@ -50,15 +50,15 @@ interfaces : LEFTPAR parameters? RIGHTPAR;
 
 build : BUILD COLON LEFTCURLYBRACE buildDecl* buildStmnt+ RIGHTCURLYBRACE;
 buildStmnt : buildBlock
-           | linkStatement
+           | linkStatement END
            | buildIteration
            | buildIf
-           | compCon
+           | compCon END
            ;
 compCon locals [DeclarationReference constructorReference]
-    : compVar '=' ID LEFTPAR arguments RIGHTPAR END;
+    : compVar '=' ID LEFTPAR arguments RIGHTPAR;
 linkStatement locals [DeclarationReference leftInterface, DeclarationReference rightInterface]
-     : LINK compVar '.' ID compVar '.' ID END;
+     : LINK compVar '.' ID compVar '.' ID;
 compVar locals [DeclarationReference variableReference]
     : ID (LEFTBRACKET expression RIGHTBRACKET)*;
 buildIf : IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?;
@@ -67,7 +67,7 @@ buildIteration locals [DeclarationReference reference]
 buildBlock locals [Scope scope]
     : LEFTCURLYBRACE buildStmnt+ RIGHTCURLYBRACE;
 buildDecl locals [DeclarationReference typeReference]
-    : ID compVar END;
+    : ID (compVar | compCon) END;
 
 interfaceDecl locals [DeclarationReference reference, List<StringValue> occurrences]
     : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;
