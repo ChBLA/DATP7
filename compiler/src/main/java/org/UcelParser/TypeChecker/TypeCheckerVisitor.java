@@ -382,39 +382,31 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         var result = VOID_TYPE;
 
         var declarationsType = visit(ctx.declarations());
-        if (declarationsType.equals(ERROR_TYPE)) {
-            result = ERROR_TYPE;
-        } else if (!declarationsType.equals(VOID_TYPE)) {
-            logger.log(new ErrorLog(ctx, "Type error in declarations. Value is not VOID_TYPE"));
-            result = ERROR_TYPE;
+        if (!declarationsType.equals(VOID_TYPE)) {
+            if (!declarationsType.equals(ERROR_TYPE))
+                logger.log(new ErrorLog(ctx, "Type error in declarations. Value is not VOID_TYPE"));
+            return ERROR_TYPE;
         }
 
 
         if (ctx.build() != null) {
             var buildType = visit(ctx.build());
-            if (buildType.equals(ERROR_TYPE)) {
-                result = ERROR_TYPE;
-            } else if (!buildType.equals(VOID_TYPE)) {
-                logger.log(new ErrorLog(ctx, "Type error in build. Value is not VOID_TYPE"));
-                result = ERROR_TYPE;
+            if (!buildType.equals(VOID_TYPE)) {
+                if (!buildType.equals(ERROR_TYPE))
+                    logger.log(new ErrorLog(ctx, "Type error in build. Value is not VOID_TYPE"));
+                return ERROR_TYPE;
             }
-        }
-
-
-        else if (ctx.system() != null) {
+        } else if (ctx.system() != null) {
             var systemType = visit(ctx.system());
-            if (systemType.equals(ERROR_TYPE)) {
-                result = ERROR_TYPE;
-            } else if (!systemType.equals(VOID_TYPE)) {
-                logger.log(new ErrorLog(ctx, "Type error in system. Value is not VOID_TYPE"));
-                result = ERROR_TYPE;
+            if (!systemType.equals(VOID_TYPE)) {
+                if (!systemType.equals(ERROR_TYPE))
+                    logger.log(new ErrorLog(ctx, "Type error in system. Value is not VOID_TYPE"));
+                return ERROR_TYPE;
             }
-        }
-        else {
+        } else {
             logger.log(new CompilerErrorLog(ctx, "PSystem: Expected either build or system in type checker"));
             result = ERROR_TYPE;
         }
-
 
         return result;
     }
