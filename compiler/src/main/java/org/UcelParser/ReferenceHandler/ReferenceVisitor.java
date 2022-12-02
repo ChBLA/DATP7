@@ -2,6 +2,7 @@ package org.UcelParser.ReferenceHandler;
 
 import org.UcelParser.UCELParser_Generated.*;
 import org.UcelParser.Util.*;
+import org.UcelParser.Util.Exception.CouldNotFindException;
 import org.UcelParser.Util.Logging.*;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -45,7 +46,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         String compName = ctx.ID().getText();
         try {
             if(!currentScope.isUnique(compName, false)) {
-                logger.log(new ErrorLog(ctx, "Component name '" + compName + "' is already declared"));
+                logger.log(new TypeAlreadyDeclaredErrorLog(ctx, compName));
                 return false;
             }
             ctx.reference = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
@@ -90,14 +91,18 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         try {
             String id = ctx.compVar().ID().getText();
-            if(!currentScope.isUnique(id, true))
+            if(!currentScope.isUnique(id, true)) {
+                logger.log(new VariableAlreadyDeclaredErrorLog(ctx, id));
                 return false;
+            }
             ctx.typeReference = currentScope.find(typeIdentifier, false);
             var compNode = currentScope.get(ctx.typeReference).getNode();
             currentScope.add(new DeclarationInfo(id, compNode));
-        } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Type " + typeIdentifier + " is not defined"));
+        } catch (CouldNotFindException e) {
+            logger.log(new TypeNotDeclaredErrorLog(ctx, typeIdentifier));
             return false;
+        } catch (Exception e) {
+            logger.log(new CompilerErrorLog(ctx, e.getMessage()));
         }
 
         return visit(ctx.compVar());
@@ -113,7 +118,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         String identifier = ctx.ID().getText();
 
         if (!currentScope.isUnique(identifier, true)) {
-            logger.log(new ErrorLog(ctx, "The variable name '" + identifier + "' already defined in scope"));
+            logger.log(new VariableAlreadyDeclaredErrorLog(ctx, identifier));
             return false;
         }
 
@@ -131,7 +136,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         String identifier = ctx.ID().getText();
 
         if (!currentScope.isUnique(identifier, false)) {
-            logger.log(new ErrorLog(ctx, "The interface name '" + identifier + "' is already defined in scope"));
+            logger.log(new TypeAlreadyDeclaredErrorLog(ctx, identifier));
             return false;
         }
 
@@ -150,8 +155,11 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         try {
             ref = currentScope.find(identifier, false);
+        } catch (CouldNotFindException e) {
+            logger.log(new TypeNotDeclaredErrorLog(ctx, identifier));
+            return false;
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Type " + identifier + " not defined in scope"));
+            logger.log(new CompilerErrorLog(ctx, e.getMessage()));
             return false;
         }
 
@@ -170,8 +178,11 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         try {
             reference = currentScope.find(identifier, true);
+        } catch (CouldNotFindException e) {
+            logger.log(new VariableNotDeclaredErrorLog(ctx, identifier));
+            return false;
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "The variable " + identifier + " is not defined in scope"));
+            logger.log(new CompilerErrorLog(ctx, e.getMessage()));
             return false;
         }
 
@@ -188,14 +199,10 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     //endregion
 
     //region Link statement
-    private DeclarationReference extractInterfaceNumberFromComponentAsReference(String id, Scope scope, UCELParser.CompVarContext node) {
+    private DeclarationReference extractInterfaceNumberFromComponentAsReference(String id, Scope scope, UCELParser.CompVarContext node) throws CouldNotFindException{
         UCELParser.ComponentContext componentNode;
-        try {
-            componentNode = (UCELParser.ComponentContext) scope.get(node.variableReference).getNode();
-        } catch (Exception e) {
-            logger.log(new CompilerErrorLog(node, "Could not get component reference from scope"));
-            return null;
-        }
+
+        componentNode = (UCELParser.ComponentContext) scope.get(node.variableReference).getNode();
 
         UCELParser.ParametersContext parameters = componentNode.interfaces().parameters();
         if (parameters == null)
@@ -212,12 +219,24 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     @Override
     public Boolean visitLinkStatement(UCELParser.LinkStatementContext ctx) {
         boolean success = visit(ctx.compVar(0));
-        var leftNode = extractInterfaceNumberFromComponentAsReference(ctx.ID(0).getText(), currentScope, ctx.compVar(0));
+        DeclarationReference leftNode;
+        try {
+            leftNode = extractInterfaceNumberFromComponentAsReference(ctx.ID(0).getText(), currentScope, ctx.compVar(0));
+        } catch (CouldNotFindException e) {
+            logger.log(new TypeNotDeclaredErrorLog(ctx.compVar(0), ctx.ID(0).getText()));
+            return false;
+        }
         success = success && leftNode != null;
         ctx.leftInterface = leftNode;
 
         success = success && visit(ctx.compVar(1));
-        var rightNode = extractInterfaceNumberFromComponentAsReference(ctx.ID(1).getText(), currentScope, ctx.compVar(1));
+        DeclarationReference rightNode;
+        try {
+            rightNode = extractInterfaceNumberFromComponentAsReference(ctx.ID(1).getText(), currentScope, ctx.compVar(1));
+        } catch (CouldNotFindException e) {
+            logger.log(new TypeNotDeclaredErrorLog(ctx.compVar(1), ctx.ID(1).getText()));
+            return false;
+        }
         success = success && rightNode != null;
         ctx.rightInterface = rightNode;
 
@@ -247,12 +266,10 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         String templateName = ctx.ID().getText();
         try {
             if(!currentScope.isUnique(templateName, false)) {
-                logger.log(new ErrorLog(ctx, "Template name '" + templateName + "' is already declared"));
+                logger.log(new TypeAlreadyDeclaredErrorLog(ctx, templateName));
                 return false;
             }
-            DeclarationReference declRef = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
-            ctx.reference = declRef;
-
+            ctx.reference = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
         } catch (Exception e) {
             logger.log(new CompilerErrorLog(ctx, e.getMessage()));
         }
@@ -322,7 +339,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
             try {
                 if(!currentScope.isUnique(id, true)) {
-                    logger.log(new ErrorLog(ctx, "Variable '" + id + "' is not unique"));
+                    logger.log(new VariableAlreadyDeclaredErrorLog(ctx, id));
                     b = false;
                 }
 
@@ -418,12 +435,11 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         String funcName = ctx.ID().getText();
         try {
             if(!currentScope.isUnique(funcName, false)) {
-                logger.log(new ErrorLog(ctx, "Function name '" + funcName + "' is already declared"));
+                logger.log(new FunctionAlreadyDeclaredErrorLog(ctx, funcName));
                 return false;
             }
             DeclarationReference declRef = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
             ctx.reference = declRef;
-
         } catch (Exception e) {
             logger.log(new CompilerErrorLog(ctx, e.getMessage()));
         }
@@ -471,7 +487,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         try {
             if(!currentScope.isUnique(parameterName, true)) {
-                logger.log(new ErrorLog(ctx, "Parameter name '" + parameterName + "' is not unique in scope"));
+                logger.log(new VariableAlreadyDeclaredErrorLog(ctx, parameterName));
                 return false;
             }
 
@@ -491,7 +507,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         try {
             if(!currentScope.isUnique(instantiationIdentifier, true)) {
-                logger.log(new ErrorLog(ctx, "Instantiation name " + instantiationIdentifier + " is not unique" ));
+                logger.log(new VariableAlreadyDeclaredErrorLog(ctx, instantiationIdentifier));
                 return false;
             }
             ctx.instantiatedReference = currentScope.add(new DeclarationInfo(instantiationIdentifier));
@@ -505,8 +521,12 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         try {
             ctx.constructorReference = currentScope.find(constructorIdentifier, false);
+        } catch (CouldNotFindException e) {
+            logger.log(new TypeNotDeclaredErrorLog(ctx, constructorIdentifier));
+            exitScope();
+            return false;
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, e.getMessage()));
+            logger.log(new CompilerErrorLog(ctx, e.getMessage()));
             exitScope();
             return false;
         }
@@ -531,6 +551,9 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         try {
             ctx.reference = currentScope.find(typeID, false);
+        } catch (CouldNotFindException e) {
+            logger.log(new TypeNotDeclaredErrorLog(ctx, typeID));
+            return false;
         } catch (Exception e) {
             logger.log(new CompilerErrorLog(ctx, e.getMessage()));
             return false;
@@ -557,7 +580,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
             try {
                 if(!currentScope.isUnique(identifier, false)) {
-                    logger.log(new ErrorLog(ctx, "Parameter name '" + identifier + "' is not unique in scope"));
+                    logger.log(new VariableAlreadyDeclaredErrorLog(ctx, identifier));
                     return false;
                 }
 
@@ -581,8 +604,11 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         try {
             tableReference = currentScope.find(identifier, true);
+        } catch (CouldNotFindException e) {
+            logger.log(new VariableNotDeclaredErrorLog(ctx,identifier));
+            return false;
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx,"Variable '" + identifier + "' has not been declared in scope"));
+            logger.log(new CompilerErrorLog(ctx, e.getMessage()));
             return false;
         }
 
@@ -599,8 +625,11 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         try {
             tableReference = currentScope.find(identifier, true);
+        } catch (CouldNotFindException e) {
+            logger.log(new FunctionNotDeclaredErrorLog(ctx, identifier));
+            return false;
         } catch (Exception e) {
-            logger.log(new ErrorLog(ctx,"Function '" + identifier + "' has not been declared in scope"));
+            logger.log(new CompilerErrorLog(ctx, e.getMessage()));
             return false;
         }
 
@@ -636,7 +665,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         //TODO: maybe delegate to Scope.add
         if(!currentScope.isUnique(identifier, true)) {
-            logger.log(new ErrorLog(ctx, "The variable name '" + identifier + "' already defined in scope"));
+            logger.log(new VariableAlreadyDeclaredErrorLog(ctx, identifier));
             return false;
         }
 
@@ -660,11 +689,10 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         try {
             if(!currentScope.isUnique(identifier, true)) {
-                logger.log(new ErrorLog(ctx, "Variable '" + identifier + "' already exists in scope"));
+                logger.log(new VariableAlreadyDeclaredErrorLog(ctx, identifier));
                 return false;
             }
-            DeclarationReference declRef = currentScope.add(new DeclarationInfo(identifier, ctx));
-            ctx.reference = declRef;
+            ctx.reference = currentScope.add(new DeclarationInfo(identifier, ctx));
         } catch (Exception e) {
             logger.log(new CompilerErrorLog(ctx, e.getMessage()));
             return false;

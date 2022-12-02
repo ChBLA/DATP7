@@ -1,5 +1,7 @@
 package org.UcelParser.Util;
 
+import org.UcelParser.Util.Exception.CouldNotFindException;
+import org.UcelParser.Util.Exception.NoParentScopeException;
 import org.antlr.v4.codegen.model.decl.Decl;
 
 import java.util.ArrayList;
@@ -51,7 +53,7 @@ public class Scope {
         return true;
     }
 
-    public DeclarationReference find(String s, boolean isVarID) throws Exception {
+    public DeclarationReference find(String s, boolean isVarID) throws CouldNotFindException {
         for (int i = 0; i < declarationInfos.size(); i++) {
             if (declarationInfos.get(i).isCalled(s)) {
                 return new DeclarationReference(0, i);
@@ -63,14 +65,14 @@ public class Scope {
             result.incrementScopeLevel();
             return result;
         } else {
-            throw new Exception("Identifier Not Found In Scope");
+            throw new CouldNotFindException("Identifier Not Found In Scope");
         }
     }
 
-    public DeclarationInfo get(DeclarationReference tableReference) throws Exception {
+    public DeclarationInfo get(DeclarationReference tableReference) throws CouldNotFindException {
         if (tableReference.getRelativeScope() > 0) {
             if (parent == null) {
-                throw new Exception("Scope has no parent");
+                throw new CouldNotFindException(tableReference);
             }
             return parent.get(tableReference.moveOutOfScope());
         } else {
@@ -78,10 +80,10 @@ public class Scope {
         }
     }
 
-    public Scope getScope(DeclarationReference tableReference) throws Exception {
+    public Scope getScope(DeclarationReference tableReference) throws CouldNotFindException {
         if (tableReference.getRelativeScope() > 0) {
             if (parent == null) {
-                throw new Exception("Scope has no parent");
+                throw new CouldNotFindException(tableReference);
             }
             return parent.getScope(tableReference.moveOutOfScope());
         } else {
