@@ -181,7 +181,7 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         DeclarationInfo compInfo;
         try {
             componentNode = (UCELParser.ComponentContext) scope.get(node.variableReference).getNode();
-            compInfo = currentScope.get(componentNode.reference);
+            compInfo = componentNode.scope.getParent().get(componentNode.reference);
         } catch (Exception e) {
             logger.log(new CompilerErrorLog(node, "Reference not found"));
             return null;
