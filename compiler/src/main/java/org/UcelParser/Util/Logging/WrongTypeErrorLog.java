@@ -16,6 +16,10 @@ public class WrongTypeErrorLog extends TypeErrorLog {
         super(ctx, String.format("Expected type %s for %s, got %s", Arrays.toString(expected.toArray()), context, actual));
     }
 
+    public WrongTypeErrorLog(ParserRuleContext ctx, String name, Type actual) {
+        super(ctx, String.format("%s cannot be of type %s", name, actual));
+    }
+
     public WrongTypeErrorLog(ParserRuleContext ctx, String expected, String actual, String context) {
         super(ctx, String.format("Expected type %s for %s, got %s", expected, context, actual));
     }
