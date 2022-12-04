@@ -4,10 +4,8 @@ import org.UcelParser.CodeGeneration.templates.*;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.*;
-import org.UcelParser.Util.Logging.CompilerErrorLog;
-import org.UcelParser.Util.Logging.ErrorLog;
-import org.UcelParser.Util.Logging.ILogger;
-import org.UcelParser.Util.Logging.Logger;
+import org.UcelParser.Util.Exception.CouldNotFindException;
+import org.UcelParser.Util.Logging.*;
 import org.UcelParser.CodeGeneration.templates.ManualTemplate;
 import org.UcelParser.CodeGeneration.templates.Template;
 import org.UcelParser.Util.Value.InterfaceValue;
@@ -64,8 +62,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                         Type paramNodeType;
                         try {
                             paramNodeType = currentScope.get(paramNode.reference).getType();
-                        } catch (Exception e) {
-                            logger.log(new CompilerErrorLog(paramNode, "Could not find entry in scope"));
+                        } catch (CouldNotFindException e) {
+                            logger.log(new MissingReferenceErrorLog(paramNode, paramNode.ID().getText()));
                             return new ManualTemplate("");
                         }
                         if (paramNode.REF() != null) {
@@ -111,8 +109,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         String id;
         try {
             id = currentScope.get(ctx.reference).generateName(this.componentPrefix);
-        } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Could not find " + ctx.ID().getText() + " in current scope"));
+        } catch (CouldNotFindException e) {
+            logger.log(new MissingReferenceErrorLog(ctx, ctx.ID().getText()));
             return new ManualTemplate("");
         }
 
@@ -215,8 +213,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         for (int i = 0; i < ctx.ID().size(); i++) {
             try {
                 ids.add(currentScope.get(ctx.references.get(i)).getIdentifier());
-            } catch (Exception e) {
-                throw new RuntimeException("internal error: could not find declaration for " + ctx.ID(i).getText() + " in scope");
+            } catch (CouldNotFindException e) {
+                logger.log(new MissingReferenceErrorLog(ctx, ctx.ID(i).getText()));
+                return new ManualTemplate("");
             }
         }
 
@@ -266,7 +265,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitLocation(UCELParser.LocationContext ctx) {
         Template invariant = visit(ctx.invariant());
         Template exponential = visit(ctx.exponential());
-        String ID = ctx.ID().getText(); //TODO: get ID from somewhere
+        String ID = ctx.ID().getText();
         return new LocationTemplate(invariant, exponential, ctx, ID);
     }
 
@@ -343,8 +342,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         String name;
         try {
             name = currentScope.get(ctx.reference).generateName();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (CouldNotFindException e) {
+            logger.log(new MissingReferenceErrorLog(ctx, ctx.ID().getText()));
+            return new ManualTemplate("");
         }
 
         enterScope(ctx.scope);
@@ -412,20 +412,21 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         var constructions = new ArrayList<Template>();
         var names = new ArrayList<String>();
 
-        try {
-            for (int i = 0; i < ctx.expression().size(); i++) {
-                if (ctx.expression(i) instanceof UCELParser.FuncCallContext) {
+        for (int i = 0; i < ctx.expression().size(); i++) {
+            if (ctx.expression(i) instanceof UCELParser.FuncCallContext) {
+                try {
                     constructions.add(visit(ctx.expression(i)));
                     String templateName = currentScope.get(ctx.expression(i).reference).generateName();
                     names.add(templateName + "_" + i);
-                } else {
-                    names.add(visit(ctx.expression(i)).toString());
-                    constructions.add(new ManualTemplate(""));
+                } catch (CouldNotFindException e) {
+                    logger.log(new MissingReferenceErrorLog(ctx.expression(i), ((UCELParser.FuncCallContext) ctx.expression(i)).ID().getText()));
                 }
+            } else {
+                names.add(visit(ctx.expression(i)).toString());
+                constructions.add(new ManualTemplate(""));
             }
-        } catch (Exception e) {
-            logger.log(new ErrorLog(ctx, "Could not find id in scope"));
         }
+
         return new SystemTemplate(constructions, names);
     }
 
@@ -438,8 +439,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         String callName;
         try {
             callName = currentScope.get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope()));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (CouldNotFindException e) {
+            logger.log(new MissingReferenceErrorLog(ctx, ctx.ID().getText()));
+            return new ManualTemplate("");
         }
 
         var argTemplate = visit(ctx.arguments());
@@ -486,8 +488,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                 try {
                     DeclarationReference callRef = ctx.occurrences.get(i).getFuncCallContext().reference;
                     nameOfCall = currentScope.getParent().get(callRef).generateName(getComponentPrefix(callRef.getRelativeScope()));
-                } catch (Exception e) {
-                    throw new RuntimeException("error: could not find occurrence");
+                } catch (CouldNotFindException e) {
+                    logger.log(new MissingReferenceErrorLog(ctx.occurrences.get(i).getFuncCallContext(), ctx.occurrences.get(i).getFuncCallContext().ID().getText()));
+                    return new ManualTemplate("");
                 }
                 var body = visit(ctx.block());
 
@@ -497,8 +500,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
             String ID = null;
             try {
                 ID = currentScope.getParent().get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope()));
-            } catch (Exception e) {
-                throw new RuntimeException("error: could not find function name");
+            } catch (CouldNotFindException e) {
+                logger.log(new MissingReferenceErrorLog(ctx, ctx.ID().getText()));
+                return new ManualTemplate("");
             }
             var params = visit(ctx.parameters());
             var body = visit(ctx.block());
@@ -518,17 +522,19 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         var ID1 = "";
         try {
             ID1 = currentScope.get(ctx.instantiatedReference).generateName(getComponentPrefix(ctx.instantiatedReference.getRelativeScope()));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (CouldNotFindException e) {
+            logger.log(new MissingReferenceErrorLog(ctx, ctx.ID(0).getText()));
+            return new ManualTemplate("");
         }
 
         enterScope(ctx.scope);
         var ID2 = "";
         try {
             ID2 = currentScope.get(ctx.constructorReference).generateName(getComponentPrefix(ctx.constructorReference.getRelativeScope()));
-        } catch (Exception e) {
+        } catch (CouldNotFindException e) {
             exitScope();
-            throw new RuntimeException(e);
+            logger.log(new MissingReferenceErrorLog(ctx, ctx.ID(1).getText()));
+            return new ManualTemplate("");
         }
 
         boolean useParenthesis = ctx.LEFTPAR().size() > 1;
@@ -649,8 +655,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
             try {
                 String identifier = currentScope.get(ctx.references.get(i)).generateName(getComponentPrefix(ctx.references.get(i).getRelativeScope()));
                 arrayDeclID = arrayDeclID.replaceValue("ID", identifier);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+            } catch (CouldNotFindException e) {
+                logger.log(new MissingReferenceErrorLog(ctx.arrayDeclID(i), ctx.arrayDeclID(i).ID().getText()));
+                return new ManualTemplate("");
             }
 
             arrayDeclIDs.add(arrayDeclID);
@@ -700,8 +707,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         ManualTemplate result;
         try {
             result = new ManualTemplate(currentScope.get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope())));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (CouldNotFindException e) {
+            logger.log(new MissingReferenceErrorLog(ctx, ctx.ID().getText()));
+            return new ManualTemplate("");
         }
 
         return result;
@@ -750,16 +758,18 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         DeclarationInfo paramInfo = null;
         try {
             paramInfo = currentScope.get(ctx.reference);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (CouldNotFindException e) {
+            logger.log(new MissingReferenceErrorLog(ctx, ctx.ID().getText()));
+            return new ManualTemplate("");
         }
 
         if (paramInfo.getType().getEvaluationType().equals(Type.TypeEnum.interfaceType)) {
             DeclarationInfo paramTypeInfo;
             try {
                 paramTypeInfo = currentScope.get(ctx.type().typeId().reference);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+            } catch (CouldNotFindException e) {
+                logger.log(new MissingReferenceErrorLog(ctx.type().typeId(), ctx.type().getText()));
+                return new ManualTemplate("");
             }
 
             if (paramTypeInfo.getNode() instanceof UCELParser.InterfaceDeclContext) {
@@ -821,8 +831,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         if (ctx.chanExpr() == null) {
             try {
                 return new ManualTemplate(currentScope.get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope())));
-            } catch (Exception e) {
-                throw new RuntimeException(e.getMessage());
+            } catch (CouldNotFindException e) {
+                logger.log(new MissingReferenceErrorLog(ctx, ctx.ID().getText()));
+                return new ManualTemplate("");
             }
         }
         var chanExpr = visit(ctx.chanExpr());
@@ -894,8 +905,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         List<Template> arrayDecals = new ArrayList<>();
         try {
             declarationInfo = currentScope.get(ctx.reference);
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+        } catch (CouldNotFindException e) {
+            logger.log(new MissingReferenceErrorLog(ctx, ctx.ID().getText()));
+            return new ManualTemplate("");
         }
 
         for (int i = 0; i < ctx.arrayDecl().size(); i++) {
@@ -949,8 +961,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
             DeclarationInfo exprInfo;
             try {
                 exprInfo = currentScope.get(expr.reference);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+            } catch (CouldNotFindException e) {
+                logger.log(new MissingReferenceErrorLog(expr, ((UCELParser.IdExprContext) expr).ID().getText()));
+                return new ManualTemplate("");
             }
 
             if (exprInfo.getType().getEvaluationType().equals(Type.TypeEnum.interfaceType)) {
@@ -980,8 +993,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitIdExpr(UCELParser.IdExprContext ctx) {
         try {
             return new ManualTemplate(currentScope.get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope())));
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+        } catch (CouldNotFindException e) {
+            logger.log(new MissingReferenceErrorLog(ctx, ctx.ID().getText()));
+            return new ManualTemplate("");
         }
     }
 
@@ -1163,8 +1177,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         String id = "";
         try {
             id = currentScope.get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope()));
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+        } catch (CouldNotFindException e) {
+            logger.log(new MissingReferenceErrorLog(ctx, ctx.ID().getText()));
+            return new ManualTemplate("");
         }
 
         enterScope(ctx.scope);
@@ -1236,8 +1251,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         DeclarationInfo declarationInfo;
         try {
             declarationInfo = currentScope.get(ctx.reference);
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+        } catch (CouldNotFindException e) {
+            logger.log(new MissingReferenceErrorLog(ctx, ctx.ID().getText()));
+            return new ManualTemplate("");
         }
 
         var typeResult = ctx.type() != null ? visit(ctx.type()) : new ManualTemplate("");
