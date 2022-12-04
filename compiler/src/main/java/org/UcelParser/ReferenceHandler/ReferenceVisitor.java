@@ -142,7 +142,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         }
 
         ctx.reference = currentScope.add(new DeclarationInfo(identifier, ctx));
-        return true;
+        return visit(ctx.interfaceVarDecl());
     }
 
     //endregion
@@ -544,6 +544,12 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         exitScope();
         return true;
+    }
+
+
+    @Override
+    public Boolean visitTypeIDInt(UCELParser.TypeIDIntContext ctx) {
+        return visit(ctx.expression(0)) && visit(ctx.expression(1));
     }
 
     @Override
