@@ -14,7 +14,7 @@ grammar UCEL;
 
 
 project locals [Scope scope]
-    : pdeclaration ptemplate* psystem;
+    : pdeclaration ptemplate* psystem verificationList;
 
 pdeclaration : declarations;
 ptemplate locals [Scope scope, DeclarationReference reference, List<TemplateOccurrence> occurrences]
@@ -37,6 +37,8 @@ select locals [List<DeclarationReference> references]
 guard : expression?;
 sync : (expression (NEG | QUESTIONMARK))?;
 update : (expression (COMMA expression)*)?;
+
+verificationList: verification*;
 
 start locals [Scope scope]
     : declarations statement* system;
