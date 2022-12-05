@@ -179,8 +179,8 @@ symbQuery :
         op=('A[]' | 'E<>' | 'E[]' | 'A<>') expression   #QuantifierQuery
       | expression '-->' expression                     #ImplicationQuery
 
-      | op = ('sup' | 'inf') ':' expression (COMMA expression)*                            #SupInfQuery1
-      | op = ('sup' | 'inf') 'sup' '{' expression '}' ':' expression (COMMA expression)*   #SupInfQuery2
+      | op = ('sup' | 'inf') ':' expression (COMMA expression)*                      #SupInfQuery1
+      | op = ('sup' | 'inf') '{' expression '}' ':' expression (COMMA expression)*   #SupInfQuery2
       ;
 
 
