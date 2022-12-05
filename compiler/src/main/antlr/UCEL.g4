@@ -40,7 +40,7 @@ update : (expression (COMMA expression)*)?;
 
 verificationList: (pQuery END)*;
 pQuery locals [String comment]
-    : verification?;
+    : symbQuery?;
 
 start locals [Scope scope]
     : declarations statement* system;
@@ -172,6 +172,24 @@ expression locals [DeclarationReference reference, DeclarationInfo originDefinit
             ;
 
 verification locals [Scope scope, DeclarationReference reference] : op=('forall' | 'exists' | 'sum') LEFTPAR ID COLON type RIGHTPAR expression;
+
+// https://docs.uppaal.org/language-reference/requirements-specification/
+// Strategy has been omitted
+symbQuery :
+        'A[]' expression
+      | 'E<>' expression
+      | 'E[]' expression
+      | 'A<>' expression
+      | expression '-->' expression
+
+      | 'sup' ':' expression (COMMA expression)*
+      | 'sup' '{' expression '}' ':' expression (COMMA expression)*
+
+      | 'inf' ':' expression (COMMA expression)*
+      | 'inf' '{' expression '}' ':' expression (COMMA expression)*
+      ;
+
+
 
 assignment  : <assoc=right> expression assign expression;
 
