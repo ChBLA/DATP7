@@ -50,9 +50,12 @@ public class Project implements IProject {
         systemDeclarations = value;
     }
 
-    private ArrayList<IVerificationExpression> verificationExpressions = new ArrayList<>();
-    public List<IVerificationExpression> getVerificationExpressions() {
-        return verificationExpressions;
+    private ArrayList<IVerificationQuery> verificationQueries = new ArrayList<>();
+    public List<IVerificationQuery> getVerificationQueries() {
+        return verificationQueries;
+    }
+    public void addVerificationQueries(IVerificationQuery expr) {
+        verificationQueries.add(expr);
     }
 
     @Override
@@ -63,12 +66,12 @@ public class Project implements IProject {
         return Objects.equals(declaration, project.declaration)
                 &&  Objects.equals(templates, project.templates)
                 && Objects.equals(systemDeclarations, project.systemDeclarations)
-                && Objects.equals(verificationExpressions, project.verificationExpressions)
+                && Objects.equals(verificationQueries, project.verificationQueries)
                 ;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(declaration, templates, systemDeclarations, verificationExpressions);
+        return Objects.hash(declaration, templates, systemDeclarations, verificationQueries);
     }
 }

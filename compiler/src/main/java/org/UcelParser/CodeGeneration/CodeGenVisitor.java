@@ -9,6 +9,7 @@ import org.UcelParser.Util.Logging.*;
 import org.UcelParser.CodeGeneration.templates.ManualTemplate;
 import org.UcelParser.CodeGeneration.templates.Template;
 import org.UcelParser.Util.Value.InterfaceValue;
+import org.UcelParser.Util.Value.ListValue;
 import org.stringtemplate.v4.ST;
 
 import javax.swing.text.DefaultCaret;
@@ -366,6 +367,18 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                         InterfaceValue interfaceParam = (InterfaceValue) param;
                         for (var interfaceField : interfaceParam.getInterfaceNode().interfaceVarDecl().arrayDeclID()) {
                             constructorCall.add("exprs", param.generateName() + "_" + interfaceField.ID().getText());
+                        }
+                    } else if (param instanceof ListValue) {
+                        ListValue listValue = (ListValue) param;
+                        for (int i = 0; i < listValue.size(); i++) {
+                            if (listValue.getValue(i) instanceof InterfaceValue) {
+                                InterfaceValue interfaceParam = (InterfaceValue) listValue.getValue(i);
+                                for (var interfaceField : interfaceParam.getInterfaceNode().interfaceVarDecl().arrayDeclID()) {
+                                    constructorCall.add("exprs", interfaceParam.generateName() + "_" + interfaceField.ID().getText() + "_" + i);
+                                }
+                            } else {
+                                constructorCall.add("exprs", param.generateName());
+                            }
                         }
                     } else {
                         constructorCall.add("exprs", param.generateName());

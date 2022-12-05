@@ -38,7 +38,9 @@ guard : expression?;
 sync : (expression (NEG | QUESTIONMARK))?;
 update : (expression (COMMA expression)*)?;
 
-verificationList: verification*;
+verificationList: (pQuery END)*;
+pQuery locals [String comment]
+    : symbQuery?;
 
 start locals [Scope scope]
     : declarations statement* system;
@@ -50,7 +52,7 @@ compBody locals [Scope scope]
     : declarations? build?;
 interfaces : LEFTPAR parameters? RIGHTPAR;
 
-build : BUILD COLON LEFTCURLYBRACE buildDecl* buildStmnt+ RIGHTCURLYBRACE;
+build : BUILD COLON LEFTCURLYBRACE buildDecl* buildStmnt* RIGHTCURLYBRACE;
 buildStmnt : buildBlock
            | linkStatement END
            | buildIteration
@@ -69,7 +71,7 @@ buildIteration locals [DeclarationReference reference]
 buildBlock locals [Scope scope]
     : LEFTCURLYBRACE buildStmnt+ RIGHTCURLYBRACE;
 buildDecl locals [DeclarationReference typeReference]
-    : ID (compVar | compCon) END;
+    : ID (compCon | compVar) END;
 
 interfaceDecl locals [DeclarationReference reference, List<StringValue> occurrences]
     : INTERFACE ID LEFTCURLYBRACE interfaceVarDecl RIGHTCURLYBRACE;
@@ -141,6 +143,7 @@ chanExpr locals [DeclarationReference reference]
 
 expression locals [DeclarationReference reference, DeclarationInfo originDefinition]
             :  literal                                          #LiteralExpr
+            |  ID LEFTPAR arguments RIGHTPAR                    #FuncCall
             |  ID                                               #IdExpr
             |  expression LEFTBRACKET expression RIGHTBRACKET   #ArrayIndex
             |  expression MARK                                  #MarkExpr
@@ -150,7 +153,6 @@ expression locals [DeclarationReference reference, DeclarationInfo originDefinit
             |  INCREMENT expression                             #IncrementPre
             |  expression DECREMENT                             #DecrementPost
             |  DECREMENT expression                             #DecrementPre
-            |  ID LEFTPAR arguments RIGHTPAR                    #FuncCall
             |  <assoc=right> unary expression                   #UnaryExpr
             |  <assoc=right> expression POWER expression        #Power
             |  expression op=('*' | '/' | '%') expression       #MultDiv
@@ -170,6 +172,18 @@ expression locals [DeclarationReference reference, DeclarationInfo originDefinit
             ;
 
 verification locals [Scope scope, DeclarationReference reference] : op=('forall' | 'exists' | 'sum') LEFTPAR ID COLON type RIGHTPAR expression;
+
+// https://docs.uppaal.org/language-reference/requirements-specification/
+// Strategy has been omitted
+symbQuery :
+        op=('A[]' | 'E<>' | 'E[]' | 'A<>') expression   #QuantifierQuery
+      | expression '-->' expression                     #ImplicationQuery
+
+      | op = ('sup' | 'inf') ':' expression (COMMA expression)*                      #SupInfQuery1
+      | op = ('sup' | 'inf') '{' expression '}' ':' expression (COMMA expression)*   #SupInfQuery2
+      ;
+
+
 
 assignment  : <assoc=right> expression assign expression;
 
