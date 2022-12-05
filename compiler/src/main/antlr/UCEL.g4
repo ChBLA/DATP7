@@ -176,17 +176,10 @@ verification locals [Scope scope, DeclarationReference reference] : op=('forall'
 // https://docs.uppaal.org/language-reference/requirements-specification/
 // Strategy has been omitted
 symbQuery :
-        'A[]' expression
-      | 'E<>' expression
-      | 'E[]' expression
-      | 'A<>' expression
-      | expression '-->' expression
-
-      | 'sup' ':' expression (COMMA expression)*
-      | 'sup' '{' expression '}' ':' expression (COMMA expression)*
-
-      | 'inf' ':' expression (COMMA expression)*
-      | 'inf' '{' expression '}' ':' expression (COMMA expression)*
+        op=('A<>' | 'A[]' | 'E<>' | 'E[]') expression                   #ReachabilityQuery
+      | expression '-->' expression                                     #ConditionalEventualityExprQuery
+      | op=('sup' | 'inf') ':' expression (COMMA expression)*           #BoundQuery
+      | op=('sup' | 'inf') '{' expression '}' ':' expression (COMMA expression)*    #BoundSetQuery
       ;
 
 
