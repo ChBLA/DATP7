@@ -50,16 +50,25 @@ public class Project implements IProject {
         systemDeclarations = value;
     }
 
+    private ArrayList<IVerificationExpression> verificationExpressions = new ArrayList<>();
+    public List<IVerificationExpression> getVerificationExpressions() {
+        return verificationExpressions;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Project project = (Project) o;
-        return Objects.equals(declaration, project.declaration) && Objects.equals(templates, project.templates) && Objects.equals(systemDeclarations, project.systemDeclarations);
+        return Objects.equals(declaration, project.declaration)
+                &&  Objects.equals(templates, project.templates)
+                && Objects.equals(systemDeclarations, project.systemDeclarations)
+                && Objects.equals(verificationExpressions, project.verificationExpressions)
+                ;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(declaration, templates, systemDeclarations);
+        return Objects.hash(declaration, templates, systemDeclarations, verificationExpressions);
     }
 }

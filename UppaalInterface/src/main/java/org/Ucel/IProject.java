@@ -6,4 +6,5 @@ public interface IProject {
     public String getDeclaration();
     public List<ITemplate> getTemplates();
     public String getSystemDeclarations();
+    public List<IVerificationExpression> getVerificationExpressions();
 }
