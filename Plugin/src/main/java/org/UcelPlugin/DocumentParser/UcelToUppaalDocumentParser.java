@@ -69,6 +69,8 @@ public class UcelToUppaalDocumentParser {
 
     private void addVerificationQueries(Document doc, List<IVerificationQuery> verificationQueries) {
         var queryList = doc.getQueryList();
+        queryList.removeAll();
+
         for(var query: verificationQueries) {
             queryList.addLast(new Query(
                 query.getFormula(),
