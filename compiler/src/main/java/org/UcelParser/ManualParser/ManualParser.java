@@ -12,6 +12,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ManualParser {
@@ -43,6 +44,9 @@ public class ManualParser {
         }
 
         children.add(parseProjectSystem(node, project.getSystemDeclarations()));
+
+        // Verification Queries
+        children.add(parseQueries(node, project.getVerificationQueries()));
 
         node.children = children;
 
@@ -243,6 +247,28 @@ public class ManualParser {
         return Parser.getNumberOfSyntaxErrors() == 0 && isEOF(Parser) ? psystemNode : null;
     }
     //endregion
+    //endregion
+
+    //region Verification Queries
+    public UCELParser.VerificationListContext parseQueries(UCELParser.ProjectContext projectContext, List<IVerificationQuery> queries) {
+        var verificationlist = new UCELParser.VerificationListContext(projectContext, -1);
+        for(var query: queries) {
+            var pQueryNode = parseQuery(query);
+            verificationlist.addChild(pQueryNode);
+        }
+        return verificationlist;
+    }
+    public UCELParser.PQueryContext parseQuery(IVerificationQuery query) {
+        var parser = generateParser(query.getFormula());
+        var pQueryNode = parser.pQuery();
+        pQueryNode.comment = query.getComment();
+
+        if(!isEOF(parser))
+            logger.log(new ErrorLog(null, "Couldn't match entire verification formula"));
+
+        return pQueryNode;
+    }
+
     //endregion
 
     //region Helper functions

@@ -38,9 +38,9 @@ guard : expression?;
 sync : (expression (NEG | QUESTIONMARK))?;
 update : (expression (COMMA expression)*)?;
 
-verificationList: pQuery*;
+verificationList: (pQuery END)*;
 pQuery locals [String comment]
-    : verification? END;
+    : verification?;
 
 start locals [Scope scope]
     : declarations statement* system;
