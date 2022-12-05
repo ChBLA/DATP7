@@ -4,6 +4,7 @@ import com.uppaal.model.core2.*;
 import org.Ucel.IGraph;
 import org.Ucel.IProject;
 import org.Ucel.ITemplate;
+import org.Ucel.IVerificationQuery;
 
 import java.util.List;
 
@@ -33,6 +34,9 @@ public class UcelToUppaalDocumentParser {
 
         // System Declaration
         document.setProperty(UppaalPropertyNames.Project.systemDeclaration, project.getSystemDeclarations());
+
+        // Verification Queries
+        this.addVerificationQueries(document, project.getVerificationQueries());
     }
 
     public void removeTemplates() {
@@ -61,5 +65,15 @@ public class UcelToUppaalDocumentParser {
     private void addGraph(Template template, IGraph graph) {
         var graphParser = new UcelToUppaalGraphParser(template, graph);
         graphParser.addGraph();
+    }
+
+    private void addVerificationQueries(Document doc, List<IVerificationQuery> verificationQueries) {
+        var queryList = doc.getQueryList();
+        for(var query: verificationQueries) {
+            queryList.addLast(new Query(
+                query.getFormula(),
+                query.getComment())
+            );
+        }
     }
 }

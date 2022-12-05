@@ -1,6 +1,8 @@
 package org.UcelPlugin.DocumentParser;
 
 import com.uppaal.model.core2.*;
+import org.Ucel.IVerificationQuery;
+import org.Ucel.VerificationQuery;
 import org.UcelPlugin.Models.SharedInterface.Project;
 import org.UcelPlugin.Models.SharedInterface.Template;
 
@@ -29,6 +31,11 @@ public class UppaalToUcelDocumentParser {
         // System Declaration
         project.setSystemDeclarations( (String) document.getPropertyValue("system"));
 
+        // Verification Expressions
+        for(var verification: parseVerificationQueries(document)) {
+            project.addVerificationQueries(verification);
+        }
+
         return project;
     }
 
@@ -55,5 +62,19 @@ public class UppaalToUcelDocumentParser {
         interfaceTemplate.setDeclarations( (String) uppaalTemplate.getPropertyValue(UppaalPropertyNames.Template.declaration));
 
         return interfaceTemplate;
+    }
+
+    private ArrayList<IVerificationQuery> parseVerificationQueries(Document document) {
+        var queries = document.getQueryList();
+        var verificationList = new ArrayList<IVerificationQuery>();
+
+        for(var query: queries) {
+            verificationList.add(new VerificationQuery() {{
+                setFormula(query.getFormula());
+                setComment(query.getComment());
+            }});
+        }
+
+        return verificationList;
     }
 }
