@@ -20,6 +20,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     private ILogger logger;
 
     private int nextInterfaceId;
+    private int depth = 0;
+    private final int MAX_DEPTH = 10000;
 
     public InterpreterVisitor(Scope scope) {
         currentScope = scope;
@@ -94,10 +96,14 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     //region Scope
     private void enterScope(Scope scope) {
         currentScope = scope;
+        depth++;
+        if (depth > MAX_DEPTH)
+            throw new RuntimeException("Maximum scope depth exceeded at " + depth);
     }
 
     private void exitScope() {
         this.currentScope = this.currentScope.getParent();
+        depth--;
     }
     //endregion
 

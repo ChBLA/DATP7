@@ -459,16 +459,10 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         Type parametersType = VOID_TYPE;
         if (ctx.parameters() != null) parametersType = visit(ctx.parameters());
         Type interfacesType = visit(ctx.interfaces());
-        Type compBodyType = visit(ctx.compBody());
         exitScope();
 
-        if (parametersType.equals(ERROR_TYPE) || interfacesType.equals(ERROR_TYPE) || compBodyType.equals(ERROR_TYPE))
+        if (parametersType.equals(ERROR_TYPE) || interfacesType.equals(ERROR_TYPE))
             return ERROR_TYPE;
-
-        if (!compBodyType.equals(VOID_TYPE)) {
-            logger.log(new WrongTypeErrorLog(ctx.compBody(), VOID_TYPE, compBodyType, "component body"));
-            return ERROR_TYPE;
-        }
 
         var componentTypes = new ArrayList<Type>();
         Type[] paramTypes = parametersType.getParameters();
@@ -491,6 +485,16 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             currentScope.get(ctx.reference).setType(componentType);
         } catch (CouldNotFindException e) {
             logger.log(new MissingReferenceErrorLog(ctx, "component " + ctx.ID().getText()));
+            return ERROR_TYPE;
+        }
+
+        enterScope(ctx.scope);
+        Type compBodyType = visit(ctx.compBody());
+        exitScope();
+
+        if (!compBodyType.equals(VOID_TYPE)) {
+            if (!compBodyType.equals(ERROR_TYPE))
+                logger.log(new WrongTypeErrorLog(ctx.compBody(), VOID_TYPE, compBodyType, "component body"));
             return ERROR_TYPE;
         }
 
