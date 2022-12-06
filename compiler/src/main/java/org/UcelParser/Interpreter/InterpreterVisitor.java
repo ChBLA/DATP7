@@ -21,7 +21,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     private int nextInterfaceId;
     private int depth = 0;
-    private final int MAX_DEPTH = 10000;
+    private final int MAX_DEPTH = 1000;
 
     public InterpreterVisitor(Scope scope) {
         currentScope = scope;
@@ -79,11 +79,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             if (visit(build) == null)
                 hadError = true;
         }
-        else if(sys != null) {
-            if(visit(sys) == null)
-                hadError = true;
-        }
-        else {
+        else if (sys == null) {
             logger.log(new ErrorLog(ctx, "Compiler error: No system or build in project"));
             hadError = true;
         }
@@ -871,8 +867,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
                 componentNode.occurrences = new ArrayList<>();
             return visitTempWithOccurrence(componentNode, (TemplateOccurrenceValue) value, indices);
         } else {
-            logger.log(new CompilerErrorLog(node, "Interpreter value in list neither component nor template"));
-            return false;
+            logger.log(new Warning(node, "Missing initialisation of component or process in build. Unavoidable if using recursion"));
+            return true;
         }
     }
 
