@@ -66,7 +66,7 @@ public class UcelPlugin implements Plugin {
             ui.getStatusArea().setErrors(err.getLogs());
             return null;
         }
-        catch (Exception ex) {
+        catch (Throwable ex) {
             ui.getStatusArea().setError(ex);
             return null;
         }

@@ -1,44 +1,58 @@
 package org.UcelPlugin.UiComponents;
 
+import org.UcelParser.Util.Logging.ErrorLog;
 import org.UcelParser.Util.Logging.Log;
+import org.UcelParser.Util.Logging.Warning;
 
 import javax.swing.*;
+import javax.swing.text.AttributeSet;
 import java.awt.*;
 import java.util.ArrayList;
 
 public class StatusArea {
-    private TextboxWithScroll element;
+    private StyledTextArea element;
     public StatusArea(JPanel panel, GridBagConstraints layout) {
-        element = new TextboxWithScroll(panel, layout);
+        element = new StyledTextArea(panel, layout);
     }
 
     public void setCompiling() {
-        element.setText("Compiling...");
+        element.setText("Compiling...", DEFAULT_STYLE);
     }
 
+
+    private String checkmark = new String(Character.toChars(10003)); // ✓
     public void setSuccess() {
-        element.setText("Success");
+        element.setText(checkmark + " Success", SUCCESS_STYLE);
     }
 
     public void setUndoSuccess() {
-        element.setText("Undone Successfully");
+        element.setText(checkmark + " Undone Successfully", SUCCESS_STYLE);
     }
 
-    public void setError(Exception ex) {
-        String errText = ex.getMessage();
+    public void setError(Throwable ex) {
+        element.setText(ex.getMessage(), ERROR_STYLE);
         for(var trace: ex.getStackTrace()) {
-            errText += "\n\t" + trace.toString();
+            element.appendString("\n\t" + trace.toString(), ERROR_STYLE);
         }
-
-        element.setText(errText);
     }
 
     public void setErrors(ArrayList<Log> logs) {
-        var collectiveErrorLog = "";
+        element.reset();
         for(var log: logs) {
-            collectiveErrorLog += log.getFancyMessage() + "\n";
+            AttributeSet style = DEFAULT_STYLE;
+
+            if(log instanceof Warning)
+                style = WARNING_STYLE;
+            else if(log instanceof ErrorLog)
+                style = ERROR_STYLE;
+
+            element.appendString(log.getFancyMessage() + "\n", style);
         }
-        element.setText(collectiveErrorLog);
     }
+
+    protected AttributeSet DEFAULT_STYLE = TextStyles.DEFAULT;
+    protected AttributeSet ERROR_STYLE = TextStyles.RED;
+    protected AttributeSet WARNING_STYLE = TextStyles.YELLOW;
+    protected AttributeSet SUCCESS_STYLE = TextStyles.DARK_GREEN;
 
 }

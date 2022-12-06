@@ -301,9 +301,11 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         for (var pTemp : ctx.ptemplate()) {
             PTemplateTemplate template = (PTemplateTemplate) visit(pTemp);
             pTemplateTemplates.add(template);
-            pSystemTemplate.system.template.add("decls", System.lineSeparator() + "// Declaration of all processes of type "
-                    + template.name + System.lineSeparator() + template.sysDeclarations);
-            pSystemTemplate.system.template.add("names", template.namesForSysDeclarations);
+            if (template.namesForSysDeclarations.size() > 0) {
+                pSystemTemplate.system.template.add("decls", System.lineSeparator() + "// Declaration of all processes of type "
+                        + template.name + System.lineSeparator() + template.sysDeclarations);
+                pSystemTemplate.system.template.add("names", template.namesForSysDeclarations);
+            }
         }
         pSystemTemplate.finalise();
 
@@ -360,6 +362,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         if (ctx.occurrences != null && ctx.occurrences.size() > 0) {
             for (var occ : ctx.occurrences) {
                 String occName = occ.getPrefix() + "_" + this.counter++;
+                occ.setPrefix(occName);
                 ST constructorCall = new ST("<cons>(<exprs; separator=\", \">)");
                 constructorCall.add("cons", name);
                 for (var param : occ.getParameters()) {

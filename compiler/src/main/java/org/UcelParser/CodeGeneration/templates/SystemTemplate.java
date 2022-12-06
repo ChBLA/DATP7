@@ -6,7 +6,7 @@ import java.util.List;
 
 public class SystemTemplate extends Template{
     public SystemTemplate(List<Template> cons, List<String> names) {
-        template = new ST("// Declarations for the necessary processes<decls; separator=[newline]><newline><newline>system <names; separator=\", \">;");
+        template = new ST("// Declarations for the necessary processes<newline><decls; separator=[newline]><newline><newline>system <names; separator=\", \">;");
         template.add("names", names);
         assert cons.size() == names.size();
 
