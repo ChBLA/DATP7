@@ -16,6 +16,9 @@ public class TemplateOccurrence {
     public String getPrefix() {
         return this.prefix;
     }
+    public void setPrefix(String value) {
+        this.prefix = value;
+    }
 
     @Override
     public boolean equals(Object other) {
