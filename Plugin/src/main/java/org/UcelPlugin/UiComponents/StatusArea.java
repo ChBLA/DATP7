@@ -24,7 +24,7 @@ public class StatusArea {
         element.setText("Undone Successfully");
     }
 
-    public void setError(Exception ex) {
+    public void setError(Throwable ex) {
         String errText = ex.getMessage();
         for(var trace: ex.getStackTrace()) {
             errText += "\n\t" + trace.toString();
