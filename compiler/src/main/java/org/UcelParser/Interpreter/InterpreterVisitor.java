@@ -1,10 +1,8 @@
 package org.UcelParser.Interpreter;
 
 import org.UcelParser.Util.*;
-import org.UcelParser.Util.Logging.CompilerErrorLog;
-import org.UcelParser.Util.Logging.ErrorLog;
-import org.UcelParser.Util.Logging.ILogger;
-import org.UcelParser.Util.Logging.Log;
+import org.UcelParser.Util.Exception.CouldNotFindException;
+import org.UcelParser.Util.Logging.*;
 import org.UcelParser.Util.Value.*;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
@@ -22,6 +20,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     private ILogger logger;
 
     private int nextInterfaceId;
+    private int depth = 0;
+    private final int MAX_DEPTH = 10000;
 
     public InterpreterVisitor(Scope scope) {
         currentScope = scope;
@@ -96,10 +96,14 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     //region Scope
     private void enterScope(Scope scope) {
         currentScope = scope;
+        depth++;
+        if (depth > MAX_DEPTH)
+            throw new RuntimeException("Maximum scope depth exceeded at " + depth);
     }
 
     private void exitScope() {
         this.currentScope = this.currentScope.getParent();
+        depth--;
     }
     //endregion
 
@@ -119,11 +123,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
                     return null;
                 }
             }
-        } catch (Exception e){
-            logger.log(new CompilerErrorLog(ctx, "Interpreter VariableID Reference"));
+        } catch (CouldNotFindException e){
+            logger.log(new CompilerErrorLog(ctx, "Interpreter VariableID Reference for '" + ctx.ID().getText() + "' failed"));
             return null;
         }
-
 
         return new VoidValue();
     }
@@ -136,7 +139,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression().get(0));
         InterpreterValue right = visit(ctx.expression().get(1));
 
-        if(!isIntegerValue(left) || !isIntegerValue(right)) return null;
+        if(!isIntegerValue(left) || !isIntegerValue(right)) {
+            logger.log(new ErrorLog(ctx, "Interpreter: Cannot evaluate as values are not integers"));
+            return null;
+        }
         IntegerValue intLeft = (IntegerValue) left;
         IntegerValue intRight = (IntegerValue) right;
         int op = ctx.op.getText().equals("+") ? 1 : -1;
@@ -148,7 +154,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.expression().get(0));
         InterpreterValue right = visit(ctx.expression().get(1));
 
-        if(!isIntegerValue(left) || !isIntegerValue(right)) return null;
+        if(!isIntegerValue(left) || !isIntegerValue(right)) {
+            logger.log(new ErrorLog(ctx, "Interpreter: Cannot evaluate as values are not integers"));
+            return null;
+        }
         IntegerValue intLeft = (IntegerValue) left;
         IntegerValue intRight = (IntegerValue) right;
         String op = ctx.op.getText();
@@ -168,7 +177,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             return declInfo.getValue() == null
                     ? new VariableValue(currentOccurrence.getPrefix() + (!currentOccurrence.getPrefix().equals("") ? "_" : ""), "", declInfo)
                     : declInfo.getValue();
-        } catch (Exception e) {
+        } catch (CouldNotFindException e) {
+            logger.log(new ErrorLog(ctx, "Interpreter: reference failed for '" + ctx.ID().getText() + "'"));
             return null;
         }
     }
@@ -181,7 +191,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         if (isIntegerValue(right)) {
             IntegerValue intRight = (IntegerValue) right;
             if(intRight.getInt() < 0) {
-                logger.log(new ErrorLog(ctx, "Array index out of range"));
+                logger.log(new ErrorLog(ctx, "Array index out of range: " + intRight.getInt()));
                 return null;
             }
 
@@ -208,6 +218,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         if(left instanceof InterfaceValue)
             return new PointerValue(id, left);
         else if(left == null) {
+            //No logging passing through
             return null;
         } else {
             return new VariableValue("", "." + id, left);
@@ -216,11 +227,11 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     @Override
     public InterpreterValue visitUnaryExpr(UCELParser.UnaryExprContext ctx) {
-        // PLUS | MINUS | NEG | NOT;
-
         var exprVal = visit(ctx.expression());
-        if(exprVal == null)
+        if(exprVal == null) {
+            //No logging passing through
             return null;
+        }
 
         var unary = ctx.unary();
         if(unary.PLUS() != null) {
@@ -268,8 +279,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         var left = visit(ctx.expression(0));
         var right = visit(ctx.expression(1));
 
-        if(left == null || right == null)
+        if(left == null || right == null) {
+            //No logging passing through
             return null;
+        }
 
         if(!(left instanceof IntegerValue) || !(right instanceof IntegerValue)) {
             logger.log(new ErrorLog(ctx, "Relative comparison only supports integers in interpreter"));
@@ -279,7 +292,6 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         var leftVal = ((IntegerValue) left).getInt();
         var rightVal = ((IntegerValue) right).getInt();
 
-        // op=('<' | '<=' | '>=' | '>')
         switch (ctx.op.getText()) {
             case "<" : return new BooleanValue(leftVal < rightVal);
             case "<=": return new BooleanValue(leftVal <= rightVal);
@@ -315,7 +327,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     @Override
     public InterpreterValue visitLiteral(UCELParser.LiteralContext ctx) {
-        // NAT | bool | DOUBLE | DEADLOCK;
+
         if(ctx.NAT() != null) {
             var val = Integer.parseInt(ctx.NAT().getText());
             return new IntegerValue(val);
@@ -324,8 +336,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             return visit(ctx.bool());
         }
         else if(ctx.DOUBLE() != null) {
-            logger.log(new ErrorLog(ctx, "Doubles are not supported in interpretation"));
-            return null;
+            return new StringValue(ctx.DOUBLE().getText());
         }
         else if(ctx.DEADLOCK() != null) {
             logger.log(new ErrorLog(ctx, "Deadlock is not supported in interpretation"));
@@ -364,8 +375,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         exitScope();
 
-        if(hadError)
+        if(hadError) {
+            //No logging passing through
             return null;
+        }
 
         return new VoidValue();
     }
@@ -379,8 +392,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     public InterpreterValue visitBuildIf(UCELParser.BuildIfContext ctx) {
         // | IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?  #BuildIf
         var predicate = visit(ctx.expression());
-        if(predicate == null)
+        if(predicate == null) {
+            //No logging passing through
             return null;
+        }
         if(!isBoolValue(predicate)) {
             logger.log(new ErrorLog(ctx, "Predicate must be of type boolean"));
             return null;
@@ -390,16 +405,20 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         if(predicateVal) {
             var stmtReturn = visit(ctx.buildStmnt(0));
-            if(stmtReturn == null)
+            if(stmtReturn == null) {
+                //No logging passing through
                 return null;
+            }
         }
 
         else {
             var elseStmt = ctx.buildStmnt(1);
             if(elseStmt != null) {
                 var stmtReturn = visit(elseStmt);
-                if(stmtReturn == null)
+                if(stmtReturn == null) {
+                    //No logging passing through
                     return null;
+                }
             }
         }
 
@@ -424,8 +443,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             }
 
             var stmtReturn = visit(ctx.buildStmnt());
-            if(stmtReturn == null)
+            if(stmtReturn == null) {
+                //No logging passing through
                 return null;
+            }
         }
 
         return new VoidValue();
@@ -483,15 +504,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     @Override
     public InterpreterValue visitInitialiser(UCELParser.InitialiserContext ctx) {
-        // initialiser   : expression?
-        //               | LEFTCURLYBRACE initialiser (COMMA initialiser)* RIGHTCURLYBRACE;
-
+        // Struct, should not be interpreted
         var expr = ctx.expression();
-        if(expr != null) {
-            return visit(expr);
-        }
-
-        return null; // Struct, should not be interpreted
+        return expr == null ? null : visit(expr);
     }
 
     @Override
@@ -502,27 +517,30 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         for(int i = 0; i < ctx.expression().size(); i++) {
             InterpreterValue v = visit(ctx.expression().get(i));
             if(isIntegerValue(v)) indices[i] = ((IntegerValue) v).getInt();
-            else return null;
+            else {
+                logger.log(new ErrorLog(ctx.expression().get(i),
+                        "Interpreter could not evaluate expression to integer"));
+                return null;
+            }
         }
-
-        String id = "";
 
         try {
-            id = currentScope.get(ctx.variableReference).getIdentifier();
-        } catch (Exception e) {
+            String id = currentScope.get(ctx.variableReference).getIdentifier();
+            return new CompVarValue(id, indices);
+        } catch (CouldNotFindException e) {
+            logger.log(new CompilerErrorLog(ctx, "Interpreter compvar reference failed"));
             return null;
         }
-
-
-        return new CompVarValue(id, indices);
     }
 
     @Override
     public InterpreterValue visitCompCon(UCELParser.CompConContext ctx) {
 
         InterpreterValue iv = visit(ctx.compVar());
-        if(!(iv instanceof CompVarValue))
+        if(!(iv instanceof CompVarValue)) {
+            logger.log(new CompilerErrorLog(ctx, "Interpreter: compvar incorrect value"));
             return null;
+        }
         CompVarValue compVarValue = (CompVarValue) iv;
 
         int argCount = ctx.arguments() == null ? 0 : ctx.arguments().expression().size();
@@ -531,7 +549,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         for(int i = 0; i < argCount; i++) {
             InterpreterValue v = visit(ctx.arguments().expression().get(i));
             if(v != null) arguments[i] = v;
-            else return null;
+            else {
+                //No logging, passing through
+                return null;
+            }
         }
 
         try {
@@ -588,6 +609,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             } else if(declInfo.getNode() instanceof UCELParser.PtemplateContext) {
                 occurrenceValue = new TemplateOccurrenceValue(ctx.compVar().ID().getText(), arguments);
             } else {
+                logger.log(new CompilerErrorLog(ctx, "declInfo node not set, or set incorrectly"));
                 return null;
             }
 
@@ -603,7 +625,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
                 }
             }
 
-        } catch (Exception e) {
+        } catch (CouldNotFindException e) {
+            logger.log(new CompilerErrorLog(ctx, "Interpreter: Reference failed"));
             return null;
         }
 
@@ -643,8 +666,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         InterpreterValue left = visit(ctx.compVar().get(0));
         InterpreterValue right = visit(ctx.compVar().get(1));
 
-        if(!isCompVarValue(left) || !isCompVarValue(right))
+        if(!isCompVarValue(left) || !isCompVarValue(right)) {
+            logger.log(new CompilerErrorLog(ctx, "Interpreter: compvar returned incorrect value"));
             return null;
+        }
 
         CompVarValue compVarLeft = (CompVarValue) left;
         CompVarValue compVarRight = (CompVarValue) right;
@@ -698,7 +723,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
                 leftInterface.occurrences = new ArrayList<>();
             leftInterface.occurrences.add(interfaceAlias);
 
-        } catch (Exception e) {
+        } catch (CouldNotFindException e) {
+            logger.log(new CompilerErrorLog(ctx, "Interpreter: Reference failed"));
             return null;
         }
 
@@ -714,7 +740,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             UCELParser.ParameterContext interfaceTypeNode = componentNode.interfaces().parameters().parameter(ref.getDeclarationId());
             DeclarationReference interfaceRef = interfaceTypeNode.type().typeId().reference;
             interfaceNode = (UCELParser.InterfaceDeclContext) componentNode.scope.get(interfaceRef).getNode();
-        } catch (Exception e) {
+        } catch (CouldNotFindException e) {
+            logger.log(new CompilerErrorLog(node, "Interpreter: Reference failed"));
             return null;
         }
         return interfaceNode;
@@ -737,8 +764,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         } else {
             CompVarValue compVarValue = (CompVarValue) visit(ctx.compVar());
 
-            if(compVarValue == null)
+            if(compVarValue == null) {
+                //No logging, passing through
                 return null;
+            }
 
             try {
                 InterpreterValue value = recBuildMultiDimLists(compVarValue.getIndices(),
@@ -768,14 +797,28 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     public InterpreterValue visitBuild(UCELParser.BuildContext ctx) {
         for(UCELParser.BuildDeclContext buildDecl : ctx.buildDecl()) {
             InterpreterValue value = visit(buildDecl);
-            if(value == null || !(value instanceof VoidValue))
+            if(value == null) {
+                //No logging, passing through
                 return null;
+            }
+
+            if(!(value instanceof VoidValue)) {
+                logger.log(new ErrorLog(ctx, "Interpreter: declaration returned something other than void"));
+                return null;
+            }
         }
 
         for(UCELParser.BuildStmntContext buildStmnt : ctx.buildStmnt()) {
             InterpreterValue value = visit(buildStmnt);
-            if(value == null || !(value instanceof VoidValue))
+            if(value == null) {
+                //No logging, passing through
                 return null;
+            }
+
+            if(!(value instanceof VoidValue)) {
+                logger.log(new ErrorLog(ctx, "Interpreter: declaration returned something other than void"));
+                return null;
+            }
         }
 
         for(UCELParser.BuildDeclContext buildDecl : ctx.buildDecl()) {
@@ -789,9 +832,12 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
                 value = currentScope.get(variableReference).getValue();
 
-                if(!visitCompWithAllOccurrences(node, value, ""))
+                if(!visitCompWithAllOccurrences(node, value, "")) {
+                    //No logging, passing through
                     return null;
-            } catch (Exception e) {
+                }
+            } catch (CouldNotFindException e) {
+                logger.log(new CompilerErrorLog(buildDecl, "Interpreter: Reference failed"));
                 return null;
             }
         }
@@ -807,7 +853,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             for(int i = 0; i < listvalue.size(); i++) {
                 boolean b = visitCompWithAllOccurrences(node,
                         listvalue.getValue(i), indices + "_" + i);
-                if(!b) return false;
+                if(!b) {
+                    //No logging
+                    return false;
+                }
             }
 
             return true;
@@ -822,6 +871,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
                 componentNode.occurrences = new ArrayList<>();
             return visitTempWithOccurrence(componentNode, (TemplateOccurrenceValue) value, indices);
         } else {
+            logger.log(new CompilerErrorLog(node, "Interpreter value in list neither component nor template"));
             return false;
         }
     }
@@ -856,7 +906,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
                 DeclarationInfo parameterInfo = currentScope.get(paramCtx.reference);
                 parameterInfo.setValue(value.getInterfaces()[i]);
             }
-        } catch (Exception e) {
+        } catch (CouldNotFindException e) {
+            logger.log(new CompilerErrorLog(componentNode, "Interpreter: Reference failed"));
             return false;
         }
 
@@ -873,7 +924,6 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
                 value.getArguments());
 
         templateNode.occurrences.add(templateOccurrence);
-
         return true;
     }
 
