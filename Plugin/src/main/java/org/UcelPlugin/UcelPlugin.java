@@ -70,8 +70,5 @@ public class UcelPlugin implements Plugin {
             ui.getStatusArea().setError(ex);
             return null;
         }
-        catch (StackOverflowError err) {
-            return null;
-        }
     }
 }
