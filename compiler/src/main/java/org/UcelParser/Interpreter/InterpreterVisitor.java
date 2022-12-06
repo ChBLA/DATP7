@@ -15,7 +15,7 @@ import java.util.Objects;
 public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     //region Header
-    private ComponentOccurrence currentOccurrence = new ComponentOccurrence("", null, null);
+    private Occurrence currentOccurrence = new Occurrence("", null, null);
     private Scope currentScope;
     private ILogger logger;
 
@@ -601,9 +601,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
                 }
 
                 currentScope = oldScope;
-                occurrenceValue = new CompOccurrenceValue(ctx.compVar().ID().getText(), arguments, interfaceParameterValues);
+                occurrenceValue = new CompOccurrenceValue(ctx.compVar().ID().getText(), arguments, interfaceParameterValues, compVarValue);
             } else if(declInfo.getNode() instanceof UCELParser.PtemplateContext) {
-                occurrenceValue = new TemplateOccurrenceValue(ctx.compVar().ID().getText(), arguments);
+                occurrenceValue = new TemplateOccurrenceValue(ctx.compVar().ID().getText(), arguments, compVarValue);
             } else {
                 logger.log(new CompilerErrorLog(ctx, "declInfo node not set, or set incorrectly"));
                 return null;
@@ -874,9 +874,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     private boolean visitCompWithOccurrence(UCELParser.ComponentContext componentNode, CompOccurrenceValue value, String indices) {
         ComponentOccurrence componentOccurrence = new ComponentOccurrence(value.generateName() + indices,
-                value.getArguments(), value.getInterfaces());
+                value.getArguments(), value.getInterfaces(), value.getCompVarValue());
 
         componentNode.occurrences.add(componentOccurrence);
+        currentOccurrence.addChild(componentOccurrence);
 
         if(componentNode.compBody().build() == null) {
             //No build block means nothing needs to be interpreted
@@ -917,9 +918,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     private boolean visitTempWithOccurrence(UCELParser.PtemplateContext templateNode, TemplateOccurrenceValue value, String indices) {
         TemplateOccurrence templateOccurrence = new TemplateOccurrence(value.generateName() + indices,
-                value.getArguments());
+                value.getArguments(), value.getCompVarValue());
 
         templateNode.occurrences.add(templateOccurrence);
+        currentOccurrence.addChild(templateOccurrence);
         return true;
     }
 

@@ -1,38 +1,20 @@
 package org.UcelParser.Util;
 
-public class TemplateOccurrence {
-    private final NameGenerator[] parameters;
-    private String prefix = "";
+import org.UcelParser.Util.Value.CompVarValue;
+import org.UcelParser.Util.Value.Occurrence;
 
-    public TemplateOccurrence(String prefix, NameGenerator[] parameters) {
-        this.prefix = prefix;
-        this.parameters = parameters;
+public class TemplateOccurrence extends Occurrence {
+
+    public TemplateOccurrence(String prefix, NameGenerator[] parameters, CompVarValue value) {
+        super(prefix, parameters, value);
     }
 
     public NameGenerator[] getParameters() {
         return this.parameters;
     }
 
-    public String getPrefix() {
-        return this.prefix;
-    }
     public void setPrefix(String value) {
         this.prefix = value;
     }
 
-    @Override
-    public boolean equals(Object other) {
-        if(!(other instanceof TemplateOccurrence)) return false;
-        boolean b = true;
-        TemplateOccurrence co = (TemplateOccurrence) other;
-
-        if(parameters.length != co.getParameters().length)
-            return false;
-
-        for(int i = 0; i < parameters.length; i++)
-            if (!parameters[i].equals(co.getParameters()[i]))
-                return false;
-
-        return true;
-    }
 }

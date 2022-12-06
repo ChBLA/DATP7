@@ -1,32 +1,23 @@
 package org.UcelParser.Util;
 
 import org.UcelParser.UCELParser_Generated.UCELParser;
+import org.UcelParser.Util.Value.CompVarValue;
 import org.UcelParser.Util.Value.InterpreterValue;
+import org.UcelParser.Util.Value.Occurrence;
 import org.UcelParser.Util.Value.StringValue;
 
 import java.util.List;
 
-public class ComponentOccurrence {
-    private final NameGenerator[] parameters;
+public class ComponentOccurrence extends Occurrence {
     private final NameGenerator[] interfaces;
-    private String prefix = "";
 
-    public ComponentOccurrence(String prefix, NameGenerator[] parameters, NameGenerator[] interfaces) {
-        this.prefix = prefix;
-        this.parameters = parameters;
+    public ComponentOccurrence(String prefix, NameGenerator[] parameters, NameGenerator[] interfaces, CompVarValue value) {
+        super(prefix, parameters, value);
         this.interfaces = interfaces;
-    }
-
-    public NameGenerator[] getParameters() {
-        return this.parameters;
     }
 
     public NameGenerator[] getInterfaces() {
         return this.interfaces;
-    }
-
-    public String getPrefix() {
-        return this.prefix;
     }
 
     @Override
