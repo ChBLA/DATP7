@@ -1,11 +1,13 @@
 package org.UcelParser.Util;
 
+import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.Value.CompVarValue;
 
 public class TemplateOccurrence extends Occurrence {
-
-    public TemplateOccurrence(String prefix, NameGenerator[] parameters, CompVarValue value) {
+    private final UCELParser.PtemplateContext node;
+    public TemplateOccurrence(UCELParser.PtemplateContext node, String prefix, NameGenerator[] parameters, CompVarValue value) {
         super(prefix, parameters, value);
+        this.node = node;
     }
 
     public NameGenerator[] getParameters() {
@@ -16,4 +18,7 @@ public class TemplateOccurrence extends Occurrence {
         this.prefix = value;
     }
 
+    public UCELParser.PtemplateContext getNode() {
+        return node;
+    }
 }

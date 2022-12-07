@@ -1,12 +1,14 @@
 package org.UcelParser.Util;
 
+import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.Value.CompVarValue;
 
 public class ComponentOccurrence extends Occurrence {
     private final NameGenerator[] interfaces;
-
-    public ComponentOccurrence(String prefix, NameGenerator[] parameters, NameGenerator[] interfaces, CompVarValue value) {
+    private final UCELParser.ComponentContext node;
+    public ComponentOccurrence(UCELParser.ComponentContext node, String prefix, NameGenerator[] parameters, NameGenerator[] interfaces, CompVarValue value) {
         super(prefix, parameters, value);
+        this.node = node;
         this.interfaces = interfaces;
     }
 
@@ -33,5 +35,9 @@ public class ComponentOccurrence extends Occurrence {
                 return false;
 
         return true;
+    }
+
+    public UCELParser.ComponentContext getNode() {
+        return node;
     }
 }
