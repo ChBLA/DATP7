@@ -1,6 +1,14 @@
 package org.Ucel;
 
 public class VerificationQuery implements IVerificationQuery {
+
+    public VerificationQuery() {
+
+    }
+    public VerificationQuery(String formula, String comment) {
+        this.formula = formula;
+        this.comment = comment;
+    }
     private String formula;
     @Override
     public String getFormula() {

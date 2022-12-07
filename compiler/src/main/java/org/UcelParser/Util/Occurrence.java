@@ -3,6 +3,8 @@ package org.UcelParser.Util;
 import org.UcelParser.Util.Value.CompVarValue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class Occurrence {
     protected ArrayList<Occurrence> children;
@@ -35,6 +37,22 @@ public class Occurrence {
 
     public String getPrefix() {
         return this.prefix;
+    }
+
+    public Occurrence findChildOccurrence(String name, List<Integer> indices) {
+        for (var child : this.children) {
+            var value = child.getCompVarValue();
+            if (value.toString().equals(name)) {
+                boolean matchingIndices = indices.size() == value.getIndices().length;
+                for (int i = 0; i < indices.size() && matchingIndices; i++) {
+                    if (indices.get(i) != value.getIndices()[i])
+                        matchingIndices = false;
+                }
+                if (matchingIndices)
+                    return child;
+            }
+        }
+        return null;
     }
 
     @Override
