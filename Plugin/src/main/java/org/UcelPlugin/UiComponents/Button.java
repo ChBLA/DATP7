@@ -13,6 +13,10 @@ public class Button {
         panel.add(element, layout);
     }
 
+    public void setEnabled(boolean enabled) {
+        element.setEnabled(enabled);
+    }
+
     public void addOnClick(Consumer onClick) {
         element.addActionListener(new AbstractAction() {
             @Override

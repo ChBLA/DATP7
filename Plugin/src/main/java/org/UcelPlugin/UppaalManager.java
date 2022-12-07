@@ -36,6 +36,7 @@ public class UppaalManager {
         this.symbolicTraceRepository = this.registry.getRepository("SymbolicTrace");
         this.systemModelRepository = this.registry.getRepository("SystemModel");
 
+        addListenerForDocUpdates(editorDocumentRepository);
     }
 
     protected Document getCurrentDocument() {
@@ -129,5 +130,43 @@ public class UppaalManager {
     }
     //endregion
 
+    //region Events
+    private ArrayList<Consumer> onOnDocChange = new ArrayList<>();
+    public void addOnDocChange(Consumer onChanged) {
+        onOnDocChange.add(onChanged);
+    }
 
+    public enum documentChangeTypes {
+        UPDATED,
+        REPLACED,
+        RESTRUCTURED
+    }
+    protected void emitOnDocChange(documentChangeTypes type) {
+        for(var action: onOnDocChange) {
+            action.accept(null);
+        }
+    }
+
+    private void addListenerForDocUpdates(Repository docRep) {
+        docRep.addListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                String evtTypeName = evt.getPropertyName();
+
+                if(evtTypeName == UPDATED.name())
+                    emitOnDocChange(documentChangeTypes.UPDATED);
+
+                else if(evtTypeName == REPLACED.name())
+                    emitOnDocChange(documentChangeTypes.REPLACED);
+
+                else if(evtTypeName == RESTRUCTURED.name())
+                    emitOnDocChange(documentChangeTypes.RESTRUCTURED);
+
+                else
+                    System.err.println("Unhandled event type: " + evt.getPropertyName());
+            }
+        });
+    }
+
+    //endregion
 }

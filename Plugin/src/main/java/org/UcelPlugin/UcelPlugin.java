@@ -7,6 +7,9 @@ import org.Ucel.IProject;
 import org.UcelParser.Compiler;
 import org.UcelParser.Util.Exception.ErrorsFoundException;
 
+import java.util.ArrayList;
+import java.util.function.Consumer;
+
 public class UcelPlugin implements Plugin {
     private UcelEditorUI ui = new UcelEditorUI();
     private PluginWorkspace[] workspaces = new PluginWorkspace[]{ui};
@@ -23,23 +26,28 @@ public class UcelPlugin implements Plugin {
         this.uppaalManager = new UppaalManager(registry);
 
         ui.getCompileToEditorButton().addOnClickAsync(e -> {
+            emitOnCompile(false);
             var currentProject = uppaalManager.getProject();
             previousIProject = currentProject;
 
             var compiled = compileProjectWithUiNotifications(currentProject);
             if(compiled != null)
                 uppaalManager.setProject(compiled);
+            emitOnCompile(true);
         });
 
         ui.getCompileToEngineButton().addOnClickAsync(e -> {
+            emitOnCompile(false);
             var currentProject = uppaalManager.getProject();
 
             var compiled = compileProjectWithUiNotifications(currentProject);
             if(compiled != null)
                 uppaalManager.setModelCheckerProject(compiled);
+            emitOnCompile(true);
         });
 
         ui.getUndoButton().addOnClick(e -> {
+            emitOnUndo();
             if(previousIProject != null) {
                 uppaalManager.setProject(previousIProject);
                 ui.getStatusArea().setUndoSuccess();
@@ -47,11 +55,87 @@ public class UcelPlugin implements Plugin {
         });
 
         ui.getTryBuildButton().addOnClickAsync(e -> {
+            emitOnCompile(false);
             compileProjectWithUiNotifications(uppaalManager.getProject());
+            emitOnCompile(true);
+        });
+
+        registerListeners();
+    }
+
+    //region Events
+    //region Emitters
+    //region onCompile
+    private ArrayList<Consumer<Boolean>> onCompileActions = new ArrayList<>();
+    public void addOnCompile(Consumer<Boolean> onCompile) {
+        onCompileActions.add(onCompile);
+    }
+    protected void emitOnCompile(boolean isDone) {
+        for(var action: onCompileActions) {
+            action.accept(isDone);
+        }
+    }
+    //endregion
+    //region onUndo
+    private ArrayList<Consumer> onUndoActions = new ArrayList<>();
+    public void addOnUndo(Consumer onUndo) {
+        onUndoActions.add(onUndo);
+    }
+    protected void emitOnUndo() {
+        for(var action: onUndoActions) {
+            action.accept(null);
+        }
+    }
+    //endregion
+    //region onUserChange
+    private ArrayList<Consumer> onUserChange = new ArrayList<>();
+    public void addOnUserChange(Consumer onUndo) {
+        onUndoActions.add(onUndo);
+    }
+    protected void emitOnUserChange() {
+        for(var action: onUserChange) {
+            action.accept(null);
+        }
+    }
+    //endregion
+
+
+    //endregion
+    //region Listeners
+
+    private boolean updatedSinceCompile = true;
+    private boolean hasUndoableChanges = false;
+    private boolean isCompiling = false;
+    private void registerListeners() {
+        addOnCompile((isDone) -> {
+            this.isCompiling = !isDone;
+            this.hasUndoableChanges = true;
+
+            updateButtonStates();
+        });
+
+        addOnUndo((x) -> {
+            this.hasUndoableChanges = false;
+
+            updateButtonStates();
+        });
+
+        uppaalManager.addOnDocChange((updateType) -> {
+            if(!isCompiling)
+                updatedSinceCompile = true;
+
+            updateButtonStates();
         });
     }
 
+    private void updateButtonStates() {
+        ui.getCompileToEditorButton().setEnabled(updatedSinceCompile && !isCompiling);
+        ui.getCompileToEngineButton().setEnabled(!isCompiling);
+        ui.getUndoButton().setEnabled(hasUndoableChanges && !isCompiling);
+        ui.getTryBuildButton().setEnabled(!isCompiling);
     }
+    //endregion
+    //endregion
 
     private IProject compileProjectWithUiNotifications(IProject project) {
         try {
@@ -60,7 +144,7 @@ public class UcelPlugin implements Plugin {
             var compiledProject = compiler.compileProject(project);
             var logs = compiler.getLogs();
             if(logs.size() == 0) {
-            ui.getStatusArea().setSuccess();
+                ui.getStatusArea().setSuccess();
             }
             else {
                 ui.getStatusArea().setErrors(logs);
