@@ -1,18 +1,22 @@
 package org.UcelParser.CodeGeneration;
 
 import org.Ucel.*;
-import org.UcelParser.CodeGeneration.templates.EdgeTemplate;
-import org.UcelParser.CodeGeneration.templates.LocationTemplate;
-import org.UcelParser.CodeGeneration.templates.PTemplatesTemplate;
-import org.UcelParser.CodeGeneration.templates.ProjectTemplate;
+import org.Ucel.Template;
+import org.UcelParser.CodeGeneration.templates.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 public class ProjectCodeLinker {
 
     public Project generateUppaalProject(ProjectTemplate projectCode) {
         var project = new Project(projectCode.pDeclarationTemplate.toString(), projectCode.pSystemTemplate.toString());
+
+        List<PQueryTemplate> verificationQueries = ((VerificationListTemplate) projectCode.verificationListTemplate).queries;
+        for (var query : verificationQueries) {
+            project.addVerificationQueries(new VerificationQuery(query.toString(), query.comment));
+        }
 
         var templatesCode = ((PTemplatesTemplate)projectCode.pTemplatesTemplate).pTemplateTemplates;
         for (var temp : templatesCode) {

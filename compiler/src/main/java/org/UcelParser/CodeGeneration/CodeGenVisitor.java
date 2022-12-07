@@ -1,5 +1,6 @@
 package org.UcelParser.CodeGeneration;
 
+import com.sun.source.tree.ArrayAccessTree;
 import org.UcelParser.CodeGeneration.templates.*;
 import org.UcelParser.UCELParser_Generated.UCELBaseVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
@@ -8,6 +9,7 @@ import org.UcelParser.Util.Exception.CouldNotFindException;
 import org.UcelParser.Util.Logging.*;
 import org.UcelParser.CodeGeneration.templates.ManualTemplate;
 import org.UcelParser.CodeGeneration.templates.Template;
+import org.UcelParser.Util.Value.IntegerValue;
 import org.UcelParser.Util.Value.InterfaceValue;
 import org.UcelParser.Util.Value.ListValue;
 import org.stringtemplate.v4.ST;
@@ -26,6 +28,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public int depthFromComponentScope = 0;
     private int counter = 0;
     private List<InterfaceTemplate> interfaces = new ArrayList<>();
+    private boolean inVerificationMode = false;
+    private List<Integer> arrayIndices;
+    private Occurrence globalOccurrence;
 
     public CodeGenVisitor() {
         this.logger = new Logger();
@@ -156,6 +161,59 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     }
 
     //endregion
+
+    //endregion
+
+    //region Verification and queries
+
+    @Override
+    public Template visitBoundQuery(UCELParser.BoundQueryContext ctx) {
+        List<Template> exprs = new ArrayList<>();
+
+        for (var expr : ctx.expression()) {
+            exprs.add(visit(expr));
+        }
+
+        return new BoundQueryTemplate(ctx.op.getText(), exprs);
+    }
+
+    @Override
+    public Template visitBoundSetQuery(UCELParser.BoundSetQueryContext ctx) {
+        List<Template> exprs = new ArrayList<>();
+
+        for (UCELParser.ExpressionContext expr : ctx.expression()) {
+            exprs.add(visit(expr));
+        }
+        Template specialExpr = exprs.remove(0);
+        return new BoundQueryTemplate(ctx.op.getText(), specialExpr, exprs);
+    }
+
+    @Override
+    public Template visitImplicationQuery(UCELParser.ImplicationQueryContext ctx) {
+        return new ImplicationQueryTemplate(visit(ctx.expression(0)), visit(ctx.expression(1)));
+    }
+
+    @Override
+    public Template visitPQuery(UCELParser.PQueryContext ctx) {
+        return new PQueryTemplate(ctx.symbQuery() != null ? visit(ctx.symbQuery()) : new ManualTemplate(""), ctx.comment);
+    }
+
+    @Override
+    public Template visitQuantifierQuery(UCELParser.QuantifierQueryContext ctx) {
+        return new QuantifierQueryTemplate(ctx.op.getText(), visit(ctx.expression()));
+    }
+
+    @Override
+    public Template visitVerificationList(UCELParser.VerificationListContext ctx) {
+        this.inVerificationMode = true;
+        List<PQueryTemplate> queries = new ArrayList<>();
+
+        for (var query : ctx.pQuery()) {
+            queries.add((PQueryTemplate) visit(query));
+        }
+
+        return new VerificationListTemplate(queries);
+    }
 
     //endregion
 
@@ -293,6 +351,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitProject(UCELParser.ProjectContext ctx) {
+        this.globalOccurrence = ctx.occurence;
+
         enterScope(ctx.scope);
         PDeclarationTemplate pDeclTemplate = (PDeclarationTemplate) visit(ctx.pdeclaration());
         PSystemTemplate pSystemTemplate = (PSystemTemplate) visit(ctx.psystem());
@@ -311,8 +371,10 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
         pDeclTemplate.template.add("decls", this.interfaces);
 
+        var verificationsTemplate = visit(ctx.verificationList());
+
         exitScope();
-        return new ProjectTemplate(pTemplateTemplates, pDeclTemplate, pSystemTemplate);
+        return new ProjectTemplate(pTemplateTemplates, pDeclTemplate, pSystemTemplate, verificationsTemplate);
     }
 
     //endregion
@@ -968,6 +1030,36 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitStructAccess(UCELParser.StructAccessContext ctx) {
+
+        if (this.inVerificationMode) {
+            var localIndices = this.arrayIndices;
+            this.arrayIndices = new ArrayList<>();
+            var expr = ctx.expression();
+            if (!(expr instanceof UCELParser.IdExprContext || expr instanceof UCELParser.StructAccessContext || expr instanceof UCELParser.ArrayIndexContext)) {
+                //todo: log
+                return new ManualTemplate("");
+            }
+            var leftSide = visit(ctx.expression());
+            this.arrayIndices = localIndices;
+            if (leftSide instanceof OccurrenceAccessTemplate) {
+                var leftSideOccurrence = ((OccurrenceAccessTemplate) leftSide).getOccurrence();
+                if (leftSideOccurrence instanceof ComponentOccurrence) {
+                    var resultingOccurrence = leftSideOccurrence.findChildOccurrence(ctx.ID().getText(), this.arrayIndices);
+                    if (resultingOccurrence == null) {
+                        //todo: log
+                        return new ManualTemplate("");
+                    }
+                    return new OccurrenceAccessTemplate(resultingOccurrence);
+                } else if (leftSideOccurrence instanceof TemplateOccurrence) {
+                    var leftName = leftSideOccurrence.getPrefix();
+                    return new ManualTemplate(String.format("%s.%s", leftName, ctx.ID().getText()));
+                }
+            }
+
+            //todo:log error?
+            return new ManualTemplate(String.format("%s.%s", leftSide, ctx.ID().getText()));
+        }
+
         var expr = ctx.expression();
         int arrayCounter;
         for (arrayCounter = 0; expr instanceof UCELParser.ArrayIndexContext; arrayCounter++)
@@ -1007,6 +1099,23 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitIdExpr(UCELParser.IdExprContext ctx) {
+        if (inVerificationMode) {
+            var occ = globalOccurrence.findChildOccurrence(ctx.ID().getText(), this.arrayIndices);
+            this.arrayIndices = new ArrayList<>();
+            if (occ != null) {
+                return new OccurrenceAccessTemplate(occ);
+            } else {
+                try {
+                    var reference = currentScope.find(ctx.ID().getText(), true);
+                    var info = currentScope.get(reference);
+                    return new ManualTemplate(info.generateName(""));
+                } catch (CouldNotFindException e) {
+                    return new ManualTemplate(ctx.ID().getText());
+                }
+
+            }
+        }
+
         try {
             return new ManualTemplate(currentScope.get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope())));
         } catch (CouldNotFindException e) {
@@ -1024,6 +1133,23 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitArrayIndex(UCELParser.ArrayIndexContext ctx) {
+
+        if (this.inVerificationMode) {
+            if(ctx.expression(1) instanceof UCELParser.LiteralExprContext && ((UCELParser.LiteralExprContext) ctx.expression(1)).literal().NAT() != null) {
+                var index = Integer.parseInt(ctx.expression(1).getText());
+                this.arrayIndices.add(0, index);
+                var leftSide = visit(ctx.expression(0));
+
+                if (leftSide instanceof OccurrenceAccessTemplate) {
+                    return leftSide;
+                }
+
+            } else {
+                //todo: log error
+                return new ManualTemplate("");
+            }
+        }
+
         var left = visit(ctx.expression(0));
         var right = visit(ctx.expression(1));
 
