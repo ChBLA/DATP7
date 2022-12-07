@@ -1046,8 +1046,16 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                 if (leftSideOccurrence instanceof ComponentOccurrence) {
                     var resultingOccurrence = leftSideOccurrence.findChildOccurrence(ctx.ID().getText(), this.arrayIndices);
                     if (resultingOccurrence == null) {
-                        //todo: log
-                        return new ManualTemplate("");
+                        UCELParser.ComponentContext componentNode = ((ComponentOccurrence) leftSideOccurrence).getNode();
+                        var componentBodyScope = componentNode.compBody().scope;
+                        try {
+                            var reference = componentBodyScope.find(ctx.ID().getText(), true);
+                            var info = componentBodyScope.get(reference);
+                            return new ManualTemplate(info.generateName(leftSideOccurrence.getPrefix()));
+                        } catch (CouldNotFindException e) {
+                            //todo: log
+                            return new ManualTemplate("");
+                        }
                     }
                     return new OccurrenceAccessTemplate(resultingOccurrence);
                 } else if (leftSideOccurrence instanceof TemplateOccurrence) {
@@ -1316,6 +1324,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitVerification(UCELParser.VerificationContext ctx) {
+        //todo: in verification id is never added. Consider where to add it. Global scope may cause conflicts
         String id = "";
         try {
             id = currentScope.get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope()));
