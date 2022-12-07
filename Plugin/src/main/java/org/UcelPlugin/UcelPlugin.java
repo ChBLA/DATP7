@@ -19,6 +19,7 @@ public class UcelPlugin implements Plugin {
     }
 
     private UppaalManager uppaalManager;
+    private LiveFeedbackProvider liveFeedbackProvider;
 
     private IProject previousIProject = null;
 
@@ -63,6 +64,7 @@ public class UcelPlugin implements Plugin {
         });
 
         registerListeners();
+        liveFeedbackProvider = new LiveFeedbackProvider(uppaalManager, ui.getLiveFeedbackCheckbox().getIsChecked());
     }
 
     //region Events
@@ -128,26 +130,10 @@ public class UcelPlugin implements Plugin {
             updateButtonStates();
         });
 
-        // Live updating error list
-        uppaalManager.addOnDocChange((updateType) -> {
-            if(!ui.getLiveFeedbackCheckbox().getIsChecked())
-                return;
-
-            Compiler compiler = new Compiler();
-            uppaalManager.clearProblems();
-            try {
-                compiler.checkProject(uppaalManager.getProject());
-            } catch (ErrorsFoundException e) {
-                for(var log: e.getLogs()) {
-                    uppaalManager.addProblem("location", log.getFancyMessage());
-                }
-                uppaalManager.updateProblemDisplay();
-            }
-            catch (Throwable err) {
-                uppaalManager.addProblem("location", err.getMessage());
-                uppaalManager.updateProblemDisplay();
-            }
+        ui.getLiveFeedbackCheckbox().addOnChange(isChecked -> {
+            liveFeedbackProvider.setEnabled((boolean)isChecked);
         });
+
     }
 
     private void updateButtonStates() {
