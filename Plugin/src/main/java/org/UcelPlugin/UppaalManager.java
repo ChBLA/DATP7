@@ -4,7 +4,7 @@ import com.uppaal.engine.Engine;
 import com.uppaal.engine.EngineException;
 import com.uppaal.engine.EngineStub;
 import com.uppaal.engine.Problem;
-import com.uppaal.model.core2.Document;
+import com.uppaal.model.core2.*;
 import com.uppaal.model.system.UppaalSystem;
 import com.uppaal.plugin.Registry;
 import com.uppaal.plugin.Repository;
@@ -12,8 +12,13 @@ import org.Ucel.IProject;
 import org.UcelPlugin.DocumentParser.UcelToUppaalDocumentParser;
 import org.UcelPlugin.DocumentParser.UppaalToUcelDocumentParser;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.function.Consumer;
+
+import static com.uppaal.plugin.Repository$ChangeType.*;
 
 public class UppaalManager {
     protected Registry registry;
@@ -45,12 +50,16 @@ public class UppaalManager {
         return documentParser.parseDocument();
     }
 
+    //region Set Editor Project
     public void setProject(IProject project) {
         Document document = getCurrentDocument();
         UcelToUppaalDocumentParser projParser = new UcelToUppaalDocumentParser(document);
         projParser.parseProject(project);
+        editorDocumentRepository.fire(REPLACED);
     }
+    //endregion
 
+    //region Set Engine Project
     public void setModelCheckerProject(IProject project) {
         UcelToUppaalDocumentParser projParser = new UcelToUppaalDocumentParser();
         projParser.parseProject(project);
@@ -118,5 +127,7 @@ public class UppaalManager {
         }
         return sys;
     }
+    //endregion
+
 
 }
