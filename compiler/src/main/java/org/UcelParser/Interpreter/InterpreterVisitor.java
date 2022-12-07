@@ -892,16 +892,20 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         Occurrence oldOccurrence = currentOccurrence;
         currentOccurrence = componentOccurrence;
 
+        var parameters = componentNode.parameters().parameter();
+        var interFaceParameters = componentNode.interfaces().parameters().parameter();
+
+        InterpreterValue[] oldComponentScope = componentNode.scope.getValues();
+        InterpreterValue[] oldBodyScope = componentNode.compBody().scope.getValues();
+
         //Set parameters
         try {
-            var parameters = componentNode.parameters().parameter();
             for(int i = 0; i < parameters.size(); i++) {
                 UCELParser.ParameterContext paramCtx = parameters.get(i);
                 DeclarationInfo parameterInfo = currentScope.get(paramCtx.reference);
                 parameterInfo.setValue(value.getArguments()[i]);
             }
 
-            var interFaceParameters = componentNode.interfaces().parameters().parameter();
             for(int i = 0; i < interFaceParameters.size(); i++) {
                 UCELParser.ParameterContext paramCtx = interFaceParameters.get(i);
                 DeclarationInfo parameterInfo = currentScope.get(paramCtx.reference);
@@ -909,6 +913,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             }
         } catch (CouldNotFindException e) {
             logger.log(new CompilerErrorLog(componentNode, "Interpreter: Reference failed"));
+            enterScope(oldScope);
             currentOccurrence = oldOccurrence;
             return false;
         }
@@ -916,12 +921,17 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         enterScope(componentNode.compBody().scope);
         visit(componentNode.compBody().declarations());
         visit(componentNode.compBody().build());
+
+        componentNode.scope.setValues(oldComponentScope);
+        componentNode.compBody().scope.setValues(oldBodyScope);
+
         currentScope = oldScope;
         currentOccurrence = oldOccurrence;
         return true;
     }
 
-    private boolean visitTempWithOccurrence(UCELParser.PtemplateContext templateNode, TemplateOccurrenceValue value, String indices) {
+    private boolean visitTempWithOccurrence(UCELParser.PtemplateContext templateNode,
+                                            TemplateOccurrenceValue value, String indices) {
         TemplateOccurrence templateOccurrence = new TemplateOccurrence(value.generateName() + indices,
                 value.getArguments(), value.getCompVarValue());
 

@@ -2,6 +2,7 @@ package org.UcelParser.Util;
 
 import org.UcelParser.Util.Exception.CouldNotFindException;
 import org.UcelParser.Util.Exception.NoParentScopeException;
+import org.UcelParser.Util.Value.InterpreterValue;
 import org.antlr.v4.codegen.model.decl.Decl;
 
 import java.util.ArrayList;
@@ -103,4 +104,20 @@ public class Scope {
         }
         return declarationInfos;
     }
+
+    public InterpreterValue[] getValues() {
+        InterpreterValue[] values = new InterpreterValue[declarationInfos.size()];
+
+        for(int i = 0; i < values.length; i++) {
+            values[i] = declarationInfos.get(i).getValue();
+        }
+        return values;
+    }
+
+    public void setValues(InterpreterValue[] values) {
+        for(int i = 0; i < values.length; i++) {
+            declarationInfos.get(i).setValue(values[i]);
+        }
+    }
+
 }
