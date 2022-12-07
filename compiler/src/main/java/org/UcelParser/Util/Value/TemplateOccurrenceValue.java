@@ -8,9 +8,16 @@ public class TemplateOccurrenceValue implements InterpreterValue {
 
     private String prefix;
 
-    public TemplateOccurrenceValue(String prefix, InterpreterValue[] arguments) {
+    private CompVarValue compVarValue;
+
+    public TemplateOccurrenceValue(String prefix, InterpreterValue[] arguments, CompVarValue value) {
         this.prefix = prefix;
         this.arguments = arguments;
+        this.compVarValue = value;
+    }
+
+    public CompVarValue getCompVarValue() {
+        return compVarValue;
     }
 
     @Override

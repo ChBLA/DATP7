@@ -11,10 +11,17 @@ public class CompOccurrenceValue implements InterpreterValue {
 
     private String prefix;
 
-    public CompOccurrenceValue(String prefix, InterpreterValue[] arguments, InterpreterValue[] interfaces) {
+    private CompVarValue compVarValue;
+
+    public CompOccurrenceValue(String prefix, InterpreterValue[] arguments, InterpreterValue[] interfaces, CompVarValue value) {
         this.prefix = prefix;
         this.arguments = arguments;
         this.interfaces = interfaces;
+        this.compVarValue = value;
+    }
+
+    public CompVarValue getCompVarValue() {
+        return compVarValue;
     }
 
     @Override
