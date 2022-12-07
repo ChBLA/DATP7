@@ -51,6 +51,28 @@ public class UppaalManager {
         return documentParser.parseDocument();
     }
 
+    //region Problems
+    public ArrayList<Problem> getProblems() {
+        return (ArrayList<Problem>) this.editorProblemsRepository.get();
+    }
+    public void clearProblems() {
+        setProblems(new ArrayList<Problem>());
+    }
+
+    public void addProblem(String location, String message) {
+        getProblems().add(new Problem("UCEL", location, message));
+    }
+
+    public void updateProblemDisplay() {
+        this.editorProblemsRepository.fire(UPDATED);
+    }
+
+    public void setProblems(ArrayList<Problem> problems) {
+        this.editorProblemsRepository.set(problems);
+        this.editorProblemsRepository.fire(REPLACED);
+    }
+    //endregion
+
     //region Set Editor Project
     public void setProject(IProject project) {
         Document document = getCurrentDocument();

@@ -127,6 +127,24 @@ public class UcelPlugin implements Plugin {
 
             updateButtonStates();
         });
+
+        // Live updating error list
+        uppaalManager.addOnDocChange((updateType) -> {
+            Compiler compiler = new Compiler();
+            uppaalManager.clearProblems();
+            try {
+                compiler.compileProject(uppaalManager.getProject());
+            } catch (ErrorsFoundException e) {
+                for(var log: e.getLogs()) {
+                    uppaalManager.addProblem("location", log.getFancyMessage());
+                }
+                uppaalManager.updateProblemDisplay();
+            }
+            catch (Throwable err) {
+                uppaalManager.addProblem("location", err.getMessage());
+                uppaalManager.updateProblemDisplay();
+            }
+        });
     }
 
     private void updateButtonStates() {
