@@ -9,11 +9,12 @@ grammar UCEL;
     import org.UcelParser.Util.FuncCallOccurrence;
     import org.UcelParser.Util.ComponentOccurrence;
     import org.UcelParser.Util.TemplateOccurrence;
+    import org.UcelParser.Util.Occurrence;
     import org.UcelParser.Util.Value.StringValue;
 }
 
 
-project locals [Scope scope]
+project locals [Scope scope, Occurrence occurence]
     : pdeclaration ptemplate* psystem verificationList;
 
 pdeclaration : declarations;

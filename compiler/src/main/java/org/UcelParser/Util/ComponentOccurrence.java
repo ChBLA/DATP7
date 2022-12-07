@@ -1,12 +1,6 @@
 package org.UcelParser.Util;
 
-import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.Value.CompVarValue;
-import org.UcelParser.Util.Value.InterpreterValue;
-import org.UcelParser.Util.Value.Occurrence;
-import org.UcelParser.Util.Value.StringValue;
-
-import java.util.List;
 
 public class ComponentOccurrence extends Occurrence {
     private final NameGenerator[] interfaces;

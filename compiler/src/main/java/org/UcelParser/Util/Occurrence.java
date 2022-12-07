@@ -1,7 +1,6 @@
-package org.UcelParser.Util.Value;
+package org.UcelParser.Util;
 
-import org.UcelParser.Util.NameGenerator;
-import org.UcelParser.Util.TemplateOccurrence;
+import org.UcelParser.Util.Value.CompVarValue;
 
 import java.util.ArrayList;
 

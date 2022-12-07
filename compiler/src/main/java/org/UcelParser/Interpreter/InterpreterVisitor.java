@@ -15,7 +15,7 @@ import java.util.Objects;
 public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     //region Header
-    private Occurrence currentOccurrence = new Occurrence("", null, null);
+    private Occurrence currentOccurrence;
     private Scope currentScope;
     private ILogger logger;
 
@@ -45,6 +45,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     public InterpreterValue visitProject(UCELParser.ProjectContext ctx) {
         // project locals [Scope scope]
         //    : pdeclaration ptemplate* psystem;
+
+        currentOccurrence = new Occurrence("", null, null);
+        ctx.occurence = currentOccurrence;
 
         enterScope(ctx.scope);
         // Only psystem can contain build statements for interpretation
@@ -886,18 +889,23 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         Scope oldScope = currentScope;
         enterScope(componentNode.scope);
+        Occurrence oldOccurrence = currentOccurrence;
         currentOccurrence = componentOccurrence;
+
+        var parameters = componentNode.parameters().parameter();
+        var interFaceParameters = componentNode.interfaces().parameters().parameter();
+
+        InterpreterValue[] oldComponentScope = componentNode.scope.getValues();
+        InterpreterValue[] oldBodyScope = componentNode.compBody().scope.getValues();
 
         //Set parameters
         try {
-            var parameters = componentNode.parameters().parameter();
             for(int i = 0; i < parameters.size(); i++) {
                 UCELParser.ParameterContext paramCtx = parameters.get(i);
                 DeclarationInfo parameterInfo = currentScope.get(paramCtx.reference);
                 parameterInfo.setValue(value.getArguments()[i]);
             }
 
-            var interFaceParameters = componentNode.interfaces().parameters().parameter();
             for(int i = 0; i < interFaceParameters.size(); i++) {
                 UCELParser.ParameterContext paramCtx = interFaceParameters.get(i);
                 DeclarationInfo parameterInfo = currentScope.get(paramCtx.reference);
@@ -905,18 +913,25 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             }
         } catch (CouldNotFindException e) {
             logger.log(new CompilerErrorLog(componentNode, "Interpreter: Reference failed"));
+            enterScope(oldScope);
+            currentOccurrence = oldOccurrence;
             return false;
         }
 
         enterScope(componentNode.compBody().scope);
         visit(componentNode.compBody().declarations());
         visit(componentNode.compBody().build());
-        currentScope = oldScope;
 
+        componentNode.scope.setValues(oldComponentScope);
+        componentNode.compBody().scope.setValues(oldBodyScope);
+
+        currentScope = oldScope;
+        currentOccurrence = oldOccurrence;
         return true;
     }
 
-    private boolean visitTempWithOccurrence(UCELParser.PtemplateContext templateNode, TemplateOccurrenceValue value, String indices) {
+    private boolean visitTempWithOccurrence(UCELParser.PtemplateContext templateNode,
+                                            TemplateOccurrenceValue value, String indices) {
         TemplateOccurrence templateOccurrence = new TemplateOccurrence(value.generateName() + indices,
                 value.getArguments(), value.getCompVarValue());
 
