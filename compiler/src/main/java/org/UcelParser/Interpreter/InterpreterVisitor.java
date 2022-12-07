@@ -15,7 +15,7 @@ import java.util.Objects;
 public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     //region Header
-    private Occurrence currentOccurrence = new Occurrence("", null, null);
+    private Occurrence currentOccurrence;
     private Scope currentScope;
     private ILogger logger;
 
@@ -45,6 +45,9 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     public InterpreterValue visitProject(UCELParser.ProjectContext ctx) {
         // project locals [Scope scope]
         //    : pdeclaration ptemplate* psystem;
+
+        currentOccurrence = new Occurrence("", null, null);
+        ctx.occurence = currentOccurrence;
 
         enterScope(ctx.scope);
         // Only psystem can contain build statements for interpretation
@@ -886,6 +889,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         Scope oldScope = currentScope;
         enterScope(componentNode.scope);
+        Occurrence oldOccurrence = currentOccurrence;
         currentOccurrence = componentOccurrence;
 
         //Set parameters
@@ -905,6 +909,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             }
         } catch (CouldNotFindException e) {
             logger.log(new CompilerErrorLog(componentNode, "Interpreter: Reference failed"));
+            currentOccurrence = oldOccurrence;
             return false;
         }
 
@@ -912,7 +917,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         visit(componentNode.compBody().declarations());
         visit(componentNode.compBody().build());
         currentScope = oldScope;
-
+        currentOccurrence = oldOccurrence;
         return true;
     }
 
