@@ -136,7 +136,7 @@ public class UcelPlugin implements Plugin {
             Compiler compiler = new Compiler();
             uppaalManager.clearProblems();
             try {
-                compiler.compileProject(uppaalManager.getProject());
+                compiler.checkProject(uppaalManager.getProject());
             } catch (ErrorsFoundException e) {
                 for(var log: e.getLogs()) {
                     uppaalManager.addProblem("location", log.getFancyMessage());

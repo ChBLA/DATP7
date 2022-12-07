@@ -60,6 +60,16 @@ public class Compiler {
         return outputProject;
     }
 
+    public void checkProject(IProject project) throws ErrorsFoundException {
+        UniquePrefixGenerator.resetCounter();
+        logger.setSource("");//TODO inject sources
+
+        var tree = runVisitor(new ManualParser(logger), project, logger);
+        var refTree = runVisitor(referenceVisitor, tree, logger);
+        var typeTree = runVisitor(typeCheckerVisitor, refTree, logger);
+        var interpreterTree = runVisitor(interpreterVisitor, typeTree, logger);
+    }
+
     private IProject generateDummyProject() {
         Project project = new Project();
         project.setDeclaration("// Declarations");
