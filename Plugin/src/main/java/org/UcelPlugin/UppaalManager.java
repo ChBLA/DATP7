@@ -4,7 +4,7 @@ import com.uppaal.engine.Engine;
 import com.uppaal.engine.EngineException;
 import com.uppaal.engine.EngineStub;
 import com.uppaal.engine.Problem;
-import com.uppaal.model.core2.Document;
+import com.uppaal.model.core2.*;
 import com.uppaal.model.system.UppaalSystem;
 import com.uppaal.plugin.Registry;
 import com.uppaal.plugin.Repository;
@@ -12,8 +12,13 @@ import org.Ucel.IProject;
 import org.UcelPlugin.DocumentParser.UcelToUppaalDocumentParser;
 import org.UcelPlugin.DocumentParser.UppaalToUcelDocumentParser;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.function.Consumer;
+
+import static com.uppaal.plugin.Repository$ChangeType.*;
 
 public class UppaalManager {
     protected Registry registry;
@@ -31,6 +36,7 @@ public class UppaalManager {
         this.symbolicTraceRepository = this.registry.getRepository("SymbolicTrace");
         this.systemModelRepository = this.registry.getRepository("SystemModel");
 
+        addListenerForDocUpdates(editorDocumentRepository);
     }
 
     protected Document getCurrentDocument() {
@@ -45,12 +51,38 @@ public class UppaalManager {
         return documentParser.parseDocument();
     }
 
+    //region Problems
+    public ArrayList<Problem> getProblems() {
+        return (ArrayList<Problem>) this.editorProblemsRepository.get();
+    }
+    public void clearProblems() {
+        setProblems(new ArrayList<Problem>());
+    }
+
+    public void addProblem(String location, String message) {
+        getProblems().add(new Problem("UCEL", location, message));
+    }
+
+    public void updateProblemDisplay() {
+        this.editorProblemsRepository.fire(UPDATED);
+    }
+
+    public void setProblems(ArrayList<Problem> problems) {
+        this.editorProblemsRepository.set(problems);
+        this.editorProblemsRepository.fire(REPLACED);
+    }
+    //endregion
+
+    //region Set Editor Project
     public void setProject(IProject project) {
         Document document = getCurrentDocument();
         UcelToUppaalDocumentParser projParser = new UcelToUppaalDocumentParser(document);
         projParser.parseProject(project);
+        editorDocumentRepository.fire(REPLACED);
     }
+    //endregion
 
+    //region Set Engine Project
     public void setModelCheckerProject(IProject project) {
         UcelToUppaalDocumentParser projParser = new UcelToUppaalDocumentParser();
         projParser.parseProject(project);
@@ -118,5 +150,45 @@ public class UppaalManager {
         }
         return sys;
     }
+    //endregion
 
+    //region Events
+    private ArrayList<Consumer> onOnDocChange = new ArrayList<>();
+    public void addOnDocChange(Consumer onChanged) {
+        onOnDocChange.add(onChanged);
+    }
+
+    public enum documentChangeTypes {
+        UPDATED,
+        REPLACED,
+        RESTRUCTURED
+    }
+    protected void emitOnDocChange(documentChangeTypes type) {
+        for(var action: onOnDocChange) {
+            action.accept(null);
+        }
+    }
+
+    private void addListenerForDocUpdates(Repository docRep) {
+        docRep.addListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                String evtTypeName = evt.getPropertyName();
+
+                if(evtTypeName == UPDATED.name())
+                    emitOnDocChange(documentChangeTypes.UPDATED);
+
+                else if(evtTypeName == REPLACED.name())
+                    emitOnDocChange(documentChangeTypes.REPLACED);
+
+                else if(evtTypeName == RESTRUCTURED.name())
+                    emitOnDocChange(documentChangeTypes.RESTRUCTURED);
+
+                else
+                    System.err.println("Unhandled event type: " + evt.getPropertyName());
+            }
+        });
+    }
+
+    //endregion
 }
