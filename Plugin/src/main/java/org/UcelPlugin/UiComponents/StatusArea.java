@@ -52,7 +52,7 @@ public class StatusArea {
 
     protected AttributeSet DEFAULT_STYLE = TextStyles.DEFAULT;
     protected AttributeSet ERROR_STYLE = TextStyles.RED;
-    protected AttributeSet WARNING_STYLE = TextStyles.YELLOW;
+    protected AttributeSet WARNING_STYLE = TextStyles.DARK_YELLOW;
     protected AttributeSet SUCCESS_STYLE = TextStyles.DARK_GREEN;
 
 }
