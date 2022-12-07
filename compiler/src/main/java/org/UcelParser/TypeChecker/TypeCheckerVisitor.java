@@ -956,13 +956,13 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             Type statementType = visit(sc);
             if (hasFoundType) {
                 exitScope();
-                logger.log(new ErrorLog(sc, "Unreachable code"));
-                return ERROR_TYPE;
+                logger.log(new Warning(sc, "Unreachable code"));
+                return commonType;
             }
             if(!(hasFoundError)) {
                 if(statementType.equals(ERROR_TYPE)) {
                     hasFoundError = true;
-                } else if(!statementType.equals(VOID_TYPE)) {
+                } else if(!statementType.equals(VOID_TYPE) && sc.expression() == null) {
                     hasFoundType = true;
                     commonType = statementType;
                 }
