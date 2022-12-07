@@ -131,7 +131,7 @@ public class UcelPlugin implements Plugin {
 
     private void updateButtonStates() {
         ui.getCompileToEditorButton().setEnabled(updatedSinceCompile && !isCompiling);
-        ui.getCompileToEngineButton().setEnabled(!isCompiling);
+        ui.getCompileToEngineButton().setEnabled(updatedSinceCompile && !isCompiling);
         ui.getUndoButton().setEnabled(hasUndoableChanges && !isCompiling);
         ui.getTryBuildButton().setEnabled(!isCompiling);
     }
