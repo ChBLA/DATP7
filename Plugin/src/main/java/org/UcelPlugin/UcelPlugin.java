@@ -30,6 +30,7 @@ public class UcelPlugin implements Plugin {
             var currentProject = uppaalManager.getProject();
             previousIProject = currentProject;
             hasUndoableChanges = true;
+            updatedSinceCompile = false;
 
             var compiled = compileProjectWithUiNotifications(currentProject);
             if(compiled != null)
