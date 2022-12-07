@@ -130,6 +130,9 @@ public class UcelPlugin implements Plugin {
 
         // Live updating error list
         uppaalManager.addOnDocChange((updateType) -> {
+            if(!ui.getLiveFeedbackCheckbox().getIsChecked())
+                return;
+
             Compiler compiler = new Compiler();
             uppaalManager.clearProblems();
             try {

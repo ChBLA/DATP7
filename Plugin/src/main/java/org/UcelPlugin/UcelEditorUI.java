@@ -1,6 +1,7 @@
 package org.UcelPlugin;
 
 import org.UcelPlugin.UiComponents.Button;
+import org.UcelPlugin.UiComponents.LabelledCheckbox;
 import org.UcelPlugin.UiComponents.LayoutGenerator;
 import org.UcelPlugin.UiComponents.StatusArea;
 
@@ -51,6 +52,11 @@ public class UcelEditorUI extends BaseWorkspace {
     private Button tryBuildButton = new Button(topPanel, LayoutGenerator.GetLayout(3,0,1,1), "Try Build");
     public Button getTryBuildButton() {
         return tryBuildButton;
+    }
+
+    private LabelledCheckbox liveFeedbackCheckbox = new LabelledCheckbox(topPanel, LayoutGenerator.GetLayout(4,0,1,1), "Live Feedback", false);
+    public LabelledCheckbox getLiveFeedbackCheckbox() {
+        return liveFeedbackCheckbox;
     }
 
     private StatusArea statusArea = new StatusArea(bottomPanel, LayoutGenerator.GetLayout(0,0,1,1));
