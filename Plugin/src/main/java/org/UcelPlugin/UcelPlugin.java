@@ -29,6 +29,7 @@ public class UcelPlugin implements Plugin {
             emitOnCompile(false);
             var currentProject = uppaalManager.getProject();
             previousIProject = currentProject;
+            hasUndoableChanges = true;
 
             var compiled = compileProjectWithUiNotifications(currentProject);
             if(compiled != null)
@@ -109,7 +110,6 @@ public class UcelPlugin implements Plugin {
     private void registerListeners() {
         addOnCompile((isDone) -> {
             this.isCompiling = !isDone;
-            this.hasUndoableChanges = true;
 
             updateButtonStates();
         });
