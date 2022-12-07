@@ -51,15 +51,20 @@ public class UcelPlugin implements Plugin {
         });
     }
 
-    private IProject compileProject(IProject project) throws ErrorsFoundException {
-        Compiler compiler = new Compiler();
-        return compiler.compileProject(project);
     }
 
     private IProject compileProjectWithUiNotifications(IProject project) {
         try {
-            var compiledProject = compileProject(project);
+            ui.getStatusArea().setCompiling();
+            Compiler compiler = new Compiler();
+            var compiledProject = compiler.compileProject(project);
+            var logs = compiler.getLogs();
+            if(logs.size() == 0) {
             ui.getStatusArea().setSuccess();
+            }
+            else {
+                ui.getStatusArea().setErrors(logs);
+            }
             return compiledProject;
         }
         catch (ErrorsFoundException err) {

@@ -31,6 +31,9 @@ public class Compiler {
     private final InterpreterVisitor interpreterVisitor;
     private final CodeGenVisitor codeGenVisitor;
     private final ILogger logger;
+    public ArrayList<Log> getLogs() {
+        return logger.getLogs();
+    }
 
     public Compiler() {
         this(new Logger(false));
