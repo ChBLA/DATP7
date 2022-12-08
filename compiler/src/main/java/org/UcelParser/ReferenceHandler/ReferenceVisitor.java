@@ -56,6 +56,8 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
         enterScope(true);
         ctx.scope = currentScope;
+
+        currentScope.add(new DeclarationInfo("this"));
         boolean success = (ctx.parameters() == null || visit(ctx.parameters())) && visit(ctx.interfaces()) && visit(ctx.compBody());
 
         exitScope();
@@ -418,11 +420,16 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     public Boolean visitBuild(UCELParser.BuildContext ctx) {
         List<Boolean> declRes = null;
-        if (ctx.buildDecl() != null) declRes = ctx.buildDecl().stream().map(this::visit).collect(Collectors.toList());
+        if (ctx.buildDecl() != null)
+            declRes = ctx.buildDecl().stream().map(this::visit).collect(Collectors.toList());
+
         List<Boolean> stmntRes = null;
-        if (ctx.buildStmnt() != null) stmntRes = ctx.buildStmnt().stream().map(this::visit).collect(Collectors.toList());
+        if (ctx.buildStmnt() != null)
+            stmntRes = ctx.buildStmnt().stream().map(this::visit).collect(Collectors.toList());
+
         return (declRes == null && stmntRes != null && stmntRes.stream().allMatch(b -> b))
-                || (declRes != null && declRes.stream().allMatch(b -> b) && stmntRes != null && stmntRes.stream().allMatch(b -> b));
+                || (declRes != null && declRes.stream().allMatch(b -> b)
+                    && stmntRes != null && stmntRes.stream().allMatch(b -> b));
     }
 
 

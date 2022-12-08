@@ -489,6 +489,15 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         }
 
         enterScope(ctx.scope);
+
+        try{
+            currentScope.get(currentScope.find("this", true)).setType(componentType);
+        } catch (CouldNotFindException e) {
+            logger.log(new CompilerErrorLog(ctx, "Could not not find 'this' in scope"));
+            exitScope();
+            return ERROR_TYPE;
+        }
+
         Type compBodyType = visit(ctx.compBody());
         exitScope();
 
@@ -546,8 +555,6 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
     @Override
     public Type visitBuild(UCELParser.BuildContext ctx) {
-        // build : BUILD COLON LEFTCURLYBRACE buildDecl* buildStmnt+ RIGHTCURLYBRACE;
-
         var decls = ctx.buildDecl();
         if(decls != null) {
             for (var decl : decls) {
