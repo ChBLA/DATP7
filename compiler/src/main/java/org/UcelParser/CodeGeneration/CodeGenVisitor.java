@@ -862,7 +862,10 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                 ArrayList<Template> paramDecls = new ArrayList<>();
 
                 for (int i = 0; i < interfaceNode.interfaceVarDecl().arrayDeclID().size(); i++) {
+                    Scope oldScope = currentScope;
+                    currentScope = currentScope.getParent();
                     String type = visit(interfaceNode.interfaceVarDecl().type(i).typeId()).toString();
+                    currentScope = oldScope;
                     String name = paramInfo.generateName(getComponentPrefix(ctx.reference.getRelativeScope())) + "_" + visit(interfaceNode.interfaceVarDecl().arrayDeclID(i));
                     paramDecls.add(new ManualTemplate(String.format("%s &%s%s", type, name, arrayString)));
                 }

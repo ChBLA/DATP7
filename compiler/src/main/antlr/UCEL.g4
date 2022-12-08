@@ -14,7 +14,7 @@ grammar UCEL;
 }
 
 
-project locals [Scope scope, Occurrence occurence]
+project locals [Scope scope, Occurrence occurence, Boolean hasRecursion]
     : pdeclaration ptemplate* psystem verificationList;
 
 pdeclaration : declarations;

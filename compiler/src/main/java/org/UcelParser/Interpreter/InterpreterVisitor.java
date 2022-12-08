@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Stack;
 
 public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
@@ -18,6 +19,10 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     private Occurrence currentOccurrence;
     private Scope currentScope;
     private ILogger logger;
+
+    private Stack<String> compNameStack;
+
+    private boolean recursion;
 
     private int nextInterfaceId;
     private int depth = 0;
@@ -45,7 +50,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     public InterpreterValue visitProject(UCELParser.ProjectContext ctx) {
         // project locals [Scope scope]
         //    : pdeclaration ptemplate* psystem;
-
+        compNameStack = new Stack<>();
         currentOccurrence = new Occurrence("", null, null);
         ctx.occurence = currentOccurrence;
 
@@ -64,6 +69,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             logger.log(new CompilerErrorLog(ctx.psystem(), "Interpreter error"));
             return null;
         }
+        ctx.hasRecursion = recursion;
         return visitRes;
     }
 
@@ -892,6 +898,8 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         Occurrence oldOccurrence = currentOccurrence;
         currentOccurrence = componentOccurrence;
 
+        checkRecursion(componentOccurrence.getNode().ID().getText());
+
         var parameters = componentNode.parameters().parameter();
         var interFaceParameters = componentNode.interfaces().parameters().parameter();
 
@@ -927,7 +935,20 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         currentScope = oldScope;
         currentOccurrence = oldOccurrence;
+        compNameStack.pop();
         return true;
+    }
+
+    private void checkRecursion(String name) {
+        if(!recursion) {
+            for (String s : compNameStack) {
+                if (s.equals(name)) {
+                    recursion = true;
+                    break;
+                }
+            }
+        }
+        compNameStack.push(name);
     }
 
     private boolean visitTempWithOccurrence(UCELParser.PtemplateContext templateNode,
