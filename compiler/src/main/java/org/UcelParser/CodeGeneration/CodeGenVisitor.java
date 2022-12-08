@@ -1063,7 +1063,15 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                     return new OccurrenceAccessTemplate(resultingOccurrence);
                 } else if (leftSideOccurrence instanceof TemplateOccurrence) {
                     var leftName = leftSideOccurrence.getPrefix();
-                    return new ManualTemplate(String.format("%s.%s", leftName, ctx.ID().getText()));
+                    String name;
+                    try {
+                        var templateScope = ((TemplateOccurrence) leftSideOccurrence).getNode().scope;
+                        var ref = templateScope.find(ctx.ID().getText(), true);
+                        var info = templateScope.get(ref);
+                        return new ManualTemplate(String.format("%s.%s", leftName, info.generateName()));
+                    } catch (CouldNotFindException e) {
+                        return new ManualTemplate(String.format("%s.%s", leftName, ctx.ID().getText()));
+                    }
                 }
             }
 
