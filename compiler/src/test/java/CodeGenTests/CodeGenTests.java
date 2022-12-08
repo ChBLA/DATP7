@@ -3242,12 +3242,10 @@ public class CodeGenTests {
         when(variable.generateName(anyString())).thenReturn(name);
 
         var scopeMock = mock(Scope.class);
-        var scopeNodeMock = mock(Scope.class);
 
         var node = mock(UCELParser.VerificationContext.class);
         node.reference = ref;
         node.op = opToken;
-        node.scope = scopeNodeMock;
 
         try {
             when(scopeMock.get(ref)).thenReturn(variable);

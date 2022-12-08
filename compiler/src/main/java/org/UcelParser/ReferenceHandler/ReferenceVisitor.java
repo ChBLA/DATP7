@@ -259,7 +259,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         boolean b = visit(ctx.pdeclaration());
         for(UCELParser.PtemplateContext t : ctx.ptemplate())
             b = visit(t) && b;
-        b = visit(ctx.psystem()) && b;
+        b = visit(ctx.psystem()) && visit(ctx.verificationList()) && b;
         exitScope();
         return b;
     }
@@ -395,6 +395,34 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
 
     //endregion
 
+
+    @Override
+    public Boolean visitPQuery(UCELParser.PQueryContext ctx) {
+        enterScope();
+        ctx.scope = currentScope;
+        boolean success = visit(ctx.symbQuery());
+        exitScope();
+
+        return success;
+    }
+
+    @Override
+    public Boolean visitVerification(UCELParser.VerificationContext ctx) {
+        String id = ctx.ID().getText();
+        try {
+            if(!currentScope.isUnique(id, false)) {
+                logger.log(new FunctionAlreadyDeclaredErrorLog(ctx, id));
+                return false;
+            }
+            DeclarationReference declRef = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));
+            ctx.reference = declRef;
+        } catch (Exception e) {
+            logger.log(new CompilerErrorLog(ctx, e.getMessage()));
+            return false;
+        }
+
+        return true;
+    }
 
     @Override
     public Boolean visitInterfaces(UCELParser.InterfacesContext ctx) {

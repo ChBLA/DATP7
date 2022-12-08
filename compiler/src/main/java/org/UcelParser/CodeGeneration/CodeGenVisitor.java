@@ -195,7 +195,10 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitPQuery(UCELParser.PQueryContext ctx) {
-        return new PQueryTemplate(ctx.symbQuery() != null ? visit(ctx.symbQuery()) : new ManualTemplate(""), ctx.comment);
+        enterScope(ctx.scope);
+        var result = ctx.symbQuery() != null ? visit(ctx.symbQuery()) : new ManualTemplate("");
+        exitScope();
+        return new PQueryTemplate(result, String.format("%s%n%n%s", ctx.getText(), ctx.comment));
     }
 
     @Override
@@ -206,6 +209,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     @Override
     public Template visitVerificationList(UCELParser.VerificationListContext ctx) {
         this.inVerificationMode = true;
+
         List<PQueryTemplate> queries = new ArrayList<>();
 
         for (var query : ctx.pQuery()) {
@@ -1056,7 +1060,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                             var info = componentBodyScope.get(reference);
                             return new ManualTemplate(info.generateName(leftSideOccurrence.getPrefix()));
                         } catch (CouldNotFindException e) {
-                            //todo: log
+                            logger.log(new MissingReferenceErrorLog(ctx, ctx.ID().getText()));
                             return new ManualTemplate("");
                         }
                     }
@@ -1127,6 +1131,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                 try {
                     var reference = currentScope.find(ctx.ID().getText(), true);
                     var info = currentScope.get(reference);
+                    if (info.getValue() instanceof IntegerValue)
+                        return new IntegerValueTemplate(((IntegerValue) info.getValue()).getInt());
                     return new ManualTemplate(info.generateName(""));
                 } catch (CouldNotFindException e) {
                     return new ManualTemplate(ctx.ID().getText());
@@ -1154,18 +1160,25 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitArrayIndex(UCELParser.ArrayIndexContext ctx) {
 
         if (this.inVerificationMode) {
+            int index;
             if(ctx.expression(1) instanceof UCELParser.LiteralExprContext && ((UCELParser.LiteralExprContext) ctx.expression(1)).literal().NAT() != null) {
-                var index = Integer.parseInt(ctx.expression(1).getText());
-                this.arrayIndices.add(0, index);
-                var leftSide = visit(ctx.expression(0));
-
-                if (leftSide instanceof OccurrenceAccessTemplate) {
-                    return leftSide;
-                }
-
+                index = Integer.parseInt(ctx.expression(1).getText());
+            } else if (ctx.expression(1) instanceof UCELParser.IdExprContext) {
+                var rightSide = visit(ctx.expression(1));
+                if (rightSide instanceof IntegerValueTemplate)
+                    index = ((IntegerValueTemplate) rightSide).value;
+                else
+                    return new ManualTemplate("");
             } else {
                 //todo: log error
                 return new ManualTemplate("");
+            }
+
+            this.arrayIndices.add(0, index);
+            var leftSide = visit(ctx.expression(0));
+
+            if (leftSide instanceof OccurrenceAccessTemplate) {
+                return leftSide;
             }
         }
 
@@ -1213,6 +1226,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitLiteral(UCELParser.LiteralContext ctx) {
+        if (inVerificationMode && ctx.NAT() != null)
+            return new IntegerValueTemplate(Integer.parseInt(ctx.getText()));
         return new LiteralTemplate(ctx.getText());
     }
 
@@ -1335,6 +1350,35 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
 
     @Override
     public Template visitVerification(UCELParser.VerificationContext ctx) {
+        if (ctx.type().typeId() instanceof UCELParser.TypeIDIntContext) {
+            UCELParser.TypeIDIntContext typeNode = (UCELParser.TypeIDIntContext) ctx.type().typeId();
+            var left = visit(typeNode.expression(0));
+            var right = visit(typeNode.expression(1));
+
+            if (left instanceof IntegerValueTemplate && right instanceof IntegerValueTemplate) {
+                var leftInt = ((IntegerValueTemplate) left).value;
+                var rightInt = ((IntegerValueTemplate) right).value;
+
+                DeclarationInfo info;
+                try {
+                    info = currentScope.get(ctx.reference);
+                } catch (CouldNotFindException e) {
+                    logger.log(new MissingReferenceErrorLog(ctx, "variable " + ctx.ID().getText()));
+                    return new ManualTemplate("");
+                }
+
+                List<Template> exprs = new ArrayList<>();
+                for (int i = leftInt; i <= rightInt; i++) {
+                    info.setValue(new IntegerValue(i));
+                    exprs.add(visit(ctx.expression()));
+                }
+
+                String operator = ctx.FORALL() != null ? "&&" : (ctx.EXISTS() != null ? "||" : "+");
+
+                return new VerificationTemplate(operator, exprs);
+            }
+        }
+
         //todo: in verification id is never added. Consider where to add it. Global scope may cause conflicts
         String id = "";
         try {
@@ -1344,11 +1388,9 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
             return new ManualTemplate("");
         }
 
-        enterScope(ctx.scope);
         var type = visit(ctx.type());
         var expr = visit(ctx.expression());
 
-        exitScope();
         return new VerificationTemplate(ctx.op.getText(), id, type, expr);
     }
 

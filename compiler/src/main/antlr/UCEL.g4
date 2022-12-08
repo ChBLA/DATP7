@@ -39,8 +39,8 @@ guard : expression?;
 sync : (expression (NEG | QUESTIONMARK))?;
 update : (expression (COMMA expression)*)?;
 
-verificationList: (pQuery END)*;
-pQuery locals [String comment]
+verificationList : (pQuery END)*;
+pQuery locals [Scope scope, String comment]
     : symbQuery?;
 
 start locals [Scope scope]
@@ -172,7 +172,9 @@ expression locals [DeclarationReference reference, DeclarationInfo originDefinit
             |  <assoc=right> expression assign expression       #AssignExpr
             ;
 
-verification locals [Scope scope, DeclarationReference reference] : op=('forall' | 'exists' | 'sum') LEFTPAR ID COLON type RIGHTPAR expression;
+verification locals [DeclarationReference reference] : op=(FORALL | EXISTS | SUM) LEFTPAR ID COLON type RIGHTPAR expression;
+
+
 
 // https://docs.uppaal.org/language-reference/requirements-specification/
 // Strategy has been omitted
@@ -250,6 +252,10 @@ BUILD : 'build';
 WITH : 'with';
 ELSE : 'else';
 
+
+FORALL  : 'forall';
+EXISTS  : 'exists';
+SUM     : 'sum';
 TRUE: 'true';
 FALSE: 'false';
 DEADLOCK : 'deadlock';
