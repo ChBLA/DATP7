@@ -40,10 +40,21 @@ public class Log {
             Token start = ctx.getStart();
             Token stop = ctx.getStop();
 
-            this.lineStart = start.getLine() - 1;
-            this.lineStop = stop.getLine() - 1;
-            this.charStart = start.getCharPositionInLine();
-            this.charStop = stop.getCharPositionInLine();
+            if(start != null) {
+                this.lineStart = start.getLine() - 1;
+                this.charStart = start.getCharPositionInLine();
+            } else {
+                this.lineStart = 0;
+                this.charStart = 0;
+            }
+
+            if(stop != null) {
+                this.lineStop = stop.getLine() - 1;
+                this.charStop = stop.getCharPositionInLine();
+            } else {
+                this.lineStop = 0;
+                this.charStop = 0;
+            }
         }
     }
 
@@ -59,7 +70,7 @@ public class Log {
 
     public String getFancyMessage() {
         var ctx = getCtx();
-        if(ctx == null)
+        if(ctx == null || ctx.getStart() == null || ctx.getStart().getTokenSource() == null)
             return getMessage();
 
         String[] lines = ctx.getStart().getTokenSource().getInputStream().toString()

@@ -402,6 +402,16 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             result = ERROR_TYPE;
         }
 
+        for(Type param : parametersType.getParameters()) {
+            if(param.getEvaluationType() == Type.TypeEnum.interfaceType
+                    && param.getArrayDimensions() > 0) {
+                result = ERROR_TYPE;
+                logger.log(new ErrorLog(ctx, "Templates cannot have arrays of interface as parameters: " +
+                        "template '" + ctx.ID().getText() + "'" ));
+                break;
+            }
+        }
+
         var declarationsType = visit(ctx.declarations());
         if (declarationsType.equals(ERROR_TYPE)) {
             result = ERROR_TYPE;
