@@ -682,7 +682,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         DeclarationInfo leftInfo;
         DeclarationInfo rightInfo;
 
-        try{
+        try {
             //Get the DeclInfo of each buildDecl
             leftInfo = currentScope.get(ctx.compVar().get(0).variableReference);
             rightInfo = currentScope.get(ctx.compVar().get(1).variableReference);
@@ -700,33 +700,65 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             int leftParamNum = ctx.leftInterface.getDeclarationId();
             int rightParamNum = ctx.rightInterface.getDeclarationId();
 
-            int id = nextInterfaceId;
-            nextInterfaceId++;
-            StringValue interfaceAlias = new StringValue(Integer.toString(id));
+            boolean rightIsThis = compVarRight.toString().equals("this");
+            boolean leftIsThis = compVarLeft.toString().equals("this");
+            InterpreterValue leftInterfaceValue;
+            InterpreterValue rightInterfaceValue;
 
-            var leftInterface = extractInterfaceDefFromLink(ctx, 0, ctx.leftInterface);
-            var rightInterface = extractInterfaceDefFromLink(ctx, 1, ctx.rightInterface);
-            assert Objects.equals(leftInterface, rightInterface);
-            assert leftInterface != null;
+            if (leftIsThis) {
+                if(rightIsThis) {
+                    logger.log(new ErrorLog(ctx, "You know why this is wrong!"));
+                    return null;
+                }
+                rightInterfaceValue = leftCompOcc.getInterfaces()[leftParamNum];
 
-            InterfaceValue leftInterfaceValue = new InterfaceValue(leftInterface, id, interfaceAlias);
-            InterfaceValue rightInterfaceValue = new InterfaceValue(rightInterface, id, interfaceAlias);
+                //Set the interfaceValues on occurrenceValues
+                if (leftCompOcc.getInterfaces()[leftParamNum] instanceof ListValue) {
+                    //TODO interface array index
+                } else if (rightCompOcc.getInterfaces()[rightParamNum] instanceof ListValue)
+                    ((ListValue) rightCompOcc.getInterfaces()[rightParamNum]).setNext(rightInterfaceValue);
+                else
+                    rightCompOcc.getInterfaces()[rightParamNum] = rightInterfaceValue;
 
-            //Set the interfaceValues on occurrenceValues
-            if (leftCompOcc.getInterfaces()[leftParamNum] instanceof ListValue)
-                ((ListValue) leftCompOcc.getInterfaces()[leftParamNum]).setNext(leftInterfaceValue);
-            else
-                leftCompOcc.getInterfaces()[leftParamNum] = leftInterfaceValue;
+            } else if (rightIsThis) {
+                leftInterfaceValue = rightCompOcc.getInterfaces()[rightParamNum];
 
-            if (rightCompOcc.getInterfaces()[rightParamNum] instanceof ListValue)
-                ((ListValue) rightCompOcc.getInterfaces()[rightParamNum]).setNext(rightInterfaceValue);
-            else
-                rightCompOcc.getInterfaces()[rightParamNum] = rightInterfaceValue;
+                if (leftCompOcc.getInterfaces()[leftParamNum] instanceof ListValue) {
+                    ((ListValue) leftCompOcc.getInterfaces()[leftParamNum]).setNext(leftInterfaceValue);
+                } else if (rightCompOcc.getInterfaces()[rightParamNum] instanceof ListValue) {
+                    //TODO interface array index
+                } else
+                    leftCompOcc.getInterfaces()[rightParamNum] = leftInterfaceValue;
+            } else {
+                int id = nextInterfaceId;
+                nextInterfaceId++;
+                StringValue interfaceAlias = new StringValue(Integer.toString(id));
 
-            //Set stringValue on interface
-            if (leftInterface.occurrences == null)
-                leftInterface.occurrences = new ArrayList<>();
-            leftInterface.occurrences.add(interfaceAlias);
+                var leftInterface = extractInterfaceDefFromLink(ctx, 0, ctx.leftInterface);
+                var rightInterface = extractInterfaceDefFromLink(ctx, 1, ctx.rightInterface);
+                assert Objects.equals(leftInterface, rightInterface);
+                assert leftInterface != null;
+
+                leftInterfaceValue = new InterfaceValue(leftInterface, id, interfaceAlias);
+                rightInterfaceValue = new InterfaceValue(rightInterface, id, interfaceAlias);
+
+                //Set stringValue on interface
+                if (leftInterface.occurrences == null)
+                    leftInterface.occurrences = new ArrayList<>();
+                leftInterface.occurrences.add(interfaceAlias);
+
+                //Set the interfaceValues on occurrenceValues
+                if (leftCompOcc.getInterfaces()[leftParamNum] instanceof ListValue)
+                    ((ListValue) leftCompOcc.getInterfaces()[leftParamNum]).setNext(leftInterfaceValue);
+                else
+                    leftCompOcc.getInterfaces()[leftParamNum] = leftInterfaceValue;
+
+                if (rightCompOcc.getInterfaces()[rightParamNum] instanceof ListValue)
+                    ((ListValue) rightCompOcc.getInterfaces()[rightParamNum]).setNext(rightInterfaceValue);
+                else
+                    rightCompOcc.getInterfaces()[rightParamNum] = rightInterfaceValue;
+            }
+
 
         } catch (CouldNotFindException e) {
             logger.log(new CompilerErrorLog(ctx, "Interpreter: Reference failed"));
@@ -905,6 +937,13 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         InterpreterValue[] oldComponentScope = componentNode.scope.getValues();
         InterpreterValue[] oldBodyScope = componentNode.compBody().scope.getValues();
+
+        try{
+            currentScope.get(currentScope.find("this", true)).setValue(value);
+        } catch (CouldNotFindException e) {
+            logger.log(new CompilerErrorLog(componentNode, "Who killed this?"));
+            return false;
+        }
 
         //Set parameters
         try {

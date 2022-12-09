@@ -57,7 +57,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
         enterScope(true);
         ctx.scope = currentScope;
 
-        currentScope.add(new DeclarationInfo("this"));
+        currentScope.add(new DeclarationInfo("this", ctx));
         boolean success = (ctx.parameters() == null || visit(ctx.parameters())) && visit(ctx.interfaces()) && visit(ctx.compBody());
 
         exitScope();
