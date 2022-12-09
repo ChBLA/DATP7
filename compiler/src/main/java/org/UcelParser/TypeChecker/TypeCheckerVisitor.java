@@ -206,46 +206,79 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
     }
     @Override
     public Type visitLinkStatement(UCELParser.LinkStatementContext ctx) {
+        UCELParser.CompVarContext leftComp = ctx.compVar(0);
+        UCELParser.CompVarContext rightComp = ctx.compVar(2);
+        UCELParser.CompVarContext leftInterface = ctx.compVar(1);
+        UCELParser.CompVarContext rightInterface = ctx.compVar(3);
+
         Type compVar1;
         Type compVar2;
 
         try {
-            compVar1 = currentScope.get(ctx.compVar(0).variableReference).getType();
+            compVar1 = currentScope.get(leftComp.variableReference).getType();
         } catch (Exception e) {
-            logger.log(new VariableNotDeclaredErrorLog(ctx.compVar(0), ctx.compVar(0).ID().getText()));
+            logger.log(new VariableNotDeclaredErrorLog(leftComp, leftComp.ID().getText()));
             return ERROR_TYPE;
         }
 
         try {
-            compVar2 = currentScope.get(ctx.compVar(1).variableReference).getType();
+            compVar2 = currentScope.get(rightComp.variableReference).getType();
         } catch (Exception e) {
-            logger.log(new VariableNotDeclaredErrorLog(ctx.compVar(1), ctx.compVar(1).ID().getText()));
+            logger.log(new VariableNotDeclaredErrorLog(rightComp, rightComp.ID().getText()));
             return ERROR_TYPE;
         }
 
         if (compVar1 == null) {
-            logger.log(new MissingTypeErrorLog(ctx.compVar(0), ctx.compVar(0).ID().getText()));
+            logger.log(new MissingTypeErrorLog(leftComp, leftComp.ID().getText()));
             return ERROR_TYPE;
         }
 
         if (compVar2 == null) {
-            logger.log(new MissingTypeErrorLog(ctx.compVar(1), ctx.compVar(1).ID().getText()));
+            logger.log(new MissingTypeErrorLog(rightComp, rightComp.ID().getText()));
             return ERROR_TYPE;
         }
 
         Type leftInterfaceType;
         try {
-            leftInterfaceType = extractInterfaceTypeFromComponent(ctx.leftInterface.getDeclarationId(), currentScope, ctx.compVar(0));
+            leftInterfaceType = extractInterfaceTypeFromComponent(ctx.leftInterface.getDeclarationId(),
+                    currentScope, leftComp);
         } catch (CouldNotFindException e) {
-            logger.log(new MissingReferenceErrorLog(ctx.compVar(0), "interface binding"));
+            logger.log(new MissingReferenceErrorLog(leftComp, "interface binding"));
+            return ERROR_TYPE;
+        }
+
+        for(UCELParser.ExpressionContext expr : leftInterface.expression()) {
+            if(visit(expr).equals(ERROR_TYPE))
+                return ERROR_TYPE;
+        }
+
+        if(leftInterface.expression().size() != leftInterfaceType.getArrayDimensions()) {
+            logger.log(new ErrorLog(ctx, "Left side has '" +
+                    leftInterface.expression().size() +
+                    "' array dimensions, but the referenced interface parameter has '" +
+                    leftInterfaceType.getArrayDimensions() + "' array dimensions"));
             return ERROR_TYPE;
         }
 
         Type rightInterfaceType;
         try {
-            rightInterfaceType = extractInterfaceTypeFromComponent(ctx.rightInterface.getDeclarationId(), currentScope, ctx.compVar(1));
+            rightInterfaceType = extractInterfaceTypeFromComponent(ctx.rightInterface.getDeclarationId(),
+                    currentScope, rightComp);
         } catch (CouldNotFindException e) {
-            logger.log(new MissingReferenceErrorLog(ctx.compVar(1), "interface binding"));
+            logger.log(new MissingReferenceErrorLog(rightComp, "interface binding"));
+            return ERROR_TYPE;
+        }
+
+        for(UCELParser.ExpressionContext expr : rightInterface.expression()) {
+            if(visit(expr).equals(ERROR_TYPE))
+                return ERROR_TYPE;
+        }
+
+        if(rightInterface.expression().size() != rightInterfaceType.getArrayDimensions()) {
+            logger.log(new ErrorLog(ctx, "Right side has '" +
+                    rightInterface.expression().size() +
+                    "' array dimensions, but the referenced interface parameter has '" +
+                    rightInterfaceType.getArrayDimensions() + "' array dimensions"));
             return ERROR_TYPE;
         }
 
@@ -271,14 +304,15 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return ERROR_TYPE;
         }
 
-        boolean hasThis = ctx.compVar(0).ID().getText().equals("this") || ctx.compVar(1).ID().getText().equals("this");
+        boolean hasThis = leftComp.ID().getText().equals("this") || rightComp.ID().getText().equals("this");
         if(isLeftIn == isRightIn && !hasThis) {
             logger.log(new ErrorLog(ctx, "Interfaces must be of mismatched 'in'/'out' types," +
                     " but found: " + (isLeftIn ? "'in'" : "'out'") + " and " + (isRightIn ? "'in'" : "'out'") ));
         }
 
         if(isLeftIn != isRightIn && hasThis) {
-            logger.log(new ErrorLog(ctx, "When using the 'this' keyword, interfaces must be of matching 'in'/'out' types," +
+            logger.log(new ErrorLog(ctx, "When using the 'this' keyword, interfaces must be of matching " +
+                    "'in'/'out' types," +
                     " but found: " + (isLeftIn ? "'in'" : "'out'") + " and " + (isRightIn ? "'in'" : "'out'")));
         }
 

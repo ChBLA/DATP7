@@ -221,25 +221,36 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     }
     @Override
     public Boolean visitLinkStatement(UCELParser.LinkStatementContext ctx) {
-        boolean success = visit(ctx.compVar(0));
+        UCELParser.CompVarContext leftComp = ctx.compVar(0);
+        UCELParser.CompVarContext rightComp = ctx.compVar(2);
+        UCELParser.CompVarContext leftInterface = ctx.compVar(1);
+        UCELParser.CompVarContext rightInterface = ctx.compVar(3);
+
+        boolean success = visit(leftComp);
         DeclarationReference leftNode;
+        String leftInterfaceName = leftInterface.ID().getText();
         try {
-            leftNode = extractInterfaceNumberFromComponentAsReference(ctx.ID(0).getText(), currentScope, ctx.compVar(0));
+            leftNode = extractInterfaceNumberFromComponentAsReference(leftInterfaceName, currentScope, leftComp);
         } catch (CouldNotFindException e) {
-            logger.log(new TypeNotDeclaredErrorLog(ctx.compVar(0), ctx.ID(0).getText()));
+            logger.log(new TypeNotDeclaredErrorLog(leftComp, leftInterfaceName));
             return false;
         }
+        for(UCELParser.ExpressionContext expr : leftInterface.expression())
+            success = success && visit(expr);
         success = success && leftNode != null;
         ctx.leftInterface = leftNode;
 
-        success = success && visit(ctx.compVar(1));
+        success = success && visit(rightComp);
         DeclarationReference rightNode;
+        String rightInterfaceName = rightInterface.ID().getText();
         try {
-            rightNode = extractInterfaceNumberFromComponentAsReference(ctx.ID(1).getText(), currentScope, ctx.compVar(1));
+            rightNode = extractInterfaceNumberFromComponentAsReference(rightInterfaceName, currentScope, rightComp);
         } catch (CouldNotFindException e) {
-            logger.log(new TypeNotDeclaredErrorLog(ctx.compVar(1), ctx.ID(1).getText()));
+            logger.log(new TypeNotDeclaredErrorLog(rightComp, rightInterfaceName));
             return false;
         }
+        for(UCELParser.ExpressionContext expr : rightInterface.expression())
+            success = success && visit(expr);
         success = success && rightNode != null;
         ctx.rightInterface = rightNode;
 
@@ -400,7 +411,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     public Boolean visitPQuery(UCELParser.PQueryContext ctx) {
         enterScope();
         ctx.scope = currentScope;
-        boolean success = visit(ctx.symbQuery());
+        boolean success = ctx.symbQuery() != null ? visit(ctx.symbQuery()) : true;
         exitScope();
 
         return success;

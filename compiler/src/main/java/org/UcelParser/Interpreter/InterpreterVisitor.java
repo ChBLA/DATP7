@@ -516,6 +516,21 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     @Override
     public InterpreterValue visitCompVar(UCELParser.CompVarContext ctx) {
+        int[] indices = getCompVarIndices(ctx);
+
+        if(indices == null)
+            return null;
+
+        try {
+            String id = currentScope.get(ctx.variableReference).getIdentifier();
+            return new CompVarValue(id, indices);
+        } catch (CouldNotFindException e) {
+            logger.log(new CompilerErrorLog(ctx, "Interpreter compvar reference failed"));
+            return null;
+        }
+    }
+
+    private int[] getCompVarIndices(UCELParser.CompVarContext ctx) {
         int size = ctx.expression() != null ? ctx.expression().size() : 0;
         int[] indices = new int[size];
 
@@ -528,14 +543,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
                 return null;
             }
         }
-
-        try {
-            String id = currentScope.get(ctx.variableReference).getIdentifier();
-            return new CompVarValue(id, indices);
-        } catch (CouldNotFindException e) {
-            logger.log(new CompilerErrorLog(ctx, "Interpreter compvar reference failed"));
-            return null;
-        }
+        return indices;
     }
 
     @Override
@@ -668,8 +676,13 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     @Override
     public InterpreterValue visitLinkStatement(UCELParser.LinkStatementContext ctx) {
-        InterpreterValue left = visit(ctx.compVar().get(0));
-        InterpreterValue right = visit(ctx.compVar().get(1));
+        UCELParser.CompVarContext leftComp = ctx.compVar(0);
+        UCELParser.CompVarContext rightComp = ctx.compVar(2);
+        UCELParser.CompVarContext leftInterfaceCompVar = ctx.compVar(1);
+        UCELParser.CompVarContext rightInterfaceCompVar = ctx.compVar(3);
+
+        InterpreterValue left = visit(leftComp);
+        InterpreterValue right = visit(rightComp);
 
         if(!isCompVarValue(left) || !isCompVarValue(right)) {
             logger.log(new CompilerErrorLog(ctx, "Interpreter: compvar returned incorrect value"));
@@ -684,17 +697,17 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
         try {
             //Get the DeclInfo of each buildDecl
-            leftInfo = currentScope.get(ctx.compVar().get(0).variableReference);
-            rightInfo = currentScope.get(ctx.compVar().get(1).variableReference);
+            leftInfo = currentScope.get(leftComp.variableReference);
+            rightInfo = currentScope.get(rightComp.variableReference);
 
             InterpreterValue leftValue = leftInfo.getValue();
             InterpreterValue rightValue = rightInfo.getValue();
 
             //Find the occurrenceValues in each declInfo
-            int[] leftIndices = compVarLeft.getIndices();
-            int[] rightIndices = compVarRight.getIndices();
-            CompOccurrenceValue leftCompOcc = (CompOccurrenceValue) getValueFromMultiDimArray(leftIndices, leftValue);
-            CompOccurrenceValue rightCompOcc = (CompOccurrenceValue) getValueFromMultiDimArray(rightIndices, rightValue);
+            int[] leftCompIndices = compVarLeft.getIndices();
+            int[] rightCompIndices = compVarRight.getIndices();
+            CompOccurrenceValue leftCompOcc = (CompOccurrenceValue) getValueFromMultiDimArray(leftCompIndices, leftValue);
+            CompOccurrenceValue rightCompOcc = (CompOccurrenceValue) getValueFromMultiDimArray(rightCompIndices, rightValue);
 
             //Construct the interface values
             int leftParamNum = ctx.leftInterface.getDeclarationId();
@@ -705,28 +718,35 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
             InterpreterValue leftInterfaceValue;
             InterpreterValue rightInterfaceValue;
 
+            int[] leftInterfaceIndices = getCompVarIndices(leftInterfaceCompVar);
+            int[] rightInterfaceIndices = getCompVarIndices(rightInterfaceCompVar);
+
             if (leftIsThis) {
                 if(rightIsThis) {
                     logger.log(new ErrorLog(ctx, "You know why this is wrong!"));
                     return null;
                 }
-                rightInterfaceValue = leftCompOcc.getInterfaces()[leftParamNum];
+                if (leftCompOcc.getInterfaces()[leftParamNum] instanceof ListValue) {
+                    rightInterfaceValue = getValueFromMultiDimArray(leftInterfaceIndices, leftCompOcc.getInterfaces()[leftParamNum]);
+                } else {
+                    rightInterfaceValue = leftCompOcc.getInterfaces()[leftParamNum];
+                }
 
                 //Set the interfaceValues on occurrenceValues
-                if (leftCompOcc.getInterfaces()[leftParamNum] instanceof ListValue) {
-                    //TODO interface array index
-                } else if (rightCompOcc.getInterfaces()[rightParamNum] instanceof ListValue)
-                    ((ListValue) rightCompOcc.getInterfaces()[rightParamNum]).setNext(rightInterfaceValue);
+                if (rightCompOcc.getInterfaces()[rightParamNum] instanceof ListValue)
+                    ((ListValue) rightCompOcc.getInterfaces()[rightParamNum]).setValue(rightInterfaceIndices, 0, rightInterfaceValue);
                 else
                     rightCompOcc.getInterfaces()[rightParamNum] = rightInterfaceValue;
 
             } else if (rightIsThis) {
-                leftInterfaceValue = rightCompOcc.getInterfaces()[rightParamNum];
+                if (rightCompOcc.getInterfaces()[rightParamNum] instanceof ListValue) {
+                    leftInterfaceValue = getValueFromMultiDimArray(rightInterfaceIndices, rightCompOcc.getInterfaces()[rightParamNum]);
+                } else {
+                    leftInterfaceValue = rightCompOcc.getInterfaces()[rightParamNum];
+                }
 
                 if (leftCompOcc.getInterfaces()[leftParamNum] instanceof ListValue) {
-                    ((ListValue) leftCompOcc.getInterfaces()[leftParamNum]).setNext(leftInterfaceValue);
-                } else if (rightCompOcc.getInterfaces()[rightParamNum] instanceof ListValue) {
-                    //TODO interface array index
+                    ((ListValue) leftCompOcc.getInterfaces()[leftParamNum]).setValue(leftInterfaceIndices, 0, leftInterfaceValue);
                 } else
                     leftCompOcc.getInterfaces()[rightParamNum] = leftInterfaceValue;
             } else {
@@ -735,7 +755,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
                 StringValue interfaceAlias = new StringValue(Integer.toString(id));
 
                 var leftInterface = extractInterfaceDefFromLink(ctx, 0, ctx.leftInterface);
-                var rightInterface = extractInterfaceDefFromLink(ctx, 1, ctx.rightInterface);
+                var rightInterface = extractInterfaceDefFromLink(ctx, 2, ctx.rightInterface);
                 assert Objects.equals(leftInterface, rightInterface);
                 assert leftInterface != null;
 
@@ -749,12 +769,12 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
                 //Set the interfaceValues on occurrenceValues
                 if (leftCompOcc.getInterfaces()[leftParamNum] instanceof ListValue)
-                    ((ListValue) leftCompOcc.getInterfaces()[leftParamNum]).setNext(leftInterfaceValue);
+                    ((ListValue) leftCompOcc.getInterfaces()[leftParamNum]).setValue(leftInterfaceIndices,0, leftInterfaceValue);
                 else
                     leftCompOcc.getInterfaces()[leftParamNum] = leftInterfaceValue;
 
                 if (rightCompOcc.getInterfaces()[rightParamNum] instanceof ListValue)
-                    ((ListValue) rightCompOcc.getInterfaces()[rightParamNum]).setNext(rightInterfaceValue);
+                    ((ListValue) rightCompOcc.getInterfaces()[rightParamNum]).setValue(rightInterfaceIndices, 0, rightInterfaceValue);
                 else
                     rightCompOcc.getInterfaces()[rightParamNum] = rightInterfaceValue;
             }

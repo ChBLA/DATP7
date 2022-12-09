@@ -27,21 +27,13 @@ public class ListValue implements InterpreterValue {
         this.values[i] = value;
     }
 
-    public void setNext(InterpreterValue value) {
-        if (next >= this.values.length)
-            throw new RuntimeException("Cannot set value at " + next + " for array of size " + this.values.length);
-        if (this.values[next] != null)
-            throw new RuntimeException("Array value at " + next + " is not empty");
-        if (this.values[next] instanceof ListValue) {
-            if (((ListValue) this.values[next]).hasSpace()) {
-                ((ListValue) this.values[next]).setNext(value);
-            } else {
-                next++;
-                this.setNext(value);
-            }
-        } else {
-            this.values[next++] = value;
-        }
+    public void setValue(int[] indices, int level, InterpreterValue value) {
+        if(level <  indices.length - 1) {
+            ((ListValue) values[indices[level]]).setValue(indices, level + 1, value);
+        } else if(level == indices.length - 1){
+            values[indices[level]] = value;
+        } else
+            throw new RuntimeException("ListValue setValue out of bounds");
     }
 
     private boolean hasSpace() {

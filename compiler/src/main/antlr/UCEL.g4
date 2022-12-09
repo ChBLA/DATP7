@@ -63,7 +63,7 @@ buildStmnt : buildBlock
 compCon locals [DeclarationReference constructorReference]
     : compVar '=' ID LEFTPAR arguments RIGHTPAR;
 linkStatement locals [DeclarationReference leftInterface, DeclarationReference rightInterface]
-     : LINK compVar '.' ID compVar '.' ID;
+     : LINK compVar '.' compVar compVar '.' compVar;
 compVar locals [DeclarationReference variableReference]
     : ID (LEFTBRACKET expression RIGHTBRACKET)*;
 buildIf : IF LEFTPAR expression RIGHTPAR buildStmnt ( ELSE buildStmnt )?;
