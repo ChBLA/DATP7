@@ -113,7 +113,9 @@ public class Type {
             }
         }
 
-        return new Type(evaluationType, parameterNames, parameterCopies, newArrayDimensions);
+        Type copy = new Type(evaluationType, parameterNames, parameterCopies, newArrayDimensions);
+        copy.setPrefix(this.prefix);
+        return copy;
     }
 
     public boolean equalsOrIsArrayOf(Type t) {

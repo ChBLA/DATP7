@@ -259,6 +259,29 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             return ERROR_TYPE;
         }
 
+        boolean isLeftIn = leftInterfaceType.getPrefix() == Type.TypePrefixEnum.in;
+        boolean isRightIn = rightInterfaceType.getPrefix() == Type.TypePrefixEnum.in;
+        boolean isLeftOut = leftInterfaceType.getPrefix() == Type.TypePrefixEnum.out;
+        boolean isRightOut = rightInterfaceType.getPrefix() == Type.TypePrefixEnum.out;
+
+        if(!(isLeftIn || isLeftOut) || !(isRightIn || isRightOut)) {
+            logger.log(new ErrorLog(ctx, "Unexpected prefix for interface types: '"
+                    + leftInterfaceType.toString() + "' and '"
+                    + rightInterfaceType.toString() + "'"));
+            return ERROR_TYPE;
+        }
+
+        boolean hasThis = ctx.compVar(0).ID().getText().equals("this") || ctx.compVar(1).ID().getText().equals("this");
+        if(isLeftIn == isRightIn && !hasThis) {
+            logger.log(new ErrorLog(ctx, "Interfaces must be of mismatched 'in'/'out' types," +
+                    " but found: " + (isLeftIn ? "'in'" : "'out'") + " and " + (isRightIn ? "'in'" : "'out'") ));
+        }
+
+        if(isLeftIn != isRightIn && hasThis) {
+            logger.log(new ErrorLog(ctx, "When using the 'this' keyword, interfaces must be of matching 'in'/'out' types," +
+                    " but found: " + (isLeftIn ? "'in'" : "'out'") + " and " + (isRightIn ? "'in'" : "'out'")));
+        }
+
         return VOID_TYPE;
     }
 
