@@ -314,6 +314,7 @@ public class ReferenceHandlerTests {
         var visitor = new ReferenceVisitor(scope);
 
         var node = mock(UCELParser.BuildDeclContext.class);
+        var compNode = mock(UCELParser.ComponentContext.class);
         var typeIDNode = mock(TerminalNode.class);
         var idNode = mock(TerminalNode.class);
 
@@ -321,6 +322,10 @@ public class ReferenceHandlerTests {
         var declRef = mock(DeclarationReference.class);
 
         var compVar = mock(UCELParser.CompVarContext.class);
+
+        var typeInfo = mock(DeclarationInfo.class);
+
+        when(typeInfo.getNode()).thenReturn(compNode);
 
         when(node.ID()).thenReturn(typeIDNode);
         when(node.compVar()).thenReturn(compVar);
@@ -333,6 +338,7 @@ public class ReferenceHandlerTests {
         try {
             when(scope.isUnique(name, true)).thenReturn(true);
             when(scope.find(typeName, false)).thenReturn(typeDeclRef);
+            when(scope.get(typeDeclRef)).thenReturn(typeInfo);
             when(scope.add(any())).thenReturn(declRef);
         } catch (Exception e) {
             fail();
@@ -354,6 +360,7 @@ public class ReferenceHandlerTests {
         var visitor = new ReferenceVisitor(scope);
 
         var node = mock(UCELParser.BuildDeclContext.class);
+        var compNode = mock(UCELParser.ComponentContext.class);
         var typeIDNode = mock(TerminalNode.class);
         var idNode = mock(TerminalNode.class);
 
@@ -361,6 +368,10 @@ public class ReferenceHandlerTests {
         var declRef = mock(DeclarationReference.class);
 
         var compVar = mock(UCELParser.CompVarContext.class);
+
+        var typeInfo = mock(DeclarationInfo.class);
+
+        when(typeInfo.getNode()).thenReturn(compNode);
 
         when(node.ID()).thenReturn(typeIDNode);
         when(node.compVar()).thenReturn(compVar);
@@ -373,6 +384,7 @@ public class ReferenceHandlerTests {
         try {
             when(scope.isUnique(name, true)).thenReturn(true);
             when(scope.find(typeName, false)).thenReturn(typeDeclRef);
+            when(scope.get(typeDeclRef)).thenReturn(typeInfo);
             when(scope.add(any())).thenReturn(declRef);
         } catch (Exception e) {
             fail();

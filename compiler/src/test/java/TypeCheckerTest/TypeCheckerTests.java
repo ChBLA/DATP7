@@ -4,6 +4,7 @@ import org.UcelParser.TypeChecker.TypeCheckerVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.DeclarationReference;
+import org.UcelParser.Util.Exception.CouldNotFindException;
 import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Type;
 
@@ -287,11 +288,25 @@ public class TypeCheckerTests  {
     public void CorrectInterfaceTypesAndComponentTypesReturnsVoid() {
         var expected = VOID_TYPE;
 
+        var nameLeft = "left";
+        var nameRight = "right";
+
         var scope = mock(Scope.class);
         var visitor = new TypeCheckerVisitor(scope);
 
         var comp1Mock = mockForVisitorResult(UCELParser.CompVarContext.class, COMPONENT_TYPE, visitor);
+        var comp1InterfaceMock = mockForVisitorResult(UCELParser.CompVarContext.class, INTERFACE_TYPE, visitor);
         var comp2Mock = mockForVisitorResult(UCELParser.CompVarContext.class, COMPONENT_TYPE, visitor);
+        var comp2InterfaceMock = mockForVisitorResult(UCELParser.CompVarContext.class, INTERFACE_TYPE, visitor);
+
+        var leftIDNode = mock(TerminalNode.class);
+        var rightIDNode = mock(TerminalNode.class);
+
+        when(leftIDNode.getText()).thenReturn(nameLeft);
+        when(rightIDNode.getText()).thenReturn(nameRight);
+
+        when(comp1Mock.ID()).thenReturn(leftIDNode);
+        when(comp2Mock.ID()).thenReturn(rightIDNode);
 
         var ref1 = mock(DeclarationReference.class);
         var ref2 = mock(DeclarationReference.class);
@@ -312,7 +327,9 @@ public class TypeCheckerTests  {
         node.rightInterface = ref2;
 
         when(node.compVar(0)).thenReturn(comp1Mock);
-        when(node.compVar(1)).thenReturn(comp2Mock);
+        when(node.compVar(1)).thenReturn(comp1InterfaceMock);
+        when(node.compVar(2)).thenReturn(comp2Mock);
+        when(node.compVar(3)).thenReturn(comp2InterfaceMock);
 
         var actual = visitor.visitLinkStatement(node);
 
@@ -3373,10 +3390,23 @@ public class TypeCheckerTests  {
     //region IdExpr
     @Test
     void missingIdentifierDefinition() {
-        var scope = new Scope(null, false);
+        var scope = mock(Scope.class);
         TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
-        UCELParser.IdExprContext node = mock(UCELParser.IdExprContext.class);
-        when(node.ID()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.ID)));
+
+        var node = mock(UCELParser.IdExprContext.class);
+        var ref = mock(DeclarationReference.class);
+        var idNode = mock(TerminalNode.class);
+
+        try {
+            when(scope.get(ref)).thenThrow(CouldNotFindException.class);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+
+        node.reference = ref;
+        when(idNode.getText()).thenReturn("node");
+        when(node.ID()).thenReturn(idNode);
+
         Type actual = visitor.visitIdExpr(node);
         assertEquals(ERROR_TYPE, actual);
     }
