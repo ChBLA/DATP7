@@ -651,6 +651,7 @@ public class ReferenceHandlerTests {
         when(node.ID()).thenReturn(idNode);
         when(idNode.getText()).thenReturn(name);
         when(node.interfaceVarDecl()).thenReturn(interfaceVarDeclNode);
+        when(interfaceVarDeclNode.accept(visitor)).thenReturn(true);
         when(scope.isUnique(name, false)).thenReturn(true);
         when(scope.add(any())).thenReturn(declRef);
 
@@ -658,7 +659,6 @@ public class ReferenceHandlerTests {
 
         assertTrue(actual);
         assertEquals(declRef, node.reference);
-        verify(interfaceVarDeclNode, never()).accept(visitor);
     }
 
     @Test
@@ -704,6 +704,7 @@ public class ReferenceHandlerTests {
         UCELParser.PdeclarationContext decls = mock(UCELParser.PdeclarationContext.class);
         UCELParser.PtemplateContext template0 = mock(UCELParser.PtemplateContext.class);
         UCELParser.PsystemContext system = mock(UCELParser.PsystemContext.class);
+        UCELParser.VerificationListContext verification = mock(UCELParser.VerificationListContext.class);
 
         ArrayList<UCELParser.PtemplateContext> templates = new ArrayList<>();
         templates.add(template0);
@@ -711,14 +712,16 @@ public class ReferenceHandlerTests {
         when(node.pdeclaration()).thenReturn(decls);
         when(node.ptemplate()).thenReturn(templates);
         when(node.psystem()).thenReturn(system);
+        when(node.verificationList()).thenReturn(verification);
 
         when(decls.accept(visitor)).thenReturn(true);
         when(template0.accept(visitor)).thenReturn(true);
         when(system.accept(visitor)).thenReturn(true);
+        when(verification.accept(visitor)).thenReturn(true);
 
         visitor.visitProject(node);
 
-        assertTrue(node.scope instanceof Scope);
+        assertNotNull(node.scope);
     }
 
     @Test
@@ -729,6 +732,7 @@ public class ReferenceHandlerTests {
         UCELParser.PdeclarationContext decls = mock(UCELParser.PdeclarationContext.class);
         UCELParser.PtemplateContext template0 = mock(UCELParser.PtemplateContext.class);
         UCELParser.PsystemContext system = mock(UCELParser.PsystemContext.class);
+        UCELParser.VerificationListContext verification = mock(UCELParser.VerificationListContext.class);
 
         ArrayList<UCELParser.PtemplateContext> templates = new ArrayList<>();
         templates.add(template0);
@@ -736,10 +740,12 @@ public class ReferenceHandlerTests {
         when(node.pdeclaration()).thenReturn(decls);
         when(node.ptemplate()).thenReturn(templates);
         when(node.psystem()).thenReturn(system);
+        when(node.verificationList()).thenReturn(verification);
 
         when(decls.accept(visitor)).thenReturn(true);
         when(template0.accept(visitor)).thenReturn(true);
         when(system.accept(visitor)).thenReturn(true);
+        when(verification.accept(visitor)).thenReturn(true);
 
         visitor.visitProject(node);
 
@@ -754,6 +760,7 @@ public class ReferenceHandlerTests {
         UCELParser.PdeclarationContext decls = mock(UCELParser.PdeclarationContext.class);
         UCELParser.PtemplateContext template0 = mock(UCELParser.PtemplateContext.class);
         UCELParser.PsystemContext system = mock(UCELParser.PsystemContext.class);
+        UCELParser.VerificationListContext verification = mock(UCELParser.VerificationListContext.class);
 
         ArrayList<UCELParser.PtemplateContext> templates = new ArrayList<>();
         templates.add(template0);
@@ -761,10 +768,12 @@ public class ReferenceHandlerTests {
         when(node.pdeclaration()).thenReturn(decls);
         when(node.ptemplate()).thenReturn(templates);
         when(node.psystem()).thenReturn(system);
+        when(node.verificationList()).thenReturn(verification);
 
         when(decls.accept(visitor)).thenReturn(true);
         when(template0.accept(visitor)).thenReturn(true);
         when(system.accept(visitor)).thenReturn(true);
+        when(verification.accept(visitor)).thenReturn(true);
 
         visitor.visitProject(node);
 
@@ -779,6 +788,7 @@ public class ReferenceHandlerTests {
         UCELParser.PdeclarationContext decls = mock(UCELParser.PdeclarationContext.class);
         UCELParser.PtemplateContext template0 = mock(UCELParser.PtemplateContext.class);
         UCELParser.PsystemContext system = mock(UCELParser.PsystemContext.class);
+        UCELParser.VerificationListContext verification = mock(UCELParser.VerificationListContext.class);
 
         ArrayList<UCELParser.PtemplateContext> templates = new ArrayList<>();
         templates.add(template0);
@@ -786,10 +796,12 @@ public class ReferenceHandlerTests {
         when(node.pdeclaration()).thenReturn(decls);
         when(node.ptemplate()).thenReturn(templates);
         when(node.psystem()).thenReturn(system);
+        when(node.verificationList()).thenReturn(verification);
 
         when(decls.accept(visitor)).thenReturn(true);
         when(template0.accept(visitor)).thenReturn(true);
         when(system.accept(visitor)).thenReturn(true);
+        when(verification.accept(visitor)).thenReturn(true);
 
         visitor.visitProject(node);
 
