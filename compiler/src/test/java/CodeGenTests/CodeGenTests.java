@@ -54,13 +54,13 @@ public class CodeGenTests {
 
     @Test
     void componentOneOccurrenceNoNestedComponentsGeneratedCorrectly() {
-        var expected = String.format("int Component1_aa_p1 = z%n%nint Component1_aa_q = Component1_aa_p1 + 1");
+        var expected = String.format("// Generation for component: Component1%nint Component1_aa_p1 = z;%nint Component1_aa_q = Component1_aa_p1 + 1;%n");
         var paramName = "p1";
         var actualParamName = "z";
 
         var parameterTemplate = new ManualTemplate("int Component1_aa_p1");
         var interfaceTemplate = new ManualTemplate("");
-        var compBodyTemplate = new ManualTemplate("int Component1_aa_q = Component1_aa_p1 + 1");
+        var compBodyTemplate = new ManualTemplate("int Component1_aa_q = Component1_aa_p1 + 1;");
 
         var visitor = new CodeGenVisitor();
 
@@ -90,6 +90,17 @@ public class CodeGenTests {
         interfaces[0] = interfaceInfo;
         var occurrence = new ComponentOccurrence(node, "Component1", parameters, interfaces, null);
 
+        var parameterRef = mock(DeclarationReference.class);
+        parameterNode.reference = parameterRef;
+
+        when(parameterInfo.getType()).thenReturn(new Type(Type.TypeEnum.intType));
+
+        try {
+            when(scopeCompNode.get(parameterRef)).thenReturn(parameterInfo);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+
         node.occurrences = new ArrayList<>() {{ add(occurrence); }};
         node.scope = scopeCompNode;
 
@@ -101,19 +112,24 @@ public class CodeGenTests {
 
     @Test
     void componentMultipleOccurrencesNoNestedComponentsGeneratedCorrectly() {
-        var expected = String.format("int Component1_aa_p1 = z%n%nint Component1_aa_q = Component1_aa_p1 + 1%n" +
-                "int Component2_ab_p1 = x%n%nint Component2_ab_q = Component2_ab_p1 + 1");
+        var expected = String.format("// Generation for component: Component1%n" +
+                "int Component1_aa_p1 = z;%n" +
+                "int Component1_aa_q = Component1_aa_p1 + 1;%n" +
+                "%n" +
+                "// Generation for component: Component2%n" +
+                "int Component2_ab_p1 = x;%n" +
+                "int Component2_ab_q = Component2_ab_p1 + 1;%n");
         var paramName = "p1";
         var actualParamName1 = "z";
         var actualParamName2 = "x";
 
         var parameterTemplate1 = new ManualTemplate("int Component1_aa_p1");
         var interfaceTemplate1 = new ManualTemplate("");
-        var compBodyTemplate1 = new ManualTemplate("int Component1_aa_q = Component1_aa_p1 + 1");
+        var compBodyTemplate1 = new ManualTemplate("int Component1_aa_q = Component1_aa_p1 + 1;");
 
         var parameterTemplate2 = new ManualTemplate("int Component2_ab_p1");
         var interfaceTemplate2 = new ManualTemplate("");
-        var compBodyTemplate2 = new ManualTemplate("int Component2_ab_q = Component2_ab_p1 + 1");
+        var compBodyTemplate2 = new ManualTemplate("int Component2_ab_q = Component2_ab_p1 + 1;");
 
         var visitor = new CodeGenVisitor();
 
@@ -157,6 +173,21 @@ public class CodeGenTests {
         parameters2[0] = parameterInfo2;
         interfaces2[0] = interfaceInfo2;
 
+        var parameterRef1 = mock(DeclarationReference.class);
+        var parameterRef2 = mock(DeclarationReference.class);
+        parameterNode1.reference = parameterRef1;
+        parameterNode2.reference = parameterRef2;
+
+        when(parameterInfo1.getType()).thenReturn(new Type(Type.TypeEnum.intType));
+        when(parameterInfo2.getType()).thenReturn(new Type(Type.TypeEnum.intType));
+
+        try {
+            when(scopeCompNode.get(parameterRef1)).thenReturn(parameterInfo1);
+            when(scopeCompNode.get(parameterRef2)).thenReturn(parameterInfo2);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+
 
         var occurrence1 = new ComponentOccurrence(node, "Component1", parameters1, interfaces1, null);
         var occurrence2 = new ComponentOccurrence(node, "Component2", parameters2, interfaces2, null);
@@ -176,6 +207,7 @@ public class CodeGenTests {
         var expected = "";
 
         var node = mock(UCELParser.CompBodyContext.class);
+        node.scope = mock(Scope.class);
 
         var visitor = new CodeGenVisitor();
 
@@ -192,8 +224,10 @@ public class CodeGenTests {
 
         var node = mock(UCELParser.CompBodyContext.class);
         var declNode = mockForVisitorResult(UCELParser.DeclarationsContext.class, declTemplate, visitor);
+        var scope = mock(Scope.class);
 
         when(node.declarations()).thenReturn(declNode);
+        node.scope = scope;
 
         var actual = visitor.visitCompBody(node);
 
@@ -202,11 +236,14 @@ public class CodeGenTests {
 
     @Test
     void compBodyEnsureBuildIsNeverVisited() {
+        var scope = mock(Scope.class);
+
         var visitor = new CodeGenVisitor();
 
         var node = mock(UCELParser.CompBodyContext.class);
         var buildNode = mock(UCELParser.BuildContext.class);
 
+        node.scope = scope;
         when(node.build()).thenReturn(buildNode);
         when(buildNode.accept(visitor)).thenThrow(new RuntimeException());
 
@@ -515,7 +552,13 @@ public class CodeGenTests {
         var invariantMock = mockForVisitorResult(UCELParser.InvariantContext.class, invariantTemplate, visitor);
         var exponentialMock = mockForVisitorResult(UCELParser.ExponentialContext.class, exponentialTemplate, visitor);
 
+        var locationID = "loc1";
+
         var node = mock(UCELParser.LocationContext.class);
+        var idNode = mock(TerminalNode.class);
+
+        when(idNode.getText()).thenReturn(locationID);
+        when(node.ID()).thenReturn(idNode);
         when(node.invariant()).thenReturn(invariantMock);
         when(node.exponential()).thenReturn(exponentialMock);
 
@@ -523,9 +566,10 @@ public class CodeGenTests {
         assertInstanceOf(LocationTemplate.class, actual);
 
         var actualCasted = (LocationTemplate) actual;
-        assertEquals(actualCasted.exponential.toString(), exponentialTemplate.toString());
-        assertEquals(actualCasted.invariant.toString(), invariantTemplate.toString());
-        assertEquals(actualCasted.location, node);
+        assertEquals(exponentialTemplate.toString(), actualCasted.exponential.toString());
+        assertEquals(invariantTemplate.toString(), actualCasted.invariant.toString());
+        assertEquals(node, actualCasted.location);
+        assertEquals(locationID, actualCasted.ID);
     }
 
     //endregion
@@ -578,10 +622,12 @@ public class CodeGenTests {
         var node = mock(UCELParser.ProjectContext.class);
         var systemNode = mockForVisitorResult(UCELParser.PsystemContext.class, pSystemTemplate, visitor);
         var declNode = mockForVisitorResult(UCELParser.PdeclarationContext.class, pDeclTemplate, visitor);
+        var verificationNode = mock(UCELParser.VerificationListContext.class);
 
         node.scope = scopeMock;
         when(node.psystem()).thenReturn(systemNode);
         when(node.pdeclaration()).thenReturn(declNode);
+        when(node.verificationList()).thenReturn(verificationNode);
 
         var actual = visitor.visitProject(node);
         assertInstanceOf(ProjectTemplate.class, actual);
@@ -607,6 +653,7 @@ public class CodeGenTests {
         var systemNode = mockForVisitorResult(UCELParser.PsystemContext.class, pSystemTemplate, visitor);
         var declNode = mockForVisitorResult(UCELParser.PdeclarationContext.class, pDeclTemplate, visitor);
         var tempNode1 = mockForVisitorResult(UCELParser.PtemplateContext.class, pTemplateTemplate, visitor);
+        var verificationNode = mock(UCELParser.VerificationListContext.class);
 
         var pTemplateNodes = new ArrayList<UCELParser.PtemplateContext>() {{ add(tempNode1); }};
 
@@ -614,6 +661,7 @@ public class CodeGenTests {
         when(node.psystem()).thenReturn(systemNode);
         when(node.pdeclaration()).thenReturn(declNode);
         when(node.ptemplate()).thenReturn(pTemplateNodes);
+        when(node.verificationList()).thenReturn(verificationNode);
 
         var actual = visitor.visitProject(node);
         assertInstanceOf(ProjectTemplate.class, actual);
@@ -628,8 +676,8 @@ public class CodeGenTests {
 
     @Test
     void projectManyPTemplatesGeneratedCorrectly() {
-        var pDeclTemplate = generateDefaultPDeclTemplate();
-        var pSystemTemplate = generateDefaultPSystemTemplate();
+        PDeclarationTemplate pDeclTemplate = generateDefaultPDeclTemplate();
+        PSystemTemplate pSystemTemplate = generateDefaultPSystemTemplate();
         var pTemplateTemplate1 = generateDefaultPTemplateTemplate();
         var pTemplateTemplate2 = generateDefaultPTemplateTemplate();
         var pTemplateTemplates = new ArrayList<PTemplateTemplate>() {{add(pTemplateTemplate1); add(pTemplateTemplate2);}};
@@ -642,13 +690,14 @@ public class CodeGenTests {
         var declNode = mockForVisitorResult(UCELParser.PdeclarationContext.class, pDeclTemplate, visitor);
         var tempNode1 = mockForVisitorResult(UCELParser.PtemplateContext.class, pTemplateTemplate1, visitor);
         var tempNode2 = mockForVisitorResult(UCELParser.PtemplateContext.class, pTemplateTemplate2, visitor);
-
+        var verificationNode = mock(UCELParser.VerificationListContext.class);
         var pTemplateNodes = new ArrayList<UCELParser.PtemplateContext>() {{ add(tempNode1); add(tempNode2); }};
 
         node.scope = scopeMock;
         when(node.psystem()).thenReturn(systemNode);
         when(node.pdeclaration()).thenReturn(declNode);
         when(node.ptemplate()).thenReturn(pTemplateNodes);
+        when(node.verificationList()).thenReturn(verificationNode);
 
         var actual = visitor.visitProject(node);
         assertInstanceOf(ProjectTemplate.class, actual);
@@ -874,7 +923,7 @@ public class CodeGenTests {
     void systemOneIDExpressionGeneratedCorrectly() {
         String name = "B";
         var exprTemplate = generateDefaultExprTemplate(name);
-        var expected = String.format("system %s;", name);
+        var expected = String.format("// Declarations for the necessary processes%n%n%nsystem %s;", name);
         var scopeMock = mock(Scope.class);
         var declInfo = mock(DeclarationInfo.class);
         var declRef = mock(DeclarationReference.class);
@@ -909,7 +958,7 @@ public class CodeGenTests {
     void systemOneFuncCallExpressionGeneratedCorrectly() {
         String name = "B_0";
         var exprTemplate = generateDefaultExprTemplate("B()");
-        var expected = String.format("%s = %s;%nsystem %s;", name, exprTemplate, name);
+        var expected = String.format("// Declarations for the necessary processes%n%s = %s;%n%nsystem %s;", name, exprTemplate, name);
 
         var scopeMock = mock(Scope.class);
         var declInfoFuncCall = mock(DeclarationInfo.class);
@@ -946,7 +995,7 @@ public class CodeGenTests {
         String name1 = "B", name2 = "C_1";
         var expr1Template = generateDefaultExprTemplate("B");
         var expr2Template = generateDefaultExprTemplate("C()");
-        var expected = String.format("%s = %s;%nsystem %s, %s;", name2, expr2Template, name1, name2);
+        var expected = String.format("// Declarations for the necessary processes%n%s = %s;%n%nsystem %s, %s;", name2, expr2Template, name1, name2);
 
         var scopeMock = mock(Scope.class);
         var declInfoFuncCall = mock(DeclarationInfo.class);
@@ -1472,7 +1521,7 @@ public class CodeGenTests {
         var ref = mock(DeclarationReference.class);
 
         when(variable.generateName()).thenReturn(id);
-
+        when(variable.getType()).thenReturn(new Type(Type.TypeEnum.intType));
         var scopeMock = mock(Scope.class);
 
         try {
@@ -1505,7 +1554,7 @@ public class CodeGenTests {
         var ref = mock(DeclarationReference.class);
 
         when(variable.generateName(anyString())).thenReturn(id);
-
+        when(variable.getType()).thenReturn(new Type(Type.TypeEnum.intType));
         var scopeMock = mock(Scope.class);
 
         try {
@@ -1535,7 +1584,7 @@ public class CodeGenTests {
         var ref = mock(DeclarationReference.class);
 
         when(variable.generateName(anyString())).thenReturn(id);
-
+        when(variable.getType()).thenReturn(new Type(Type.TypeEnum.intType));
         var scopeMock = mock(Scope.class);
 
         try {
@@ -1569,7 +1618,7 @@ public class CodeGenTests {
         var ref = mock(DeclarationReference.class);
 
         when(variable.generateName(anyString())).thenReturn(id);
-
+        when(variable.getType()).thenReturn(new Type(Type.TypeEnum.intType));
         var scopeMock = mock(Scope.class);
 
         try {
@@ -1606,7 +1655,7 @@ public class CodeGenTests {
         var ref = mock(DeclarationReference.class);
 
         when(variable.generateName(anyString())).thenReturn(id);
-
+        when(variable.getType()).thenReturn(new Type(Type.TypeEnum.intType));
         var scopeMock = mock(Scope.class);
 
         try {
@@ -4227,12 +4276,12 @@ public class CodeGenTests {
         return new ManualTemplate("");
     }
 
-    private Template generateDefaultPDeclTemplate() {
-        return new ManualTemplate(String.format("%s", generateDefaultDeclarationTemplate("a", "4")));
+    private PDeclarationTemplate generateDefaultPDeclTemplate() {
+        return new PDeclarationTemplate(generateDefaultDeclarationTemplate("a", "4"));
     }
 
-    private Template generateDefaultPSystemTemplate() {
-        return new ManualTemplate(String.format("%s\n%s", generateDefaultDeclarationTemplate("a", "4"), generateDefaultSystemTemplate("a")));
+    private PSystemTemplate generateDefaultPSystemTemplate() {
+        return new PSystemTemplate(generateDefaultDeclarationTemplate("a", "4"), generateDefaultSystemTemplate("a"));
     }
 
     private PTemplateTemplate generateDefaultPTemplateTemplate() {

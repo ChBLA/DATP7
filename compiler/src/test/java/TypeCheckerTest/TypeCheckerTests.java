@@ -171,7 +171,7 @@ public class TypeCheckerTests  {
         when(node.parameters()).thenReturn(parametersNode);
 
         var expected = parametersResultType.deepCopy();
-        expected.setEvaluationType(Type.TypeEnum.interfaceType);
+
         var actual = visitor.visitInterfaces(node);
         assertEquals(expected, actual);
     }
@@ -336,6 +336,13 @@ public class TypeCheckerTests  {
         when(decl1.getType()).thenReturn(INTERFACE_TYPE);
         when(decl2.getType()).thenReturn(INTERFACE_TYPE);
 
+        var leftIDNode = mock(TerminalNode.class);
+        var rightIDNode = mock(TerminalNode.class);
+        when(leftIDNode.getText()).thenReturn("left");
+        when(rightIDNode.getText()).thenReturn("right");
+        when(comp1Mock.ID()).thenReturn(leftIDNode);
+        when(comp2Mock.ID()).thenReturn(rightIDNode);
+
         try {
             when(scope.get(ref1)).thenReturn(decl1);
             when(scope.get(ref2)).thenReturn(decl2);
@@ -369,8 +376,12 @@ public class TypeCheckerTests  {
         var ref2 = mock(DeclarationReference.class);
         var decl1 = mock(DeclarationInfo.class);
         var decl2 = mock(DeclarationInfo.class);
+        var leftIDNode = mock(TerminalNode.class);
+        var rightIDNode = mock(TerminalNode.class);
         when(decl1.getType()).thenReturn(INTERFACE_TYPE);
         when(decl2.getType()).thenReturn(INTERFACE_TYPE);
+        when(leftIDNode.getText()).thenReturn("left");
+        when(rightIDNode.getText()).thenReturn("right");
 
         try {
             when(scope.get(ref1)).thenReturn(decl1);
@@ -385,6 +396,8 @@ public class TypeCheckerTests  {
 
         when(node.compVar(0)).thenReturn(comp1Mock);
         when(node.compVar(1)).thenReturn(comp2Mock);
+        when(comp1Mock.ID()).thenReturn(leftIDNode);
+        when(comp2Mock.ID()).thenReturn(rightIDNode);
 
         var actual = visitor.visitLinkStatement(node);
 
@@ -3456,11 +3469,27 @@ public class TypeCheckerTests  {
     }
 
     @Test
-    void arrayIndexReturnsArrayType() {
+    void arrayIndexReturnNonArrayType() {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
         var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_ARRAY_TYPE, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
+
+        Type actual = visitor.visitArrayIndex(node);
+        assertEquals(BOOL_TYPE, actual);
+    }
+
+    @Test
+    void arrayIndexReturnsArrayType() {
+        var input = BOOL_ARRAY_TYPE.deepCopy(2);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, input, visitor);
         var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
 
         when(node.expression(0)).thenReturn(child1);
@@ -3781,16 +3810,16 @@ public class TypeCheckerTests  {
 
         Type actual = visitor.visitArguments(node);
 
-        assertEquals(argTypes, actual);
+        assertEquals(argTypes.getEvaluationType(), actual.getEvaluationType());
     }
     private static Stream<Arguments> argumentTypesArguments() {
 
         ArrayList<Arguments> args = new ArrayList<Arguments>();
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {})));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE})));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE, INT_TYPE})));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE, INT_TYPE, BOOL_TYPE})));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE, INT_TYPE, BOOL_TYPE, CHAR_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.voidType, new Type[] {})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.voidType, new Type[] {DOUBLE_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.voidType, new Type[] {DOUBLE_TYPE, INT_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.voidType, new Type[] {DOUBLE_TYPE, INT_TYPE, BOOL_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.voidType, new Type[] {DOUBLE_TYPE, INT_TYPE, BOOL_TYPE, CHAR_TYPE})));
 
         // If it contains an error, base-type becomes error
         args.add(Arguments.arguments(new Type(Type.TypeEnum.errorType, new Type[] {ERROR_TYPE})));
