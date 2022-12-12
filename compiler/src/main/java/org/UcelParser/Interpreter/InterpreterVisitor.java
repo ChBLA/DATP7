@@ -31,6 +31,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     public InterpreterVisitor(Scope scope) {
         currentScope = scope;
         nextInterfaceId = 0;
+        this.logger = new Logger();
     }
 
     public InterpreterVisitor(ILogger logger) {
@@ -41,6 +42,11 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     public InterpreterVisitor(ILogger logger, Scope scope) {
         this.logger = logger;
         this.currentScope = scope;
+    }
+
+    public InterpreterVisitor(Scope scope, Occurrence testOccurrence) {
+        this(scope);
+        this.currentOccurrence = testOccurrence;
     }
 
     //endregion

@@ -277,8 +277,10 @@ public class ManualParser {
         UCELLexer lexer = new UCELLexer(charStream);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         var parser = new UCELParser(tokenStream);
-        parser.addErrorListener(ConsoleErrorListener.INSTANCE);
-        parser.addErrorListener(errorListener);
+        if (errorListener != null) {
+            parser.addErrorListener(ConsoleErrorListener.INSTANCE);
+            parser.addErrorListener(errorListener);
+        }
         return parser;
     }
 

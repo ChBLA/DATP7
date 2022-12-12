@@ -178,10 +178,9 @@ public class InterpreterTests {
 
     private static Stream<Arguments> structValues() {
         return Stream.of(
-                Arguments.arguments(value("cbuffer") , "i", value("cbuffer.i")),
-                Arguments.arguments(value("a") , "s", value("a.s")),
-                Arguments.arguments(value("a") , "chan", value("a.chan")),
-                Arguments.arguments(value("a") , null, null),
+                Arguments.arguments(value("cbuffer") , "i", varValue("cbuffer.i")),
+                Arguments.arguments(value("a") , "s", varValue("a.s")),
+                Arguments.arguments(value("a") , "chan", varValue("a.chan")),
                 Arguments.arguments(null , "s", null),
                 Arguments.arguments(null, null, null)
         );
@@ -215,8 +214,8 @@ public class InterpreterTests {
 
     private static Stream<Arguments> arrayValues() {
         return Stream.of(
-                Arguments.arguments(value("cbuffer") , value(134), value("cbuffer_134")),
-                Arguments.arguments(value("a") , value(3), value("a_3")),
+                Arguments.arguments(varValue("cbuffer") , value(134), varValue("cbuffer[134]")),
+                Arguments.arguments(varValue("a") , value(3), varValue("a[3]")),
                 Arguments.arguments(value("a") , value(-17), null),
                 Arguments.arguments(value("a") , null, null),
                 Arguments.arguments(value("a") , value("s"), null),
@@ -322,7 +321,8 @@ public class InterpreterTests {
     @MethodSource("idValues")
     void idValues(InterpreterValue v, InterpreterValue expected) {
         Scope scope = mock(Scope.class);
-        InterpreterVisitor visitor = new InterpreterVisitor(scope);
+        Occurrence occ = mock(Occurrence.class);
+        InterpreterVisitor visitor = new InterpreterVisitor(scope, occ);
 
         UCELParser.IdExprContext node = mock(UCELParser.IdExprContext.class);
         DeclarationReference declRef = new DeclarationReference(0,0);
@@ -330,6 +330,7 @@ public class InterpreterTests {
         node.reference = declRef;
         when(declInfo.getValue()).thenReturn(v);
         when(declInfo.generateName()).thenReturn("aaaaaa_id");
+        when(occ.getPrefix()).thenReturn("");
 
         try{
             when(scope.get(declRef)).thenReturn(declInfo);
@@ -346,7 +347,7 @@ public class InterpreterTests {
                 Arguments.arguments(new IntegerValue(-19), new IntegerValue(-19)),
                 Arguments.arguments(new BooleanValue(true), new BooleanValue(true)),
                 Arguments.arguments(new StringValue("s"), new StringValue("s")),
-                Arguments.arguments(null, new StringValue("aaaaaa_id"))
+                Arguments.arguments(null, varValue("aaaaaa_id"))
 
                 );
     }
@@ -546,9 +547,8 @@ public class InterpreterTests {
 
     @Test
     public void literalDoubleTest() {
-        Object expected = null;
         String literalStr = "54.5";
-
+        Object expected = value(literalStr);
 
         var visitor = testVisitor();
 
@@ -939,6 +939,15 @@ public class InterpreterTests {
 
     private static StringValue value(String val) {
         return new StringValue(val);
+    }
+
+    private static VariableValue varValue(String val) {
+        return new VariableValue("", "", new StringValue(val));
+    }
+    private static ListValue listValue(String val) {
+        var res = new InterpreterValue[1];
+        res[0] = new StringValue(val);
+        return new ListValue(res);
     }
     private static BooleanValue value(boolean val) {
         return new BooleanValue(val);

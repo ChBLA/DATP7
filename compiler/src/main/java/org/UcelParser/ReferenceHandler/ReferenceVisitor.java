@@ -106,6 +106,7 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
             return false;
         } catch (Exception e) {
             logger.log(new CompilerErrorLog(ctx, e.getMessage()));
+            return false;
         }
 
         return isInitialised ? visit(ctx.compCon()) : visit(ctx.compVar());

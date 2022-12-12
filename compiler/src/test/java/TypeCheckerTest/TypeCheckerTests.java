@@ -4,6 +4,7 @@ import org.UcelParser.TypeChecker.TypeCheckerVisitor;
 import org.UcelParser.UCELParser_Generated.UCELParser;
 import org.UcelParser.Util.DeclarationInfo;
 import org.UcelParser.Util.DeclarationReference;
+import org.UcelParser.Util.Exception.CouldNotFindException;
 import org.UcelParser.Util.Scope;
 import org.UcelParser.Util.Type;
 
@@ -52,6 +53,7 @@ public class TypeCheckerTests  {
     private static final Type CONSTANT_INT_TYPE = new Type(Type.TypeEnum.intType, Type.TypePrefixEnum.constant);
     private static final Type INTERFACE_TYPE = new Type(Type.TypeEnum.interfaceType);
     private static final Type COMPONENT_TYPE = new Type(Type.TypeEnum.componentType);
+    private static final Type SEPARATOR_TYPE = new Type(Type.TypeEnum.seperatorType);
     //endregion
 
 
@@ -96,16 +98,6 @@ public class TypeCheckerTests  {
         assertEquals(expected, actual);
     }
 
-    @Test void ptemplateWhenChildIsSuccess() {
-        var expectedReferenceType = new Type(Type.TypeEnum.templateType, new Type[] {PROCESS_TYPE, INT_TYPE});
-        var expectedReturnType = VOID_TYPE;
-    }
-
-    @Test void ptemplateWhenChildIsError() {
-
-    }
-
-
 
     @Test
     void pdeclarationsEvaluateSuccesfully() {
@@ -142,22 +134,39 @@ public class TypeCheckerTests  {
     @Test void visitComponentResultTypeTest() throws Exception {
         var globalScope =  mock(Scope.class);
         var scope = mock(Scope.class);
+
         var declerationInfo = mock(DeclarationInfo.class);
-        when(scope.get(new DeclarationReference(1, 1))).thenReturn(declerationInfo);
+        var thisInfo = mock(DeclarationInfo.class);
+        var compInfo = mock(DeclarationInfo.class);
+        var ref = mock(DeclarationReference.class);
+        var thisRef = mock(DeclarationReference.class);
+        var compRef = mock(DeclarationReference.class);
+        when(scope.get(ref)).thenReturn(declerationInfo);
+        when(scope.getParent()).thenReturn(globalScope);
+        when(scope.find("this", true)).thenReturn(thisRef);
+        when(scope.get(thisRef)).thenReturn(thisInfo);
+
+        when(globalScope.get(compRef)).thenReturn(compInfo);
+
         var visitor = new TypeCheckerVisitor(globalScope);
 
         var node = mock(UCELParser.ComponentContext.class);
         node.scope = scope;
-        node.reference = new DeclarationReference(1,1);
-        when(node.parameters()).thenReturn(mock(UCELParser.ParametersContext.class));
-        when(node.interfaces()).thenReturn(mock(UCELParser.InterfacesContext.class));
-        when(node.compBody()).thenReturn(mock(UCELParser.CompBodyContext.class));
-        mockForVisitorResult(UCELParser.ParametersContext.class, new Type(Type.TypeEnum.voidType, new Type[] {INT_TYPE, INT_TYPE}), visitor);
-        var interfacesType = new Type(Type.TypeEnum.interfaceType, new Type[] {INT_TYPE, INT_TYPE});
-        mockForVisitorResult(UCELParser.InterfacesContext.class, interfacesType, visitor);
-        mockForVisitorResult(UCELParser.CompBodyContext.class, VOID_TYPE, visitor);
+        node.reference = compRef;
 
-        var expected = new Type(Type.TypeEnum.componentType, new Type[] {INT_TYPE, INT_TYPE, interfacesType});
+        Type paramType = new Type(Type.TypeEnum.voidType, new String[]{"a", "b"}, new Type[] {INT_TYPE, INT_TYPE});
+        Type interfacesType = new Type(Type.TypeEnum.interfaceType, new String[]{"c", "d"}, new Type[] {INT_TYPE, INT_TYPE});
+
+        var parameters = mockForVisitorResult(UCELParser.ParametersContext.class, paramType, visitor);
+        var interfaces = mockForVisitorResult(UCELParser.InterfacesContext.class, interfacesType, visitor);
+        var body = mockForVisitorResult(UCELParser.CompBodyContext.class, VOID_TYPE, visitor);
+
+        when(node.parameters()).thenReturn(parameters);
+        when(node.interfaces()).thenReturn(interfaces);
+        when(node.compBody()).thenReturn(body);
+
+
+        var expected = new Type(Type.TypeEnum.componentType, new Type[] {COMPONENT_TYPE, INT_TYPE, INT_TYPE, SEPARATOR_TYPE, INT_TYPE, INT_TYPE});
         var actual = visitor.visitComponent(node);
         assertEquals(expected, actual);
     }
@@ -171,7 +180,7 @@ public class TypeCheckerTests  {
         when(node.parameters()).thenReturn(parametersNode);
 
         var expected = parametersResultType.deepCopy();
-        expected.setEvaluationType(Type.TypeEnum.interfaceType);
+
         var actual = visitor.visitInterfaces(node);
         assertEquals(expected, actual);
     }
@@ -217,12 +226,13 @@ public class TypeCheckerTests  {
 
     //region Parameters
     @Test
-    void typeForParametersReturnsCorrectSetOfParameters() {
+    void typeForParametersReturnsCorrectSetOfParameters() throws Exception {
         Type[] parameterTypes = new Type[]{INT_TYPE, DOUBLE_TYPE, BOOL_TYPE};
-
         var expected = new Type(Type.TypeEnum.voidType, parameterTypes);
 
-        var visitor = new TypeCheckerVisitor();
+        var scope = mock(Scope.class);
+
+        var visitor = new TypeCheckerVisitor(scope);
 
         var parameterMockInt = mockForVisitorResult(UCELParser.ParameterContext.class, parameterTypes[0], visitor);
         var parameterMockDouble = mockForVisitorResult(UCELParser.ParameterContext.class, parameterTypes[1], visitor);
@@ -232,6 +242,26 @@ public class TypeCheckerTests  {
         parameterList.add(parameterMockInt);
         parameterList.add(parameterMockDouble);
         parameterList.add(parameterMockBool);
+
+        var param1Ref = mock(DeclarationReference.class);
+        var param2Ref = mock(DeclarationReference.class);
+        var param3Ref = mock(DeclarationReference.class);
+
+        var param1Info = mock(DeclarationInfo.class);
+        var param2Info = mock(DeclarationInfo.class);
+        var param3Info = mock(DeclarationInfo.class);
+
+        when(scope.get(param1Ref)).thenReturn(param1Info);
+        when(scope.get(param2Ref)).thenReturn(param2Info);
+        when(scope.get(param3Ref)).thenReturn(param3Info);
+
+        when(param1Info.getIdentifier()).thenReturn("p1");
+        when(param2Info.getIdentifier()).thenReturn("p2");
+        when(param3Info.getIdentifier()).thenReturn("p3");
+
+        parameterMockInt.reference = param1Ref;
+        parameterMockDouble.reference = param2Ref;
+        parameterMockBool.reference = param3Ref;
 
         var node = mock(UCELParser.ParametersContext.class);
         when(node.parameter()).thenReturn(parameterList);
@@ -283,41 +313,7 @@ public class TypeCheckerTests  {
 
     //region LinkStatement
 
-    @Test
-    public void CorrectInterfaceTypesAndComponentTypesReturnsVoid() {
-        var expected = VOID_TYPE;
 
-        var scope = mock(Scope.class);
-        var visitor = new TypeCheckerVisitor(scope);
-
-        var comp1Mock = mockForVisitorResult(UCELParser.CompVarContext.class, COMPONENT_TYPE, visitor);
-        var comp2Mock = mockForVisitorResult(UCELParser.CompVarContext.class, COMPONENT_TYPE, visitor);
-
-        var ref1 = mock(DeclarationReference.class);
-        var ref2 = mock(DeclarationReference.class);
-        var decl1 = mock(DeclarationInfo.class);
-        var decl2 = mock(DeclarationInfo.class);
-        when(decl1.getType()).thenReturn(INTERFACE_TYPE);
-        when(decl2.getType()).thenReturn(INTERFACE_TYPE);
-
-        try {
-            when(scope.get(ref1)).thenReturn(decl1);
-            when(scope.get(ref2)).thenReturn(decl2);
-        } catch (Exception e) {
-            fail("error: could not mock scope");
-        }
-
-        var node = mock(UCELParser.LinkStatementContext.class);
-        node.leftInterface = ref1;
-        node.rightInterface = ref2;
-
-        when(node.compVar(0)).thenReturn(comp1Mock);
-        when(node.compVar(1)).thenReturn(comp2Mock);
-
-        var actual = visitor.visitLinkStatement(node);
-
-        assertEquals(expected, actual);
-    }
 
     @Test
     public void WrongComponent1TypeReturnsError() {
@@ -335,6 +331,13 @@ public class TypeCheckerTests  {
         var decl2 = mock(DeclarationInfo.class);
         when(decl1.getType()).thenReturn(INTERFACE_TYPE);
         when(decl2.getType()).thenReturn(INTERFACE_TYPE);
+
+        var leftIDNode = mock(TerminalNode.class);
+        var rightIDNode = mock(TerminalNode.class);
+        when(leftIDNode.getText()).thenReturn("left");
+        when(rightIDNode.getText()).thenReturn("right");
+        when(comp1Mock.ID()).thenReturn(leftIDNode);
+        when(comp2Mock.ID()).thenReturn(rightIDNode);
 
         try {
             when(scope.get(ref1)).thenReturn(decl1);
@@ -369,8 +372,12 @@ public class TypeCheckerTests  {
         var ref2 = mock(DeclarationReference.class);
         var decl1 = mock(DeclarationInfo.class);
         var decl2 = mock(DeclarationInfo.class);
+        var leftIDNode = mock(TerminalNode.class);
+        var rightIDNode = mock(TerminalNode.class);
         when(decl1.getType()).thenReturn(INTERFACE_TYPE);
         when(decl2.getType()).thenReturn(INTERFACE_TYPE);
+        when(leftIDNode.getText()).thenReturn("left");
+        when(rightIDNode.getText()).thenReturn("right");
 
         try {
             when(scope.get(ref1)).thenReturn(decl1);
@@ -385,6 +392,8 @@ public class TypeCheckerTests  {
 
         when(node.compVar(0)).thenReturn(comp1Mock);
         when(node.compVar(1)).thenReturn(comp2Mock);
+        when(comp1Mock.ID()).thenReturn(leftIDNode);
+        when(comp2Mock.ID()).thenReturn(rightIDNode);
 
         var actual = visitor.visitLinkStatement(node);
 
@@ -405,6 +414,10 @@ public class TypeCheckerTests  {
         var ref2 = mock(DeclarationReference.class);
         var decl1 = mock(DeclarationInfo.class);
         var decl2 = mock(DeclarationInfo.class);
+        var leftIDNode = mock(TerminalNode.class);
+        var rightIDNode = mock(TerminalNode.class);
+        when(leftIDNode.getText()).thenReturn("left");
+        when(rightIDNode.getText()).thenReturn("right");
         when(decl1.getType()).thenReturn(INT_TYPE);
         when(decl2.getType()).thenReturn(INTERFACE_TYPE);
 
@@ -421,6 +434,8 @@ public class TypeCheckerTests  {
 
         when(node.compVar(0)).thenReturn(comp1Mock);
         when(node.compVar(1)).thenReturn(comp2Mock);
+        when(comp1Mock.ID()).thenReturn(leftIDNode);
+        when(comp2Mock.ID()).thenReturn(rightIDNode);
 
         var actual = visitor.visitLinkStatement(node);
 
@@ -441,6 +456,10 @@ public class TypeCheckerTests  {
         var ref2 = mock(DeclarationReference.class);
         var decl1 = mock(DeclarationInfo.class);
         var decl2 = mock(DeclarationInfo.class);
+        var leftIDNode = mock(TerminalNode.class);
+        var rightIDNode = mock(TerminalNode.class);
+        when(leftIDNode.getText()).thenReturn("left");
+        when(rightIDNode.getText()).thenReturn("right");
         when(decl1.getType()).thenReturn(INTERFACE_TYPE);
         when(decl2.getType()).thenReturn(INT_TYPE);
 
@@ -457,6 +476,8 @@ public class TypeCheckerTests  {
 
         when(node.compVar(0)).thenReturn(comp1Mock);
         when(node.compVar(1)).thenReturn(comp2Mock);
+        when(comp1Mock.ID()).thenReturn(leftIDNode);
+        when(comp2Mock.ID()).thenReturn(rightIDNode);
 
         var actual = visitor.visitLinkStatement(node);
 
@@ -3360,10 +3381,23 @@ public class TypeCheckerTests  {
     //region IdExpr
     @Test
     void missingIdentifierDefinition() {
-        var scope = new Scope(null, false);
+        var scope = mock(Scope.class);
         TypeCheckerVisitor visitor = new TypeCheckerVisitor(scope);
-        UCELParser.IdExprContext node = mock(UCELParser.IdExprContext.class);
-        when(node.ID()).thenReturn(new TerminalNodeImpl(new CommonToken(UCELParser.ID)));
+
+        var node = mock(UCELParser.IdExprContext.class);
+        var ref = mock(DeclarationReference.class);
+        var idNode = mock(TerminalNode.class);
+
+        try {
+            when(scope.get(ref)).thenThrow(CouldNotFindException.class);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+
+        node.reference = ref;
+        when(idNode.getText()).thenReturn("node");
+        when(node.ID()).thenReturn(idNode);
+
         Type actual = visitor.visitIdExpr(node);
         assertEquals(ERROR_TYPE, actual);
     }
@@ -3456,11 +3490,27 @@ public class TypeCheckerTests  {
     }
 
     @Test
-    void arrayIndexReturnsArrayType() {
+    void arrayIndexReturnNonArrayType() {
         TypeCheckerVisitor visitor = new TypeCheckerVisitor();
 
         UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
         var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, BOOL_ARRAY_TYPE, visitor);
+        var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
+
+        when(node.expression(0)).thenReturn(child1);
+        when(node.expression(1)).thenReturn(child2);
+
+        Type actual = visitor.visitArrayIndex(node);
+        assertEquals(BOOL_TYPE, actual);
+    }
+
+    @Test
+    void arrayIndexReturnsArrayType() {
+        var input = BOOL_ARRAY_TYPE.deepCopy(2);
+        TypeCheckerVisitor visitor = new TypeCheckerVisitor();
+
+        UCELParser.ArrayIndexContext node = mock(UCELParser.ArrayIndexContext.class);
+        var child1 = mockForVisitorResult(UCELParser.ExpressionContext.class, input, visitor);
         var child2 = mockForVisitorResult(UCELParser.ExpressionContext.class, INT_TYPE, visitor);
 
         when(node.expression(0)).thenReturn(child1);
@@ -3781,16 +3831,16 @@ public class TypeCheckerTests  {
 
         Type actual = visitor.visitArguments(node);
 
-        assertEquals(argTypes, actual);
+        assertEquals(argTypes.getEvaluationType(), actual.getEvaluationType());
     }
     private static Stream<Arguments> argumentTypesArguments() {
 
         ArrayList<Arguments> args = new ArrayList<Arguments>();
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {})));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE})));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE, INT_TYPE})));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE, INT_TYPE, BOOL_TYPE})));
-        args.add(Arguments.arguments(new Type(Type.TypeEnum.invalidType, new Type[] {DOUBLE_TYPE, INT_TYPE, BOOL_TYPE, CHAR_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.voidType, new Type[] {})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.voidType, new Type[] {DOUBLE_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.voidType, new Type[] {DOUBLE_TYPE, INT_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.voidType, new Type[] {DOUBLE_TYPE, INT_TYPE, BOOL_TYPE})));
+        args.add(Arguments.arguments(new Type(Type.TypeEnum.voidType, new Type[] {DOUBLE_TYPE, INT_TYPE, BOOL_TYPE, CHAR_TYPE})));
 
         // If it contains an error, base-type becomes error
         args.add(Arguments.arguments(new Type(Type.TypeEnum.errorType, new Type[] {ERROR_TYPE})));

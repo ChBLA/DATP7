@@ -308,12 +308,14 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if(isLeftIn == isRightIn && !hasThis) {
             logger.log(new ErrorLog(ctx, "Interfaces must be of mismatched 'in'/'out' types," +
                     " but found: " + (isLeftIn ? "'in'" : "'out'") + " and " + (isRightIn ? "'in'" : "'out'") ));
+            return ERROR_TYPE;
         }
 
         if(isLeftIn != isRightIn && hasThis) {
             logger.log(new ErrorLog(ctx, "When using the 'this' keyword, interfaces must be of matching " +
                     "'in'/'out' types," +
                     " but found: " + (isLeftIn ? "'in'" : "'out'") + " and " + (isRightIn ? "'in'" : "'out'")));
+            return ERROR_TYPE;
         }
 
         return VOID_TYPE;
@@ -1421,6 +1423,8 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
 
         try {
             Type newType = structToArray(ctx, initialiserType, arrayDim);
+            if (newType.getEvaluationType().equals(Type.TypeEnum.errorType))
+                return ERROR_TYPE;
             currentScope.get(ctx.reference).setType(newType);
             return newType;
         } catch (CouldNotFindException e) {
@@ -1434,8 +1438,11 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if(type.equals(VOID_TYPE)) return VOID_TYPE.deepCopy(arrayDim);
         if(type.getEvaluationType() != Type.TypeEnum.structType) {
             logger.log(new WrongTypeErrorLog(ctx, STRUCT_TYPE, type, "array declaration"));
+            return ERROR_TYPE;
         }
         Type internalType = null;
+        if (type.getParameters() == null)
+            return ERROR_TYPE;
         for(Type t : type.getParameters()) {
             Type paramType = structToArray(ctx, t, arrayDim - 1);
             if(internalType != null && !internalType.equals(paramType)) {

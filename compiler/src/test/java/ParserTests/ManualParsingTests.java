@@ -3,8 +3,10 @@ package ParserTests;
 import org.Ucel.*;
 import org.Ucel.IEdge;
 import org.Ucel.ILocation;
+import org.UcelParser.ManualParser.ErrorListener;
 import org.UcelParser.ManualParser.ManualParser;
 import org.UcelParser.UCELParser_Generated.UCELParser;
+import org.UcelParser.Util.Logging.Logger;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -34,13 +36,13 @@ public class ManualParsingTests {
         var projectMock = mock(IProject.class);
 
         when(projectMock.getDeclaration()).thenReturn("int i = 0;");
-        when(projectMock.getSystemDeclarations()).thenReturn("int i = 0; system goimer;");
+        when(projectMock.getSystemDeclarations()).thenReturn("int i = 0; system g;");
         when(projectMock.getTemplates()).thenReturn(List.of(mock(ITemplate.class)));
 
         var result = parser.parseProject(projectMock);
 
         assertNotNull(result);
-        assertEquals(3, result.getChildCount());
+        assertEquals(4, result.getChildCount());
 
     }
     //endregion
@@ -428,7 +430,7 @@ public class ManualParsingTests {
         var actualCasted = (UCELParser.LocationContext)actual;
         assertEquals(invMock, actualCasted.invariant());
         assertEquals(expMock, actualCasted.exponential());
-        assertNull(actualCasted.ID());
+        assertEquals("", actualCasted.ID().getText());
         assertTrue(actualCasted.isInitial);
         assertFalse(actualCasted.isUrgent);
         assertFalse(actualCasted.isCommitted);
