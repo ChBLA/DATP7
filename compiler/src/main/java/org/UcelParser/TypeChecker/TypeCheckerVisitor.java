@@ -308,12 +308,14 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
         if(isLeftIn == isRightIn && !hasThis) {
             logger.log(new ErrorLog(ctx, "Interfaces must be of mismatched 'in'/'out' types," +
                     " but found: " + (isLeftIn ? "'in'" : "'out'") + " and " + (isRightIn ? "'in'" : "'out'") ));
+            return ERROR_TYPE;
         }
 
         if(isLeftIn != isRightIn && hasThis) {
             logger.log(new ErrorLog(ctx, "When using the 'this' keyword, interfaces must be of matching " +
                     "'in'/'out' types," +
                     " but found: " + (isLeftIn ? "'in'" : "'out'") + " and " + (isRightIn ? "'in'" : "'out'")));
+            return ERROR_TYPE;
         }
 
         return VOID_TYPE;
