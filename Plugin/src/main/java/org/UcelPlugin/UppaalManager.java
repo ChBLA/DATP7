@@ -15,6 +15,8 @@ import org.UcelPlugin.DocumentParser.UppaalToUcelDocumentParser;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 
@@ -44,9 +46,20 @@ public class UppaalManager {
         Document doc = (Document)reg.get();
         return doc;
     }
+    protected static Document getDocument(String filePath) throws IOException {
+        return new PrototypeDocument().load(new URL("file", null, filePath));
+    }
 
     public IProject getProject() {
-        Document document = getCurrentDocument();
+        return getProject(getCurrentDocument());
+    }
+
+    public static IProject getProject(Path filePath) throws IOException {
+        String absolutePath = filePath.toAbsolutePath().toString();
+        return getProject(getDocument(absolutePath));
+    }
+
+    protected static IProject getProject(Document document) {
         UppaalToUcelDocumentParser documentParser = new UppaalToUcelDocumentParser(document);
         return documentParser.parseDocument();
     }
