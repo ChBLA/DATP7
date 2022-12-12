@@ -29,4 +29,8 @@ public class VariableValue implements InterpreterValue {
         return generateName();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof InterpreterValue && ((InterpreterValue) obj).generateName().equals(this.generateName());
+    }
 }

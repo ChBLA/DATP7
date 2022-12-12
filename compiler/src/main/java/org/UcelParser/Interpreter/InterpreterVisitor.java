@@ -44,6 +44,11 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
         this.currentScope = scope;
     }
 
+    public InterpreterVisitor(Scope scope, Occurrence testOccurrence) {
+        this(scope);
+        this.currentOccurrence = testOccurrence;
+    }
+
     //endregion
 
     //region Project / Manual Parser
