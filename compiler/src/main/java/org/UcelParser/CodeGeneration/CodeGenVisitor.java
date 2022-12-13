@@ -31,6 +31,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     private boolean inVerificationMode = false;
     private List<Integer> arrayIndices;
     private Occurrence globalOccurrence;
+    private Boolean hasRecursion = false;
 
     public CodeGenVisitor() {
         this.logger = new Logger();
@@ -56,7 +57,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         ArrayList<ComponentTemplate> components = new ArrayList<>();
         if (ctx.occurrences != null) {
             for (var occurrence : ctx.occurrences) {
-                this.componentPrefix = occurrence.getPrefix();
+                this.componentPrefix = occurrence.getPrefix() + (hasRecursion ? "_" + this.counter++ : "");
                 this.depthFromComponentScope = 0;
 
                 ArrayList<Template> parameters = new ArrayList<>();
@@ -356,6 +357,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     @Override
     public Template visitProject(UCELParser.ProjectContext ctx) {
         this.globalOccurrence = ctx.occurence;
+        this.hasRecursion = ctx.hasRecursion;
 
         enterScope(ctx.scope);
         PDeclarationTemplate pDeclTemplate = (PDeclarationTemplate) visit(ctx.pdeclaration());
