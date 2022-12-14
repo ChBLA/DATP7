@@ -128,4 +128,9 @@ public class Edge implements IEdge {
     public int hashCode() {
         return Objects.hash(locationStart, locationEnd, select, guard, sync, update, comment, testCode);
     }
+
+    @Override
+    public String toString() {
+        return locationStart.toString() + "->" + locationEnd.toString();
+    }
 }

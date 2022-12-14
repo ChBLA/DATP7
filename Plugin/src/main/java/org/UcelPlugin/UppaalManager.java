@@ -114,7 +114,7 @@ public class UppaalManager {
             system = compile(engine, document);
         }
         catch (Exception err) {
-            throw new RuntimeException();
+            throw new RuntimeException(err);
         }
 
         this.registry.getRepository("SystemModel").set(system);
