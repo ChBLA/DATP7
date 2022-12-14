@@ -154,4 +154,12 @@ public class Location implements ILocation {
     public int hashCode() {
         return Objects.hash(posX, posY, name, invariant, rateOfExponential, initial, urgent, committed, comments, testCodeOnEnter, testCodeOnExit);
     }
+
+    @Override
+    public String toString() {
+        if(getName() == null || getName() == "")
+            return "Node";
+
+        return getName();
+    }
 }
