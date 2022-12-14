@@ -56,7 +56,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         ArrayList<ComponentTemplate> components = new ArrayList<>();
         if (ctx.occurrences != null) {
             for (var occurrence : ctx.occurrences) {
-                this.componentPrefix = occurrence.getPrefix();
+                this.componentPrefix = prevPrefix + occurrence.getPrefix();
                 this.depthFromComponentScope = 0;
 
                 ArrayList<Template> parameters = new ArrayList<>();
@@ -74,7 +74,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                         }
                         if (paramNode.REF() != null) {
                             //TODO: Implement when component with references
-                        } else if (!paramNodeType.getEvaluationType().equals(Type.TypeEnum.interfaceType)) {
+                        } else if (!paramNodeType.getEvaluationType().equals(Type.TypeEnum.interfaceType) && !paramNodeType.getEvaluationType().equals(Type.TypeEnum.chanType)) {
                             Template paramTemplate = visit(paramNode);
                             String actualParameter = occurrence.getParameters()[i].generateName("");
                             ManualTemplate paramDeclaration = new ManualTemplate(String.format("%s = %s;", paramTemplate, actualParameter));
