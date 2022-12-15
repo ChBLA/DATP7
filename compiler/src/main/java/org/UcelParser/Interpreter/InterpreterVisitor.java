@@ -955,7 +955,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     }
 
     private boolean visitCompWithOccurrence(UCELParser.ComponentContext componentNode, CompOccurrenceValue value, String indices) {
-        ComponentOccurrence componentOccurrence = new ComponentOccurrence(componentNode, value.generateName() + indices,
+        ComponentOccurrence componentOccurrence = new ComponentOccurrence(componentNode, currentOccurrence.getPrefix() + (!currentOccurrence.getPrefix().isEmpty() ? "_" : "") + value.generateName() + indices,
                 value.getArguments(), value.getInterfaces(), value.getCompVarValue());
 
         componentNode.occurrences.add(componentOccurrence);
@@ -1033,7 +1033,7 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
 
     private boolean visitTempWithOccurrence(UCELParser.PtemplateContext templateNode,
                                             TemplateOccurrenceValue value, String indices) {
-        TemplateOccurrence templateOccurrence = new TemplateOccurrence(templateNode, value.generateName() + indices,
+        TemplateOccurrence templateOccurrence = new TemplateOccurrence(templateNode, currentOccurrence.getPrefix() + "_" + value.generateName() + indices,
                 value.getArguments(), value.getCompVarValue());
 
         templateNode.occurrences.add(templateOccurrence);
