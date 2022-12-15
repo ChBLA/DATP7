@@ -155,7 +155,7 @@ public class UcelPlugin implements Plugin {
                 ui.getStatusArea().setSuccess();
             }
             else {
-                ui.getStatusArea().setErrors(logs);
+                ui.getStatusArea().setWarnings(logs);
             }
             return compiledProject;
         }

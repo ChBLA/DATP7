@@ -50,6 +50,21 @@ public class StatusArea {
         }
     }
 
+    public void setWarnings(ArrayList<Log> logs) {
+        setSuccess();
+        element.appendString("\n\n", DEFAULT_STYLE);
+        for(var log: logs) {
+            AttributeSet style = DEFAULT_STYLE;
+
+            if(log instanceof Warning)
+                style = WARNING_STYLE;
+            else if(log instanceof ErrorLog)
+                style = ERROR_STYLE;
+
+            element.appendString(log.getFancyMessage() + "\n", style);
+        }
+    }
+
     protected AttributeSet DEFAULT_STYLE = TextStyles.DEFAULT;
     protected AttributeSet ERROR_STYLE = TextStyles.RED;
     protected AttributeSet WARNING_STYLE = TextStyles.DARK_YELLOW;
