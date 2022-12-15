@@ -10,6 +10,7 @@ import static com.ibm.icu.impl.Utility.repeat;
 public class Log {
 
     private String message;
+    protected String msgType;
     private int lineStart, charStart, lineStop, charStop;
     private boolean isPacked;
     private ParserRuleContext ctx;
@@ -22,6 +23,7 @@ public class Log {
         this.message = message;
         this.ctx = ctx;
         isPacked = true;
+        this.msgType = "Error";
     }
 
     public Log(int lineStart, int lineStop, int charStart, int charStop, String message) {
@@ -79,7 +81,7 @@ public class Log {
         if(getLineStart() == getLineStop()) {
             int line = (getLineStart() + 1), character = (getCharStart() + 1), width = getCharStop() - getCharStart() + 1;
             if (width > 1) width += 1;
-            return "Error at " + line + ":" + character + ": " + getMessage()
+            return msgType + " at " + line + ":" + character + ": " + getMessage()
                     + "\n" + lines[getLineStart()] +
                     "\n" + repeat(" ", getCharStart()) +
                     repeat("^", width);
