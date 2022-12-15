@@ -114,7 +114,7 @@ public class ManualParser {
 
         for(IEdge e : graph.getEdges()) {
             ParserRuleContext edge = parseEdge(graphCtx, e, locationMap);
-            if(edge == null)
+            if(edge == null && logger != null)
                 logger.log(new ErrorLog(graphCtx, "Invalid edge: " + e));
             foundNull = foundNull || edge == null;
             graphCtx.addChild(edge);

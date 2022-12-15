@@ -54,7 +54,7 @@ public class CodeGenTests {
 
     @Test
     void componentOneOccurrenceNoNestedComponentsGeneratedCorrectly() {
-        var expected = String.format("// Generation for component: Component1%nint Component1_aa_p1 = z;%nint Component1_aa_q = Component1_aa_p1 + 1;%n");
+        var expected = String.format("// Generation for component: Component1%nint Component1_aa_p1 = z;%n%nint Component1_aa_q = Component1_aa_p1 + 1;%n");
         var paramName = "p1";
         var actualParamName = "z";
 
@@ -104,100 +104,11 @@ public class CodeGenTests {
         node.occurrences = new ArrayList<>() {{ add(occurrence); }};
         node.scope = scopeCompNode;
 
-        var actual = visitor.visitComponent(node);
+        var actual = visitor.visitComponentOccurrence(node, occurrence);
 
         assertEquals(expected, actual.toString());
     }
-
-
-    @Test
-    void componentMultipleOccurrencesNoNestedComponentsGeneratedCorrectly() {
-        var expected = String.format("// Generation for component: Component1%n" +
-                "int Component1_aa_p1 = z;%n" +
-                "int Component1_aa_q = Component1_aa_p1 + 1;%n" +
-                "%n" +
-                "// Generation for component: Component2%n" +
-                "int Component2_ab_p1 = x;%n" +
-                "int Component2_ab_q = Component2_ab_p1 + 1;%n");
-        var paramName = "p1";
-        var actualParamName1 = "z";
-        var actualParamName2 = "x";
-
-        var parameterTemplate1 = new ManualTemplate("int Component1_aa_p1");
-        var interfaceTemplate1 = new ManualTemplate("");
-        var compBodyTemplate1 = new ManualTemplate("int Component1_aa_q = Component1_aa_p1 + 1;");
-
-        var parameterTemplate2 = new ManualTemplate("int Component2_ab_p1");
-        var interfaceTemplate2 = new ManualTemplate("");
-        var compBodyTemplate2 = new ManualTemplate("int Component2_ab_q = Component2_ab_p1 + 1;");
-
-        var visitor = new CodeGenVisitor();
-
-        var scopeCompNode = mock(Scope.class);
-
-        var node = mock(UCELParser.ComponentContext.class);
-        var parametersNode1 = mock(UCELParser.ParametersContext.class);
-        var parameterNode1 = mockForVisitorResult(UCELParser.ParameterContext.class, parameterTemplate1, visitor);
-        var interfaceNode1 = mockForVisitorResult(UCELParser.InterfacesContext.class, interfaceTemplate1, visitor);
-        var compBodyNode1 = mockForVisitorResult(UCELParser.CompBodyContext.class, compBodyTemplate1, visitor);
-
-        var parametersNode2 = mock(UCELParser.ParametersContext.class);
-        var parameterNode2 = mockForVisitorResult(UCELParser.ParameterContext.class, parameterTemplate2, visitor);
-        var interfaceNode2 = mockForVisitorResult(UCELParser.InterfacesContext.class, interfaceTemplate2, visitor);
-        var compBodyNode2 = mockForVisitorResult(UCELParser.CompBodyContext.class, compBodyTemplate2, visitor);
-
-        var constructorCallNode = mock(UCELParser.CompConContext.class);
-        var parameterNodes1 = new ArrayList<UCELParser.ParameterContext>() {{ add(parameterNode1); }};
-        when(parametersNode1.parameter()).thenReturn(parameterNodes1);
-
-        var parameterNodes2 = new ArrayList<UCELParser.ParameterContext>() {{ add(parameterNode2); }};
-        when(parametersNode2.parameter()).thenReturn(parameterNodes2);
-
-        when(node.parameters()).thenReturn(parametersNode1, parametersNode1, parametersNode1, parametersNode2);
-        when(node.interfaces()).thenReturn(interfaceNode1, interfaceNode2);
-        when(node.compBody()).thenReturn(compBodyNode1, compBodyNode2);
-
-        DeclarationInfo[] parameters1 = new DeclarationInfo[1];
-        DeclarationInfo[] interfaces1 = new DeclarationInfo[1];
-        var parameterInfo1 = mock(DeclarationInfo.class);
-        var interfaceInfo1 = mock(DeclarationInfo.class);
-        when(parameterInfo1.generateName(anyString())).thenReturn(actualParamName1);
-        parameters1[0] = parameterInfo1;
-        interfaces1[0] = interfaceInfo1;
-
-        DeclarationInfo[] parameters2 = new DeclarationInfo[1];
-        DeclarationInfo[] interfaces2 = new DeclarationInfo[1];
-        var parameterInfo2 = mock(DeclarationInfo.class);
-        var interfaceInfo2 = mock(DeclarationInfo.class);
-        when(parameterInfo2.generateName(anyString())).thenReturn(actualParamName2);
-        parameters2[0] = parameterInfo2;
-        interfaces2[0] = interfaceInfo2;
-
-        var parameterRef1 = mock(DeclarationReference.class);
-        var parameterRef2 = mock(DeclarationReference.class);
-        parameterNode1.reference = parameterRef1;
-        parameterNode2.reference = parameterRef2;
-
-        when(parameterInfo1.getType()).thenReturn(new Type(Type.TypeEnum.intType));
-        when(parameterInfo2.getType()).thenReturn(new Type(Type.TypeEnum.intType));
-
-        try {
-            when(scopeCompNode.get(parameterRef1)).thenReturn(parameterInfo1);
-            when(scopeCompNode.get(parameterRef2)).thenReturn(parameterInfo2);
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
-
-
-        var occurrence1 = new ComponentOccurrence(node, "Component1", parameters1, interfaces1, null);
-        var occurrence2 = new ComponentOccurrence(node, "Component2", parameters2, interfaces2, null);
-        node.occurrences = new ArrayList<>() {{ add(occurrence1); add(occurrence2); }};
-        node.scope = scopeCompNode;
-
-        var actual = visitor.visitComponent(node);
-
-        assertEquals(expected, actual.toString());
-    }
+    
 
     //endregion
 
@@ -623,8 +534,11 @@ public class CodeGenTests {
         var systemNode = mockForVisitorResult(UCELParser.PsystemContext.class, pSystemTemplate, visitor);
         var declNode = mockForVisitorResult(UCELParser.PdeclarationContext.class, pDeclTemplate, visitor);
         var verificationNode = mock(UCELParser.VerificationListContext.class);
+        var occurrence = mock(Occurrence.class);
 
         node.scope = scopeMock;
+        node.occurence = occurrence;
+        when(occurrence.getChildren()).thenReturn(new ArrayList<>());
         when(node.psystem()).thenReturn(systemNode);
         when(node.pdeclaration()).thenReturn(declNode);
         when(node.verificationList()).thenReturn(verificationNode);
@@ -654,10 +568,12 @@ public class CodeGenTests {
         var declNode = mockForVisitorResult(UCELParser.PdeclarationContext.class, pDeclTemplate, visitor);
         var tempNode1 = mockForVisitorResult(UCELParser.PtemplateContext.class, pTemplateTemplate, visitor);
         var verificationNode = mock(UCELParser.VerificationListContext.class);
-
+        var occurrence = mock(Occurrence.class);
         var pTemplateNodes = new ArrayList<UCELParser.PtemplateContext>() {{ add(tempNode1); }};
 
         node.scope = scopeMock;
+        node.occurence = occurrence;
+        when(occurrence.getChildren()).thenReturn(new ArrayList<>());
         when(node.psystem()).thenReturn(systemNode);
         when(node.pdeclaration()).thenReturn(declNode);
         when(node.ptemplate()).thenReturn(pTemplateNodes);
@@ -692,8 +608,11 @@ public class CodeGenTests {
         var tempNode2 = mockForVisitorResult(UCELParser.PtemplateContext.class, pTemplateTemplate2, visitor);
         var verificationNode = mock(UCELParser.VerificationListContext.class);
         var pTemplateNodes = new ArrayList<UCELParser.PtemplateContext>() {{ add(tempNode1); add(tempNode2); }};
+        var occurrence = mock(Occurrence.class);
 
         node.scope = scopeMock;
+        node.occurence = occurrence;
+        when(occurrence.getChildren()).thenReturn(new ArrayList<>());
         when(node.psystem()).thenReturn(systemNode);
         when(node.pdeclaration()).thenReturn(declNode);
         when(node.ptemplate()).thenReturn(pTemplateNodes);

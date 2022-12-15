@@ -49,50 +49,59 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     //region Component Extension
     //region Component
 
+
     @Override
     public Template visitComponent(UCELParser.ComponentContext ctx) {
-        String prevPrefix = componentPrefix;
+        return new ManualTemplate("");
+    }
+
+    public Template visitComponentOccurrence(UCELParser.ComponentContext ctx, ComponentOccurrence occurrence) {
         enterScope(ctx.scope);
+        String prevPrefix = componentPrefix;
+        this.componentPrefix = prevPrefix + (!prevPrefix.isEmpty() ? "_" : "") + occurrence.getPrefix() + (hasRecursion ? "_" + this.counter++ : "");
+        this.depthFromComponentScope = 0;
 
-        ArrayList<ComponentTemplate> components = new ArrayList<>();
-        if (ctx.occurrences != null) {
-            for (var occurrence : ctx.occurrences) {
-                this.componentPrefix = prevPrefix + "_" + occurrence.getPrefix() + (hasRecursion ? "_" + this.counter++ : "");
-                this.depthFromComponentScope = 0;
-
-                ArrayList<Template> parameters = new ArrayList<>();
-                ArrayList<Template> interfaces = new ArrayList<>();
-                Template compBodyTemplate;
-                if (ctx.parameters() != null) {
-                    for (int i = 0; i < ctx.parameters().parameter().size(); i++) {
-                        UCELParser.ParameterContext paramNode = ctx.parameters().parameter().get(i);
-                        Type paramNodeType;
-                        try {
-                            paramNodeType = currentScope.get(paramNode.reference).getType();
-                        } catch (CouldNotFindException e) {
-                            logger.log(new MissingReferenceErrorLog(paramNode, paramNode.ID().getText()));
-                            return new ManualTemplate("");
-                        }
-                        if (paramNode.REF() != null) {
-                            //TODO: Implement when component with references
-                        } else if (!paramNodeType.getEvaluationType().equals(Type.TypeEnum.interfaceType) && !paramNodeType.getEvaluationType().equals(Type.TypeEnum.chanType)) {
-                            Template paramTemplate = visit(paramNode);
-                            String actualParameter = occurrence.getParameters()[i].generateName("");
-                            ManualTemplate paramDeclaration = new ManualTemplate(String.format("%s = %s;", paramTemplate, actualParameter));
-                            parameters.add(paramDeclaration);
-                        }
-                    }
+        ArrayList<Template> parameters = new ArrayList<>();
+        ArrayList<Template> interfaces = new ArrayList<>();
+        Template compBodyTemplate;
+        if (ctx.parameters() != null) {
+            for (int i = 0; i < ctx.parameters().parameter().size(); i++) {
+                UCELParser.ParameterContext paramNode = ctx.parameters().parameter().get(i);
+                Type paramNodeType;
+                try {
+                    paramNodeType = currentScope.get(paramNode.reference).getType();
+                } catch (CouldNotFindException e) {
+                    logger.log(new MissingReferenceErrorLog(paramNode, paramNode.ID().getText()));
+                    return new ManualTemplate("");
                 }
-
-                compBodyTemplate = visit(ctx.compBody());
-
-                components.add(new ComponentTemplate(this.componentPrefix, parameters, interfaces, compBodyTemplate));
+                if (paramNode.REF() != null) {
+                    //TODO: Implement when component with references
+                } else if (!paramNodeType.getEvaluationType().equals(Type.TypeEnum.interfaceType) && !paramNodeType.getEvaluationType().equals(Type.TypeEnum.chanType)) {
+                    Template paramTemplate = visit(paramNode);
+                    String actualParameter = occurrence.getParameters()[i].generateName("");
+                    ManualTemplate paramDeclaration = new ManualTemplate(String.format("%s = %s;", paramTemplate, actualParameter));
+                    parameters.add(paramDeclaration);
+                }
             }
         }
 
-        componentPrefix = prevPrefix;
+        compBodyTemplate = visit(ctx.compBody());
+
+        ArrayList<Template> subComps = new ArrayList<>();
+        for (var child : occurrence.getChildren()) {
+            if (child instanceof ComponentOccurrence) {
+                var subComp = visitComponentOccurrence(((ComponentOccurrence) child).getNode(), (ComponentOccurrence) child);
+                if (!subComp.toString().isEmpty())
+                    subComps.add(subComp);
+            }
+        }
+
+
         exitScope();
-        return new ComponentsTemplate(components);
+        var result = new ComponentTemplate(this.componentPrefix, parameters, interfaces, subComps, compBodyTemplate);
+        this.componentPrefix = prevPrefix;
+
+        return result;
     }
     //endregion
 
@@ -362,6 +371,10 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         enterScope(ctx.scope);
         PDeclarationTemplate pDeclTemplate = (PDeclarationTemplate) visit(ctx.pdeclaration());
         PSystemTemplate pSystemTemplate = (PSystemTemplate) visit(ctx.psystem());
+        for (var child : globalOccurrence.getChildren()) {
+            if (child instanceof ComponentOccurrence)
+                pSystemTemplate.comps.add(visitComponentOccurrence(((ComponentOccurrence) child).getNode(), (ComponentOccurrence) child));
+        }
 
         ArrayList<PTemplateTemplate> pTemplateTemplates = new ArrayList<>();
         for (var pTemp : ctx.ptemplate()) {
