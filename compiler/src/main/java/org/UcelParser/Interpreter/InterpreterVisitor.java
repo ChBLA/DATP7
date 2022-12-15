@@ -372,6 +372,21 @@ public class InterpreterVisitor extends UCELBaseVisitor<InterpreterValue> {
     }
 
 
+    @Override
+    public InterpreterValue visitConditional(UCELParser.ConditionalContext ctx) {
+        InterpreterValue predicate = visit(ctx.expression(0));
+        if(predicate instanceof BooleanValue) {
+            if(((BooleanValue) predicate).getBool()) {
+                return visit(ctx.expression(1));
+            } else {
+                return visit(ctx.expression(2));
+            }
+        } else {
+            logger.log(new CompilerErrorLog(ctx, "Invalid predicate"));
+            return null;
+        }
+    }
+
     //endregion
 
     //region Control Flow
