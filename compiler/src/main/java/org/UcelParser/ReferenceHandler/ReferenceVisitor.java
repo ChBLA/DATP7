@@ -422,8 +422,8 @@ public class ReferenceVisitor extends UCELBaseVisitor<Boolean> {
     public Boolean visitVerification(UCELParser.VerificationContext ctx) {
         String id = ctx.ID().getText();
         try {
-            if(!currentScope.isUnique(id, false)) {
-                logger.log(new FunctionAlreadyDeclaredErrorLog(ctx, id));
+            if(!currentScope.isUnique(id, true)) {
+                logger.log(new VariableAlreadyDeclaredErrorLog(ctx, id));
                 return false;
             }
             DeclarationReference declRef = currentScope.add(new DeclarationInfo(ctx.ID().getText(), ctx));

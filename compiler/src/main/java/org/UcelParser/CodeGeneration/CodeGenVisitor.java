@@ -1058,6 +1058,8 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
             this.arrayIndices = new ArrayList<>();
             var expr = ctx.expression();
             if (!(expr instanceof UCELParser.IdExprContext || expr instanceof UCELParser.StructAccessContext || expr instanceof UCELParser.ArrayIndexContext)) {
+                if (expr instanceof UCELParser.FuncCallContext)
+                    return new ManualTemplate(String.format("%s.%s", ctx.expression().getText(), ctx.ID().getText()));
                 //todo: log
                 return new ManualTemplate("");
             }
@@ -1395,18 +1397,20 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         }
 
         //todo: in verification id is never added. Consider where to add it. Global scope may cause conflicts
-        String id = "";
         try {
-            id = currentScope.get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope()));
+            String id = currentScope.get(ctx.reference).generateName(getComponentPrefix(ctx.reference.getRelativeScope()));
+
+            var type = visit(ctx.type());
+            var expr = visit(ctx.expression());
+
+            return new VerificationTemplate(ctx.op.getText(), id, type, expr);
         } catch (CouldNotFindException e) {
             logger.log(new MissingReferenceErrorLog(ctx, ctx.ID().getText()));
             return new ManualTemplate("");
+        } catch (Exception e) {
+            logger.log(new Warning(ctx, "Could not generate verification query, inserting as it was before compilation. Error: " + e.getMessage()));
+            return new ManualTemplate(ctx.getText());
         }
-
-        var type = visit(ctx.type());
-        var expr = visit(ctx.expression());
-
-        return new VerificationTemplate(ctx.op.getText(), id, type, expr);
     }
 
     //endregion
