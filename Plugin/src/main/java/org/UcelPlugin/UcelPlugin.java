@@ -63,6 +63,12 @@ public class UcelPlugin implements Plugin {
             emitOnCompile(true);
         });
 
+        ui.getBenchmarkButton().addOnClickAsync(e -> {
+            emitOnCompile(false);
+            runCompilerBenchmark(uppaalManager.getProject());
+            emitOnCompile(true);
+        });
+
         registerListeners();
         liveFeedbackProvider = new LiveFeedbackProvider(uppaalManager, ui.getLiveFeedbackCheckbox().getIsChecked());
     }
@@ -168,4 +174,30 @@ public class UcelPlugin implements Plugin {
             return null;
         }
     }
+
+    private IProject runCompilerBenchmark(IProject project) {
+        try {
+            ui.getStatusArea().setCompiling();
+            Compiler compiler = new Compiler();
+            var compiledProject = compiler.compileProject(project);
+            var logs = compiler.getLogs();
+            if(logs.size() == 0) {
+                ui.getStatusArea().setSuccess();
+            }
+            else {
+                ui.getStatusArea().setWarnings(logs);
+            }
+            return compiledProject;
+        }
+        catch (ErrorsFoundException err) {
+            ui.getStatusArea().setErrors(err.getLogs());
+            return null;
+        }
+        catch (Throwable ex) {
+            ui.getStatusArea().setError(ex);
+            return null;
+        }
+    }
+
+
 }

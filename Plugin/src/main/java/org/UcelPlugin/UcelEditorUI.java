@@ -59,6 +59,11 @@ public class UcelEditorUI extends BaseWorkspace {
         return liveFeedbackCheckbox;
     }
 
+    private Button benchmarkButton = new Button(topPanel, LayoutGenerator.GetLayout(4,1,1,1), "Benchmark");
+    public Button getBenchmarkButton() {
+        return benchmarkButton;
+    }
+
     private StatusArea statusArea = new StatusArea(bottomPanel, LayoutGenerator.GetLayout(0,0,1,1));
     public StatusArea getStatusArea() {
         return statusArea;
