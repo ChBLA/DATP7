@@ -58,7 +58,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
     public Template visitComponentOccurrence(UCELParser.ComponentContext ctx, ComponentOccurrence occurrence) {
         enterScope(ctx.scope);
         String prevPrefix = componentPrefix;
-        this.componentPrefix = prevPrefix + (!prevPrefix.isEmpty() ? "_" : "") + occurrence.getPrefix() + (hasRecursion ? "_" + this.counter++ : "");
+        this.componentPrefix = occurrence.getPrefix() + (hasRecursion ? "_" + this.counter++ : "");
         this.depthFromComponentScope = 0;
 
         ArrayList<Template> parameters = new ArrayList<>();
@@ -72,6 +72,7 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                     paramNodeType = currentScope.get(paramNode.reference).getType();
                 } catch (CouldNotFindException e) {
                     logger.log(new MissingReferenceErrorLog(paramNode, paramNode.ID().getText()));
+                    exitScope();
                     return new ManualTemplate("");
                 }
                 if (paramNode.REF() != null) {
@@ -371,11 +372,13 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
         enterScope(ctx.scope);
         PDeclarationTemplate pDeclTemplate = (PDeclarationTemplate) visit(ctx.pdeclaration());
         PSystemTemplate pSystemTemplate = (PSystemTemplate) visit(ctx.psystem());
+        exitScope();
         for (var child : globalOccurrence.getChildren()) {
             if (child instanceof ComponentOccurrence)
                 pSystemTemplate.comps.add(visitComponentOccurrence(((ComponentOccurrence) child).getNode(), (ComponentOccurrence) child));
         }
 
+        enterScope(ctx.scope);
         ArrayList<PTemplateTemplate> pTemplateTemplates = new ArrayList<>();
         for (var pTemp : ctx.ptemplate()) {
             PTemplateTemplate template = (PTemplateTemplate) visit(pTemp);

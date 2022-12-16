@@ -116,17 +116,25 @@ public class TypeCheckerVisitor extends UCELBaseVisitor<Type> {
             }
         }
 
-        Type compVarType;
-        try {
-            compVarType = currentScope.get(ctx.compVar().variableReference).getType();
-        } catch (Exception e) {
-            logger.log(new VariableNotDeclaredErrorLog(ctx.compVar(), ctx.compVar().ID().getText()));
-            return ERROR_TYPE;
-        }
+        Type compVarType = variableCompInfo.getType();
 
         if (compVarType == null) {
             logger.log(new MissingTypeErrorLog(ctx.compVar(), ctx.compVar().ID().getText()));
             return ERROR_TYPE;
+        }
+
+        if(compVarType.getArrayDimensions() != ctx.compVar().expression().size()) {
+            logger.log(new TypeErrorLog(ctx, "Expected " + compVarType.getArrayDimensions() +
+                    " indices but found " + ctx.compVar().expression().size()));
+            return ERROR_TYPE;
+        }
+
+        for(UCELParser.ExpressionContext expr : ctx.compVar().expression()) {
+            Type indexType = visit(expr);
+            if(!indexType.equals(INT_TYPE)) {
+                logger.log(new TypeErrorLog(ctx, "Array indices must be of type int but found " + indexType));
+                return ERROR_TYPE;
+            }
         }
 
         if (!(compVarType.getEvaluationType().equals(Type.TypeEnum.processType) && constructorType.getEvaluationType().equals(Type.TypeEnum.templateType))
