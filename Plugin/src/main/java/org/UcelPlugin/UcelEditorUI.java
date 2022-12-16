@@ -26,13 +26,12 @@ public class UcelEditorUI extends BaseWorkspace {
     }
 
     private JPanel jPanel = new JPanel(new GridBagLayout());
+
+    //region Top Panel
+    //region Button list
     private JPanel topPanel = new JPanel(new GridBagLayout()) {{
         jPanel.add(this, LayoutGenerator.GetLayout(0,0,1,1));
     }};
-    private JPanel bottomPanel = new JPanel(new GridBagLayout()) {{
-        jPanel.add(this, LayoutGenerator.GetLayout(0,1,1,9));
-    }};
-
 
     private Button compileToEditorButton = new Button(topPanel, LayoutGenerator.GetLayout(0,0,1,1), "Compile to Editor");
     public Button getCompileToEditorButton() {
@@ -54,6 +53,8 @@ public class UcelEditorUI extends BaseWorkspace {
         return tryBuildButton;
     }
 
+    //endregion
+    //region Right side
     private LabelledCheckbox liveFeedbackCheckbox = new LabelledCheckbox(topPanel, LayoutGenerator.GetLayout(4,0,1,1), "Live Feedback", false);
     public LabelledCheckbox getLiveFeedbackCheckbox() {
         return liveFeedbackCheckbox;
@@ -63,9 +64,17 @@ public class UcelEditorUI extends BaseWorkspace {
     public Button getBenchmarkButton() {
         return benchmarkButton;
     }
+    //endregion
+    //endregion
+
+    //region Bottom Panel
+    private JPanel bottomPanel = new JPanel(new GridBagLayout()) {{
+        jPanel.add(this, LayoutGenerator.GetLayout(0,1,1,9));
+    }};
 
     private StatusArea statusArea = new StatusArea(bottomPanel, LayoutGenerator.GetLayout(0,0,1,1));
     public StatusArea getStatusArea() {
         return statusArea;
     }
+    //endregion
 }
