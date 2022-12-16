@@ -175,11 +175,11 @@ public class UcelPlugin implements Plugin {
         }
     }
 
-    private IProject runCompilerBenchmark(IProject project) {
+    private void runCompilerBenchmark(IProject project) {
         try {
             ui.getStatusArea().setCompiling();
             Compiler compiler = new Compiler();
-            var compiledProject = compiler.compileProject(project);
+            compiler.benchmarkProject(project);
             var logs = compiler.getLogs();
             if(logs.size() == 0) {
                 ui.getStatusArea().setSuccess();
@@ -187,15 +187,12 @@ public class UcelPlugin implements Plugin {
             else {
                 ui.getStatusArea().setWarnings(logs);
             }
-            return compiledProject;
         }
         catch (ErrorsFoundException err) {
             ui.getStatusArea().setErrors(err.getLogs());
-            return null;
         }
         catch (Throwable ex) {
             ui.getStatusArea().setError(ex);
-            return null;
         }
     }
 
