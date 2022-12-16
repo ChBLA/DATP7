@@ -1,6 +1,7 @@
 package org.UcelPlugin.UiComponents;
 
 import org.UcelParser.Util.Logging.ErrorLog;
+import org.UcelParser.Util.Logging.InfoLog;
 import org.UcelParser.Util.Logging.Log;
 import org.UcelParser.Util.Logging.Warning;
 
@@ -36,38 +37,38 @@ public class StatusArea {
         }
     }
 
-    public void setErrors(ArrayList<Log> logs) {
-        element.reset();
-        for(var log: logs) {
-            AttributeSet style = DEFAULT_STYLE;
-
-            if(log instanceof Warning)
-                style = WARNING_STYLE;
-            else if(log instanceof ErrorLog)
-                style = ERROR_STYLE;
-
-            element.appendString(log.getFancyMessage() + "\n", style);
+    public void setLogs(ArrayList<Log> logs, boolean success) {
+        if(success) {
+            setSuccess();
+            element.appendString("\n\n", DEFAULT_STYLE);
         }
+        else {
+            element.reset();
+        }
+
+        for(var log: logs)
+            appendLog(log);
     }
 
-    public void setWarnings(ArrayList<Log> logs) {
-        setSuccess();
-        element.appendString("\n\n", DEFAULT_STYLE);
-        for(var log: logs) {
-            AttributeSet style = DEFAULT_STYLE;
+    public void appendLog(Log log) {
+        AttributeSet style;
 
-            if(log instanceof Warning)
-                style = WARNING_STYLE;
-            else if(log instanceof ErrorLog)
-                style = ERROR_STYLE;
+        if(log instanceof ErrorLog)
+            style = ERROR_STYLE;
+        else if(log instanceof Warning)
+            style = WARNING_STYLE;
+        else if(log instanceof InfoLog)
+            style = INFO_STYLE;
+        else
+            style = DEFAULT_STYLE;
 
-            element.appendString(log.getFancyMessage() + "\n", style);
-        }
+        element.appendString(log.getFancyMessage() + "\n", style);
     }
 
     protected AttributeSet DEFAULT_STYLE = TextStyles.DEFAULT;
     protected AttributeSet ERROR_STYLE = TextStyles.RED;
     protected AttributeSet WARNING_STYLE = TextStyles.DARK_YELLOW;
+    protected AttributeSet INFO_STYLE = TextStyles.BLUE;
     protected AttributeSet SUCCESS_STYLE = TextStyles.DARK_GREEN;
 
 }

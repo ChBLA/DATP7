@@ -14,4 +14,6 @@ public class TextStyles {
     public final static AttributeSet DARK_YELLOW = CTX.addAttribute(CTX.getEmptySet(), StyleConstants.Foreground, new Color(126, 126, 0));
     public final static AttributeSet GREEN = CTX.addAttribute(CTX.getEmptySet(), StyleConstants.Foreground, Color.GREEN);
     public final static AttributeSet DARK_GREEN = CTX.addAttribute(CTX.getEmptySet(), StyleConstants.Foreground, new Color(0, 120, 0));
+
+    public final static AttributeSet BLUE = CTX.addAttribute(CTX.getEmptySet(), StyleConstants.Foreground, new Color(0, 100, 150));
 }

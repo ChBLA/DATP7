@@ -156,17 +156,11 @@ public class UcelPlugin implements Plugin {
             ui.getStatusArea().setCompiling();
             Compiler compiler = new Compiler();
             var compiledProject = compiler.compileProject(project);
-            var logs = compiler.getLogs();
-            if(logs.size() == 0) {
-                ui.getStatusArea().setSuccess();
-            }
-            else {
-                ui.getStatusArea().setWarnings(logs);
-            }
+            ui.getStatusArea().setLogs(compiler.getLogs(), true);
             return compiledProject;
         }
         catch (ErrorsFoundException err) {
-            ui.getStatusArea().setErrors(err.getLogs());
+            ui.getStatusArea().setLogs(err.getLogs(), false);
             return null;
         }
         catch (Throwable ex) {
@@ -180,17 +174,11 @@ public class UcelPlugin implements Plugin {
             ui.getStatusArea().setCompiling();
             Compiler compiler = new Compiler();
             var compiledProject = compiler.compileProject(project);
-            var logs = compiler.getLogs();
-            if(logs.size() == 0) {
-                ui.getStatusArea().setSuccess();
-            }
-            else {
-                ui.getStatusArea().setWarnings(logs);
-            }
+            ui.getStatusArea().setLogs(compiler.getLogs(), true);
             return compiledProject;
         }
         catch (ErrorsFoundException err) {
-            ui.getStatusArea().setErrors(err.getLogs());
+            ui.getStatusArea().setLogs(err.getLogs(), false);
             return null;
         }
         catch (Throwable ex) {
