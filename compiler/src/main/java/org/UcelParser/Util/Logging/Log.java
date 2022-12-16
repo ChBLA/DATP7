@@ -9,7 +9,7 @@ import static com.ibm.icu.impl.Utility.repeat;
 
 public class Log {
 
-    private String message;
+    protected String message;
     protected String msgType;
     private int lineStart, charStart, lineStop, charStop;
     private boolean isPacked;
