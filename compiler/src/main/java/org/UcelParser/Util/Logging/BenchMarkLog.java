@@ -4,15 +4,16 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.apache.commons.math3.distribution.TDistribution;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class BenchMarkLog extends InfoLog {
     public BenchMarkLog(ArrayList<double[]> times) {
         super("");
 
-        this.message = String.format("%nLexing/Parsing: %f +- %f%nReference Handler: %f +- %f%n" +
-                "Type Checking: %f +- %f%nInterpreter: %f +- %f%nCode generation: %f +- %f%n" +
-                "Project linking: %f +- %f%n",
+        this.message = String.format("%nLexing/Parsing: %.2f +- %.2f%nReference Handler: %.2f +- %.2f%n" +
+                "Type Checking: %.2f +- %.2f%nInterpreter: %.2f +- %.2f%nCode generation: %.2f +- %.2f%n" +
+                "Project linking: %.2f +- %.2f%n",
                 mean(times.get(0)), confidenceInterval(times.get(0), 0.05),
                 mean(times.get(1)), confidenceInterval(times.get(1), 0.05),
                 mean(times.get(2)), confidenceInterval(times.get(2), 0.05),
