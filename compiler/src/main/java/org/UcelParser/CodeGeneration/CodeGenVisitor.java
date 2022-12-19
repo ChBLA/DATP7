@@ -1379,9 +1379,12 @@ public class CodeGenVisitor extends UCELBaseVisitor<Template> {
                 var leftInt = ((IntegerValueTemplate) left).value;
                 var rightInt = ((IntegerValueTemplate) right).value;
 
-                DeclarationInfo info;
+                DeclarationInfo info = new DeclarationInfo(ctx.ID().getText());
                 try {
-                    info = currentScope.get(ctx.reference);
+                    if (ctx.reference == null)
+                        ctx.reference = currentScope.add(info);
+                    else
+                        info = currentScope.get(ctx.reference);
                 } catch (CouldNotFindException e) {
                     logger.log(new MissingReferenceErrorLog(ctx, "variable " + ctx.ID().getText()));
                     return new ManualTemplate("");
