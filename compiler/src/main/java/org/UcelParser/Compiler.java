@@ -8,9 +8,7 @@ import org.UcelParser.CodeGeneration.templates.Template;
 import org.UcelParser.Interpreter.InterpreterVisitor;
 import org.UcelParser.ManualParser.ManualParser;
 import org.UcelParser.Util.Exception.ErrorsFoundException;
-import org.UcelParser.Util.Logging.ErrorLog;
-import org.UcelParser.Util.Logging.ILogger;
-import org.UcelParser.Util.Logging.Log;
+import org.UcelParser.Util.Logging.*;
 import org.UcelParser.Util.UniquePrefixGenerator;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.CharStream;
@@ -19,8 +17,9 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.UcelParser.UCELParser_Generated.*;
 import org.UcelParser.ReferenceHandler.ReferenceVisitor;
 import org.UcelParser.TypeChecker.TypeCheckerVisitor;
-import org.UcelParser.Util.Logging.Logger;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.apache.commons.math3.distribution.TDistribution;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import java.util.ArrayList;
 
@@ -58,6 +57,54 @@ public class Compiler {
         var generatedCode = runVisitor(codeGenVisitor, interpreterTree, logger);
         var outputProject = new ProjectCodeLinker().generateUppaalProject((ProjectTemplate) generatedCode);
         return outputProject;
+    }
+
+    public void benchmarkProject(IProject project) throws ErrorsFoundException {
+        UniquePrefixGenerator.resetCounter();
+        logger.setSource("");//TODO inject sources
+
+        long divider = 1000;
+        int testCount = 10;
+        int warmUpCount = 3;
+
+        ArrayList<double[]> timesForAll = new ArrayList<>();
+        for (int i = 0; i < 6; i++) {
+            timesForAll.add(new double[testCount]);
+        }
+
+        ArrayList<Long> times = new ArrayList<>();
+        for (int i = 0; i < 13; i++) {
+            if (i < warmUpCount) {
+                var tree = runVisitor(new ManualParser(logger), project, logger);
+                var refTree = runVisitor(referenceVisitor, tree, logger);
+                var typeTree = runVisitor(typeCheckerVisitor, refTree, logger);
+                var interpreterTree = runVisitor(interpreterVisitor, typeTree, logger);
+                var generatedCode = runVisitor(codeGenVisitor, interpreterTree, logger);
+                var outputProject = new ProjectCodeLinker().generateUppaalProject((ProjectTemplate) generatedCode);
+            } else {
+                var startTime = System.nanoTime();
+                var tree = runVisitor(new ManualParser(logger), project, logger);
+                timesForAll.get(0)[i - warmUpCount] = (double) (System.nanoTime() - startTime) / divider;
+                startTime = System.nanoTime();
+                var refTree = runVisitor(referenceVisitor, tree, logger);
+                timesForAll.get(1)[i - warmUpCount] = (double) (System.nanoTime() - startTime) / divider;
+                startTime = System.nanoTime();
+                var typeTree = runVisitor(typeCheckerVisitor, refTree, logger);
+                timesForAll.get(2)[i - warmUpCount] = (double) (System.nanoTime() - startTime) / divider;
+                startTime = System.nanoTime();
+                var interpreterTree = runVisitor(interpreterVisitor, typeTree, logger);
+                timesForAll.get(3)[i - warmUpCount] = (double) (System.nanoTime() - startTime) / divider;
+                startTime = System.nanoTime();
+                var generatedCode = runVisitor(codeGenVisitor, interpreterTree, logger);
+                timesForAll.get(4)[i - warmUpCount] = (double) (System.nanoTime() - startTime) / divider;
+                startTime = System.nanoTime();
+                var outputProject = new ProjectCodeLinker().generateUppaalProject((ProjectTemplate) generatedCode);
+                timesForAll.get(5)[i - warmUpCount] = (double) (System.nanoTime() - startTime) / divider;
+            }
+        }
+
+        logger.log(new BenchMarkLog(timesForAll));
+
     }
 
     public void checkProject(IProject project) throws ErrorsFoundException {

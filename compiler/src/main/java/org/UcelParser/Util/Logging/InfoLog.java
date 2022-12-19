@@ -12,4 +12,9 @@ public class InfoLog extends Log {
     public String getFancyMessage() {
         return msgType + ": " + this.getMessage();
     }
+
+    @Override
+    public void unpack() {
+
+    }
 }
