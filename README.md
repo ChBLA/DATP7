@@ -2,7 +2,7 @@
 Plugin for the model-checking tool UPPAAL
 
 ## Building From Source
-1. Make sure UPPAAL is installed.
+1. Install UPPAAL version 4.1.26-1 or higher. https://uppaal.org/downloads/
 2. Install Gradle https://gradle.org/install/
 3. Clone the repository
 4. Set environment variable `UPPAAL_HOME` to the root folder of your UPPAAL installation, such that `%UPPAAL_HOME%/uppaal.jar` exists.
