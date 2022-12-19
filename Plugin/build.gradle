@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'org.UcelPlugin'
-version "0.1"
+version "1.0"
 
 def UPPAAL_HOME = System.getenv('UPPAAL_HOME')
 if(UPPAAL_HOME == null)
@@ -27,7 +27,7 @@ dependencies {
     implementation findProject(':compiler')
 }
 
-task buildFatjar(type: Jar) {
+task buildFatJar(type: Jar) {
     dependsOn(build)
 
     manifest {
@@ -60,8 +60,16 @@ task buildFatjar(type: Jar) {
     with jar
 }
 
+task buildPlugin(type: Copy) {
+    dependsOn(buildFatJar)
+
+    from "build/libs/UCEL-${version}.jar"
+    into ".." // Project root
+    rename { 'UCEL.jar' }
+}
+
 task installPlugin(type: Copy) {
-    dependsOn(buildFatjar)
+    dependsOn(buildFatJar)
 
     from "build/libs/UCEL-${version}.jar"
     into "$UPPAAL_HOME/plugins"
