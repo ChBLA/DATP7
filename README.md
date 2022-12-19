@@ -1,19 +1,23 @@
 # DATP7
 Plugin for the model-checking tool UPPAAL
 
-## Building From Source
-1. Install UPPAAL version 4.1.26-1 or higher. https://uppaal.org/downloads/
-2. Install Gradle https://gradle.org/install/
-3. Clone the repository
-4. Set environment variable `UPPAAL_HOME` to the root folder of your UPPAAL installation, such that `%UPPAAL_HOME%/uppaal.jar` exists.
+## Setup
+1. Install dependencies
+2. Clone the repository
+3. Set environment variable `UPPAAL_HOME` to the root folder of your UPPAAL installation, such that `%UPPAAL_HOME%/uppaal.jar` exists e.g. `C:/Users/<USERNAME>/Desktop/uppaal64-4.1.26-1`.
 
     **Note:** For auto-install to work, the directory must be writable.
 
-5. Open repository root in commandline
-6. Run `gradle installPlugin`
+4. Open repository root in commandline
+5. Run `gradle runUppaal` *OR* `gradle installPlugin` to install without running UPPAAL
 
     **Note:** To manually install the plugin, see below
-7. Run UPPAAL
+6. Run UPPAAL
+
+### Dependencies
+- Java - Tested with JVM 17 https://www.oracle.com/java/technologies/downloads/#java17
+- Gradle https://gradle.org/install/
+- UPPAAL version 4.1.26-1 or higher. https://uppaal.org/downloads/
 
 ### Setting Environment Variables
 
@@ -41,3 +45,11 @@ To build without installing,
 2. In the folder of UPPAAL, add a folder named `plugins`
 3. Copy `UCEL.jar` into `uppaal/plugins`
 
+### Troubleshooting
+- **Missing Task "buildPlugin", "installPlugin" or "runUppaal"**
+   
+   See "Setting Environment Variables" above
+
+- **Missing dependencies from UPPAAL**
+    
+   Environment variable is probably pointing to a wrong path.
