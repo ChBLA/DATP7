@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.</declaration>
+	<template>
+		<name>Reacter</name>
+		<parameter>const int id, chan &amp;shared</parameter>
+		<location id="id0" x="-93" y="0">
+			<name x="-93" y="11">End</name>
+		</location>
+		<location id="id1" x="-212" y="0">
+			<name x="-212" y="11">Start</name>
+		</location>
+		<init ref="id1"/>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="-152" y="11">shared?</label>
+		</transition>
+	</template>
+	<template>
+		<name>Producer</name>
+		<parameter>chan &amp;shared</parameter>
+		<declaration>// Place local declarations here.</declaration>
+		<location id="id2" x="-178" y="-42">
+			<name x="-178" y="-31">End</name>
+		</location>
+		<location id="id3" x="-306" y="-42">
+			<name x="-306" y="-31">Start</name>
+		</location>
+		<init ref="id3"/>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-242" y="-31">shared!</label>
+		</transition>
+	</template>
+	<system>chan shared;
+const int count = 100;
+const int vcount = count - 1;
+
+build : {
+    Producer p = Producer(shared);
+    Reacter rs[count];
+    for (i : int[0, count-1]) {
+        rs[i] = Reacter(i, shared);
+    }
+}
+
+</system>
+	<queries>
+		<query>
+			<formula>E&lt;&gt; exists (j : int[0, vcount]) (forall (k: int[0, vcount]) ((rs[j].End &amp;&amp; rs[k].Start) || j == k))</formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>

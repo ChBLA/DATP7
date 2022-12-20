@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+
+interface Send {
+    chan com;
+}
+</declaration>
+	<template>
+		<name>Receiver</name>
+		<parameter>in Send input</parameter>
+		<location id="id0" x="-42" y="0">
+		</location>
+		<location id="id1" x="68" y="0">
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="13" y="11">input.com?</label>
+		</transition>
+	</template>
+	<template>
+		<name>Sender</name>
+		<parameter>out Send output</parameter>
+		<declaration>// Place local declarations here.</declaration>
+		<location id="id2" x="-187" y="0">
+		</location>
+		<location id="id3" x="-59" y="0">
+		</location>
+		<init ref="id2"/>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="-123" y="11">output.com!</label>
+		</transition>
+	</template>
+	<system>const int listener_count = 5;
+
+comp Broadcaster(const int size) : (out Send com_lines[size]) {
+    build : {
+        Sender senders[size];
+        for (i : int[0, size-1]) {
+            senders[i] = Sender(com_lines[i]);
+        }
+    }
+}
+
+comp Listener() : (in Send com_line) {
+    build : {
+        Receiver receiver = Receiver(com_line);
+    }
+}
+
+build : {
+    Listener listeners[listener_count];
+    Broadcaster broadcaster = Broadcaster(listener_count);
+    
+    for (i : int[0, listener_count-1]) {
+        listeners[i] = Listener();
+    }
+
+    for (j : int[0, listener_count-1]) {
+        link broadcaster.com_lines[j] listeners[j].com_line;
+    }
+}</system>
+	<queries>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>

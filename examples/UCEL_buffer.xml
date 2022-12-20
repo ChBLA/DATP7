@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+typedef int[0, 10] int_t;
+
+interface  Send { 
+    chan c;
+    int_t msg;
+}</declaration>
+	<template>
+		<name>Delayer</name>
+		<parameter>const int_t delay, in Send input, out Send output</parameter>
+		<declaration>// Place local declarations here.
+clock x;
+int_t msg;</declaration>
+		<location id="id0" x="-42" y="-34">
+			<name x="-42" y="-6">End</name>
+			<label kind="invariant" x="-42" y="-23">x &lt;= 2 * delay</label>
+		</location>
+		<location id="id1" x="144" y="119">
+			<name x="144" y="130">Start</name>
+		</location>
+		<init ref="id1"/>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="51" y="53">input.c?</label>
+			<label kind="assignment" x="51" y="70">x = 0, msg = input.msg</label>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="51" y="53">x &gt;= delay</label>
+			<label kind="synchronisation" x="51" y="70">output.c!</label>
+			<label kind="assignment" x="51" y="87">output.msg = msg</label>
+		</transition>
+	</template>
+	<template>
+		<name>Receiver</name>
+		<parameter>in Send input</parameter>
+		<declaration>int_t msg = 0;</declaration>
+		<location id="id2" x="76" y="0">
+			<name x="76" y="11">end</name>
+		</location>
+		<location id="id3" x="0" y="0">
+			<name x="0" y="11">start</name>
+		</location>
+		<init ref="id3"/>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="38" y="11">input.c?</label>
+			<label kind="assignment" x="38" y="28">msg = input.msg</label>
+		</transition>
+	</template>
+	<template>
+		<name>Sender</name>
+		<parameter>out Send output, int_t msg</parameter>
+		<location id="id4" x="178" y="0">
+			<name x="178" y="11">end</name>
+		</location>
+		<location id="id5" x="0" y="0">
+			<name x="0" y="11">start</name>
+			<committed/>
+		</location>
+		<init ref="id5"/>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="89" y="11">output.c!</label>
+			<label kind="assignment" x="89" y="28">output.msg = msg</label>
+		</transition>
+	</template>
+	<system>const int_t globDelay = 2;
+const int bufferSize = 5;
+const int vBufferSize = bufferSize - 1;
+chan a;
+
+comp ReceiverComp() : (in Send input) {
+    build : { 
+        Receiver receiverProc;     
+        receiverProc = Receiver(input);  
+    } 
+}
+
+comp SenderComp(int value) : (out Send output) {
+    build : {
+        Sender senderProc = Sender(output, value);
+    }
+}
+
+comp Buffer(const int size, const int_t delay) : (in Send input, out Send output) {
+    comp DelayerComp(const int_t delay) : (in Send input, out Send output) {
+        build : {
+            Delayer delayer = Delayer(delay, input, output);
+        }
+    }
+
+    build : {
+        DelayerComp delayers[size];
+        
+        for(i : int[0, size-1]) {
+            delayers[i] = DelayerComp(delay);
+        }
+
+        for(j : int[0, size-2]) {
+            link delayers[j].output delayers[j+1].input;
+        }
+
+        link this.input delayers[0].input;
+        link this.output delayers[size-1].output;        
+    }
+}
+
+build : {
+    SenderComp sender = SenderComp(7);
+    ReceiverComp receiver = ReceiverComp();
+    Buffer buffer = Buffer(bufferSize, globDelay);
+    
+    link sender.output buffer.input;
+    link receiver.input buffer.output;
+}</system>
+	<queries>
+		<query>
+			<formula>A&lt;&gt;receiver.receiverProc.end</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>A[] (!receiver.receiverProc.end || sender.senderProc.end)</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>A&lt;&gt; receiver.receiverProc.msg == sender.senderProc.msg
+</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>receiver.receiverProc.end --&gt; sender.senderProc.end
+</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; forall (x : int[0,vBufferSize]) (buffer.delayers[x].delayer.Start)</formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>

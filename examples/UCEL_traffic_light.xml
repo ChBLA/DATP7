@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>broadcast chan start;
+bool isSynchro = false;
+
+interface LightChange {
+    chan red;
+    chan green;
+}</declaration>
+	<template>
+		<name>Light</name>
+		<parameter>LightChange change, const int delay</parameter>
+		<declaration>clock x;</declaration>
+		<location id="id0" x="-314" y="76">
+			<name x="-314" y="104">Yellow</name>
+			<label kind="invariant" x="-314" y="87">x &lt;= delay</label>
+		</location>
+		<location id="id1" x="-212" y="178">
+			<name x="-212" y="189">Green</name>
+		</location>
+		<location id="id2" x="-102" y="76">
+			<name x="-102" y="104">RedYellow</name>
+			<label kind="invariant" x="-102" y="87">x &lt;= delay</label>
+		</location>
+		<location id="id3" x="-212" y="-34">
+			<name x="-212" y="-23">Red</name>
+		</location>
+		<location id="id4" x="-212" y="-127">
+			<name x="-212" y="-116">Off</name>
+		</location>
+		<init ref="id4"/>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="-212" y="-69">start?</label>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-157" y="32">change.green?</label>
+			<label kind="assignment" x="-157" y="49">x = 0</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-157" y="138">x &gt;= delay</label>
+			<label kind="synchronisation" x="-157" y="155">change.green!</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="-263" y="138">change.red?</label>
+			<label kind="assignment" x="-263" y="155">x = 0</label>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id3"/>
+			<label kind="guard" x="-263" y="32">x &gt;= delay</label>
+			<label kind="synchronisation" x="-263" y="49">change.red!</label>
+		</transition>
+	</template>
+	<template>
+		<name>Initialiser</name>
+		<location id="id5" x="8" y="0">
+		</location>
+		<location id="id6" x="-68" y="0">
+			<committed/>
+		</location>
+		<init ref="id6"/>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="-30" y="11">start!</label>
+		</transition>
+	</template>
+	<template>
+		<name>Changer</name>
+		<parameter>LightChange ns, LightChange we, const int delay</parameter>
+		<declaration>clock x;</declaration>
+		<location id="id7" x="-102" y="76">
+		</location>
+		<location id="id8" x="0" y="76">
+		</location>
+		<location id="id9" x="102" y="76">
+		</location>
+		<location id="id10" x="195" y="76">
+		</location>
+		<location id="id11" x="289" y="76">
+		</location>
+		<location id="id12" x="374" y="76">
+		</location>
+		<location id="id13" x="374" y="-8">
+		</location>
+		<location id="id14" x="289" y="-8">
+		</location>
+		<location id="id15" x="195" y="-8">
+		</location>
+		<location id="id16" x="102" y="-8">
+		</location>
+		<location id="id17" x="0" y="-8">
+		</location>
+		<location id="id18" x="-102" y="-8">
+		</location>
+		<init ref="id18"/>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id17"/>
+			<label kind="synchronisation" x="-51" y="3">ns.green!</label>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id16"/>
+			<label kind="synchronisation" x="51" y="3">ns.green?</label>
+			<label kind="assignment" x="51" y="20">x = 0</label>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id15"/>
+			<label kind="guard" x="148" y="3">x &gt;= delay</label>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id14"/>
+			<label kind="synchronisation" x="242" y="3">ns.red!</label>
+		</transition>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id13"/>
+			<label kind="synchronisation" x="331" y="3">ns.red?</label>
+			<label kind="assignment" x="331" y="20">x = 0</label>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id12"/>
+			<label kind="guard" x="374" y="45">x &gt;= delay</label>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="331" y="87">we.green!</label>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id10"/>
+			<label kind="synchronisation" x="242" y="87">we.green?</label>
+			<label kind="assignment" x="242" y="104">x = 0</label>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id9"/>
+			<label kind="guard" x="148" y="87">x &gt;= delay</label>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id8"/>
+			<label kind="synchronisation" x="51" y="87">we.red!</label>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="-51" y="87">we.red?</label>
+			<label kind="assignment" x="-51" y="104">x = 0</label>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id18"/>
+			<label kind="guard" x="-102" y="45">x &gt;= delay</label>
+		</transition>
+	</template>
+	<template>
+		<name>LightSynchronizer</name>
+		<parameter>chan &amp;red, chan &amp;green, LightChange change</parameter>
+		<location id="id19" x="161" y="51">
+			<name x="161" y="62">changedGreen</name>
+			<urgent/>
+		</location>
+		<location id="id20" x="161" y="-42">
+			<name x="161" y="-31">changedRed</name>
+			<urgent/>
+		</location>
+		<location id="id21" x="76" y="85">
+			<name x="76" y="96">changingGreen</name>
+		</location>
+		<location id="id22" x="-34" y="85">
+			<name x="-34" y="96">changeToGreen</name>
+			<urgent/>
+		</location>
+		<location id="id23" x="76" y="-76">
+			<name x="76" y="-65">changingRed</name>
+		</location>
+		<location id="id24" x="-34" y="-76">
+			<name x="-34" y="-65">changeToRed</name>
+			<urgent/>
+		</location>
+		<location id="id25" x="-110" y="0">
+			<name x="-110" y="11">idle</name>
+		</location>
+		<init ref="id25"/>
+		<transition>
+			<source ref="id25"/>
+			<target ref="id24"/>
+			<label kind="guard" x="-72" y="-27">isSynchro</label>
+			<label kind="synchronisation" x="-72" y="-10">red?</label>
+		</transition>
+		<transition>
+			<source ref="id24"/>
+			<target ref="id23"/>
+			<label kind="synchronisation" x="21" y="-65">change.red!</label>
+		</transition>
+		<transition>
+			<source ref="id25"/>
+			<target ref="id22"/>
+			<label kind="guard" x="-72" y="53">isSynchro</label>
+			<label kind="synchronisation" x="-72" y="70">green?</label>
+		</transition>
+		<transition>
+			<source ref="id22"/>
+			<target ref="id21"/>
+			<label kind="synchronisation" x="21" y="96">change.green!</label>
+		</transition>
+		<transition>
+			<source ref="id23"/>
+			<target ref="id20"/>
+			<label kind="synchronisation" x="118" y="-48">change.red?</label>
+		</transition>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id25"/>
+			<label kind="synchronisation" x="25" y="36">green!</label>
+			<label kind="assignment" x="25" y="53">isSynchro = false</label>
+		</transition>
+		<transition>
+			<source ref="id21"/>
+			<target ref="id19"/>
+			<label kind="synchronisation" x="118" y="79">change.green?</label>
+		</transition>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id25"/>
+			<label kind="synchronisation" x="25" y="-10">red!</label>
+			<label kind="assignment" x="25" y="7">isSynchro = false</label>
+		</transition>
+	</template>
+	<template>
+		<name>GroupSynchronizer</name>
+		<parameter>LightChange change, chan &amp;red, chan &amp;green, int count</parameter>
+		<declaration>int counter = 0;</declaration>
+		<location id="id26" x="119" y="85">
+		</location>
+		<location id="id27" x="119" y="-85">
+		</location>
+		<location id="id28" x="0" y="85">
+			<urgent/>
+		</location>
+		<location id="id29" x="0" y="-85">
+			<urgent/>
+		</location>
+		<location id="id30" x="-102" y="0">
+		</location>
+		<init ref="id30"/>
+		<transition>
+			<source ref="id28"/>
+			<target ref="id28"/>
+			<label kind="guard" x="0" y="96">counter &lt; (count - 1)</label>
+			<label kind="synchronisation" x="0" y="113">red!</label>
+			<label kind="assignment" x="0" y="130">counter++</label>
+		</transition>
+		<transition>
+			<source ref="id29"/>
+			<target ref="id29"/>
+			<label kind="guard" x="0" y="-74">counter &lt; (count - 1)</label>
+			<label kind="synchronisation" x="0" y="-57">green!</label>
+			<label kind="assignment" x="0" y="-40">counter++</label>
+		</transition>
+		<transition>
+			<source ref="id30"/>
+			<target ref="id29"/>
+			<label kind="synchronisation" x="-51" y="-31">change.green?</label>
+			<label kind="assignment" x="-51" y="-14">counter = 0, isSynchro = true</label>
+		</transition>
+		<transition>
+			<source ref="id29"/>
+			<target ref="id27"/>
+			<label kind="guard" x="59" y="-74">counter &gt;= (count - 1)</label>
+			<label kind="synchronisation" x="59" y="-57">green!</label>
+			<label kind="assignment" x="59" y="-40">counter = 0, isSynchro = true</label>
+		</transition>
+		<transition>
+			<source ref="id27"/>
+			<target ref="id27"/>
+			<label kind="synchronisation" x="119" y="-74">green?</label>
+			<label kind="assignment" x="119" y="-57">counter++</label>
+		</transition>
+		<transition>
+			<source ref="id27"/>
+			<target ref="id30"/>
+			<label kind="guard" x="8" y="-31">counter &gt;= count</label>
+			<label kind="synchronisation" x="8" y="-14">change.green!</label>
+		</transition>
+		<transition>
+			<source ref="id30"/>
+			<target ref="id28"/>
+			<label kind="synchronisation" x="-51" y="53">change.red?</label>
+			<label kind="assignment" x="-51" y="70">counter = 0, isSynchro = true</label>
+		</transition>
+		<transition>
+			<source ref="id28"/>
+			<target ref="id26"/>
+			<label kind="guard" x="59" y="96">counter &gt;= (count - 1)</label>
+			<label kind="synchronisation" x="59" y="113">red!</label>
+			<label kind="assignment" x="59" y="130">counter = 0, isSynchro = true</label>
+		</transition>
+		<transition>
+			<source ref="id26"/>
+			<target ref="id30"/>
+			<label kind="guard" x="8" y="53">counter &gt;= count</label>
+			<label kind="synchronisation" x="8" y="70">change.red!</label>
+		</transition>
+		<transition>
+			<source ref="id26"/>
+			<target ref="id26"/>
+			<label kind="synchronisation" x="119" y="96">red?</label>
+			<label kind="assignment" x="119" y="113">counter++</label>
+		</transition>
+	</template>
+	<system>
+
+comp Controller(const int delay) : (out LightChange ns, out LightChange we) {
+    build : {
+        Changer signaler = Changer(ns, we, delay);
+    }
+}
+
+comp LightComp(const int delay) : (in LightChange change) {
+    build : {
+        Light light = Light(change, delay);
+    }
+}
+
+comp LightSyncComp(chan red, chan green) : (out LightChange change) {
+    build : {
+        LightSynchronizer syncer = LightSynchronizer(red, green, change);
+    }
+}
+
+comp LightGroup (const int size, const int delay) : (in LightChange change) {
+    chan red;
+    chan green;
+
+    build : {
+        LightComp lights[size];
+        LightSyncComp syncs[size];
+        GroupSynchronizer groupSyncer = GroupSynchronizer(change, red, green, size);
+        
+        for (i : int[0, size-1]) {
+            lights[i] = LightComp(delay);
+            syncs[i] = LightSyncComp(red, green);
+            link lights[i].change syncs[i].change;
+        }
+    }
+}
+
+
+build : {
+    LightGroup groups[2];
+    Controller controller = Controller(4);
+    Initialiser initialiser = Initialiser();
+
+    for (i : int[0,1])
+        groups[i] = LightGroup(2, 2);
+
+    link groups[0].change controller.ns;
+    link groups[1].change controller.we;
+}</system>
+	<queries>
+		<query>
+			<formula>A[] not deadlock</formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>

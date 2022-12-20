@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>interface Communication {
+    chan publication;
+    chan reviewSubmission;
+    chan reviewAnswer;
+    bool accepted;
+}
+
+interface FundsRequest {
+    chan request;
+    bool accepted;
+}</declaration>
+	<template>
+		<name>Coffeemachine</name>
+		<parameter>chan &amp;buyCoffee, int maxBusyTime</parameter>
+		<declaration>clock x;</declaration>
+		<location id="id0" x="0" y="0">
+		</location>
+		<location id="id1" x="0" y="93">
+			<name x="0" y="121">busy</name>
+			<label kind="invariant" x="0" y="104">x &lt; maxBusyTime</label>
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id0"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="0" y="57">buyCoffee?</label>
+			<label kind="assignment" x="0" y="74">x = 0</label>
+		</transition>
+	</template>
+	<template>
+		<name>Researcher</name>
+		<parameter>in Communication incoming, out Communication outgoing,  in FundsRequest fundsAnswer, out FundsRequest fundsRequest, chan &amp; buyCoffee</parameter>
+		<declaration>int[0,10] funds = 5;</declaration>
+		<location id="id2" x="0" y="-59">
+		</location>
+		<location id="id3" x="238" y="-59">
+			<name x="238" y="-48">WritingPaper</name>
+		</location>
+		<location id="id4" x="238" y="102">
+			<name x="238" y="113">SubmittedForReview</name>
+		</location>
+		<location id="id5" x="-102" y="34">
+		</location>
+		<location id="id6" x="-255" y="8">
+		</location>
+		<location id="id7" x="-102" y="161">
+		</location>
+		<location id="id8" x="0" y="102">
+			<name x="0" y="113">PaperAccepted</name>
+		</location>
+		<init ref="id2"/>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="0" y="32">outgoing.publication!</label>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id8"/>
+			<label kind="guard" x="119" y="113">incoming.accepted</label>
+			<label kind="synchronisation" x="119" y="130">incoming.reviewAnswer?</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="0" y="-48">incoming.publication?</label>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id2"/>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id2"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="-102" y="108">outgoing.reviewAnswer!</label>
+			<label kind="assignment" x="-102" y="125">outgoing.accepted = false</label>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="-178" y="32">outgoing.reviewAnswer!</label>
+			<label kind="assignment" x="-178" y="49">outgoing.accepted = true</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="-51" y="-1">incoming.reviewSubmission?</label>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id3"/>
+			<label kind="guard" x="238" y="32">!incoming.accepted</label>
+			<label kind="synchronisation" x="238" y="49">incoming.reviewAnswer?</label>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="238" y="32">outgoing.reviewSubmission!</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="guard" x="119" y="-48">funds &gt;= 1</label>
+			<label kind="synchronisation" x="119" y="-31">buyCoffee!</label>
+			<label kind="assignment" x="119" y="-14">funds -= 1</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="0" y="-48">fundsAnswer.request?</label>
+			<label kind="assignment" x="0" y="-31">funds += fundsAnswer.accepted ? 3 : 0</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="0" y="-48">fundsRequest.request!</label>
+		</transition>
+	</template>
+	<template>
+		<name>Administrator</name>
+		<parameter>in FundsRequest request, out FundsRequest answer</parameter>
+		<declaration>// Place local declarations here.</declaration>
+		<location id="id9" x="0" y="0">
+		</location>
+		<location id="id10" x="0" y="187">
+		</location>
+		<location id="id11" x="-212" y="195">
+		</location>
+		<location id="id12" x="178" y="212">
+		</location>
+		<init ref="id9"/>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="-106" y="202">answer.request!</label>
+			<label kind="assignment" x="-106" y="219">answer.accepted = true</label>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="89" y="210">answer.request!</label>
+			<label kind="assignment" x="89" y="227">answer.accepted = false</label>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id9"/>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id9"/>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id10"/>
+			<label kind="synchronisation" x="0" y="104">request.request?</label>
+		</transition>
+	</template>
+	<system>const int universityCount = 3;
+
+comp Department(int researcherCount, const int machineCount, int universityCount,
+                     in Communication incoming[universityCount-1], 
+                     out Communication outgoing[universityCount-1]) 
+                    : (in FundsRequest answer,
+                       out FundsRequest request) {
+    chan buyCoffee[machineCount];
+    build: {
+        Researcher researchers[researcherCount];
+        Coffeemachine machines[machineCount];
+
+        for (i : int[0, researcherCount-1]) {
+            researchers[i] = Researcher(incoming[i % (universityCount-1)], 
+                                        outgoing[i % (universityCount-1)],
+                                        answer, request, buyCoffee[i % machineCount]); 
+        }
+
+        for (ii : int[0, machineCount-1]) {
+            machines[ii] = Coffeemachine(buyCoffee[ii], 5);
+        }
+    }
+}
+
+comp Administration(int departmentCount) : (in FundsRequest requests[departmentCount],
+                                            out FundsRequest answers[departmentCount]) {
+    build: {
+        Administrator administrators[departmentCount];
+        
+        for (i : int[0, departmentCount-1]) {
+            administrators[i] = Administrator(requests[i], answers[i]);
+        }
+    }
+}
+
+comp University(int departmentCount, int universityCount) : (in Communication incoming[universityCount-1], 
+                                    out Communication outgoing[universityCount-1]) {
+    build: {
+        Administration administration = Administration(departmentCount);
+        Department departments[departmentCount];
+        
+        for (i : int[0, departmentCount-1]) {
+            departments[i] = Department(3 + 2 * (i % 2), 1 + i % 2, universityCount, incoming, outgoing);
+            link departments[i].request administration.requests[i];
+            link departments[i].answer administration.answers[i];
+        }
+    }
+}
+
+
+build: {
+    University universities[universityCount];
+    
+    for (i : int[0, universityCount-1]){
+        universities[i] = University(2 + i, universityCount);
+    }
+
+    for (ii : int[0, universityCount-1]) {
+        for (iii : int[0, universityCount-1]) {
+            if(ii != iii) {
+                link universities[ii].incoming[iii &gt; ii ? iii-1 : iii] universities[iii].outgoing[ii &gt; iii ? ii-1 : ii];
+                link universities[ii].outgoing[iii &gt; ii ? iii-1 : iii] universities[iii].incoming[ii &gt; iii ? ii-1 : ii];
+            } 
+        }
+    }
+}
+
+    </system>
+	<queries>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>
