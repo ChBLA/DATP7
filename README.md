@@ -53,3 +53,7 @@ To build without installing,
 - **Missing dependencies from UPPAAL**
     
    Environment variable is probably pointing to a wrong path.
+
+## Examples
+Examples of UCEL programs can be found in `examples`. 
+Load them into UPPAAL via the UPPAAL editor to use them.
